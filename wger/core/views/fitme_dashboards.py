@@ -237,6 +237,64 @@ def member_dashboard(request):
 # ═════════════════════════════════════════════════════════════════════
 
 @login_required
+@login_required
+@role_required('front_desk', 'super_admin')
+def create_application_api(request):
+    """Creates a new member application from front desk walk-in or intake form."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    full_name = data.get('full_name', '').strip()
+    email = data.get('email', '').strip().lower()
+    phone = data.get('phone', '').strip()
+    plan_id = data.get('plan_id')
+    primary_goal = data.get('primary_goal', 'general_fitness')
+
+    if not full_name or not email or not phone:
+        return JsonResponse({'error': 'Full name, email, and phone number are required.'}, status=400)
+
+    # Check if applicant or user with this email already exists
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    if User.objects.filter(email=email).exists():
+        return JsonResponse({'error': f"A member with email {email} already exists."}, status=400)
+
+    existing_app = MemberApplication.objects.filter(email=email, status='pending').first()
+    if existing_app:
+        return JsonResponse({'error': f"An application for {email} is already pending review."}, status=400)
+
+    plan = MembershipPlan.objects.filter(id=plan_id).first() if plan_id else MembershipPlan.objects.first()
+
+    app = MemberApplication.objects.create(
+        full_name=full_name,
+        email=email,
+        phone=phone,
+        desired_plan=plan,
+        primary_goal=primary_goal,
+        status='pending'
+    )
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Application created for {app.full_name}!",
+        'application': {
+            'id': app.id,
+            'full_name': app.full_name,
+            'email': app.email,
+            'phone': app.phone,
+            'plan_name': plan.name if plan else 'Individual',
+            'primary_goal': app.primary_goal or 'General Fitness'
+        }
+    })
+
+
+@login_required
 @role_required('front_desk', 'super_admin')
 def approve_application_api(request, app_id):
     """Dynamically approves an intake application, creates user, PIN, and biometric profile."""

@@ -200,7 +200,12 @@
             <i class="fa fa-inbox" style="color:var(--neon-lime);"></i>
             Member Application Queue
           </div>
-          <span class="badge badge-green" id="appCount">{{ pending_applications.count }} PENDING</span>
+          <div style="display:flex;align-items:center;gap:0.6rem;">
+            <button class="btn-action btn-approve" onclick="openIntakeModal()" style="font-size:0.75rem;">
+              <i class="fa fa-user-plus"></i> + Walk-in Intake
+            </button>
+            <span class="badge badge-green" id="appCount">{{ pending_applications.count }} PENDING</span>
+          </div>
         </div>
         <div class="card-body" style="padding:0;">
           <table id="applicationsTable">
@@ -335,6 +340,54 @@
   </div>
 </div>
 
+<!-- New Walk-in Member Intake Modal -->
+<div class="modal-overlay" id="intakeModal" style="display:none;">
+  <div class="modal-box" style="max-width:480px;">
+    <h3 style="font-family:'Montserrat';font-weight:800;margin-bottom:1.25rem;color:#fff;display:flex;align-items:center;gap:0.5rem;">
+      <i class="fa fa-user-plus" style="color:var(--neon-lime);"></i>
+      Walk-in Member Intake
+    </h3>
+    <form id="intakeForm" onsubmit="submitIntake(event)">
+      <div class="form-group" style="margin-bottom:0.85rem;">
+        <label style="display:block;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.35rem;">Full Name</label>
+        <input type="text" id="intakeFullName" placeholder="e.g. Ruwan Silva" required style="width:100%;background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.12);padding:0.65rem 0.85rem;border-radius:8px;font-size:0.88rem;">
+      </div>
+      <div class="form-group" style="margin-bottom:0.85rem;">
+        <label style="display:block;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.35rem;">Email Address</label>
+        <input type="email" id="intakeEmail" placeholder="e.g. ruwan.silva@gmail.com" required style="width:100%;background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.12);padding:0.65rem 0.85rem;border-radius:8px;font-size:0.88rem;">
+      </div>
+      <div class="form-group" style="margin-bottom:0.85rem;">
+        <label style="display:block;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.35rem;">Phone Number</label>
+        <input type="text" id="intakePhone" placeholder="e.g. 077 123 4567" required style="width:100%;background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.12);padding:0.65rem 0.85rem;border-radius:8px;font-size:0.88rem;">
+      </div>
+      <div class="form-group" style="margin-bottom:0.85rem;">
+        <label style="display:block;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.35rem;">Desired Membership Plan</label>
+        <select id="intakePlanId" required style="width:100%;background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.12);padding:0.65rem 0.85rem;border-radius:8px;font-size:0.88rem;">
+          {% for plan in plans %}
+            <option value="{{ plan.id }}">{{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }}/mo</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group" style="margin-bottom:1.25rem;">
+        <label style="display:block;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.35rem;">Primary Fitness Goal</label>
+        <select id="intakeGoal" style="width:100%;background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.12);padding:0.65rem 0.85rem;border-radius:8px;font-size:0.88rem;">
+          <option value="muscle_gain">Muscle Gain & Strength</option>
+          <option value="weight_loss">Weight Loss & Conditioning</option>
+          <option value="general_fitness" selected>General Fitness & Longevity</option>
+          <option value="endurance">Endurance & Cardio</option>
+          <option value="rehabilitation">Rehabilitation</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
+        <button type="button" class="btn-action btn-reject" onclick="closeIntakeModal()">Cancel</button>
+        <button type="submit" class="btn-action btn-approve" id="btnSubmitIntake" style="padding:0.55rem 1.4rem;">
+          <i class="fa fa-paper-plane"></i> Add to Intake Queue
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="fitme-toast" id="frontToast">
   <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:1.4rem;"></i>
@@ -347,6 +400,89 @@
     document.getElementById('frontToastMsg').textContent = msg;
     toast.style.display = 'flex';
     setTimeout(() => { toast.style.display = 'none'; }, 4000);
+  }
+
+  // Intake Modal Handlers
+  function openIntakeModal() {
+    document.getElementById('intakeModal').style.display = 'flex';
+  }
+  function closeIntakeModal() {
+    document.getElementById('intakeModal').style.display = 'none';
+  }
+
+  async function submitIntake(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitIntake');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
+
+    const payload = {
+      full_name: document.getElementById('intakeFullName').value,
+      email: document.getElementById('intakeEmail').value,
+      phone: document.getElementById('intakePhone').value,
+      plan_id: document.getElementById('intakePlanId').value,
+      primary_goal: document.getElementById('intakeGoal').value
+    };
+
+    try {
+      const res = await fetch('/fitme/dashboard/api/applications/create/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeIntakeModal();
+        document.getElementById('intakeForm').reset();
+        showToast(data.message);
+
+        // Dynamically add row to intake queue table
+        const tbody = document.querySelector('#applicationsTable tbody');
+        const noRow = document.getElementById('noAppsRow');
+        if (noRow) noRow.remove();
+
+        const app = data.application;
+        const tr = document.createElement('tr');
+        tr.id = `app-row-${app.id}`;
+        tr.style.background = 'rgba(118,192,67,0.08)';
+        tr.innerHTML = `
+          <td>
+            <div style="font-weight:700;color:var(--text-primary);">${app.full_name}</div>
+            <div style="font-size:0.75rem;color:var(--text-muted);">${app.email} • ${app.phone}</div>
+          </td>
+          <td><span style="color:var(--neon-lime);font-weight:700;">${app.plan_name}</span></td>
+          <td>${app.primary_goal.replace('_', ' ').toUpperCase()}</td>
+          <td style="text-align:right;">
+            <div style="display:inline-flex;gap:0.45rem;">
+              <button class="btn-action btn-approve" onclick="approveApp(${app.id})">
+                <i class="fa fa-check"></i> Approve & Issue PIN
+              </button>
+              <button class="btn-action btn-reject" onclick="rejectApp(${app.id})">
+                <i class="fa fa-times"></i>
+              </button>
+            </div>
+          </td>
+        `;
+        tbody.prepend(tr);
+
+        // Update badge count
+        const badge = document.getElementById('appCount');
+        if (badge) {
+          const count = parseInt(badge.textContent) || 0;
+          badge.textContent = `${count + 1} PENDING`;
+        }
+      } else {
+        alert("Error: " + data.error);
+      }
+    } catch (err) {
+      alert("Submission failed: " + err);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-paper-plane"></i> Add to Intake Queue';
+    }
   }
 
   // 1. Dynamic Application Approval

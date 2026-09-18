@@ -306,6 +306,7 @@ urlpatterns += [
         path('coach/', __import__('wger.core.views.fitme_dashboards', fromlist=['coach_dashboard']).coach_dashboard, name='fitme-coach'),
         path('member/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_dashboard']).member_dashboard, name='fitme-member'),
         # Dynamic Actions
+        path('api/applications/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['create_application_api']).create_application_api, name='api-app-create'),
         path('api/applications/<int:app_id>/approve/', __import__('wger.core.views.fitme_dashboards', fromlist=['approve_application_api']).approve_application_api, name='api-app-approve'),
         path('api/applications/<int:app_id>/reject/', __import__('wger.core.views.fitme_dashboards', fromlist=['reject_application_api']).reject_application_api, name='api-app-reject'),
         path('api/record-payment/', __import__('wger.core.views.fitme_dashboards', fromlist=['record_payment_api']).record_payment_api, name='api-record-payment'),
