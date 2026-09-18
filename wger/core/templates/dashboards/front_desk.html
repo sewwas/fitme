@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Front Desk — Fit Me</title>
+<title>Front Desk &amp; Biometric Ops — Fit Me</title>
 <link rel="icon" href="{% static 'images/logos/fitme-logo.png' %}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
@@ -67,42 +67,47 @@
   .page-title { font-family: 'Montserrat', sans-serif; font-size: 1.75rem; font-weight: 900; }
   .subtitle { color: var(--text-muted); font-size: 0.88rem; margin: 0.25rem 0 1.75rem; }
 
-  /* ── Buzzer Card ── */
-  .buzzer-card {
-    background: linear-gradient(145deg, #181D20 0%, #0F1214 100%);
-    border: 2px solid var(--neon-lime);
+  /* ── Live Turnstile Monitor Header Card ── */
+  .monitor-card {
+    background: linear-gradient(145deg, #161A1D 0%, #0F1214 100%);
+    border: 1.5px solid var(--neon-lime);
     border-radius: 16px;
-    padding: 1.75rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
+    padding: 1.5rem;
     margin-bottom: 2rem;
     box-shadow: 0 0 35px var(--neon-glow);
   }
-  .buzzer-text h3 { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.15rem; color: #fff; }
-  .buzzer-text p { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+  .monitor-header {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem;
+    padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); margin-bottom: 1rem;
+  }
+  .pulse-dot {
+    display: inline-block; width: 10px; height: 10px; background: var(--neon-lime);
+    border-radius: 50%; box-shadow: 0 0 10px var(--neon-lime);
+    animation: livePulse 1.8s infinite;
+  }
+  @keyframes livePulse {
+    0% { transform: scale(0.95); opacity: 0.7; }
+    50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 16px var(--neon-lime); }
+    100% { transform: scale(0.95); opacity: 0.7; }
+  }
+
+  .stat-pill {
+    background: var(--card-surface); border: 1px solid var(--border-color); border-radius: 8px;
+    padding: 0.4rem 0.85rem; font-size: 0.82rem; font-weight: 700; display: inline-flex; align-items: center; gap: 0.5rem;
+  }
+
+  /* ── Emergency Buzzer ── */
   .btn-buzz-pulse {
-    background: var(--neon-lime);
-    color: #000;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 900;
-    font-size: 0.95rem;
-    padding: 0.85rem 1.8rem;
-    border-radius: 10px;
-    border: none;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    box-shadow: 0 0 20px var(--neon-glow-high);
-    transition: all 0.2s;
+    background: var(--neon-lime); color: #000; font-family: 'Montserrat', sans-serif;
+    font-weight: 900; font-size: 0.88rem; padding: 0.65rem 1.4rem; border-radius: 8px;
+    border: none; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;
+    box-shadow: 0 0 15px var(--neon-glow); transition: all 0.2s;
   }
   .btn-buzz-pulse:hover { background: #8AE04F; transform: scale(1.03); }
-  .btn-buzz-pulse:active { transform: scale(0.97); }
 
   /* ── Grids & Tables ── */
-  .grid-2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; }
-  @media(max-width: 1024px) { .grid-2 { grid-template-columns: 1fr; } }
+  .grid-2 { display: grid; grid-template-columns: 1.15fr 1.15fr; gap: 1.5rem; margin-bottom: 2rem; }
+  @media(max-width: 1080px) { .grid-2 { grid-template-columns: 1fr; } }
 
   .fitme-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; }
   .card-header {
@@ -129,15 +134,16 @@
   .badge-green { background: rgba(118,192,67,0.15); color: var(--neon-lime); border: 1px solid var(--neon-lime); }
   .badge-yellow { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid var(--warning); }
   .badge-red { background: rgba(230,57,70,0.15); color: var(--danger); border: 1px solid var(--danger); }
+  .badge-cyan { background: rgba(6,182,212,0.15); color: var(--cyan); border: 1px solid var(--cyan); }
 
   /* Modal */
   .modal-overlay {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.8); z-index: 500; align-items: center; justify-content: center;
   }
   .modal-box {
     background: var(--card-bg); border: 2px solid var(--neon-lime); border-radius: 16px;
-    padding: 2rem; max-width: 460px; width: 90%; box-shadow: 0 10px 40px var(--neon-glow);
+    padding: 2rem; max-width: 480px; width: 90%; box-shadow: 0 10px 40px var(--neon-glow);
   }
   .form-group { margin-bottom: 1.25rem; }
   .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600; }
@@ -161,7 +167,7 @@
   <div class="brand">
     <img src="{% static 'images/logos/fitme-logo.png' %}" alt="Fit Me">
     <span class="brand-name">Fit Me</span>
-    <span class="role-badge">Front Desk Operations</span>
+    <span class="role-badge">Front Desk &amp; Biometrics</span>
   </div>
   <div style="display:flex;align-items:center;gap:1.25rem;color:var(--text-muted);font-size:0.88rem;">
     <span><i class="fa fa-user-circle"></i> {{ request.user.username }}</span>
@@ -175,7 +181,7 @@
 <div class="layout">
   <aside class="sidebar">
     <div class="sidebar-section">Front Desk Ops</div>
-    <a href="/dashboard/front-desk/" class="active"><i class="fa fa-inbox"></i> Intake Queue</a>
+    <a href="/dashboard/front-desk/" class="active"><i class="fa fa-inbox"></i> Intake &amp; Biometrics</a>
     <a href="#" onclick="openPaymentModal(); return false;"><i class="fa fa-credit-card"></i> Record Payment</a>
     <a href="/dashboard/member/"><i class="fa fa-id-badge"></i> Member Portal View</a>
     <div class="sidebar-section" style="margin-top:1rem;">System Links</div>
@@ -184,19 +190,101 @@
   </aside>
 
   <main class="main">
-    <h1 class="page-title">Front Desk Operations</h1>
-    <p class="subtitle">Real-time intake queue, turnstile door buzzer, and subscription payments.</p>
-
-    <!-- Emergency Turnstile Door Buzzer -->
-    <div class="buzzer-card">
-      <div class="buzzer-text">
-        <h3>Emergency Turnstile Remote Override (192.168.1.23)</h3>
-        <p>Press to buzz open the biometric turnstile gate for 5 seconds for arriving visitors or walk-ins.</p>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;">
+      <div>
+        <h1 class="page-title">Front Desk Operations</h1>
+        <p class="subtitle" style="margin-bottom:0;">Biometric enrollment (Face ID &amp; Fingerprint), live turnstile monitor, and payments.</p>
       </div>
       <button class="btn-buzz-pulse" id="btnFrontBuzzer" onclick="buzzTurnstile()">
         <i class="fa fa-door-open"></i>
-        <span>BUZZ DOOR OPEN</span>
+        <span>BUZZ DOOR OPEN (5s)</span>
       </button>
+    </div>
+
+    <!-- Live Turnstile Biometrics Monitor -->
+    <div class="monitor-card">
+      <div class="monitor-header">
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <span class="pulse-dot"></span>
+          <h3 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:1.1rem;color:#fff;">
+            Live Turnstile Access Monitor
+          </h3>
+          <span class="badge badge-green" style="font-size:0.68rem;letter-spacing:1px;">TERMINAL 192.168.1.23</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.75rem;">
+          <div class="stat-pill">
+            <i class="fa fa-users" style="color:var(--neon-lime);"></i>
+            <span>Members on Floor: <strong style="color:#fff;" id="floorMembersCount">0</strong></span>
+          </div>
+          <div class="stat-pill">
+            <i class="fa fa-id-badge" style="color:var(--cyan);"></i>
+            <span>Staff on Floor: <strong style="color:#fff;" id="floorStaffCount">0</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;">
+        <table id="livePunchesTable">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Member / Scan</th>
+              <th>Biometric Method</th>
+              <th>Plan Status</th>
+              <th>Access Decision</th>
+              <th>Terminal</th>
+            </tr>
+          </thead>
+          <tbody id="livePunchesBody">
+            {% for p in recent_door_punches %}
+              <tr>
+                <td style="color:var(--text-muted);font-family:monospace;font-size:0.8rem;">{{ p.punch_time|date:"H:i:s" }}</td>
+                <td>
+                  <div style="display:flex;align-items:center;gap:0.6rem;">
+                    {% if p.user and p.user.member_profile.profile_photo %}
+                      <img src="{{ p.user.member_profile.profile_photo.url }}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--neon-lime);">
+                    {% else %}
+                      <div style="width:28px;height:28px;border-radius:50%;background:#1F2428;display:flex;align-items:center;justify-content:center;color:#888;font-size:0.7rem;"><i class="fa fa-user"></i></div>
+                    {% endif %}
+                    <div>
+                      <div style="font-weight:700;color:#fff;">{{ p.user.get_full_name|default:p.user.username|default:"Walk-in / Hardware Scan" }}</div>
+                      <div style="font-size:0.72rem;color:var(--text-muted);">ID: #FM{{ p.zk_pin }}</div>
+                    </div>
+                  </div>
+                </td>
+                <td>
+                  {% if p.verify_mode == 'FACE_ID' %}
+                    <span class="badge badge-green"><i class="fa fa-smile"></i> Face ID</span>
+                  {% elif p.verify_mode == 'FINGERPRINT' %}
+                    <span class="badge badge-cyan"><i class="fa fa-fingerprint"></i> Fingerprint</span>
+                  {% elif p.verify_mode == 'BUZZER' %}
+                    <span class="badge badge-yellow"><i class="fa fa-bolt"></i> Manual Remote</span>
+                  {% else %}
+                    <span class="badge badge-green">{{ p.verify_mode }}</span>
+                  {% endif %}
+                </td>
+                <td><span style="font-size:0.8rem;color:#ccc;">Floor Pass</span></td>
+                <td>
+                  {% if p.event_type == 'ENTRY' or p.event_type == 'EXIT' %}
+                    <span class="badge badge-green"><i class="fa fa-check-circle"></i> {{ p.event_type }} GRANTED</span>
+                  {% elif p.event_type == 'ANTI_PASSBACK' %}
+                    <span class="badge badge-yellow"><i class="fa fa-history"></i> ANTI-PASSBACK (60s)</span>
+                  {% else %}
+                    <span class="badge badge-red"><i class="fa fa-times-circle"></i> DENIED</span>
+                  {% endif %}
+                </td>
+                <td style="font-size:0.75rem;color:var(--text-muted);">{{ p.terminal_name }}</td>
+              </tr>
+            {% empty %}
+              <tr id="noPunchesRow">
+                <td colspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted);">
+                  Waiting for biometric turnstile scans...
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
     </div>
 
     <div class="grid-2">
@@ -247,7 +335,7 @@
                         <i class="fa fa-eye"></i> Inspect
                       </button>
                       <button class="btn-action btn-approve" onclick="approveApp({{ app.id }})">
-                        <i class="fa fa-check"></i> Approve & PIN
+                        <i class="fa fa-check"></i> Approve &amp; Enroll
                       </button>
                       <button class="btn-action btn-reject" onclick="rejectApp({{ app.id }})">
                         <i class="fa fa-times"></i>
@@ -268,12 +356,12 @@
         </div>
       </div>
 
-      <!-- Active / Expiring Subscriptions with Quick Extend -->
+      <!-- Active Subscriptions & Biometrics Enrollment Center -->
       <div class="fitme-card">
         <div class="card-header">
           <div class="card-title">
-            <i class="fa fa-clock" style="color:var(--warning);"></i>
-            Subscriptions & Biometric Status
+            <i class="fa fa-fingerprint" style="color:var(--neon-lime);"></i>
+            Biometric Enrollment &amp; Subscriptions
           </div>
           <button class="btn-action btn-approve" onclick="openPaymentModal()">
             <i class="fa fa-plus"></i> Record Payment
@@ -284,9 +372,9 @@
             <thead>
               <tr>
                 <th>Member</th>
-                <th>Plan</th>
-                <th>Expires</th>
+                <th>Plan &amp; Expiry</th>
                 <th>Biometrics</th>
+                <th style="text-align:right;">Enroll Action</th>
               </tr>
             </thead>
             <tbody>
@@ -294,18 +382,36 @@
                 <tr>
                   <td>
                     <div style="font-weight:700;">{{ sub.member.get_full_name|default:sub.member.username }}</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);">ID: #{{ sub.member.id|stringformat:"04d" }}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">ID: #FM{{ sub.member.biometric_profile.zk_pin|default:sub.member.id }}</div>
                   </td>
-                  <td>{{ sub.plan.name }}</td>
-                  <td>{{ sub.end_date|date:"d M Y" }}</td>
                   <td>
-                    {% if sub.days_remaining <= 3 %}
-                      <span class="badge badge-red">{{ sub.days_remaining }}d left</span>
-                    {% elif sub.days_remaining <= 7 %}
-                      <span class="badge badge-yellow">{{ sub.days_remaining }}d left</span>
-                    {% else %}
-                      <span class="badge badge-green">ACTIVE</span>
-                    {% endif %}
+                    <div style="font-weight:600;font-size:0.82rem;">{{ sub.plan.name }}</div>
+                    <div style="font-size:0.74rem;color:var(--text-muted);">{{ sub.end_date|date:"d M Y" }}</div>
+                  </td>
+                  <td>
+                    <div style="display:flex;flex-direction:column;gap:3px;">
+                      {% if sub.member.biometric_profile.face_enrolled %}
+                        <span class="badge badge-green" style="font-size:0.65rem;"><i class="fa fa-smile"></i> Face ID</span>
+                      {% else %}
+                        <span class="badge badge-yellow" style="font-size:0.65rem;"><i class="fa fa-exclamation-triangle"></i> Face Missing</span>
+                      {% endif %}
+
+                      {% if sub.member.biometric_profile.fingerprint_enrolled %}
+                        <span class="badge badge-green" style="font-size:0.65rem;"><i class="fa fa-fingerprint"></i> Fingerprint</span>
+                      {% else %}
+                        <span class="badge badge-yellow" style="font-size:0.65rem;"><i class="fa fa-exclamation-triangle"></i> Finger Missing</span>
+                      {% endif %}
+                    </div>
+                  </td>
+                  <td style="text-align:right;">
+                    <div style="display:inline-flex;gap:0.35rem;">
+                      <button class="btn-action" style="background:#1F2428;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:0.72rem;" onclick="openFaceModal({{ sub.member.id }}, '{{ sub.member.get_full_name|default:sub.member.username|escapejs }}', '{{ sub.member.biometric_profile.zk_pin|default:sub.member.id }}')" title="Snap WebCam Portrait for Face ID">
+                        <i class="fa fa-camera" style="color:var(--neon-lime);"></i> Face
+                      </button>
+                      <button class="btn-action btn-approve" style="font-size:0.72rem;" onclick="enrollFingerprint({{ sub.member.id }}, '{{ sub.member.get_full_name|default:sub.member.username|escapejs }}', '{{ sub.member.biometric_profile.zk_pin|default:sub.member.id }}')" title="Activate 3-tap Fingerprint Scanner on Turnstile">
+                        <i class="fa fa-fingerprint"></i> Finger
+                      </button>
+                    </div>
                   </td>
                 </tr>
               {% empty %}
@@ -314,12 +420,13 @@
                 </tr>
               {% endfor %}
             </tbody>
+          </table>
         </div>
       </div>
     </div>
 
-    <!-- Recent 80mm Thermal Receipts & Invoices (Auto-Cut Ready) -->
-    <div class="fitme-card" style="margin-top: 2rem;">
+    <!-- Recent 80mm Thermal Receipts (Auto-Cut Ready) -->
+    <div class="fitme-card">
       <div class="card-header">
         <div class="card-title">
           <i class="fa fa-print" style="color:var(--neon-lime);"></i>
@@ -332,12 +439,12 @@
           <thead>
             <tr>
               <th>Receipt #</th>
-              <th>Member / Access PIN</th>
+              <th>Member / Biometrics</th>
               <th>Plan</th>
               <th>Amount</th>
               <th>Method</th>
               <th>Cashier</th>
-              <th>Date & Time</th>
+              <th>Date &amp; Time</th>
               <th style="text-align:right;">Actions</th>
             </tr>
           </thead>
@@ -347,7 +454,7 @@
                 <td><span style="font-family:monospace;font-weight:800;color:var(--neon-lime);letter-spacing:0.5px;">{{ r.receipt_number }}</span></td>
                 <td>
                   <div style="font-weight:700;color:var(--text-primary);">{{ r.member.get_full_name|default:r.member.username }}</div>
-                  <div style="font-size:0.75rem;color:var(--text-muted);"><i class="fa fa-key" style="color:var(--neon-lime);font-size:0.7rem;"></i> PIN: #{{ r.member_pin }}</div>
+                  <div style="font-size:0.75rem;color:var(--text-muted);"><i class="fa fa-id-badge" style="color:var(--neon-lime);font-size:0.7rem;"></i> ID: #FM{{ r.member_pin }} • Face &amp; Fingerprint</div>
                 </td>
                 <td><span style="font-weight:600;">{{ r.plan_name }}</span></td>
                 <td style="font-weight:800;color:#fff;">LKR {{ r.amount_paid|floatformat:0 }}</td>
@@ -370,6 +477,87 @@
       </div>
     </div>
   </main>
+</div>
+
+<!-- Face ID WebCam Capture / Upload Modal -->
+<div class="modal-overlay" id="faceModal">
+  <div class="modal-box" style="max-width:520px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+      <h3 style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;display:flex;align-items:center;gap:0.55rem;">
+        <i class="fa fa-camera" style="color:var(--neon-lime);"></i>
+        Enroll Face ID Template
+      </h3>
+      <button onclick="closeFaceModal()" style="background:none;border:none;color:#888;font-size:1.25rem;cursor:pointer;">✕</button>
+    </div>
+
+    <p style="font-size:0.84rem;color:var(--text-muted);margin-bottom:1rem;">
+      Capturing portrait photo for <strong id="faceMemberName" style="color:#fff;">Member</strong> (ID: #FM<span id="faceMemberPin"></span>). This will be synchronized directly to the ZKTeco SpeedFace turnstile terminal.
+    </p>
+
+    <!-- WebCam Stream Area -->
+    <div style="position:relative;width:100%;height:270px;background:#000;border-radius:12px;overflow:hidden;border:2px solid var(--border-color);margin-bottom:1rem;display:flex;align-items:center;justify-content:center;">
+      <video id="webcamVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;"></video>
+      <canvas id="webcamCanvas" style="display:none;"></canvas>
+      <img id="photoPreview" style="display:none;width:100%;height:100%;object-fit:cover;">
+      <div id="cameraPlaceholder" style="display:none;color:var(--text-muted);text-align:center;">
+        <i class="fa fa-video-slash" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>
+        Camera inactive or denied. Select a photo file below.
+      </div>
+    </div>
+
+    <div style="display:flex;gap:0.6rem;margin-bottom:1.25rem;">
+      <button type="button" class="btn-action" style="flex:1;background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.2);justify-content:center;padding:0.6rem;" id="btnSnapPhoto" onclick="snapPhoto()">
+        <i class="fa fa-camera"></i> Snap Photo
+      </button>
+      <button type="button" class="btn-action" style="display:none;background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.2);justify-content:center;padding:0.6rem;" id="btnRetakePhoto" onclick="retakePhoto()">
+        <i class="fa fa-redo"></i> Retake
+      </button>
+    </div>
+
+    <div class="form-group" style="margin-bottom:1rem;">
+      <label style="font-size:0.75rem;">Or Choose Portrait File from Device</label>
+      <input type="file" id="faceFileInput" accept="image/*" class="form-control" onchange="handleFileSelected(event)">
+    </div>
+
+    <div style="display:flex;gap:0.75rem;justify-content:flex-end;border-top:1px solid rgba(255,255,255,0.08);padding-top:1rem;">
+      <button type="button" class="btn-action btn-reject" onclick="closeFaceModal()">Cancel</button>
+      <button type="button" class="btn-action btn-approve" id="btnUploadFace" onclick="submitFacePhoto()" style="padding:0.6rem 1.4rem;">
+        <i class="fa fa-cloud-upload-alt"></i> Sync Face ID to Turnstile
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Fingerprint Turnstile Enrollment Modal -->
+<div class="modal-overlay" id="fingerprintModal">
+  <div class="modal-box" style="text-align:center;max-width:440px;">
+    <div style="width:80px;height:80px;border-radius:50%;background:rgba(118,192,67,0.12);border:2px solid var(--neon-lime);display:flex;align-items:center;justify-content:center;margin:0 auto 1.25rem;box-shadow:0 0 25px var(--neon-glow);">
+      <i class="fa fa-fingerprint" style="font-size:2.8rem;color:var(--neon-lime);animation:livePulse 1.5s infinite;"></i>
+    </div>
+    <h3 style="font-family:'Montserrat',sans-serif;font-weight:900;color:#fff;font-size:1.25rem;margin-bottom:0.4rem;">
+      Turnstile Fingerprint Enrollment
+    </h3>
+    <p style="font-size:0.86rem;color:var(--text-muted);margin-bottom:1.5rem;" id="fpModalText">
+      Connecting to turnstile terminal at 192.168.1.23...
+    </p>
+
+    <div style="background:#181D20;border:1px solid var(--border-color);border-radius:10px;padding:1rem;margin-bottom:1.5rem;text-align:left;">
+      <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;margin-bottom:0.25rem;">Instructions for Member:</div>
+      <ol style="font-size:0.82rem;color:#ccc;padding-left:1.25rem;line-height:1.6;">
+        <li>Approach turnstile terminal optical scanner.</li>
+        <li>Place index finger firmly on the sensor.</li>
+        <li>Lift and press <strong style="color:var(--neon-lime);">3 times</strong> when terminal beeps.</li>
+      </ol>
+    </div>
+
+    <div id="fpStatusIndicator" style="font-weight:800;font-size:0.9rem;color:var(--neon-lime);margin-bottom:1.25rem;">
+      <i class="fa fa-spinner fa-spin"></i> Initializing sensor...
+    </div>
+
+    <button type="button" class="btn-action btn-reject" onclick="closeFingerprintModal()" style="padding:0.5rem 1.5rem;">
+      Close Window
+    </button>
+  </div>
 </div>
 
 <!-- Record Payment Modal -->
@@ -403,7 +591,7 @@
       </div>
       <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.5rem;">
         <button type="button" class="btn-action btn-reject" onclick="closePaymentModal()">Cancel</button>
-        <button type="submit" class="btn-action btn-approve" style="padding:0.5rem 1.2rem;">Confirm & Activate Door Access</button>
+        <button type="submit" class="btn-action btn-approve" style="padding:0.5rem 1.2rem;">Confirm &amp; Activate Door Access</button>
       </div>
     </form>
   </div>
@@ -440,10 +628,10 @@
       <div class="form-group" style="margin-bottom:1.25rem;">
         <label style="display:block;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.35rem;">Primary Fitness Goal</label>
         <select id="intakeGoal" style="width:100%;background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.12);padding:0.65rem 0.85rem;border-radius:8px;font-size:0.88rem;">
-          <option value="muscle_gain">Muscle Gain & Strength</option>
-          <option value="weight_loss">Weight Loss & Conditioning</option>
-          <option value="general_fitness" selected>General Fitness & Longevity</option>
-          <option value="endurance">Endurance & Cardio</option>
+          <option value="muscle_gain">Muscle Gain &amp; Strength</option>
+          <option value="weight_loss">Weight Loss &amp; Conditioning</option>
+          <option value="general_fitness" selected>General Fitness &amp; Longevity</option>
+          <option value="endurance">Endurance &amp; Cardio</option>
           <option value="rehabilitation">Rehabilitation</option>
         </select>
       </div>
@@ -468,14 +656,12 @@
       <button onclick="closeInspectModal()" style="background:none;border:none;color:#888;font-size:1.25rem;cursor:pointer;">✕</button>
     </div>
 
-    <div id="inspectContent" style="font-size:0.86rem;line-height:1.6;">
-      <!-- Populated dynamically via JS -->
-    </div>
+    <div id="inspectContent" style="font-size:0.86rem;line-height:1.6;"></div>
 
     <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.5rem;border-top:1px solid rgba(255,255,255,0.1);padding-top:1rem;">
       <button type="button" class="btn-action btn-reject" onclick="closeInspectModal()">Close</button>
       <button type="button" class="btn-action btn-approve" id="btnApproveFromInspect" style="padding:0.5rem 1.4rem;">
-        <i class="fa fa-check"></i> Approve & Issue PIN
+        <i class="fa fa-check"></i> Approve &amp; Enroll Biometrics
       </button>
     </div>
   </div>
@@ -488,6 +674,12 @@
 </div>
 
 <script>
+  let currentFaceUserId = null;
+  let currentFacePin = null;
+  let webcamStream = null;
+  let capturedPhotoBase64 = null;
+  let fpPollingInterval = null;
+
   function showToast(msg) {
     const toast = document.getElementById('frontToast');
     document.getElementById('frontToastMsg').textContent = msg;
@@ -495,7 +687,420 @@
     setTimeout(() => { toast.style.display = 'none'; }, 4000);
   }
 
-  // Inspect Application Modal Handler
+  // ── 1. Real-time Live Punch Monitor & Floor Counter (Every 3.5 seconds) ──
+  async function pollLivePunches() {
+    try {
+      const [punchRes, floorRes] = await Promise.all([
+        fetch('/api/zkbio/recent-punches/'),
+        fetch('/api/zkbio/floor-status/')
+      ]);
+      const punchData = await punchRes.json();
+      const floorData = await floorRes.json();
+
+      if (floorData) {
+        document.getElementById('floorMembersCount').textContent = floorData.members_on_floor || 0;
+        document.getElementById('floorStaffCount').textContent = floorData.staff_on_floor || 0;
+      }
+
+      if (punchData && punchData.punches) {
+        const tbody = document.getElementById('livePunchesBody');
+        tbody.innerHTML = '';
+
+        if (punchData.punches.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted);">Waiting for biometric turnstile scans...</td></tr>';
+          return;
+        }
+
+        punchData.punches.forEach(p => {
+          let methodBadge = '<span class="badge badge-green"><i class="fa fa-smile"></i> Face ID</span>';
+          if (p.verify_mode === 'FINGERPRINT') {
+            methodBadge = '<span class="badge badge-cyan"><i class="fa fa-fingerprint"></i> Fingerprint</span>';
+          } else if (p.verify_mode === 'BUZZER') {
+            methodBadge = '<span class="badge badge-yellow"><i class="fa fa-bolt"></i> Manual Remote</span>';
+          }
+
+          let decisionBadge = '<span class="badge badge-green"><i class="fa fa-check-circle"></i> ' + p.event_type + ' GRANTED</span>';
+          if (p.event_type === 'ANTI_PASSBACK') {
+            decisionBadge = '<span class="badge badge-yellow"><i class="fa fa-history"></i> ANTI-PASSBACK (60s)</span>';
+          } else if (!p.allowed) {
+            decisionBadge = '<span class="badge badge-red" title="' + (p.reason || '') + '"><i class="fa fa-times-circle"></i> DENIED: ' + (p.reason || 'Expired') + '</span>';
+          }
+
+          const photoHtml = p.photo_url
+            ? `<img src="${p.photo_url}" style="width:28px;height:28px;border-radius:50%;object-fit:cover;border:1px solid var(--neon-lime);">`
+            : `<div style="width:28px;height:28px;border-radius:50%;background:#1F2428;display:flex;align-items:center;justify-content:center;color:#888;font-size:0.7rem;"><i class="fa fa-user"></i></div>`;
+
+          const row = document.createElement('tr');
+          row.innerHTML = `
+            <td style="color:var(--text-muted);font-family:monospace;font-size:0.8rem;">${p.punch_time}</td>
+            <td>
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                ${photoHtml}
+                <div>
+                  <div style="font-weight:700;color:#fff;">${p.full_name}</div>
+                  <div style="font-size:0.72rem;color:var(--text-muted);">ID: #FM${p.user_name}</div>
+                </div>
+              </div>
+            </td>
+            <td>${methodBadge}</td>
+            <td><span style="font-size:0.8rem;color:#ccc;">${p.plan_name}</span></td>
+            <td>${decisionBadge}</td>
+            <td style="font-size:0.75rem;color:var(--text-muted);">${p.terminal_name}</td>
+          `;
+          tbody.appendChild(row);
+        });
+      }
+    } catch (e) {
+      console.warn("Live punch poll error:", e);
+    }
+  }
+
+  setInterval(pollLivePunches, 3500);
+
+  // ── 2. Face ID WebCam Capture & Hardware Upload ──
+  async function openFaceModal(userId, fullName, pin) {
+    currentFaceUserId = userId;
+    currentFacePin = pin;
+    capturedPhotoBase64 = null;
+    document.getElementById('faceMemberName').textContent = fullName;
+    document.getElementById('faceMemberPin').textContent = pin;
+    document.getElementById('faceModal').style.display = 'flex';
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('webcamVideo').style.display = 'block';
+    document.getElementById('btnSnapPhoto').style.display = 'inline-flex';
+    document.getElementById('btnRetakePhoto').style.display = 'none';
+
+    try {
+      webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
+      const video = document.getElementById('webcamVideo');
+      video.srcObject = webcamStream;
+      document.getElementById('cameraPlaceholder').style.display = 'none';
+    } catch (err) {
+      console.warn("WebCam access unavailable:", err);
+      document.getElementById('cameraPlaceholder').style.display = 'block';
+      document.getElementById('webcamVideo').style.display = 'none';
+      document.getElementById('btnSnapPhoto').style.display = 'none';
+    }
+  }
+
+  function snapPhoto() {
+    const video = document.getElementById('webcamVideo');
+    const canvas = document.getElementById('webcamCanvas');
+    const preview = document.getElementById('photoPreview');
+
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    capturedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.9);
+    preview.src = capturedPhotoBase64;
+    preview.style.display = 'block';
+    video.style.display = 'none';
+
+    document.getElementById('btnSnapPhoto').style.display = 'none';
+    document.getElementById('btnRetakePhoto').style.display = 'inline-flex';
+  }
+
+  function retakePhoto() {
+    capturedPhotoBase64 = null;
+    document.getElementById('photoPreview').style.display = 'none';
+    document.getElementById('webcamVideo').style.display = 'block';
+    document.getElementById('btnSnapPhoto').style.display = 'inline-flex';
+    document.getElementById('btnRetakePhoto').style.display = 'none';
+  }
+
+  function handleFileSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      capturedPhotoBase64 = evt.target.result;
+      const preview = document.getElementById('photoPreview');
+      preview.src = capturedPhotoBase64;
+      preview.style.display = 'block';
+      document.getElementById('webcamVideo').style.display = 'none';
+      document.getElementById('btnSnapPhoto').style.display = 'none';
+      document.getElementById('btnRetakePhoto').style.display = 'inline-flex';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function closeFaceModal() {
+    if (webcamStream) {
+      webcamStream.getTracks().forEach(t => t.stop());
+      webcamStream = null;
+    }
+    document.getElementById('faceModal').style.display = 'none';
+  }
+
+  async function submitFacePhoto() {
+    if (!capturedPhotoBase64) {
+      alert("Please snap a webcam photo or select an image file first.");
+      return;
+    }
+
+    const btn = document.getElementById('btnUploadFace');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Syncing to Turnstile...';
+
+    try {
+      const res = await fetch('/api/zkbio/upload-face/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          user_id: currentFaceUserId,
+          pin: currentFacePin,
+          photo_base64: capturedPhotoBase64
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("Face ID template enrolled and synced to turnstile terminal!");
+        closeFaceModal();
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        alert("Upload failed: " + (data.error || "Unknown error"));
+      }
+    } catch (e) {
+      alert("Face ID sync failed: " + e);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-cloud-upload-alt"></i> Sync Face ID to Turnstile';
+    }
+  }
+
+  // ── 3. Fingerprint Turnstile Optical Enrollment Trigger ──
+  async function enrollFingerprint(userId, memberName, pin) {
+    document.getElementById('fpModalText').textContent = `Initiating 3-tap fingerprint capture on turnstile (192.168.1.23) for ${memberName}...`;
+    document.getElementById('fpStatusIndicator').innerHTML = '<i class="fa fa-spinner fa-spin"></i> Contacting terminal...';
+    document.getElementById('fingerprintModal').style.display = 'flex';
+
+    try {
+      const res = await fetch('/api/zkbio/enroll-fingerprint/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ user_id: userId, pin: pin })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        document.getElementById('fpStatusIndicator').innerHTML = `<span style="color:var(--danger);">Error: ${data.error}</span>`;
+        return;
+      }
+
+      const cmdId = data.command_id;
+      document.getElementById('fpStatusIndicator').innerHTML = '<i class="fa fa-fingerprint fa-beat" style="color:var(--neon-lime);"></i> Terminal Ready! Please have member touch sensor 3 times...';
+
+      // Poll command status
+      let attempts = 0;
+      if (fpPollingInterval) clearInterval(fpPollingInterval);
+      fpPollingInterval = setInterval(async () => {
+        attempts++;
+        if (attempts > 25) { // 35 seconds max
+          clearInterval(fpPollingInterval);
+          document.getElementById('fpStatusIndicator').innerHTML = '<span style="color:var(--warning);">Enrollment timed out. Please try again.</span>';
+          return;
+        }
+
+        try {
+          const pollRes = await fetch(`/api/zkbio/command-status/${cmdId}/`);
+          const pollData = await pollRes.json();
+          if (pollData.status === 'COMPLETED') {
+            clearInterval(fpPollingInterval);
+            document.getElementById('fpStatusIndicator').innerHTML = '<i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:1.5rem;"></i><br>Fingerprint Enrolled Successfully!';
+            showToast("Fingerprint template enrolled on turnstile terminal!");
+            setTimeout(() => {
+              closeFingerprintModal();
+              location.reload();
+            }, 1800);
+          } else if (pollData.status === 'FAILED') {
+            clearInterval(fpPollingInterval);
+            document.getElementById('fpStatusIndicator').innerHTML = `<span style="color:var(--danger);">Enrollment failed: ${pollData.result_message}</span>`;
+          }
+        } catch (pe) {
+          console.warn("Poll error", pe);
+        }
+      }, 1500);
+
+    } catch (e) {
+      document.getElementById('fpStatusIndicator').innerHTML = `<span style="color:var(--danger);">Failed to dispatch command: ${e}</span>`;
+    }
+  }
+
+  function closeFingerprintModal() {
+    if (fpPollingInterval) clearInterval(fpPollingInterval);
+    document.getElementById('fingerprintModal').style.display = 'none';
+  }
+
+  // ── 4. Emergency Remote Buzzer ──
+  async function buzzTurnstile() {
+    const btn = document.getElementById('btnFrontBuzzer');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> BUZZING...';
+    try {
+      const res = await fetch('/api/zkbio/remote-buzzer/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      showToast(data.message || "Turnstile buzzer pulsed for 5 seconds!");
+      pollLivePunches();
+    } catch (e) {
+      alert("Buzzer failed: " + e);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-door-open"></i> BUZZ DOOR OPEN (5s)';
+    }
+  }
+
+  // ── 5. Application Approval & Rejection ──
+  async function approveApp(appId) {
+    if (!confirm("Approve application, create member login, and assign biometric credentials?")) return;
+    try {
+      const res = await fetch(`/dashboard/api/applications/${appId}/approve/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Approved! User '${data.username}' created. Member ID: #FM${data.pin}`);
+        const row = document.getElementById(`app-row-${appId}`);
+        if (row) {
+          row.style.background = 'rgba(118,192,67,0.15)';
+          setTimeout(() => { row.remove(); }, 600);
+        }
+        if (data.receipt_id) {
+          setTimeout(() => {
+            if (confirm(`Do you want to print the 80mm thermal receipt (${data.receipt_number}) now?`)) {
+              printReceipt(data.receipt_id);
+            }
+          }, 350);
+        }
+      } else {
+        alert("Error: " + data.error);
+      }
+    } catch (e) {
+      alert("Request failed: " + e);
+    }
+  }
+
+  async function rejectApp(appId) {
+    const reason = prompt("Enter reason for rejection:", "Did not meet requirements");
+    if (!reason) return;
+    try {
+      const res = await fetch(`/dashboard/api/applications/${appId}/reject/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("Application rejected.");
+        const row = document.getElementById(`app-row-${appId}`);
+        if (row) row.remove();
+      }
+    } catch (e) {
+      alert("Error: " + e);
+    }
+  }
+
+  // ── 6. Intake & Payments ──
+  function openIntakeModal() { document.getElementById('intakeModal').style.display = 'flex'; }
+  function closeIntakeModal() { document.getElementById('intakeModal').style.display = 'none'; }
+
+  async function submitIntake(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitIntake');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
+
+    const payload = {
+      full_name: document.getElementById('intakeFullName').value,
+      email: document.getElementById('intakeEmail').value,
+      phone: document.getElementById('intakePhone').value,
+      plan_id: document.getElementById('intakePlanId').value,
+      primary_goal: document.getElementById('intakeGoal').value
+    };
+
+    try {
+      const res = await fetch('/dashboard/api/applications/create/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeIntakeModal();
+        document.getElementById('intakeForm').reset();
+        showToast(data.message);
+        setTimeout(() => location.reload(), 1000);
+      } else {
+        alert("Error: " + data.error);
+      }
+    } catch (err) {
+      alert("Submission failed: " + err);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-paper-plane"></i> Add to Intake Queue';
+    }
+  }
+
+  function printReceipt(receiptId) {
+    if (!receiptId) return;
+    const printUrl = `/receipt/${receiptId}/?autoprint=1`;
+    window.open(printUrl, '_blank', 'width=380,height=650,top=50,left=100,scrollbars=yes');
+  }
+
+  function openPaymentModal() { document.getElementById('paymentModal').style.display = 'flex'; }
+  function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; }
+
+  async function submitPayment(e) {
+    e.preventDefault();
+    const memberId = document.getElementById('payMemberId').value;
+    const planId = document.getElementById('payPlanId').value;
+    const paymentMethod = document.getElementById('payMethod').value;
+
+    try {
+      const res = await fetch('/dashboard/api/record-payment/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ member_id: memberId, plan_id: planId, payment_method: paymentMethod })
+      });
+      const data = await res.json();
+      if (data.success) {
+        closePaymentModal();
+        showToast(data.message);
+        if (data.receipt_id) {
+          printReceipt(data.receipt_id);
+        }
+        setTimeout(() => location.reload(), 1500);
+      }
+    } catch (err) {
+      alert("Payment failed: " + err);
+    }
+  }
+
   function inspectApp(id, name, nic, phone, email, address, gender, blood, emName, emRel, emPhone, plan, duration, goal, hasMed, medDetails, underMeds, medsDetails, trainerNeeded, admFee, monFee, disc, total, payMethod) {
     const content = document.getElementById('inspectContent');
     content.innerHTML = `
@@ -552,214 +1157,6 @@
 
   function closeInspectModal() {
     document.getElementById('inspectAppModal').style.display = 'none';
-  }
-
-  // Intake Modal Handlers
-  function openIntakeModal() {
-    document.getElementById('intakeModal').style.display = 'flex';
-  }
-  function closeIntakeModal() {
-    document.getElementById('intakeModal').style.display = 'none';
-  }
-
-  async function submitIntake(e) {
-    e.preventDefault();
-    const btn = document.getElementById('btnSubmitIntake');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Submitting...';
-
-    const payload = {
-      full_name: document.getElementById('intakeFullName').value,
-      email: document.getElementById('intakeEmail').value,
-      phone: document.getElementById('intakePhone').value,
-      plan_id: document.getElementById('intakePlanId').value,
-      primary_goal: document.getElementById('intakeGoal').value
-    };
-
-    try {
-      const res = await fetch('/dashboard/api/applications/create/', {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': '{{ csrf_token }}',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-      const data = await res.json();
-      if (data.success) {
-        closeIntakeModal();
-        document.getElementById('intakeForm').reset();
-        showToast(data.message);
-
-        // Dynamically add row to intake queue table
-        const tbody = document.querySelector('#applicationsTable tbody');
-        const noRow = document.getElementById('noAppsRow');
-        if (noRow) noRow.remove();
-
-        const app = data.application;
-        const tr = document.createElement('tr');
-        tr.id = `app-row-${app.id}`;
-        tr.style.background = 'rgba(118,192,67,0.08)';
-        tr.innerHTML = `
-          <td>
-            <div style="font-weight:700;color:var(--text-primary);">${app.full_name}</div>
-            <div style="font-size:0.75rem;color:var(--text-muted);">${app.email} • ${app.phone}</div>
-          </td>
-          <td><span style="color:var(--neon-lime);font-weight:700;">${app.plan_name}</span></td>
-          <td>${app.primary_goal.replace('_', ' ').toUpperCase()}</td>
-          <td style="text-align:right;">
-            <div style="display:inline-flex;gap:0.45rem;">
-              <button class="btn-action btn-approve" onclick="approveApp(${app.id})">
-                <i class="fa fa-check"></i> Approve & Issue PIN
-              </button>
-              <button class="btn-action btn-reject" onclick="rejectApp(${app.id})">
-                <i class="fa fa-times"></i>
-              </button>
-            </div>
-          </td>
-        `;
-        tbody.prepend(tr);
-
-        // Update badge count
-        const badge = document.getElementById('appCount');
-        if (badge) {
-          const count = parseInt(badge.textContent) || 0;
-          badge.textContent = `${count + 1} PENDING`;
-        }
-      } else {
-        alert("Error: " + data.error);
-      }
-    } catch (err) {
-      alert("Submission failed: " + err);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa fa-paper-plane"></i> Add to Intake Queue';
-    }
-  }
-
-  // 80mm Thermal Receipt Pop-up Trigger
-  function printReceipt(receiptId) {
-    if (!receiptId) return;
-    const printUrl = `/receipt/${receiptId}/?autoprint=1`;
-    window.open(printUrl, '_blank', 'width=380,height=650,top=50,left=100,scrollbars=yes');
-  }
-
-  // 1. Dynamic Application Approval
-  async function approveApp(appId) {
-    if (!confirm("Approve application, create member login, and assign turnstile biometric PIN?")) return;
-    try {
-      const res = await fetch(`/dashboard/api/applications/${appId}/approve/`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': '{{ csrf_token }}',
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast(`Approved! User '${data.username}' created. Hardware PIN: #${data.pin}`);
-        const row = document.getElementById(`app-row-${appId}`);
-        if (row) {
-          row.style.background = 'rgba(118,192,67,0.15)';
-          setTimeout(() => { row.remove(); }, 600);
-        }
-        if (data.receipt_id) {
-          setTimeout(() => {
-            if (confirm(`Do you want to print the 80mm thermal receipt (${data.receipt_number}) now?`)) {
-              printReceipt(data.receipt_id);
-            }
-          }, 350);
-        }
-      } else {
-        alert("Error: " + data.error);
-      }
-    } catch (e) {
-      alert("Request failed: " + e);
-    }
-  }
-
-  // 2. Dynamic Application Rejection
-  async function rejectApp(appId) {
-    const reason = prompt("Enter reason for rejection:", "Did not meet requirements");
-    if (!reason) return;
-    try {
-      const res = await fetch(`/dashboard/api/applications/${appId}/reject/`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': '{{ csrf_token }}',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ reason })
-      });
-      const data = await res.json();
-      if (data.success) {
-        showToast("Application rejected.");
-        const row = document.getElementById(`app-row-${appId}`);
-        if (row) row.remove();
-      }
-    } catch (e) {
-      alert("Error: " + e);
-    }
-  }
-
-  // 3. Emergency Turnstile Buzzer
-  async function buzzTurnstile() {
-    const btn = document.getElementById('btnFrontBuzzer');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> BUZZING...';
-    try {
-      const res = await fetch('/api/zkbio/remote-buzzer/', {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': '{{ csrf_token }}',
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await res.json();
-      showToast(data.message || "Turnstile buzzer pulsed for 5 seconds!");
-    } catch (e) {
-      alert("Buzzer failed: " + e);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa fa-door-open"></i> BUZZ DOOR OPEN';
-    }
-  }
-
-  // 4. Modal and Payment Recording
-  function openPaymentModal() {
-    document.getElementById('paymentModal').style.display = 'flex';
-  }
-  function closePaymentModal() {
-    document.getElementById('paymentModal').style.display = 'none';
-  }
-
-  async function submitPayment(e) {
-    e.preventDefault();
-    const memberId = document.getElementById('payMemberId').value;
-    const planId = document.getElementById('payPlanId').value;
-    const paymentMethod = document.getElementById('payMethod').value;
-
-    try {
-      const res = await fetch('/dashboard/api/record-payment/', {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': '{{ csrf_token }}',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ member_id: memberId, plan_id: planId, payment_method: paymentMethod })
-      });
-      const data = await res.json();
-      if (data.success) {
-        closePaymentModal();
-        showToast(data.message);
-        if (data.receipt_id) {
-          printReceipt(data.receipt_id);
-        }
-        setTimeout(() => location.reload(), 1500);
-      }
-    } catch (err) {
-      alert("Payment failed: " + err);
-    }
   }
 </script>
 </body>

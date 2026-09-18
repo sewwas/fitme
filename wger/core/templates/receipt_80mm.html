@@ -262,11 +262,12 @@
     </tr>
   </table>
 
-  <!-- Turnstile Biometric Access PIN Box -->
+  <!-- Biometric Turnstile Access Verification -->
   <div class="pin-box">
-    <div class="pin-title">TURNSTILE ACCESS PIN</div>
-    <div class="pin-value">#{{ receipt.member_pin }}</div>
-    <div style="font-size:9px;font-weight:700;">STATUS: DOOR ACCESS ACTIVE</div>
+    <div class="pin-title">BIOMETRIC ACCESS CREDENTIAL</div>
+    <div class="pin-value" style="font-size:13px;letter-spacing:1px;">FACE ID &amp; FINGERPRINT</div>
+    <div style="font-size:9px;font-weight:700;margin-top:2px;">MEMBER ID: #FM{{ receipt.member_pin }}</div>
+    <div style="font-size:8px;font-weight:600;color:#222;margin-top:1px;">NO KEYPAD PIN REQUIRED — SCAN FACE OR FINGERPRINT</div>
   </div>
 
   <!-- Purchased Items Table -->
@@ -325,9 +326,9 @@
   <div class="footer">
     <div class="bold" style="font-size:10px;margin-bottom:2px;">THANK YOU FOR TRAINING WITH US!</div>
     Please keep this receipt for entrance verification.<br>
-    Pass valid with hardware PIN #{{ receipt.member_pin }}.<br>
+    Gate access via automated Face Recognition &amp; Optical Fingerprint.<br>
     Anti-passback cooldown: 60 seconds.<br>
-    Fees non-refundable & non-transferable.<br>
+    Fees non-refundable &amp; non-transferable.<br>
     Powered by Fit Me Smart Gym OS
   </div>
 

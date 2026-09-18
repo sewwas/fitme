@@ -167,14 +167,16 @@ def super_admin_dashboard(request):
 @login_required
 @role_required('front_desk', 'super_admin')
 def front_desk_dashboard(request):
-    """Front Desk — member queue, payments, and 80mm thermal receipts."""
+    """Front Desk — member queue, biometric enrollment, live turnstile monitor, payments, and 80mm thermal receipts."""
     from wger.gym_operations_payroll.models import PaymentReceipt
+    from wger.zkbio_integration.models import DoorAccessLog
     pending_apps = MemberApplication.objects.filter(status='pending').order_by('-applied_at')
     active_subs = Subscription.objects.filter(
         status='active',
         end_date__gte=timezone.now().date()
-    ).select_related('member', 'plan').order_by('end_date')[:15]
+    ).select_related('member', 'plan', 'member__biometric_profile', 'member__member_profile').order_by('end_date')[:25]
     recent_receipts = PaymentReceipt.objects.select_related('member', 'cashier').order_by('-issued_at')[:20]
+    recent_punches = DoorAccessLog.objects.select_related('user', 'user__member_profile').order_by('-punch_time')[:10]
 
     context = {
         'role': 'front_desk',
@@ -189,8 +191,10 @@ def front_desk_dashboard(request):
         'active_subscriptions': active_subs,
         'plans': MembershipPlan.objects.filter(is_active=True),
         'recent_receipts': recent_receipts,
+        'recent_door_punches': recent_punches,
     }
     return render(request, 'dashboards/front_desk.html', context)
+
 
 
 @login_required
