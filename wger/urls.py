@@ -304,8 +304,8 @@ urlpatterns += [
     path('en/user/login', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/user/login', permanent=False)),
     path('en/user/login/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/user/login', permanent=False)),
 
-    # ── Fit Me Role Dashboards ──
-    path('fitme/dashboard/', include(([
+    # ── Fit Me Role Dashboards (Clean URLs) ──
+    path('dashboard/', include(([
         path('', __import__('wger.core.views.fitme_dashboards', fromlist=['dashboard_redirect']).dashboard_redirect, name='fitme-dashboard'),
         path('admin/', __import__('wger.core.views.fitme_dashboards', fromlist=['super_admin_dashboard']).super_admin_dashboard, name='fitme-admin'),
         path('front-desk/', __import__('wger.core.views.fitme_dashboards', fromlist=['front_desk_dashboard']).front_desk_dashboard, name='fitme-front-desk'),
@@ -322,11 +322,19 @@ urlpatterns += [
         path('api/alerts/<int:alert_id>/resolve/', __import__('wger.core.views.fitme_dashboards', fromlist=['resolve_absence_alert_api']).resolve_absence_alert_api, name='api-alert-resolve'),
     ], 'fitme'))),
 
-    # ── Fit Me 80mm Thermal Receipt View ──
-    path('fitme/receipt/<int:receipt_id>/', __import__('wger.core.views.fitme_dashboards', fromlist=['view_receipt']).view_receipt, name='fitme-receipt'),
+    # ── Legacy /fitme/ Redirects to clean routes ──
+    path('fitme/dashboard/admin/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/dashboard/admin/', permanent=False)),
+    path('fitme/dashboard/front-desk/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/dashboard/front-desk/', permanent=False)),
+    path('fitme/dashboard/coach/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/dashboard/coach/', permanent=False)),
+    path('fitme/dashboard/member/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/dashboard/member/', permanent=False)),
+    path('fitme/dashboard/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/dashboard/', permanent=False)),
+    path('fitme/register/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/register/', permanent=False)),
+    path('fitme/receipt/<int:receipt_id>/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/receipt/%(receipt_id)s/', permanent=False)),
 
-    # ── Fit Me Official Membership Registration Form ──
-    path('fitme/register/', __import__('wger.core.views.fitme_dashboards', fromlist=['public_registration_view']).public_registration_view, name='fitme-register'),
+    # ── Fit Me 80mm Thermal Receipt View (Clean URL: /receipt/<id>/) ──
+    path('receipt/<int:receipt_id>/', __import__('wger.core.views.fitme_dashboards', fromlist=['view_receipt']).view_receipt, name='receipt-view'),
+
+    # ── Fit Me Official Membership Registration Form (Clean URL: /register/) ──
     path('register/', __import__('wger.core.views.fitme_dashboards', fromlist=['public_registration_view']).public_registration_view, name='public-register'),
 
     # ── Fit Me Hardware & Operations Integrations ──

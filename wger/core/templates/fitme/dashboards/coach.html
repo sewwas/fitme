@@ -157,7 +157,7 @@
   </div>
   <div style="display:flex;align-items:center;gap:1.25rem;color:var(--text-muted);font-size:0.88rem;">
     <span><i class="fa fa-user-circle"></i> Coach {{ request.user.username }}</span>
-    <a href="/fitme/dashboard/admin/" style="color:var(--text-muted);text-decoration:none;"><i class="fa fa-shield-alt"></i> Super Admin</a>
+    <a href="/dashboard/admin/" style="color:var(--text-muted);text-decoration:none;"><i class="fa fa-shield-alt"></i> Super Admin</a>
     <form method="post" action="/account/logout/" style="display:inline;">{% csrf_token %}
       <button type="submit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;"><i class="fa fa-sign-out-alt"></i> Logout</button>
     </form>
@@ -167,11 +167,11 @@
 <div class="layout">
   <aside class="sidebar">
     <div class="sidebar-section">Coaching Tools</div>
-    <a href="/fitme/dashboard/coach/" class="active"><i class="fa fa-dumbbell"></i> Roster & Meals</a>
-    <a href="/fitme/dashboard/member/"><i class="fa fa-user"></i> Member Portal View</a>
+    <a href="/dashboard/coach/" class="active"><i class="fa fa-dumbbell"></i> Roster & Meals</a>
+    <a href="/dashboard/member/"><i class="fa fa-user"></i> Member Portal View</a>
     <div class="sidebar-section" style="margin-top:1rem;">Role Navigation</div>
-    <a href="/fitme/dashboard/front-desk/"><i class="fa fa-id-card"></i> Front Desk</a>
-    <a href="/fitme/dashboard/admin/"><i class="fa fa-chart-line"></i> Super Admin</a>
+    <a href="/dashboard/front-desk/"><i class="fa fa-id-card"></i> Front Desk</a>
+    <a href="/dashboard/admin/"><i class="fa fa-chart-line"></i> Super Admin</a>
   </aside>
 
   <main class="main">
@@ -314,7 +314,7 @@
       btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
     }
     try {
-      const res = await fetch(`/fitme/dashboard/api/members/${memberId}/ping/`, {
+      const res = await fetch(`/dashboard/api/members/${memberId}/ping/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': '{{ csrf_token }}',
@@ -356,7 +356,7 @@
     const feedback = document.getElementById('coachFeedbackText').value;
 
     try {
-      const res = await fetch(`/fitme/dashboard/api/meals/${activeMealId}/review/`, {
+      const res = await fetch(`/dashboard/api/meals/${activeMealId}/review/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': '{{ csrf_token }}',

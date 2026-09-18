@@ -165,7 +165,7 @@
   </div>
   <div style="display:flex;align-items:center;gap:1.25rem;color:var(--text-muted);font-size:0.88rem;">
     <span><i class="fa fa-user-circle"></i> {{ request.user.username }}</span>
-    <a href="/fitme/dashboard/admin/" style="color:var(--text-muted);text-decoration:none;"><i class="fa fa-shield-alt"></i> Super Admin</a>
+    <a href="/dashboard/admin/" style="color:var(--text-muted);text-decoration:none;"><i class="fa fa-shield-alt"></i> Super Admin</a>
     <form method="post" action="/account/logout/" style="display:inline;">{% csrf_token %}
       <button type="submit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;"><i class="fa fa-sign-out-alt"></i> Logout</button>
     </form>
@@ -175,11 +175,11 @@
 <div class="layout">
   <aside class="sidebar">
     <div class="sidebar-section">Front Desk Ops</div>
-    <a href="/fitme/dashboard/front-desk/" class="active"><i class="fa fa-inbox"></i> Intake Queue</a>
+    <a href="/dashboard/front-desk/" class="active"><i class="fa fa-inbox"></i> Intake Queue</a>
     <a href="#" onclick="openPaymentModal(); return false;"><i class="fa fa-credit-card"></i> Record Payment</a>
-    <a href="/fitme/dashboard/member/"><i class="fa fa-id-badge"></i> Member Portal View</a>
+    <a href="/dashboard/member/"><i class="fa fa-id-badge"></i> Member Portal View</a>
     <div class="sidebar-section" style="margin-top:1rem;">System Links</div>
-    <a href="/fitme/dashboard/admin/"><i class="fa fa-chart-line"></i> Super Admin</a>
+    <a href="/dashboard/admin/"><i class="fa fa-chart-line"></i> Super Admin</a>
     <a href="/admin/"><i class="fa fa-cog"></i> Django Backend</a>
   </aside>
 
@@ -577,7 +577,7 @@
     };
 
     try {
-      const res = await fetch('/fitme/dashboard/api/applications/create/', {
+      const res = await fetch('/dashboard/api/applications/create/', {
         method: 'POST',
         headers: {
           'X-CSRFToken': '{{ csrf_token }}',
@@ -640,7 +640,7 @@
   // 80mm Thermal Receipt Pop-up Trigger
   function printReceipt(receiptId) {
     if (!receiptId) return;
-    const printUrl = `/fitme/receipt/${receiptId}/?autoprint=1`;
+    const printUrl = `/receipt/${receiptId}/?autoprint=1`;
     window.open(printUrl, '_blank', 'width=380,height=650,top=50,left=100,scrollbars=yes');
   }
 
@@ -648,7 +648,7 @@
   async function approveApp(appId) {
     if (!confirm("Approve application, create member login, and assign turnstile biometric PIN?")) return;
     try {
-      const res = await fetch(`/fitme/dashboard/api/applications/${appId}/approve/`, {
+      const res = await fetch(`/dashboard/api/applications/${appId}/approve/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': '{{ csrf_token }}',
@@ -683,7 +683,7 @@
     const reason = prompt("Enter reason for rejection:", "Did not meet requirements");
     if (!reason) return;
     try {
-      const res = await fetch(`/fitme/dashboard/api/applications/${appId}/reject/`, {
+      const res = await fetch(`/dashboard/api/applications/${appId}/reject/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': '{{ csrf_token }}',
@@ -740,7 +740,7 @@
     const paymentMethod = document.getElementById('payMethod').value;
 
     try {
-      const res = await fetch('/fitme/dashboard/api/record-payment/', {
+      const res = await fetch('/dashboard/api/record-payment/', {
         method: 'POST',
         headers: {
           'X-CSRFToken': '{{ csrf_token }}',

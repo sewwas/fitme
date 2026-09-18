@@ -789,13 +789,13 @@ def get_role_dashboard(user):
     """
     group_names = set(user.groups.values_list('name', flat=True))
     if 'super_admin' in group_names or user.is_superuser:
-        return '/fitme/dashboard/admin/'
+        return '/dashboard/admin/'
     elif 'front_desk' in group_names:
-        return '/fitme/dashboard/front-desk/'
+        return '/dashboard/front-desk/'
     elif 'coach' in group_names:
-        return '/fitme/dashboard/coach/'
+        return '/dashboard/coach/'
     elif 'member' in group_names:
-        return '/fitme/dashboard/member/'
+        return '/dashboard/member/'
     # Fallback: default wger dashboard
     return reverse('core:dashboard')
 

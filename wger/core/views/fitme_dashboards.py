@@ -21,7 +21,7 @@ def role_required(*roles):
     def decorator(view_func):
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
-                return redirect('/en/user/login')
+                return redirect(f'/user/login?next={request.path}')
             user_groups = set(request.user.groups.values_list('name', flat=True))
             if request.user.is_superuser or user_groups.intersection(roles):
                 return view_func(request, *args, **kwargs)
@@ -504,7 +504,7 @@ def approve_application_api(request, app_id):
         'sub_id': sub.id,
         'receipt_id': receipt.id,
         'receipt_number': receipt.receipt_number,
-        'receipt_url': f"/fitme/receipt/{receipt.id}/?autoprint=1"
+        'receipt_url': f"/receipt/{receipt.id}/?autoprint=1"
     })
 
 
@@ -609,7 +609,7 @@ def record_payment_api(request):
         'message': f"Payment recorded for {member.username}. Subscription active until {sub.end_date:%d %b %Y}.",
         'receipt_id': receipt.id,
         'receipt_number': receipt.receipt_number,
-        'receipt_url': f"/fitme/receipt/{receipt.id}/?autoprint=1"
+        'receipt_url': f"/receipt/{receipt.id}/?autoprint=1"
     })
 
 

@@ -339,7 +339,7 @@
   </div>
 
   <div class="topbar-right">
-    <a href="/fitme/dashboard/"><i class="fa fa-th-large"></i> Role Hub</a>
+    <a href="/dashboard/"><i class="fa fa-th-large"></i> Role Hub</a>
     <a href="/en/dashboard"><i class="fa fa-dumbbell"></i> Workout Portal</a>
     <form method="post" action="/account/logout/" style="display:inline;">{% csrf_token %}
       <button type="submit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;"><i class="fa fa-sign-out-alt"></i> Logout</button>
@@ -351,10 +351,10 @@
   <!-- ── Sidebar ── -->
   <aside class="sidebar">
     <div class="sidebar-section">Main Operations</div>
-    <a href="/fitme/dashboard/admin/" class="active"><i class="fa fa-tachometer-alt"></i> Overview</a>
-    <a href="/fitme/dashboard/front-desk/"><i class="fa fa-id-card"></i> Front Desk Queue</a>
-    <a href="/fitme/dashboard/coach/"><i class="fa fa-user-ninja"></i> Coaches</a>
-    <a href="/fitme/dashboard/member/"><i class="fa fa-user"></i> Member View</a>
+    <a href="/dashboard/admin/" class="active"><i class="fa fa-tachometer-alt"></i> Overview</a>
+    <a href="/dashboard/front-desk/"><i class="fa fa-id-card"></i> Front Desk Queue</a>
+    <a href="/dashboard/coach/"><i class="fa fa-user-ninja"></i> Coaches</a>
+    <a href="/dashboard/member/"><i class="fa fa-user"></i> Member View</a>
 
     <div class="sidebar-section" style="margin-top:1rem;">Hardware & Payroll</div>
     <a href="/api/zkbio/floor-status/" target="_blank"><i class="fa fa-network-wired"></i> ZKBio Status</a>
@@ -572,7 +572,7 @@
   async function resolveAlert(alertId) {
     if (!confirm("Acknowledge and mark this staff absence alert as resolved?")) return;
     try {
-      const res = await fetch(`/fitme/dashboard/api/alerts/${alertId}/resolve/`, {
+      const res = await fetch(`/dashboard/api/alerts/${alertId}/resolve/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': '{{ csrf_token }}',

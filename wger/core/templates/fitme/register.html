@@ -711,7 +711,7 @@
       formData.set('primary_goal', goals.join(', '));
 
       try {
-        const res = await fetch('/fitme/register/', {
+        const res = await fetch('/register/', {
           method: 'POST',
           body: formData
         });
