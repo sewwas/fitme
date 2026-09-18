@@ -56,7 +56,7 @@ export function FinalCTA() {
             </div>
 
             <SecondaryButton
-              href="http://127.0.0.1:8000/dashboard/member/"
+              href="/dashboard/member/"
               size="lg"
               fullWidth
               className="sm:w-auto"

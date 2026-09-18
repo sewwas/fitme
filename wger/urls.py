@@ -24,7 +24,8 @@ from django.contrib.sitemaps.views import (
     index,
     sitemap,
 )
-from django.urls import path
+import os
+from django.urls import path, re_path
 
 # Third Party
 from drf_spectacular.views import (
@@ -353,6 +354,14 @@ urlpatterns += [
     # ── Fit Me Hardware & Operations Integrations ──
     path('api/zkbio/', include(('wger.zkbio_integration.urls', 'zkbio_integration'), namespace='zkbio_integration')),
     path('operations/', include(('wger.gym_operations_payroll.urls', 'gym_operations_payroll'), namespace='gym_operations_payroll')),
+
+    # ── Next.js Homepage Static Assets ──
+    re_path(r'^_next/(?P<path>.*)$', __import__('django.views.static', fromlist=['serve']).serve, {
+        'document_root': str(__import__('pathlib').Path(__file__).resolve().parents[1] / 'fitme-ui' / 'out' / '_next')
+    }),
+    re_path(r'^images/(?P<path>.*)$', __import__('django.views.static', fromlist=['serve']).serve, {
+        'document_root': str(__import__('pathlib').Path(__file__).resolve().parents[1] / 'fitme-ui' / 'out' / 'images')
+    }),
 
     path('i18n/', include('django.conf.urls.i18n')),
     path('robots.txt', TextTemplateView.as_view(template_name='robots.txt'), name='robots'),

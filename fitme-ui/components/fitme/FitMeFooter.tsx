@@ -129,37 +129,37 @@ export function FitMeFooter() {
             </h4>
             <ul className="mt-4 space-y-2.5 text-sm">
               <li>
-                <a
-                  href="http://127.0.0.1:8000/dashboard/member/"
+                <Link
+                  href="/dashboard/member/"
                   className="hover:text-[#76C043] transition-colors flex items-center gap-1.5"
                 >
                   <span>Member Dashboard</span>
                   <span className="text-[10px] text-[#76C043] font-mono">→</span>
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="http://127.0.0.1:8000/dashboard/coach/"
+                <Link
+                  href="/dashboard/coach/"
                   className="hover:text-[#76C043] transition-colors"
                 >
                   Coach Portal
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="http://127.0.0.1:8000/dashboard/admin/"
+                <Link
+                  href="/dashboard/admin/"
                   className="hover:text-[#76C043] transition-colors"
                 >
                   Admin Console
-                </a>
+                </Link>
               </li>
               <li>
-                <a
-                  href="http://127.0.0.1:8000/en/user/login"
+                <Link
+                  href="/user/login"
                   className="hover:text-[#76C043] transition-colors"
                 >
                   Sign In
-                </a>
+                </Link>
               </li>
             </ul>
           </div>

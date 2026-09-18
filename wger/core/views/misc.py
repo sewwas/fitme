@@ -35,22 +35,30 @@ from wger.core.demo import (
 logger = logging.getLogger(__name__)
 
 
-# ************************
-# Misc functions
-# ************************
 def index(request):
     """
-    Index page — redirects authenticated users to their Fit Me role dashboard,
-    or renders the Fit Me commercial landing page for unauthenticated visitors
-    with 100% dynamic database data.
+    Unified Fit Me Entry Point:
+    - If authenticated: redirects to role dashboard
+    - If unauthenticated: serves the unified, cinematic, full-width Next.js production homepage
     """
     if request.user.is_authenticated:
         from wger.core.views.fitme_dashboards import get_role_dashboard
         return HttpResponseRedirect(get_role_dashboard(request.user))
-    else:
-        from django.shortcuts import render
-        from wger.core.views.fitme_dashboards import get_public_home_context
-        return render(request, 'home.html', get_public_home_context())
+    
+    # Serve the compiled Next.js production export
+    from pathlib import Path
+    from django.http import HttpResponse
+    repo_root = Path(__file__).resolve().parents[3]
+    next_html_path = repo_root / 'fitme-ui' / 'out' / 'index.html'
+    if next_html_path.exists():
+        with open(next_html_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+        return HttpResponse(content, content_type='text/html; charset=utf-8')
+    
+    # Fallback to dynamic template if export file not present
+    from django.shortcuts import render
+    from wger.core.views.fitme_dashboards import get_public_home_context
+    return render(request, 'home.html', get_public_home_context())
 
 
 def demo_entries(request):
