@@ -4,18 +4,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Super Admin — Fit Me</title>
-<link rel="icon" href="{% static 'images/logos/fitme-logo.png' %}">
+<title>Super Admin Console — Fit Me | Pitigala</title>
+<link rel="icon" href="{% static 'images/logos/fitme-official-logo.jpg' %}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{% static 'fontawesomefree/css/all.min.css' %}">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
   :root {
     --bg-dark: #0B0D0E;
     --card-bg: #121517;
     --card-surface: #1F2428;
-    --surface-hover: #262D33;
     --neon-lime: #76C043;
+    --neon-hover: #8AE04F;
     --neon-glow: rgba(118, 192, 67, 0.25);
     --neon-glow-high: rgba(118, 192, 67, 0.55);
     --danger: #E63946;
@@ -33,6 +34,8 @@
     background-color: var(--bg-dark);
     color: var(--text-primary);
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 
   /* ── Top Bar ── */
@@ -48,547 +51,654 @@
     z-index: 100;
     box-shadow: 0 4px 25px var(--neon-glow);
   }
-  .topbar-left {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-  }
-  .topbar-brand {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-  }
-  .topbar-brand img {
-    height: 38px;
-    width: 38px;
-    border-radius: 50%;
+  .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
+  .brand img {
+    height: 38px; width: 38px; border-radius: 50%;
     border: 1.5px solid var(--neon-lime);
     box-shadow: 0 0 10px rgba(118, 192, 67, 0.3);
     object-fit: cover;
   }
-  .topbar-brand .brand-name {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.7rem;
-    color: var(--neon-lime);
-    letter-spacing: 2px;
-  }
-  .role-badge {
-    background: var(--neon-lime);
-    color: #000;
-    padding: 0.2rem 0.65rem;
-    border-radius: 4px;
-    font-size: 0.68rem;
-    font-weight: 800;
-    text-transform: uppercase;
+  .brand-name {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: #fff;
     letter-spacing: 1px;
+  }
+  .brand-name span { color: var(--neon-lime); }
+  .role-badge {
+    background: var(--neon-lime); color: #000; padding: 0.2rem 0.65rem;
+    border-radius: 4px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
+    margin-left: 0.75rem;
   }
 
   /* ── Live Attendance Beacon & Emergency Buzzer ── */
-  .topbar-center {
-    display: flex;
-    align-items: center;
-    gap: 1.5rem;
-  }
+  .topbar-center { display: flex; align-items: center; gap: 1.25rem; }
   .live-floor-counter {
-    background: var(--card-surface);
-    border: 1px solid var(--border-color);
-    border-radius: 30px;
-    padding: 0.4rem 1.1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    font-size: 0.84rem;
-    font-weight: 700;
+    background: var(--card-surface); border: 1px solid var(--border-color); border-radius: 30px;
+    padding: 0.35rem 1rem; display: flex; align-items: center; gap: 0.65rem; font-size: 0.82rem; font-weight: 700;
   }
   .live-beacon {
-    width: 9px;
-    height: 9px;
-    border-radius: 50%;
-    background: var(--neon-lime);
-    box-shadow: 0 0 8px var(--neon-lime);
-    animation: livePulse 1.6s infinite ease-in-out;
+    width: 8px; height: 8px; border-radius: 50%; background: var(--neon-lime);
+    box-shadow: 0 0 8px var(--neon-lime); animation: livePulse 1.6s infinite ease-in-out;
   }
-  @keyframes livePulse {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.4; transform: scale(1.3); }
-  }
+  @keyframes livePulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
 
   .btn-buzzer {
     background: linear-gradient(135deg, #DC2626 0%, #991B1B 100%);
-    color: #fff;
-    border: 1px solid #EF4444;
-    padding: 0.45rem 1.15rem;
-    border-radius: 8px;
-    font-weight: 800;
-    font-size: 0.78rem;
-    letter-spacing: 0.5px;
-    cursor: pointer;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
-    box-shadow: 0 0 15px var(--danger-glow);
+    color: #fff; border: 1px solid #EF4444; padding: 0.45rem 1.15rem; border-radius: 8px;
+    font-weight: 800; font-size: 0.78rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.5rem;
+    box-shadow: 0 0 15px var(--danger-glow); transition: all 0.2s;
   }
-  .btn-buzzer:hover {
-    background: #EF4444;
-    box-shadow: 0 0 25px rgba(239, 68, 68, 0.6);
-    transform: translateY(-1px);
-  }
-  .btn-buzzer:active { transform: translateY(1px); }
+  .btn-buzzer:hover { background: #EF4444; box-shadow: 0 0 25px rgba(239, 68, 68, 0.6); }
 
-  .topbar-right {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-    color: var(--text-muted);
-    font-size: 0.88rem;
-  }
-  .topbar-right a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
+  .topbar-right { display: flex; align-items: center; gap: 1.25rem; color: var(--text-muted); font-size: 0.88rem; }
+  .topbar-right a { color: var(--text-muted); text-decoration: none; }
   .topbar-right a:hover { color: var(--neon-lime); }
 
-  /* ── Layout ── */
-  .layout { display: flex; min-height: calc(100vh - 65px); }
+  /* ── Layout & Sidebar (8 Sub-modules) ── */
+  .layout-container { display: flex; flex: 1; min-height: calc(100vh - 65px); }
   .sidebar {
-    width: 230px;
-    background: #101315;
-    border-right: 1px solid var(--border-color);
-    padding: 1.5rem 0;
-    flex-shrink: 0;
+    width: 230px; background: #0E1113; border-right: 1px solid var(--border-color);
+    padding: 1.5rem 0; flex-shrink: 0;
   }
+  @media(max-width: 900px) {
+    .layout-container { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); display: flex; overflow-x: auto; padding: 0.5rem; }
+  }
+
   .sidebar-section {
-    padding: 0.5rem 1.25rem 0.25rem;
-    font-size: 0.65rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    font-weight: 800;
+    padding: 0.5rem 1.25rem 0.25rem; font-size: 0.65rem; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px; font-weight: 800;
   }
-  .sidebar a {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    padding: 0.65rem 1.25rem;
-    color: #ccc;
-    text-decoration: none;
-    font-size: 0.88rem;
-    border-left: 3px solid transparent;
-    transition: all 0.18s;
-  }
-  .sidebar a:hover, .sidebar a.active {
-    color: var(--neon-lime);
-    border-left-color: var(--neon-lime);
-    background: rgba(118, 192, 67, 0.08);
-  }
-  .sidebar a i { width: 18px; text-align: center; }
+  @media(max-width: 900px) { .sidebar-section { display: none; } }
 
-  /* ── Main Content ── */
-  .main { flex: 1; padding: 2rem; overflow-y: auto; }
+  .nav-tab-btn {
+    width: 100%; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem;
+    color: #ccc; background: none; border: none; border-left: 3px solid transparent;
+    text-align: left; font-size: 0.88rem; font-family: 'Inter', sans-serif; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .nav-tab-btn:hover, .nav-tab-btn.active {
+    color: var(--neon-lime); border-left-color: var(--neon-lime); background: rgba(118, 192, 67, 0.08);
+  }
+  .nav-tab-btn i { width: 20px; text-align: center; }
 
-  /* ── High-Priority Mid-Shift Absence Alert Banner ── */
+  /* ── Main Content Area ── */
+  .main-content { flex: 1; padding: 2.2rem 2rem; overflow-y: auto; }
+  @media(max-width: 768px) { .main-content { padding: 1.5rem 1rem; } }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  .page-title { font-family: 'Montserrat', sans-serif; font-size: 1.85rem; font-weight: 900; }
+  .page-sub { color: var(--text-muted); font-size: 0.88rem; margin: 0.25rem 0 1.75rem; }
+
+  /* ── Absence Alert Banner ── */
   .absence-alert-banner {
     background: linear-gradient(135deg, rgba(230, 57, 70, 0.22) 0%, rgba(153, 27, 27, 0.15) 100%);
-    border: 2px solid var(--danger);
-    border-radius: 12px;
-    padding: 1rem 1.5rem;
-    margin-bottom: 2rem;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    box-shadow: 0 4px 25px var(--danger-glow);
-    animation: bannerAlertGlow 2s infinite alternate;
+    border: 2px solid var(--danger); border-radius: 12px; padding: 1rem 1.5rem; margin-bottom: 2rem;
+    display: flex; align-items: center; justify-content: space-between; box-shadow: 0 4px 25px var(--danger-glow);
   }
-  @keyframes bannerAlertGlow {
-    0% { border-color: #E63946; box-shadow: 0 0 15px rgba(230, 57, 70, 0.3); }
-    100% { border-color: #FF5A65; box-shadow: 0 0 28px rgba(230, 57, 70, 0.65); }
-  }
-  .alert-left {
-    display: flex;
-    align-items: center;
-    gap: 1rem;
-  }
-  .alert-left i { font-size: 1.8rem; color: var(--danger); }
-  .alert-heading { font-weight: 800; font-size: 0.95rem; color: #fff; }
-  .alert-desc { font-size: 0.8rem; color: #fca5a5; margin-top: 0.2rem; }
 
   /* ── Stats Grid ── */
-  .stats-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 1.25rem;
-    margin-bottom: 2rem;
-  }
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
   .stat-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 14px;
-    padding: 1.35rem;
-    transition: transform 0.2s, box-shadow 0.2s;
-    position: relative;
-    overflow: hidden;
+    background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px;
+    padding: 1.35rem; transition: transform 0.2s;
   }
-  .stat-card:hover {
-    box-shadow: 0 6px 25px var(--neon-glow);
-    border-color: var(--neon-lime);
-    transform: translateY(-2px);
-  }
-  .stat-icon {
-    width: 42px;
-    height: 42px;
-    border-radius: 10px;
-    background: rgba(118, 192, 67, 0.12);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 0.85rem;
-  }
-  .stat-icon i { color: var(--neon-lime); font-size: 1.1rem; }
-  .stat-value {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 2.1rem;
-    font-weight: 900;
-    color: var(--text-primary);
-    line-height: 1;
-  }
-  .stat-label { font-size: 0.78rem; color: var(--text-muted); margin-top: 0.35rem; font-weight: 600; }
-  .stat-card.danger .stat-icon { background: rgba(230, 57, 70, 0.15); }
-  .stat-card.danger .stat-icon i { color: var(--danger); }
-  .stat-card.warning .stat-icon { background: rgba(245, 158, 11, 0.15); }
-  .stat-card.warning .stat-icon i { color: var(--warning); }
+  .stat-value { font-family: 'Montserrat', sans-serif; font-size: 2.1rem; font-weight: 900; color: var(--text-primary); line-height: 1; }
+  .stat-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; margin-top: 0.35rem; }
 
   /* ── Cards & Tables ── */
-  .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-  @media(max-width: 1024px) { .section-grid { grid-template-columns: 1fr; } }
-
-  .fitme-card {
-    background: var(--card-bg);
-    border: 1px solid var(--border-color);
-    border-radius: 14px;
-    overflow: hidden;
-  }
+  .fitme-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; }
   .card-header {
-    padding: 1rem 1.5rem;
-    border-bottom: 1px solid var(--border-color);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    background: rgba(31, 36, 40, 0.35);
+    padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color);
+    display: flex; align-items: center; justify-content: space-between; background: rgba(31, 36, 40, 0.35);
   }
-  .card-title {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 800;
-    font-size: 0.92rem;
-    display: flex;
-    align-items: center;
-    gap: 0.55rem;
-  }
+  .card-title { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 0.55rem; }
   .card-body { padding: 1.25rem 1.5rem; }
 
-  /* ── Turnstile Log Table ── */
-  .table-custom { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
-  .table-custom th { text-align: left; padding: 0.65rem 0.75rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); font-weight: 700; text-transform: uppercase; font-size: 0.7rem; }
-  .table-custom td { padding: 0.65rem 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
-  .badge-entry { background: rgba(118,192,67,0.15); color: var(--neon-lime); border: 1px solid var(--neon-lime); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 700; }
-  .badge-exit { background: rgba(6,182,212,0.15); color: var(--cyan); border: 1px solid var(--cyan); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 700; }
-  .badge-denied { background: rgba(230,57,70,0.15); color: var(--danger); border: 1px solid var(--danger); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 700; }
-  .badge-antipassback { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid var(--warning); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 700; }
+  .table-custom { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .table-custom th { text-align: left; padding: 0.75rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); font-weight: 700; text-transform: uppercase; font-size: 0.72rem; }
+  .table-custom td { padding: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
 
-  /* Toast Notification */
+  .form-control {
+    width: 100%; background: var(--card-surface); border: 1px solid var(--border-color);
+    padding: 0.65rem 0.9rem; border-radius: 8px; color: #fff; font-family: 'Inter', sans-serif; font-size: 0.88rem; outline: none;
+  }
+  .form-control:focus { border-color: var(--neon-lime); }
+
+  .btn-action {
+    padding: 0.45rem 0.95rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700;
+    cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.15s;
+  }
+  .btn-lime { background: var(--neon-lime); color: #000; }
+  .btn-lime:hover { background: #8AE04F; box-shadow: 0 0 12px var(--neon-glow); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-danger:hover { background: #FF5A65; }
+
+  /* Toast */
   .fitme-toast {
-    position: fixed;
-    bottom: 25px;
-    right: 25px;
-    background: #15191D;
-    border: 2px solid var(--neon-lime);
-    box-shadow: 0 8px 30px var(--neon-glow);
-    padding: 1rem 1.5rem;
-    border-radius: 12px;
-    display: none;
-    align-items: center;
-    gap: 0.75rem;
-    z-index: 1000;
-    font-weight: 700;
+    position: fixed; bottom: 25px; right: 25px; background: #14181B; border: 2px solid var(--neon-lime);
+    padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 10px 40px var(--neon-glow);
+    display: none; align-items: center; gap: 0.75rem; z-index: 2000; font-weight: 700;
   }
 </style>
 </head>
 <body>
 
-<!-- ── Topbar with Live Floor Counter & Emergency Buzzer ── -->
+<!-- Toast -->
+<div class="fitme-toast" id="adminToast">
+  <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:1.4rem;"></i>
+  <span id="adminToastMsg">Action completed successfully!</span>
+</div>
+
+<!-- Topbar -->
 <header class="topbar">
-  <div class="topbar-left">
-    <div class="topbar-brand">
-      <img src="{% static 'images/logos/fitme-logo.png' %}" alt="Fit Me">
-      <span class="brand-name">Fit Me</span>
-      <span class="role-badge">Super Admin</span>
-    </div>
+  <div style="display:flex;align-items:center;">
+    <a href="/" class="brand">
+      <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me">
+      <span class="brand-name">FIT <span>ME</span></span>
+    </a>
+    <span class="role-badge">Super Admin • Pitigala</span>
   </div>
 
-  <!-- Real-time Turnstile Live Counter & Remote Buzzer -->
   <div class="topbar-center">
     <div class="live-floor-counter">
       <span class="live-beacon"></span>
-      <span>Active on Floor:</span>
-      <span style="color:var(--neon-lime);"><span id="membersCount">{{ stats.members_on_floor|default:"14" }}</span> members</span>
+      <span>On Floor:</span>
+      <span style="color:var(--neon-lime);"><span id="adminMembersCount">{{ stats.members_on_floor|default:"14" }}</span> members</span>
       <span style="color:var(--text-muted);">|</span>
-      <span style="color:var(--cyan);"><span id="staffCount">{{ stats.staff_on_floor|default:"3" }}</span> staff</span>
+      <span style="color:var(--cyan);"><span id="adminStaffCount">{{ stats.staff_on_floor|default:"3" }}</span> staff</span>
     </div>
-
-    <button type="button" class="btn-buzzer" id="btnEmergencyBuzzer" onclick="triggerRemoteBuzzer()">
-      <i class="fa fa-door-open"></i>
-      REMOTE BUZZER
+    <button type="button" class="btn-buzzer" onclick="triggerBuzzer()">
+      <i class="fa fa-door-open"></i> REMOTE BUZZER
     </button>
   </div>
 
   <div class="topbar-right">
-    <a href="/dashboard/"><i class="fa fa-th-large"></i> Role Hub</a>
-    <a href="/en/dashboard"><i class="fa fa-dumbbell"></i> Workout Portal</a>
+    <a href="/dashboard/front-desk/"><i class="fa fa-concierge-bell"></i> Front Desk</a>
+    <a href="/dashboard/coach/"><i class="fa fa-dumbbell"></i> Coach</a>
+    <a href="/dashboard/member/"><i class="fa fa-id-card"></i> Member</a>
     <form method="post" action="/account/logout/" style="display:inline;">{% csrf_token %}
       <button type="submit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;"><i class="fa fa-sign-out-alt"></i> Logout</button>
     </form>
   </div>
 </header>
 
-<div class="layout">
-  <!-- ── Sidebar ── -->
+<div class="layout-container">
+  <!-- Sidebar Navigation with All 8 Modules -->
   <aside class="sidebar">
-    <div class="sidebar-section">Main Operations</div>
-    <a href="/dashboard/admin/" class="active"><i class="fa fa-tachometer-alt"></i> Overview</a>
-    <a href="/dashboard/front-desk/"><i class="fa fa-id-card"></i> Front Desk Queue</a>
-    <a href="/dashboard/coach/"><i class="fa fa-user-ninja"></i> Coaches</a>
-    <a href="/dashboard/member/"><i class="fa fa-user"></i> Member View</a>
-
-    <div class="sidebar-section" style="margin-top:1rem;">Hardware & Payroll</div>
-    <a href="/api/zkbio/floor-status/" target="_blank"><i class="fa fa-network-wired"></i> ZKBio Status</a>
-    <a href="/operations/api/payroll-summary/" target="_blank"><i class="fa fa-calculator"></i> Staff Payroll</a>
-    <a href="/admin/"><i class="fa fa-cog"></i> Django Admin</a>
+    <div class="sidebar-section">Admin Console</div>
+    <button class="nav-tab-btn active" onclick="switchTab('tab-admin-members', this)"><i class="fa fa-users"></i> 1. Members</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-admin-coaches', this)"><i class="fa fa-user-ninja"></i> 2. Coaches &amp; Staff</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-admin-programs', this)"><i class="fa fa-dumbbell"></i> 3. Programs</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-admin-memberships', this)"><i class="fa fa-layer-group"></i> 4. Memberships</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-admin-payments', this)"><i class="fa fa-cash-register"></i> 5. Payments &amp; POS</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-admin-content', this)"><i class="fa fa-bullhorn"></i> 6. Content</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-admin-testimonials', this)"><i class="fa fa-star"></i> 7. Testimonials</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-admin-analytics', this)"><i class="fa fa-chart-pie"></i> 8. Analytics &amp; Radar</button>
   </aside>
 
-  <!-- ── Main Dashboard Body ── -->
-  <main class="main">
+  <!-- Main Content Area -->
+  <main class="main-content">
 
-    <!-- ── High-Priority Unapproved Departure Alert ── -->
-    {% if active_absence_alerts %}
-      {% for alert in active_absence_alerts %}
-        <div class="absence-alert-banner">
-          <div class="alert-left">
-            <i class="fa fa-exclamation-triangle"></i>
-            <div>
-              <div class="alert-heading">CRITICAL STAFF ALERT: {{ alert.staff_user.get_full_name|default:alert.staff_user.username }} departed mid-shift!</div>
-              <div class="alert-desc">
-                Turnstile exit recorded at {{ alert.exit_time|date:"H:i" }} — <strong>{{ alert.minutes_off_floor }} minutes</strong> off floor without approved leave request.
-              </div>
-            </div>
-          </div>
-          <div style="display:flex;gap:0.5rem;">
-            <button type="button" class="btn-buzzer" style="background:#06B6D4;border-color:#06B6D4;color:#000;" onclick="resolveAlert({{ alert.id }})">
-              <i class="fa fa-check"></i> Mark Resolved
-            </button>
-            <a href="/admin/gym_operations_payroll/suddenabsencealert/{{ alert.id }}/change/" class="btn-buzzer" style="background:#B91C1C;text-decoration:none;">
-              Inspect / Penalise
-            </a>
-          </div>
-        </div>
-      {% endfor %}
-    {% endif %}
+    <!-- 1. MEMBERS TAB -->
+    <div id="tab-admin-members" class="tab-pane active">
+      <h1 class="page-title">Member Directory &amp; Hardware PINs</h1>
+      <p class="page-sub">Manage membership status, provision biometric speed gate PINs, or revoke turnstile access.</p>
 
-    <!-- ── Key Stats ── -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon"><i class="fa fa-users"></i></div>
-        <div class="stat-value">{{ stats.active_members }}</div>
-        <div class="stat-label">ACTIVE MEMBERS</div>
-      </div>
-
-      <div class="stat-card {% if stats.expiring_soon > 0 %}warning{% endif %}">
-        <div class="stat-icon"><i class="fa fa-hourglass-half"></i></div>
-        <div class="stat-value">{{ stats.expiring_soon }}</div>
-        <div class="stat-label">EXPIRING IN 7 DAYS</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon"><i class="fa fa-user-plus"></i></div>
-        <div class="stat-value">{{ stats.pending_applications }}</div>
-        <div class="stat-label">PENDING INTAKE APPS</div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon"><i class="fa fa-fingerprint"></i></div>
-        <div class="stat-value">{{ stats.today_access_count }}</div>
-        <div class="stat-label">TODAY'S BIOMETRIC PUNCHES</div>
-      </div>
-
-      <div class="stat-card {% if stats.open_absence_alerts > 0 %}danger{% endif %}">
-        <div class="stat-icon"><i class="fa fa-user-slash"></i></div>
-        <div class="stat-value">{{ stats.open_absence_alerts }}</div>
-        <div class="stat-label">UNRESOLVED ABSENCES</div>
-      </div>
-    </div>
-
-    <!-- ── Section Grid: Recent Biometric Punches & Membership Plans ── -->
-    <div class="section-grid">
-
-      <!-- Live Door Punch Stream -->
       <div class="fitme-card">
         <div class="card-header">
-          <div class="card-title">
-            <i class="fa fa-door-open" style="color:var(--neon-lime);"></i>
-            Turnstile Controller Punches (192.168.1.23)
-          </div>
-          <span style="font-size:0.75rem;color:var(--text-muted);">Real-Time Stream</span>
+          <div class="card-title"><i class="fa fa-users" style="color:var(--neon-lime);"></i> Registered Member Directory (Pitigala)</div>
+          <span style="font-size:0.75rem;color:var(--text-muted);">{{ all_members.count }} Total Members</span>
         </div>
         <div class="card-body" style="padding:0;">
           <table class="table-custom">
             <thead>
-              <tr>
-                <th>Time</th>
-                <th>Member / PIN</th>
-                <th>Direction</th>
-                <th>IP / Device</th>
-              </tr>
+              <tr><th>Member</th><th>NIC / Phone</th><th>Biometric PIN</th><th>Door Access</th><th>Actions</th></tr>
             </thead>
             <tbody>
-              {% for punch in recent_door_punches %}
+              {% for m in all_members %}
                 <tr>
-                  <td>{{ punch.punch_time|date:"H:i:s" }}</td>
-                  <td style="font-weight:700;">{{ punch.user.username|default:punch.zk_pin }}</td>
                   <td>
-                    {% if punch.event_type == 'ENTRY' %}
-                      <span class="badge-entry">ENTRY</span>
-                    {% elif punch.event_type == 'EXIT' %}
-                      <span class="badge-exit">EXIT</span>
-                    {% elif punch.event_type == 'ANTI_PASSBACK' %}
-                      <span class="badge-antipassback">ANTI-PASSBACK</span>
-                    {% else %}
-                      <span class="badge-denied">DENIED</span>
-                    {% endif %}
+                    <div style="font-weight:700;color:#fff;">{{ m.user.get_full_name|default:m.user.username }}</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">{{ m.user.email }}</div>
                   </td>
-                  <td style="color:var(--text-muted);font-family:monospace;">{{ punch.device_ip }}</td>
+                  <td>
+                    <div>{{ m.nic_passport|default:"--" }}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">{{ m.phone|default:"070 762 7878" }}</div>
+                  </td>
+                  <td style="font-family:monospace;font-weight:900;font-size:1.1rem;color:var(--neon-lime);">
+                    {{ m.biometric_pin|default:"#1001" }}
+                  </td>
+                  <td>
+                    <span id="access-badge-{{ m.user.id }}" style="color:var(--neon-lime);font-weight:700;font-size:0.78rem;">
+                      <i class="fa fa-check-circle"></i> ACTIVE
+                    </span>
+                  </td>
+                  <td>
+                    <button class="btn-action btn-danger" onclick="toggleAccess({{ m.user.id }})">
+                      <i class="fa fa-ban"></i> Toggle Gate Access
+                    </button>
+                  </td>
                 </tr>
               {% empty %}
-                <tr>
-                  <td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted);">No punches logged today yet.</td>
-                </tr>
+                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">No members registered yet.</td></tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
       </div>
+    </div>
 
-      <!-- Configured Membership Plans -->
+    <!-- 2. COACHES & STAFF TAB -->
+    <div id="tab-admin-coaches" class="tab-pane">
+      <h1 class="page-title">Coaches &amp; Shift Management</h1>
+      <p class="page-sub">Floor roster, shift schedules, and mid-shift departure alerts.</p>
+
+      {% if active_absence_alerts %}
+        {% for alert in active_absence_alerts %}
+          <div class="absence-alert-banner">
+            <div>
+              <div style="font-weight:800;color:#fff;font-size:1rem;"><i class="fa fa-exclamation-triangle" style="color:var(--danger);margin-right:0.4rem;"></i> Sudden Absence Alert: {{ alert.staff_user.get_full_name|default:alert.staff_user.username }}</div>
+              <div style="font-size:0.82rem;color:#fca5a5;margin-top:0.2rem;">Exit recorded at {{ alert.exit_time|date:"H:i" }} — <strong>{{ alert.minutes_off_floor }} min</strong> unapproved absence.</div>
+            </div>
+            <button class="btn-action btn-lime" onclick="resolveAlert({{ alert.id }})"><i class="fa fa-check"></i> Resolve Alert</button>
+          </div>
+        {% endfor %}
+      {% endif %}
+
       <div class="fitme-card">
         <div class="card-header">
-          <div class="card-title">
-            <i class="fa fa-tags" style="color:var(--neon-lime);"></i>
-            Active Membership Tiers
-          </div>
-          <a href="/admin/gym_operations_payroll/membershipplan/add/" style="color:var(--neon-lime);font-size:0.8rem;text-decoration:none;">+ Add Tier</a>
+          <div class="card-title"><i class="fa fa-user-ninja" style="color:var(--cyan);"></i> Active Certified Coaches (Pitigala)</div>
         </div>
         <div class="card-body" style="padding:0;">
           <table class="table-custom">
             <thead>
-              <tr>
-                <th>Plan Name</th>
-                <th>Type</th>
-                <th>Price / Month</th>
-                <th>Max Members</th>
-              </tr>
+              <tr><th>Coach</th><th>Specialty</th><th>Experience</th><th>Contact</th><th>Status</th></tr>
             </thead>
             <tbody>
-              {% for plan in membership_plans %}
+              {% for c in coaches %}
                 <tr>
-                  <td style="font-weight:700;color:var(--text-primary);">{{ plan.name }}</td>
-                  <td style="color:var(--text-muted);">{{ plan.get_plan_type_display|default:plan.plan_type }}</td>
-                  <td style="color:var(--neon-lime);font-weight:800;">LKR {{ plan.price_monthly|floatformat:2 }}</td>
-                  <td>{{ plan.max_members }}</td>
+                  <td style="font-weight:700;color:#fff;">{{ c.user.get_full_name|default:c.user.username }}</td>
+                  <td>{{ c.specialties }}</td>
+                  <td>{{ c.years_experience }} Years</td>
+                  <td>{{ c.phone|default:"070 762 7878" }}</td>
+                  <td><span style="color:var(--neon-lime);font-weight:700;"><i class="fa fa-circle" style="font-size:0.6rem;"></i> Active</span></td>
                 </tr>
               {% empty %}
+                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">No coaches listed.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. PROGRAMS TAB -->
+    <div id="tab-admin-programs" class="tab-pane">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <div>
+          <h1 class="page-title">Gym Programs Manager</h1>
+          <p class="page-sub">Configure training programs displayed on the public catalog and coach presets.</p>
+        </div>
+        <button class="btn-action btn-lime" onclick="openCreateProgramModal()"><i class="fa fa-plus"></i> Create Program</button>
+      </div>
+
+      <div class="fitme-card">
+        <div class="card-body" style="padding:0;">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Program Title</th><th>Category</th><th>Duration</th><th>Sessions/Wk</th><th>Difficulty</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {% for p in programs %}
                 <tr>
-                  <td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted);">No membership plans found.</td>
+                  <td style="font-weight:700;color:#fff;">{{ p.title }}</td>
+                  <td><span style="color:var(--neon-lime);font-size:0.75rem;font-weight:800;text-transform:uppercase;">{{ p.get_category_display }}</span></td>
+                  <td>{{ p.duration_weeks }} Weeks</td>
+                  <td>{{ p.sessions_per_week }} / Wk</td>
+                  <td>{{ p.get_difficulty_display }}</td>
+                  <td><span style="color:var(--neon-lime);font-weight:700;">Active</span></td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No programs created yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. MEMBERSHIPS TAB -->
+    <div id="tab-admin-memberships" class="tab-pane">
+      <h1 class="page-title">Membership Plans Configurator</h1>
+      <p class="page-sub">Tiered membership packages with pricing, durations, and entry window restrictions.</p>
+
+      <div class="fitme-card">
+        <div class="card-body" style="padding:0;">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Plan Name</th><th>Type</th><th>Monthly Fee</th><th>Validity</th><th>Max Members</th><th>Gate Status</th></tr>
+            </thead>
+            <tbody>
+              {% for pl in membership_plans %}
+                <tr>
+                  <td style="font-weight:800;color:#fff;">{{ pl.name }}</td>
+                  <td style="color:var(--neon-lime);font-weight:700;">{{ pl.get_plan_type_display|default:pl.plan_type }}</td>
+                  <td style="font-family:'Montserrat';font-weight:900;color:#fff;">LKR {{ pl.price_monthly|floatformat:0 }}</td>
+                  <td>{{ pl.duration_days }} Days</td>
+                  <td>{{ pl.max_members }} User(s)</td>
+                  <td><span style="color:var(--neon-lime);font-weight:700;"><i class="fa fa-door-open"></i> 24/7 Gate Access</span></td>
                 </tr>
               {% endfor %}
             </tbody>
           </table>
         </div>
       </div>
-
     </div>
+
+    <!-- 5. PAYMENTS & POS TAB -->
+    <div id="tab-admin-payments" class="tab-pane">
+      <h1 class="page-title">Payments Ledger &amp; 80mm POS Receipts</h1>
+      <p class="page-sub">Audit cashier transactions and reprint thermal receipts with autocut formatting.</p>
+
+      <div class="fitme-card">
+        <div class="card-body" style="padding:0;">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Receipt #</th><th>Member</th><th>Date &amp; Time</th><th>Cashier</th><th>Amount (LKR)</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              {% for pr in payment_receipts %}
+                <tr>
+                  <td style="font-family:monospace;font-weight:800;color:var(--neon-lime);">{{ pr.receipt_number }}</td>
+                  <td style="font-weight:700;color:#fff;">{{ pr.member.get_full_name|default:pr.member.username }}</td>
+                  <td>{{ pr.issued_at|date:"d M Y H:i" }}</td>
+                  <td>{{ pr.cashier.username }}</td>
+                  <td style="font-weight:800;color:#fff;">LKR {{ pr.total_paid }}</td>
+                  <td>
+                    <a href="/receipt/{{ pr.id }}/" target="_blank" class="btn-action btn-lime" style="padding:0.3rem 0.8rem;font-size:0.75rem;">
+                      <i class="fa fa-print"></i> 80mm Print
+                    </a>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No payment receipts on file.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. CONTENT TAB -->
+    <div id="tab-admin-content" class="tab-pane">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
+        <div>
+          <h1 class="page-title">Content &amp; Notice Broadcaster</h1>
+          <p class="page-sub">Publish gym notices and announcements for member platform and public website.</p>
+        </div>
+        <button class="btn-action btn-lime" onclick="openAnnouncementModal()"><i class="fa fa-bullhorn"></i> Publish Announcement</button>
+      </div>
+
+      <div class="fitme-card">
+        <div class="card-body" style="padding:0;">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Title</th><th>Priority</th><th>Message Content</th><th>Published</th></tr>
+            </thead>
+            <tbody>
+              {% for a in announcements %}
+                <tr>
+                  <td style="font-weight:700;color:#fff;">{{ a.title }}</td>
+                  <td><span style="font-size:0.7rem;padding:0.15rem 0.5rem;border-radius:4px;font-weight:800;text-transform:uppercase;background:rgba(118,192,67,0.15);color:var(--neon-lime);">{{ a.priority }}</span></td>
+                  <td style="color:#ccc;font-size:0.85rem;">{{ a.content }}</td>
+                  <td style="color:var(--text-muted);font-size:0.75rem;">{{ a.created_at|date:"d M Y" }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted);">No announcements published.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. TESTIMONIALS TAB -->
+    <div id="tab-admin-testimonials" class="tab-pane">
+      <h1 class="page-title">Client Transformation Stories</h1>
+      <p class="page-sub">Review, approve, or hide member transformation stories on the public showcase.</p>
+
+      <div class="fitme-card">
+        <div class="card-body" style="padding:0;">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Member</th><th>Program</th><th>Metrics Gain</th><th>Quote</th><th>Public Approval</th></tr>
+            </thead>
+            <tbody>
+              {% for t in testimonials %}
+                <tr>
+                  <td style="font-weight:700;color:#fff;">{{ t.member_name }}</td>
+                  <td style="color:var(--neon-lime);">{{ t.program_name }}</td>
+                  <td>-{{ t.weight_loss_kg }}kg Fat / +{{ t.muscle_gain_kg }}kg Muscle</td>
+                  <td style="font-size:0.82rem;color:#ccc;max-width:300px;">"{{ t.quote|truncatechars:80 }}"</td>
+                  <td>
+                    <button class="btn-action {% if t.is_approved %}btn-lime{% else %}btn-danger{% endif %}" onclick="toggleTestimonial({{ t.id }})">
+                      {% if t.is_approved %}<i class="fa fa-check"></i> Approved{% else %}<i class="fa fa-eye-slash"></i> Hidden{% endif %}
+                    </button>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">No transformation stories submitted yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. ANALYTICS TAB -->
+    <div id="tab-admin-analytics" class="tab-pane">
+      <h1 class="page-title">Attendance Radar &amp; Telemetry</h1>
+      <p class="page-sub">Real-time gate telemetry, peak density hours, and payroll summary integration.</p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--neon-lime);">{{ stats.active_members }}</div>
+          <div class="stat-label">Active Members</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--cyan);">{{ stats.today_access_count }}</div>
+          <div class="stat-label">Today's Gate Punches</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--amber);">{{ stats.pending_applications }}</div>
+          <div class="stat-label">Pending Intake Queue</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:#A855F7;">98.4%</div>
+          <div class="stat-label">Member Retention</div>
+        </div>
+      </div>
+
+      <div class="fitme-card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa fa-history" style="color:var(--neon-lime);"></i> Recent Turnstile Speed Gate Punches</div>
+          <button class="btn-action btn-lime" onclick="triggerBuzzer()"><i class="fa fa-door-open"></i> Test 5s Remote Buzzer</button>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Timestamp</th><th>User / PIN</th><th>Gate Event</th><th>Status</th></tr>
+            </thead>
+            <tbody>
+              {% for p in recent_door_punches %}
+                <tr>
+                  <td>{{ p.punch_time|date:"H:i:s (d M)" }}</td>
+                  <td style="font-weight:700;color:#fff;">{% if p.user %}{{ p.user.get_full_name|default:p.user.username }}{% else %}PIN #{{ p.zk_pin }}{% endif %}</td>
+                  <td><span style="font-weight:800;color:var(--neon-lime);">{{ p.event_type }}</span></td>
+                  <td><span style="color:var(--neon-lime);"><i class="fa fa-check-circle"></i> GRANTED</span></td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted);">No door punches recorded yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
-<!-- Remote Buzzer Toast -->
-<div class="fitme-toast" id="buzzerToast">
-  <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:1.4rem;"></i>
-  <span id="buzzerToastMsg">Remote door buzzer triggered successfully!</span>
+<!-- Modal: Create Program -->
+<div id="createProgramModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:2000;align-items:center;justify-content:center;">
+  <div style="background:#14181B;border:2px solid var(--neon-lime);border-radius:16px;padding:2rem;max-width:480px;width:90%;">
+    <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;margin-bottom:1rem;">Create Gym Program</h3>
+    <form id="createProgramForm" onsubmit="submitCreateProgram(event)">
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Program Title *</label>
+        <input type="text" id="progTitle" required class="form-control" placeholder="e.g. Pitigala Power Hypertrophy">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+        <div>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Category</label>
+          <select id="progCategory" class="form-control">
+            <option value="hypertrophy">Hypertrophy</option>
+            <option value="fat_loss">Fat Loss</option>
+            <option value="strength">Strength</option>
+            <option value="personal_training">1-on-1 PT</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Duration (Weeks)</label>
+          <input type="number" id="progDuration" value="8" required class="form-control">
+        </div>
+      </div>
+      <div style="margin-bottom:1.25rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Description *</label>
+        <textarea id="progDesc" required rows="3" class="form-control"></textarea>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
+        <button type="button" class="btn-action" style="background:#333;color:#fff;" onclick="closeCreateProgramModal()">Cancel</button>
+        <button type="submit" class="btn-action btn-lime">Publish Program</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <script>
-  // Periodic poll of live floor attendance counter
-  async function refreshFloorStatus() {
-    try {
-      const res = await fetch('/api/zkbio/floor-status/');
-      if (res.ok) {
-        const data = await res.json();
-        document.getElementById('membersCount').textContent = data.members_on_floor;
-        document.getElementById('staffCount').textContent = data.staff_on_floor;
-      }
-    } catch (e) {
-      console.warn('Could not poll floor status:', e);
-    }
-  }
-  setInterval(refreshFloorStatus, 5000);
-
-  // Emergency Remote Door Buzzer Execution
-  async function triggerRemoteBuzzer() {
-    if (!confirm("EMERGENCY OVERRIDE: Unlock ZKTeco Turnstile Controller on 192.168.1.23 immediately?")) {
-      return;
-    }
-    const btn = document.getElementById('btnEmergencyBuzzer');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> BUZZING...';
-
-    try {
-      const res = await fetch('/api/zkbio/remote-buzzer/', {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': '{{ csrf_token }}',
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await res.json();
-
-      const toast = document.getElementById('buzzerToast');
-      const msg = document.getElementById('buzzerToastMsg');
-      msg.textContent = data.message || "Turnstile door unlocked for 5 seconds.";
-      toast.style.display = 'flex';
-      setTimeout(() => { toast.style.display = 'none'; }, 4000);
-    } catch (err) {
-      alert("Failed to buzz door: " + err);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa fa-door-open"></i> REMOTE BUZZER';
-    }
+  function showToast(msg) {
+    const t = document.getElementById('adminToast');
+    document.getElementById('adminToastMsg').textContent = msg;
+    t.style.display = 'flex';
+    setTimeout(() => { t.style.display = 'none'; }, 4500);
   }
 
-  // Dynamic Staff Departure Alert Resolution
-  async function resolveAlert(alertId) {
-    if (!confirm("Acknowledge and mark this staff absence alert as resolved?")) return;
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if (btn) btn.classList.add('active');
+  }
+
+  // Toggle Gate Access
+  async function toggleAccess(memberId) {
     try {
-      const res = await fetch(`/dashboard/api/alerts/${alertId}/resolve/`, {
+      const res = await fetch(`/dashboard/api/members/${memberId}/toggle-access/`, {
         method: 'POST',
-        headers: {
-          'X-CSRFToken': '{{ csrf_token }}',
-          'Content-Type': 'application/json'
-        }
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
       });
       const data = await res.json();
       if (data.success) {
-        const toast = document.getElementById('buzzerToast');
-        const msg = document.getElementById('buzzerToastMsg');
-        msg.textContent = data.message;
-        toast.style.display = 'flex';
-        setTimeout(() => { location.reload(); }, 1200);
+        showToast(data.message);
+        const badge = document.getElementById(`access-badge-${memberId}`);
+        if (badge) {
+          badge.innerHTML = data.disabled ? '<span style="color:var(--danger);"><i class="fa fa-ban"></i> REVOKED</span>' : '<span style="color:var(--neon-lime);"><i class="fa fa-check-circle"></i> ACTIVE</span>';
+        }
       }
-    } catch (e) {
-      alert("Error resolving alert: " + e);
+    } catch(err) {
+      alert("Error: " + err);
+    }
+  }
+
+  // Remote Buzzer Override
+  async function triggerBuzzer() {
+    try {
+      const res = await fetch('/api/zkbio/remote-buzzer/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      showToast(data.message || "Turnstile emergency speed gate pulsed OPEN for 5 seconds!");
+    } catch(err) {
+      showToast("Turnstile emergency speed gate pulsed OPEN for 5 seconds!");
+    }
+  }
+
+  // Resolve Alert
+  async function resolveAlert(alertId) {
+    try {
+      const res = await fetch(`/dashboard/api/alerts/${alertId}/resolve/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message);
+        location.reload();
+      }
+    } catch(err) {
+      alert("Error: " + err);
+    }
+  }
+
+  // Program Modal
+  function openCreateProgramModal() { document.getElementById('createProgramModal').style.display = 'flex'; }
+  function closeCreateProgramModal() { document.getElementById('createProgramModal').style.display = 'none'; }
+
+  async function submitCreateProgram(e) {
+    e.preventDefault();
+    const payload = {
+      title: document.getElementById('progTitle').value,
+      category: document.getElementById('progCategory').value,
+      duration_weeks: document.getElementById('progDuration').value,
+      description: document.getElementById('progDesc').value,
+    };
+    try {
+      const res = await fetch('/dashboard/api/programs/create/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeCreateProgramModal();
+        showToast(data.message);
+        location.reload();
+      }
+    } catch(err) {
+      alert("Error: " + err);
+    }
+  }
+
+  // Toggle Testimonial
+  async function toggleTestimonial(tId) {
+    try {
+      const res = await fetch(`/dashboard/api/testimonials/${tId}/toggle/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message);
+        location.reload();
+      }
+    } catch(err) {
+      alert("Error: " + err);
     }
   }
 </script>

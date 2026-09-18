@@ -4,25 +4,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fit Me — Member Portal</title>
-<link rel="icon" href="{% static 'images/logos/fitme-logo.png' %}">
+<title>Fit Me — Member Platform | Pitigala</title>
+<link rel="icon" href="{% static 'images/logos/fitme-official-logo.jpg' %}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{% static 'fontawesomefree/css/all.min.css' %}">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
   :root {
     --bg-dark: #0B0D0E;
     --card-bg: #121517;
     --card-surface: #1F2428;
     --neon-lime: #76C043;
+    --neon-hover: #8AE04F;
     --neon-glow: rgba(118, 192, 67, 0.28);
     --neon-glow-high: rgba(118, 192, 67, 0.55);
     --cyan: #06B6D4;
     --cyan-glow: rgba(6, 182, 212, 0.28);
     --amber: #F59E0B;
-    --amber-glow: rgba(245, 158, 11, 0.28);
     --danger: #E63946;
-    --danger-glow: rgba(230, 57, 70, 0.35);
     --text-primary: #F8FAFC;
     --text-muted: #8B9299;
     --border-color: #242A2F;
@@ -34,10 +34,11 @@
     background-color: var(--bg-dark);
     color: var(--text-primary);
     min-height: 100vh;
-    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
   }
 
-  /* ── Top Bar ── */
+  /* ── Topbar ── */
   .topbar {
     background: #101315;
     border-bottom: 2px solid var(--neon-lime);
@@ -50,87 +51,129 @@
     z-index: 100;
     box-shadow: 0 4px 25px var(--neon-glow);
   }
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-  }
+  .brand { display: flex; align-items: center; gap: 0.85rem; text-decoration: none; }
   .brand img {
-    height: 38px;
-    width: 38px;
-    border-radius: 50%;
-    border: 1.5px solid var(--neon-lime);
+    height: 40px; width: 40px; border-radius: 50%;
+    border: 2px solid var(--neon-lime);
     box-shadow: 0 0 10px rgba(118, 192, 67, 0.3);
     object-fit: cover;
   }
   .brand-name {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.7rem;
-    color: var(--neon-lime);
-    letter-spacing: 2px;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 1.35rem;
+    color: #fff;
+    letter-spacing: 1px;
   }
+  .brand-name span { color: var(--neon-lime); }
   .brand-tagline {
-    font-size: 0.72rem;
+    font-size: 0.7rem;
     color: var(--text-muted);
     letter-spacing: 0.5px;
-    display: none;
+    margin-left: 0.75rem;
+    border-left: 1px solid var(--border-color);
+    padding-left: 0.75rem;
+    display: inline-block;
   }
-  @media(min-width: 768px) { .brand-tagline { display: inline-block; margin-left: 0.75rem; border-left: 1px solid var(--border-color); padding-left: 0.75rem; } }
+  @media(max-width: 800px) { .brand-tagline { display: none; } }
 
-  .user-actions {
-    display: flex;
-    align-items: center;
-    gap: 1.25rem;
-  }
-  .user-actions a {
-    color: var(--text-muted);
-    text-decoration: none;
-    font-size: 0.85rem;
-    transition: color 0.2s;
-  }
+  .user-actions { display: flex; align-items: center; gap: 1.25rem; font-size: 0.86rem; }
+  .user-actions a { color: var(--text-muted); text-decoration: none; transition: color 0.2s; }
   .user-actions a:hover { color: var(--neon-lime); }
 
-  /* ── Container ── */
-  .main-wrapper {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 2.2rem 1.5rem;
-  }
-  .hero-header {
-    margin-bottom: 2rem;
-  }
-  .welcome-title {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 2rem;
-    font-weight: 900;
-    color: var(--text-primary);
-    letter-spacing: -0.5px;
-  }
-  .welcome-sub {
-    font-size: 0.9rem;
-    color: var(--neon-lime);
-    font-weight: 500;
-    margin-top: 0.35rem;
+  /* ── Layout & Sidebar Navigation (8 Sub-modules) ── */
+  .layout-container {
+    display: flex;
+    flex: 1;
+    min-height: calc(100vh - 65px);
   }
 
-  /* ── Grids ── */
+  .sidebar {
+    width: 240px;
+    background: #0E1113;
+    border-right: 1px solid var(--border-color);
+    padding: 1.5rem 0;
+    flex-shrink: 0;
+  }
+  @media(max-width: 900px) {
+    .layout-container { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); display: flex; overflow-x: auto; padding: 0.5rem; }
+  }
+
+  .sidebar-section {
+    padding: 0.5rem 1.25rem 0.25rem;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 800;
+  }
+  @media(max-width: 900px) { .sidebar-section { display: none; } }
+
+  .nav-tab-btn {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.25rem;
+    color: #ccc;
+    background: none;
+    border: none;
+    border-left: 3px solid transparent;
+    text-align: left;
+    font-size: 0.88rem;
+    font-family: 'Inter', sans-serif;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .nav-tab-btn:hover, .nav-tab-btn.active {
+    color: var(--neon-lime);
+    border-left-color: var(--neon-lime);
+    background: rgba(118, 192, 67, 0.08);
+  }
+  .nav-tab-btn i { width: 20px; text-align: center; font-size: 1rem; }
+
+  /* ── Main Content Area ── */
+  .main-content {
+    flex: 1;
+    padding: 2.2rem 2rem;
+    overflow-y: auto;
+  }
+  @media(max-width: 768px) { .main-content { padding: 1.5rem 1rem; } }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  .hero-header { margin-bottom: 2rem; }
+  .welcome-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.85rem;
+    font-weight: 900;
+    color: var(--text-primary);
+  }
+  .welcome-sub {
+    font-size: 0.88rem;
+    color: var(--neon-lime);
+    font-weight: 600;
+    margin-top: 0.25rem;
+  }
+
+  /* ── Grids & Cards ── */
   .dashboard-grid {
     display: grid;
     grid-template-columns: 360px 1fr;
     gap: 1.75rem;
   }
-  @media(max-width: 960px) { .dashboard-grid { grid-template-columns: 1fr; } }
+  @media(max-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr; } }
 
-  /* ── Cards ── */
   .fitme-card {
     background: var(--card-bg);
     border: 1px solid var(--border-color);
     border-radius: 16px;
     overflow: hidden;
-    transition: transform 0.2s, box-shadow 0.2s;
-  }
-  .fitme-card:hover {
-    box-shadow: 0 6px 30px rgba(0,0,0,0.4);
+    margin-bottom: 1.5rem;
   }
   .card-header {
     padding: 1.15rem 1.5rem;
@@ -149,622 +192,888 @@
     align-items: center;
     gap: 0.55rem;
   }
-  .card-body {
-    padding: 1.5rem;
-  }
+  .card-body { padding: 1.5rem; }
 
-  /* ── Digital ID & Biometric Pass Card ── */
+  /* ── Digital ID Card ── */
   .id-pass-card {
     background: linear-gradient(145deg, #15191C 0%, #0D0F11 100%);
     border: 2px solid var(--neon-lime);
     border-radius: 20px;
     padding: 1.75rem;
+    box-shadow: 0 10px 40px var(--neon-glow);
     position: relative;
-    box-shadow: 0 0 35px var(--neon-glow);
-    overflow: hidden;
+    margin-bottom: 1.5rem;
   }
-  .id-pass-card::after {
-    content: '';
-    position: absolute;
-    top: -50px;
-    right: -50px;
-    width: 170px;
-    height: 170px;
-    border-radius: 50%;
-    background: radial-gradient(circle, var(--neon-glow) 0%, transparent 70%);
-    pointer-events: none;
-  }
-  .id-card-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-    margin-bottom: 1.25rem;
-  }
+  .id-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
   .id-photo-frame {
-    width: 80px;
-    height: 80px;
-    border-radius: 50%;
-    border: 3px solid var(--neon-lime);
-    background: var(--card-surface);
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 0 15px var(--neon-glow);
+    width: 68px; height: 68px; border-radius: 14px;
+    border: 2px solid var(--neon-lime);
+    background: #1F2428; overflow: hidden; display: flex; align-items: center; justify-content: center;
   }
   .id-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
   .id-photo-frame i { font-size: 2.2rem; color: var(--text-muted); }
 
-  /* ── Pulsing Door Access Badge ── */
   .biometric-status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 0.6rem;
-    background: rgba(118, 192, 67, 0.12);
-    border: 1px solid var(--neon-lime);
-    padding: 0.45rem 0.95rem;
-    border-radius: 30px;
-    font-size: 0.78rem;
-    font-weight: 800;
-    letter-spacing: 0.8px;
-    color: var(--neon-lime);
+    display: inline-flex; align-items: center; gap: 0.6rem;
+    background: rgba(118, 192, 67, 0.12); border: 1px solid var(--neon-lime);
+    padding: 0.4rem 0.85rem; border-radius: 30px; font-size: 0.74rem; font-weight: 800;
+    color: var(--neon-lime); letter-spacing: 0.8px;
   }
   .biometric-status-badge.inactive {
-    background: rgba(230, 57, 70, 0.12);
-    border-color: var(--danger);
-    color: var(--danger);
+    background: rgba(230, 57, 70, 0.12); border-color: var(--danger); color: var(--danger);
   }
-  .pulse-indicator {
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--neon-lime);
-    box-shadow: 0 0 10px var(--neon-lime);
-    position: relative;
+  .pulse-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--neon-lime); box-shadow: 0 0 10px var(--neon-lime);
+    animation: livePulse 1.6s infinite ease-in-out;
   }
-  .pulse-indicator::after {
-    content: '';
-    position: absolute;
-    top: -4px; left: -4px; right: -4px; bottom: -4px;
-    border-radius: 50%;
-    border: 2px solid var(--neon-lime);
-    animation: radarPulse 1.8s infinite ease-out;
-  }
-  .biometric-status-badge.inactive .pulse-indicator {
-    background: var(--danger);
-    box-shadow: 0 0 10px var(--danger);
-  }
-  .biometric-status-badge.inactive .pulse-indicator::after {
-    border-color: var(--danger);
-  }
-  @keyframes radarPulse {
-    0% { transform: scale(0.6); opacity: 1; }
-    100% { transform: scale(2.4); opacity: 0; }
-  }
+  .biometric-status-badge.inactive .pulse-dot { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
+  @keyframes livePulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
 
-  .id-user-info { margin-top: 1rem; }
-  .id-user-name {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 1.35rem;
-    font-weight: 900;
-    color: var(--text-primary);
-  }
-  .id-user-plan {
-    color: var(--neon-lime);
-    font-weight: 700;
-    font-size: 0.82rem;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    margin-top: 0.2rem;
-  }
+  .id-user-name { font-family: 'Montserrat', sans-serif; font-size: 1.35rem; font-weight: 900; margin-top: 1rem; }
+  .id-user-plan { color: var(--neon-lime); font-weight: 700; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; }
+
   .id-meta-grid {
-    margin-top: 1.25rem;
-    padding-top: 1rem;
-    border-top: 1px solid rgba(255,255,255,0.08);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    font-size: 0.8rem;
+    margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);
+    display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.8rem;
   }
-  .id-meta-label { color: var(--text-muted); }
-  .id-meta-val { color: var(--text-primary); font-weight: 600; font-family: monospace; font-size: 0.95rem; }
+  .id-meta-label { color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; }
+  .id-meta-val { color: var(--text-primary); font-weight: 700; font-family: monospace; font-size: 0.95rem; }
 
-  /* ── Apple-Fitness Style Concentric Rings ── */
-  .rings-container {
-    display: flex;
-    align-items: center;
-    justify-content: space-around;
-    gap: 1.5rem;
-    flex-wrap: wrap;
-    padding: 0.5rem 0;
-  }
-  .rings-svg-wrap {
-    position: relative;
-    width: 200px;
-    height: 200px;
-  }
-  .rings-svg {
-    transform: rotate(-90deg);
-  }
-  .ring-bg {
-    fill: none;
-    stroke-width: 12;
-    opacity: 0.15;
-  }
-  .ring-fill {
-    fill: none;
-    stroke-width: 12;
-    stroke-linecap: round;
-    transition: stroke-dashoffset 1s ease-in-out;
-  }
-  .ring-center-stat {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-  }
-  .ring-center-val {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 2.2rem;
-    line-height: 1;
-    color: var(--text-primary);
-  }
-  .ring-center-sub {
-    font-size: 0.65rem;
-    color: var(--text-muted);
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
+  /* ── Concentric Rings ── */
+  .rings-container { display: flex; align-items: center; justify-content: space-around; gap: 1.5rem; flex-wrap: wrap; }
+  .rings-svg-wrap { position: relative; width: 190px; height: 190px; }
+  .rings-svg { transform: rotate(-90deg); }
+  .ring-bg { fill: none; stroke-width: 12; opacity: 0.15; }
+  .ring-fill { fill: none; stroke-width: 12; stroke-linecap: round; transition: stroke-dashoffset 1s ease-in-out; }
+  .ring-center-stat { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; }
+  .ring-center-val { font-family: 'Bebas Neue', sans-serif; font-size: 2.2rem; line-height: 1; color: #fff; }
+  .ring-center-sub { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; }
 
-  .rings-legend {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-    min-width: 190px;
-  }
-  .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 0.85rem;
-    background: var(--card-surface);
-    padding: 0.65rem 1rem;
-    border-radius: 12px;
-    border-left: 4px solid transparent;
-  }
+  .rings-legend { display: flex; flex-direction: column; gap: 0.85rem; min-width: 190px; }
+  .legend-item { display: flex; align-items: center; gap: 0.85rem; background: var(--card-surface); padding: 0.6rem 0.9rem; border-radius: 12px; border-left: 4px solid transparent; }
   .legend-item.protein { border-left-color: var(--neon-lime); }
   .legend-item.water { border-left-color: var(--cyan); }
   .legend-item.calories { border-left-color: var(--amber); }
+  .legend-title { font-size: 0.7rem; color: var(--text-muted); text-transform: uppercase; }
+  .legend-nums { font-family: 'Montserrat', sans-serif; font-size: 1rem; font-weight: 800; }
 
-  .legend-data { flex: 1; }
-  .legend-title { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.8px; }
-  .legend-nums { font-family: 'Montserrat', sans-serif; font-size: 1.05rem; font-weight: 800; }
-  .legend-pct { font-size: 0.8rem; font-weight: 700; color: var(--text-muted); }
-
-  /* ── 3D Morph Comparison Slider ── */
+  /* ── Morph Comparison Slider ── */
   .morph-slider-container {
-    position: relative;
-    width: 100%;
-    height: 380px;
-    border-radius: 16px;
-    overflow: hidden;
-    border: 1px solid var(--border-color);
-    background: #000;
-    user-select: none;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    position: relative; width: 100%; height: 350px; border-radius: 16px;
+    overflow: hidden; border: 1px solid var(--border-color); background: #000; user-select: none;
   }
-  .morph-img-layer {
-    position: absolute;
-    top: 0; left: 0; width: 100%; height: 100%;
-    background-size: cover;
-    background-position: center;
-  }
-  .morph-img-before {
-    background-color: #171B1E;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  .morph-img-after {
-    background-color: #0E1317;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    clip-path: inset(0 0 0 50%);
-  }
-  .morph-divider-line {
-    position: absolute;
-    top: 0; bottom: 0;
-    left: 50%;
-    width: 3px;
-    background: var(--neon-lime);
-    box-shadow: 0 0 12px var(--neon-glow-high);
-    cursor: ew-resize;
-    z-index: 10;
-  }
+  .morph-img-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; }
+  .morph-img-before { background-color: #171B1E; display: flex; align-items: center; justify-content: center; }
+  .morph-img-after { background-color: #0E1317; display: flex; align-items: center; justify-content: center; clip-path: inset(0 0 0 50%); }
+  .morph-divider-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; background: var(--neon-lime); box-shadow: 0 0 12px var(--neon-glow-high); cursor: ew-resize; z-index: 10; }
   .morph-handle {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 44px;
-    height: 44px;
-    border-radius: 50%;
-    background: #111417;
-    border: 3px solid var(--neon-lime);
-    box-shadow: 0 0 20px var(--neon-glow-high);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--neon-lime);
-    font-size: 0.9rem;
-    cursor: ew-resize;
-    z-index: 12;
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+    width: 40px; height: 40px; border-radius: 50%; background: #111417; border: 3px solid var(--neon-lime);
+    box-shadow: 0 0 20px var(--neon-glow-high); display: flex; align-items: center; justify-content: center;
+    color: var(--neon-lime); font-size: 0.85rem; cursor: ew-resize; z-index: 12;
   }
-  .morph-label {
-    position: absolute;
-    bottom: 15px;
-    padding: 0.35rem 0.85rem;
-    border-radius: 6px;
-    font-size: 0.75rem;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    background: rgba(11, 13, 14, 0.85);
-    border: 1px solid rgba(255,255,255,0.15);
-    z-index: 8;
-  }
+  .morph-label { position: absolute; bottom: 15px; padding: 0.35rem 0.85rem; border-radius: 6px; font-size: 0.75rem; font-weight: 800; text-transform: uppercase; background: rgba(11, 13, 14, 0.85); border: 1px solid rgba(255,255,255,0.15); z-index: 8; }
   .morph-label.before { left: 15px; color: var(--text-muted); }
   .morph-label.after { right: 15px; color: var(--neon-lime); }
 
-  /* ── Attendance Streak Display ── */
-  .streak-badge-card {
-    background: linear-gradient(135deg, #1C2126 0%, #121517 100%);
-    border: 1px solid var(--border-color);
-    border-radius: 16px;
-    padding: 1.5rem;
-    text-align: center;
-    margin-top: 1.5rem;
-  }
-  .streak-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 4rem;
-    color: var(--neon-lime);
-    line-height: 1;
-    text-shadow: 0 0 20px var(--neon-glow);
-  }
-  .streak-sub {
-    font-size: 0.85rem;
-    color: var(--text-muted);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-  }
+  /* ── Tables & Forms ── */
+  .table-custom { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .table-custom th { text-align: left; padding: 0.75rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); font-weight: 700; text-transform: uppercase; font-size: 0.72rem; }
+  .table-custom td { padding: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
 
-  /* ── Action Buttons ── */
-  .btn-fitme {
-    background: var(--neon-lime);
-    color: #000;
-    font-weight: 800;
-    font-size: 0.85rem;
-    padding: 0.6rem 1.4rem;
-    border-radius: 8px;
-    border: none;
-    cursor: pointer;
-    text-decoration: none;
-    display: inline-flex;
-    align-items: center;
-    gap: 0.5rem;
-    transition: all 0.2s;
-    box-shadow: 0 4px 15px var(--neon-glow);
+  .form-control {
+    width: 100%; background: var(--card-surface); border: 1px solid var(--border-color);
+    padding: 0.65rem 0.9rem; border-radius: 8px; color: #fff; font-family: 'Inter', sans-serif; font-size: 0.88rem; outline: none;
   }
-  .btn-fitme:hover {
-    background: #8AE04F;
-    box-shadow: 0 6px 22px var(--neon-glow-high);
-    transform: translateY(-1px);
+  .form-control:focus { border-color: var(--neon-lime); }
+
+  .btn-fitme {
+    background: var(--neon-lime); color: #000; font-weight: 800; font-size: 0.85rem;
+    padding: 0.6rem 1.3rem; border-radius: 8px; border: none; cursor: pointer; text-decoration: none;
+    display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; box-shadow: 0 4px 15px var(--neon-glow);
+  }
+  .btn-fitme:hover { background: #8AE04F; transform: translateY(-1px); }
+
+  /* Toast */
+  .fitme-toast {
+    position: fixed; bottom: 25px; right: 25px; background: #14181B; border: 2px solid var(--neon-lime);
+    padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 10px 40px var(--neon-glow);
+    display: none; align-items: center; gap: 0.75rem; z-index: 2000; font-weight: 700;
   }
 </style>
 </head>
 <body>
 
-<!-- ── Navigation Bar ── -->
+<!-- Toast -->
+<div class="fitme-toast" id="memberToast">
+  <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:1.4rem;"></i>
+  <span id="memberToastMsg">Action completed successfully!</span>
+</div>
+
+<!-- Topbar -->
 <header class="topbar">
-  <div class="brand">
-    <img src="{% static 'images/logos/fitme-logo.png' %}" alt="Fit Me">
-    <span class="brand-name">Fit Me</span>
-    <span class="brand-tagline">Train with Purpose & Move with Confidence</span>
-  </div>
+  <a href="/" class="brand">
+    <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me">
+    <div>
+      <span class="brand-name">FIT <span>ME</span></span>
+      <span class="brand-tagline">Train with Purpose &amp; Move with Confidence</span>
+    </div>
+  </a>
   <div class="user-actions">
-    <a href="/dashboard/"><i class="fa fa-th-large"></i> Role Hub</a>
-    <a href="/en/dashboard"><i class="fa fa-dumbbell"></i> Workout Tools</a>
+    <span><i class="fa fa-map-marker-alt" style="color:var(--neon-lime);"></i> Pitigala</span>
+    <a href="/dashboard/admin/"><i class="fa fa-shield-alt"></i> Admin</a>
+    <a href="/dashboard/coach/"><i class="fa fa-dumbbell"></i> Coach</a>
     <form method="post" action="/account/logout/" style="display:inline;">{% csrf_token %}
       <button type="submit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;"><i class="fa fa-sign-out-alt"></i> Logout</button>
     </form>
   </div>
 </header>
 
-<!-- ── Main Dashboard ── -->
-<main class="main-wrapper">
-  <div class="hero-header">
-    <h1 class="welcome-title">Welcome back, {{ request.user.first_name|default:request.user.username }}! 💪</h1>
-    <p class="welcome-sub">⚡ Real-time Smart Gym Biometrics & Performance Hub</p>
-  </div>
+<div class="layout-container">
+  <!-- Sidebar Navigation with All 8 Modules -->
+  <aside class="sidebar">
+    <div class="sidebar-section">Member Platform</div>
+    <button class="nav-tab-btn active" onclick="switchTab('tab-dashboard', this)"><i class="fa fa-id-card"></i> 1. Dashboard</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-myprogram', this)"><i class="fa fa-calendar-alt"></i> 2. My Program</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-workout', this)"><i class="fa fa-dumbbell"></i> 3. Workout Logger</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-nutrition', this)"><i class="fa fa-utensils"></i> 4. Nutrition &amp; Fuel</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-progress', this)"><i class="fa fa-chart-line"></i> 5. Progress</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-measurements', this)"><i class="fa fa-ruler"></i> 6. Measurements</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-timeline', this)"><i class="fa fa-camera"></i> 7. Transformation</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-membership', this)"><i class="fa fa-receipt"></i> 8. Membership</button>
+  </aside>
 
-  <div class="dashboard-grid">
-    <!-- ── Left Column: Digital Pass & Streak ── -->
-    <div>
-      <div class="id-pass-card">
-        <div class="id-card-top">
-          <div class="id-photo-frame">
-            {% if profile and profile.profile_photo %}
-              <img src="{{ profile.profile_photo.url }}" alt="Member Photo">
-            {% else %}
-              <i class="fa fa-user"></i>
-            {% endif %}
-          </div>
-          <div>
-            {% if door_access_active %}
-              <div class="biometric-status-badge">
-                <span class="pulse-indicator"></span>
-                DOOR ACCESS ACTIVE
-              </div>
-            {% else %}
-              <div class="biometric-status-badge inactive">
-                <span class="pulse-indicator"></span>
-                ACCESS REVOKED
-              </div>
-            {% endif %}
-          </div>
-        </div>
+  <!-- Main Content Area -->
+  <main class="main-content">
 
-        <div class="id-user-info">
-          <div class="id-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
-          <div class="id-user-plan">
-            {% if subscription %}
-              {{ subscription.plan.name }}
-            {% else %}
-              No Active Plan
-            {% endif %}
-          </div>
-        </div>
-
-        <div class="id-meta-grid">
-          <div>
-            <div class="id-meta-label">Hardware PIN</div>
-            <div class="id-meta-val">
-              {% if bio_profile %}{{ bio_profile.zk_pin }}{% elif profile and profile.biometric_pin %}{{ profile.biometric_pin }}{% else %}#1001{% endif %}
-            </div>
-          </div>
-          <div>
-            <div class="id-meta-label">Turnstile IP</div>
-            <div class="id-meta-val">192.168.1.23</div>
-          </div>
-          <div>
-            <div class="id-meta-label">Expiry Date</div>
-            <div class="id-meta-val">
-              {% if subscription %}{{ subscription.end_date|date:"d M Y" }}{% else %}N/A{% endif %}
-            </div>
-          </div>
-          <div>
-            <div class="id-meta-label">Days Left</div>
-            <div class="id-meta-val" style="color:var(--neon-lime);">
-              {% if subscription %}{{ subscription.days_remaining }} days{% else %}0{% endif %}
-            </div>
-          </div>
-        </div>
+    <!-- 1. DASHBOARD TAB -->
+    <div id="tab-dashboard" class="tab-pane active">
+      <div class="hero-header">
+        <h1 class="welcome-title">Welcome back, {{ request.user.first_name|default:request.user.username }}! 💪</h1>
+        <p class="welcome-sub">⚡ Pitigala Smart Gym • Automated Biometric Pass &amp; Fuel Performance</p>
       </div>
 
-      <!-- Streak Badge -->
-      <div class="streak-badge-card">
-        <div style="font-size:2.2rem;margin-bottom:0.25rem;">
-          {% if streak.current_streak >= 7 %}🔥{% elif streak.current_streak >= 3 %}⚡{% else %}💪{% endif %}
+      <div class="dashboard-grid">
+        <!-- Left: Digital ID Pass & Streak -->
+        <div>
+          <div class="id-pass-card">
+            <div class="id-card-top">
+              <div class="id-photo-frame">
+                {% if profile and profile.profile_photo %}
+                  <img src="{{ profile.profile_photo.url }}" alt="Member Photo">
+                {% else %}
+                  <i class="fa fa-user"></i>
+                {% endif %}
+              </div>
+              <div>
+                {% if door_access_active %}
+                  <div class="biometric-status-badge">
+                    <span class="pulse-dot"></span>
+                    DOOR ACCESS ACTIVE
+                  </div>
+                {% else %}
+                  <div class="biometric-status-badge inactive">
+                    <span class="pulse-dot"></span>
+                    ACCESS REVOKED
+                  </div>
+                {% endif %}
+              </div>
+            </div>
+
+            <div class="id-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+            <div class="id-user-plan">
+              {% if subscription %}{{ subscription.plan.name }}{% else %}Active Pitigala Member{% endif %}
+            </div>
+
+            <div class="id-meta-grid">
+              <div>
+                <div class="id-meta-label">Hardware PIN</div>
+                <div class="id-meta-val" style="color:var(--neon-lime);font-size:1.15rem;">
+                  {% if bio_profile %}{{ bio_profile.zk_pin }}{% elif profile and profile.biometric_pin %}{{ profile.biometric_pin }}{% else %}#1001{% endif %}
+                </div>
+              </div>
+              <div>
+                <div class="id-meta-label">Club Branch</div>
+                <div class="id-meta-val">Pitigala 80420</div>
+              </div>
+              <div>
+                <div class="id-meta-label">Hotline</div>
+                <div class="id-meta-val">070 762 7878</div>
+              </div>
+              <div>
+                <div class="id-meta-label">Days Left</div>
+                <div class="id-meta-val" style="color:var(--neon-lime);">
+                  {% if subscription %}{{ subscription.days_remaining }} days{% else %}Active Pass{% endif %}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Streak Card -->
+          <div class="fitme-card" style="text-align:center;padding:1.5rem;">
+            <div style="font-size:2.2rem;margin-bottom:0.25rem;">
+              {% if streak.current_streak >= 7 %}🔥{% elif streak.current_streak >= 3 %}⚡{% else %}💪{% endif %}
+            </div>
+            <div style="font-family:'Bebas Neue';font-size:4rem;color:var(--neon-lime);line-height:1;">
+              {{ streak.current_streak|default:"3" }}
+            </div>
+            <div style="font-size:0.85rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;letter-spacing:1px;">
+              Consecutive Day Streak
+            </div>
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;">
+              Personal Best: {{ streak.longest_streak|default:"14" }} days • Total Punches: {{ streak.total_checkins|default:"28" }}
+            </div>
+          </div>
         </div>
-        <div class="streak-num">{{ streak.current_streak|default:"3" }}</div>
-        <div class="streak-sub">Consecutive Day Streak</div>
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.5rem;">
-          Personal Best: {{ streak.longest_streak|default:"14" }} days • Total Check-ins: {{ streak.total_checkins|default:"28" }}
+
+        <!-- Right: Concentric Rings & Morph Comparison -->
+        <div>
+          <!-- Concentric SVG Rings -->
+          <div class="fitme-card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa fa-circle-notch" style="color:var(--neon-lime);"></i>
+                Daily Fuel &amp; Calorie Performance Rings
+              </div>
+              <button class="btn-fitme" style="padding:0.35rem 0.9rem;font-size:0.75rem;" onclick="switchTab('tab-nutrition', document.querySelectorAll('.nav-tab-btn')[3])">
+                <i class="fa fa-plus"></i> Log Nutrition
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="rings-container">
+                <div class="rings-svg-wrap">
+                  <svg class="rings-svg" width="190" height="190" viewBox="0 0 200 200">
+                    <circle class="ring-bg" cx="100" cy="100" r="80" stroke="#76C043" />
+                    <circle class="ring-fill" cx="100" cy="100" r="80" stroke="#76C043" stroke-dasharray="502.6" stroke-dashoffset="135" id="proteinRing" />
+
+                    <circle class="ring-bg" cx="100" cy="100" r="62" stroke="#06B6D4" />
+                    <circle class="ring-fill" cx="100" cy="100" r="62" stroke="#06B6D4" stroke-dasharray="389.5" stroke-dashoffset="77" id="waterRing" />
+
+                    <circle class="ring-bg" cx="100" cy="100" r="44" stroke="#F59E0B" />
+                    <circle class="ring-fill" cx="100" cy="100" r="44" stroke="#F59E0B" stroke-dasharray="276.4" stroke-dashoffset="94" id="calorieRing" />
+                  </svg>
+                  <div class="ring-center-stat">
+                    <div class="ring-center-val">{{ rings.calories_consumed|default:"1450" }}</div>
+                    <div class="ring-center-sub">KCAL</div>
+                  </div>
+                </div>
+
+                <div class="rings-legend">
+                  <div class="legend-item protein">
+                    <div>
+                      <div class="legend-title">Protein Target</div>
+                      <div class="legend-nums" style="color:var(--neon-lime);">{{ rings.protein_consumed|default:"110" }}g / {{ rings.protein_target|default:"150" }}g</div>
+                    </div>
+                  </div>
+                  <div class="legend-item water">
+                    <div>
+                      <div class="legend-title">Hydration Intake</div>
+                      <div class="legend-nums" style="color:var(--cyan);">{{ rings.water_consumed|default:"2.4" }}L / {{ rings.water_target|default:"3.0" }}L</div>
+                    </div>
+                  </div>
+                  <div class="legend-item calories">
+                    <div>
+                      <div class="legend-title">Active Calories</div>
+                      <div class="legend-nums" style="color:var(--amber);">{{ rings.calories_consumed|default:"1450" }} / {{ rings.calories_target|default:"2200" }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 3D Morph Comparison Slider -->
+          <div class="fitme-card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa fa-sliders-h" style="color:var(--neon-lime);"></i>
+                3D Physique Morph Comparison
+              </div>
+              <span style="font-size:0.75rem;color:var(--text-muted);">Drag handle horizontally</span>
+            </div>
+            <div class="card-body">
+              <div class="morph-slider-container" id="morphContainer">
+                <div class="morph-img-layer morph-img-before" id="beforeLayer"
+                     style="{% if before_checkin and before_checkin.photo_front %}background-image:url('{{ before_checkin.photo_front.url }}');{% else %}background:linear-gradient(135deg,#1E2428 0%,#111417 100%);{% endif %}">
+                  {% if not before_checkin or not before_checkin.photo_front %}
+                    <div style="text-align:center;color:var(--text-muted);">
+                      <i class="fa fa-camera" style="font-size:2.8rem;margin-bottom:0.75rem;opacity:0.4;"></i>
+                      <div style="font-weight:700;font-size:0.9rem;">Initial Baseline Photo</div>
+                      <div style="font-size:0.75rem;opacity:0.7;">Check-in month 1</div>
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="morph-img-layer morph-img-after" id="afterLayer"
+                     style="{% if after_checkin and after_checkin.photo_front %}background-image:url('{{ after_checkin.photo_front.url }}');{% else %}background:linear-gradient(135deg,#142312 0%,#0B130A 100%);{% endif %}">
+                  {% if not after_checkin or not after_checkin.photo_front %}
+                    <div style="text-align:center;color:var(--neon-lime);">
+                      <i class="fa fa-trophy" style="font-size:2.8rem;margin-bottom:0.75rem;filter:drop-shadow(0 0 10px var(--neon-glow));"></i>
+                      <div style="font-weight:800;font-size:0.95rem;">Current Lean Physique</div>
+                      <div style="font-size:0.75rem;color:var(--text-muted);">Latest check-in</div>
+                    </div>
+                  {% endif %}
+                </div>
+
+                <div class="morph-label before">Before (Day 1)</div>
+                <div class="morph-label after">After (Current)</div>
+
+                <div class="morph-divider-line" id="morphLine"></div>
+                <div class="morph-handle" id="morphHandle"><i class="fa fa-arrows-alt-h"></i></div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
 
-    <!-- ── Right Column: Apple-Fitness Rings & 3D Morph Slider ── -->
-    <div style="display:flex;flex-direction:column;gap:1.75rem;">
-
-      <!-- Widget 1: Apple-Fitness Style Daily Macro & Activity Concentric Rings -->
-      <div class="fitme-card">
-        <div class="card-header">
-          <div class="card-title">
-            <i class="fa fa-circle-notch" style="color:var(--neon-lime);"></i>
-            Daily Fuel & Calorie Performance Rings
-          </div>
-          <button class="btn-fitme" style="padding:0.35rem 0.9rem;font-size:0.75rem;" onclick="openLogMealModal()">
-            <i class="fa fa-plus"></i> Log Fuel
-          </button>
-        </div>
-        <div class="card-body">
-          <div class="rings-container">
-            <!-- Concentric SVG Rings -->
-            <div class="rings-svg-wrap">
-              <svg class="rings-svg" width="200" height="200" viewBox="0 0 200 200">
-                <!-- Outer: Protein (Lime) R=80 -> C=502.6 -->
-                <circle class="ring-bg" cx="100" cy="100" r="80" stroke="#76C043" />
-                <circle class="ring-fill" cx="100" cy="100" r="80" stroke="#76C043"
-                        stroke-dasharray="502.6"
-                        stroke-dashoffset="{{ rings.protein_pct|default:73|stringformat:'f'|slice:':4' }}"
-                        id="proteinRing" />
-
-                <!-- Middle: Water (Cyan) R=62 -> C=389.5 -->
-                <circle class="ring-bg" cx="100" cy="100" r="62" stroke="#06B6D4" />
-                <circle class="ring-fill" cx="100" cy="100" r="62" stroke="#06B6D4"
-                        stroke-dasharray="389.5"
-                        stroke-dashoffset="116.8"
-                        id="waterRing" />
-
-                <!-- Inner: Calories (Amber) R=44 -> C=276.4 -->
-                <circle class="ring-bg" cx="100" cy="100" r="44" stroke="#F59E0B" />
-                <circle class="ring-fill" cx="100" cy="100" r="44" stroke="#F59E0B"
-                        stroke-dasharray="276.4"
-                        stroke-dashoffset="94.0"
-                        id="calorieRing" />
-              </svg>
-              <div class="ring-center-stat">
-                <div class="ring-center-val">{{ rings.calories_consumed|default:"1,450" }}</div>
-                <div class="ring-center-sub">KCAL BURN</div>
-              </div>
-            </div>
-
-            <!-- Legend breakdown -->
-            <div class="rings-legend">
-              <div class="legend-item protein">
-                <div class="legend-data">
-                  <div class="legend-title">Protein Target</div>
-                  <div class="legend-nums" style="color:var(--neon-lime);">{{ rings.protein_consumed|default:"110" }}g <span style="font-size:0.75rem;color:var(--text-muted);">/ {{ rings.protein_target|default:"150" }}g</span></div>
-                </div>
-                <div class="legend-pct">{{ rings.protein_pct|default:"73" }}%</div>
-              </div>
-
-              <div class="legend-item water">
-                <div class="legend-data">
-                  <div class="legend-title">Hydration Intake</div>
-                  <div class="legend-nums" style="color:var(--cyan);">{{ rings.water_consumed|default:"2.4" }}L <span style="font-size:0.75rem;color:var(--text-muted);">/ {{ rings.water_target|default:"3.0" }}L</span></div>
-                </div>
-                <div class="legend-pct">{{ rings.water_pct|default:"80" }}%</div>
-              </div>
-
-              <div class="legend-item calories">
-                <div class="legend-data">
-                  <div class="legend-title">Active Calories</div>
-                  <div class="legend-nums" style="color:var(--amber);">{{ rings.calories_consumed|default:"1,450" }} <span style="font-size:0.75rem;color:var(--text-muted);">/ {{ rings.calories_target|default:"2,200" }}</span></div>
-                </div>
-                <div class="legend-pct">{{ rings.calories_pct|default:"66" }}%</div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <!-- 2. MY PROGRAM TAB -->
+    <div id="tab-myprogram" class="tab-pane">
+      <div class="hero-header">
+        <h1 class="welcome-title">My Assigned Program</h1>
+        <p class="welcome-sub">Coach-curated training split and weekly progressive overload targets</p>
       </div>
 
-      <!-- Widget 2: 3D-Styled Before/After Transformation Morph Slider -->
       <div class="fitme-card">
         <div class="card-header">
-          <div class="card-title">
-            <i class="fa fa-sliders-h" style="color:var(--neon-lime);"></i>
-            3D Transformation Morph Slider
-          </div>
-          <span style="font-size:0.75rem;color:var(--text-muted);">Drag handle horizontally</span>
+          <div class="card-title"><i class="fa fa-calendar-check" style="color:var(--neon-lime);"></i> Current Active Training Routine</div>
+          <span class="biometric-status-badge">ACTIVE SPLIT</span>
         </div>
         <div class="card-body">
-          <div class="morph-slider-container" id="morphContainer">
-            <!-- Before Layer (Initial Baseline) -->
-            <div class="morph-img-layer morph-img-before" id="beforeLayer"
-                 style="{% if before_checkin and before_checkin.photo_front %}background-image:url('{{ before_checkin.photo_front.url }}');{% else %}background:linear-gradient(135deg,#1E2428 0%,#111417 100%);{% endif %}">
-              {% if not before_checkin or not before_checkin.photo_front %}
-                <div style="text-align:center;color:var(--text-muted);">
-                  <i class="fa fa-camera" style="font-size:2.8rem;margin-bottom:0.75rem;opacity:0.4;"></i>
-                  <div style="font-weight:700;font-size:0.9rem;">Initial Baseline Photo</div>
-                  <div style="font-size:0.75rem;opacity:0.7;">Check-in month 1</div>
-                </div>
-              {% endif %}
+          <h2 style="font-family:'Montserrat';font-weight:900;font-size:1.5rem;color:#fff;margin-bottom:0.4rem;">
+            {{ active_program.title|default:"Hypertrophy Master Split" }}
+          </h2>
+          <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.25rem;">
+            {{ active_program.description|default:"Progressive overload volume split focused on optimal muscle fiber recruitment and aesthetic physique conditioning." }}
+          </p>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;margin-bottom:1.5rem;">
+            <div style="background:var(--card-surface);padding:1rem;border-radius:10px;border-left:3px solid var(--neon-lime);">
+              <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Duration</div>
+              <div style="font-weight:800;font-size:1.1rem;color:#fff;">{{ active_program.duration_weeks|default:"12" }} Weeks</div>
             </div>
-
-            <!-- After Layer (Current Progress) -->
-            <div class="morph-img-layer morph-img-after" id="afterLayer"
-                 style="{% if after_checkin and after_checkin.photo_front %}background-image:url('{{ after_checkin.photo_front.url }}');{% else %}background:linear-gradient(135deg,#142312 0%,#0B130A 100%);{% endif %}">
-              {% if not after_checkin or not after_checkin.photo_front %}
-                <div style="text-align:center;color:var(--neon-lime);">
-                  <i class="fa fa-trophy" style="font-size:2.8rem;margin-bottom:0.75rem;filter:drop-shadow(0 0 10px var(--neon-glow));"></i>
-                  <div style="font-weight:800;font-size:0.95rem;">Current Lean Physique</div>
-                  <div style="font-size:0.75rem;color:var(--text-muted);">Latest check-in</div>
-                </div>
-              {% endif %}
+            <div style="background:var(--card-surface);padding:1rem;border-radius:10px;border-left:3px solid var(--cyan);">
+              <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Weekly Frequency</div>
+              <div style="font-weight:800;font-size:1.1rem;color:#fff;">{{ active_program.sessions_per_week|default:"5" }} Days / Week</div>
             </div>
-
-            <!-- Labels -->
-            <div class="morph-label before">Before (Day 1)</div>
-            <div class="morph-label after">After (Current)</div>
-
-            <!-- Draggable Divider & 3D Handle -->
-            <div class="morph-divider-line" id="morphLine"></div>
-            <div class="morph-handle" id="morphHandle">
-              <i class="fa fa-arrows-alt-h"></i>
+            <div style="background:var(--card-surface);padding:1rem;border-radius:10px;border-left:3px solid var(--amber);">
+              <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Assigned Coach</div>
+              <div style="font-weight:800;font-size:1.1rem;color:#fff;">Coach Kamal</div>
             </div>
           </div>
+
+          <h3 style="font-family:'Montserrat';font-weight:800;font-size:1.1rem;margin-bottom:1rem;">Weekly Schedule &amp; Day Splits</h3>
+          <table class="table-custom">
+            <thead>
+              <tr><th>Day</th><th>Workout Split</th><th>Primary Focus</th><th>Intensity</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Monday</td><td style="font-weight:700;color:var(--neon-lime);">Push Day A</td><td>Chest, Anterior Delts, Triceps</td><td>RIR 1-2</td></tr>
+              <tr><td>Tuesday</td><td style="font-weight:700;color:var(--cyan);">Pull Day B</td><td>Lats, Rhomboids, Biceps, Rear Delts</td><td>RIR 1-2</td></tr>
+              <tr><td>Wednesday</td><td style="font-weight:700;color:var(--amber);">Legs &amp; Core</td><td>Quads, Hamstrings, Calves, Abs</td><td>RIR 0-1</td></tr>
+              <tr><td>Thursday</td><td style="color:var(--text-muted);">Active Recovery</td><td>Mobility, Foam Rolling, 5km Walk</td><td>Zone 1-2</td></tr>
+              <tr><td>Friday</td><td style="font-weight:700;color:var(--neon-lime);">Upper Hypertrophy</td><td>Chest, Back, Shoulders Superset</td><td>RIR 1-2</td></tr>
+              <tr><td>Saturday</td><td style="font-weight:700;color:var(--cyan);">Lower Power</td><td>Deadlifts, Hack Squats, Unilateral work</td><td>Heavy</td></tr>
+            </tbody>
+          </table>
         </div>
       </div>
-
     </div>
-  </div>
-</main>
 
-<script>
-<!-- Quick Meal Modal -->
-<div class="modal-overlay" id="quickMealModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:1000;align-items:center;justify-content:center;">
-  <div style="background:#121517;border:2px solid #76C043;border-radius:16px;padding:2rem;max-width:440px;width:90%;box-shadow:0 10px 40px rgba(118,192,67,0.35);">
-    <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;margin-bottom:0.5rem;">Log Quick Fuel & Nutrition</h3>
-    <p style="font-size:0.8rem;color:#8B9299;margin-bottom:1.25rem;">Directly updates your concentric calorie & macro rings.</p>
-    <form id="quickFuelForm" onsubmit="submitQuickFuel(event)">
-      <div style="margin-bottom:1rem;">
-        <label style="display:block;font-size:0.75rem;color:#8B9299;margin-bottom:0.35rem;">Meal Category</label>
-        <select id="quickMealType" style="width:100%;background:#1F2428;border:1px solid #242A2F;padding:0.6rem;border-radius:8px;color:#fff;">
-          <option value="lunch">Lunch</option>
-          <option value="breakfast">Breakfast</option>
-          <option value="dinner">Dinner</option>
-          <option value="post_workout">Post-Workout Fuel</option>
-          <option value="snack">Healthy Snack</option>
-        </select>
+    <!-- 3. WORKOUT TAB -->
+    <div id="tab-workout" class="tab-pane">
+      <div class="hero-header">
+        <h1 class="welcome-title">Live Workout Logger</h1>
+        <p class="welcome-sub">Record sets, reps, and resistance with instant feedback</p>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
-        <div>
-          <label style="display:block;font-size:0.75rem;color:#8B9299;margin-bottom:0.35rem;">Calories (kcal)</label>
-          <input type="number" id="quickCal" value="450" required style="width:100%;background:#1F2428;border:1px solid #242A2F;padding:0.6rem;border-radius:8px;color:#fff;">
+
+      <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:1.5rem;">
+        <!-- Workout Log Form -->
+        <div class="fitme-card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa fa-pen" style="color:var(--neon-lime);"></i> Log Current Exercise</div>
+          </div>
+          <div class="card-body">
+            <form id="workoutLogForm" onsubmit="submitWorkoutLog(event)">
+              <div style="margin-bottom:1rem;">
+                <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Workout Routine</label>
+                <select id="wlRoutine" class="form-control">
+                  <option value="Push Day">Push Day (Chest, Shoulders, Triceps)</option>
+                  <option value="Pull Day">Pull Day (Back, Biceps)</option>
+                  <option value="Leg Day">Leg Day (Quads, Hamstrings, Glutes)</option>
+                  <option value="Cardio & Conditioning">Cardio &amp; Conditioning</option>
+                </select>
+              </div>
+              <div style="margin-bottom:1rem;">
+                <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Exercise Name *</label>
+                <input type="text" id="wlExercise" required class="form-control" placeholder="e.g. Barbell Bench Press">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                <div>
+                  <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Sets</label>
+                  <input type="number" id="wlSets" value="3" required class="form-control">
+                </div>
+                <div>
+                  <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Reps</label>
+                  <input type="number" id="wlReps" value="10" required class="form-control">
+                </div>
+                <div>
+                  <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Weight (kg)</label>
+                  <input type="number" step="0.5" id="wlWeight" value="60.0" required class="form-control">
+                </div>
+              </div>
+              <div style="margin-bottom:1.25rem;">
+                <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Notes / RIR</label>
+                <input type="text" id="wlNotes" class="form-control" placeholder="e.g. 2 RIR, strict pause at bottom">
+              </div>
+              <button type="submit" class="btn-fitme" id="btnLogWorkout" style="width:100%;justify-content:center;">
+                <i class="fa fa-save"></i> Save Exercise Set
+              </button>
+            </form>
+          </div>
         </div>
-        <div>
-          <label style="display:block;font-size:0.75rem;color:#8B9299;margin-bottom:0.35rem;">Protein (g)</label>
-          <input type="number" id="quickPro" value="35" required style="width:100%;background:#1F2428;border:1px solid #242A2F;padding:0.6rem;border-radius:8px;color:#fff;">
+
+        <!-- Recent Logs Table -->
+        <div class="fitme-card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa fa-history" style="color:var(--cyan);"></i> Today's Workout History</div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <table class="table-custom" id="workoutLogsTable">
+              <thead>
+                <tr><th>Time</th><th>Exercise</th><th>Sets &amp; Reps</th><th>Weight</th><th>Notes</th></tr>
+              </thead>
+              <tbody>
+                {% for log in workout_logs %}
+                  <tr>
+                    <td style="color:var(--text-muted);">{{ log.logged_at|date:"d M H:i" }}</td>
+                    <td style="font-weight:700;color:#fff;">{{ log.exercise_name }}</td>
+                    <td>{{ log.sets_completed }} x {{ log.reps }}</td>
+                    <td style="color:var(--neon-lime);font-weight:800;">{{ log.weight_kg }} kg</td>
+                    <td style="color:var(--text-muted);font-size:0.75rem;">{{ log.notes|default:"--" }}</td>
+                  </tr>
+                {% empty %}
+                  <tr id="emptyWorkoutRow"><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">No workout entries logged yet. Record your first set today!</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
-      <div style="margin-bottom:1.25rem;">
-        <label style="display:block;font-size:0.75rem;color:#8B9299;margin-bottom:0.35rem;">Notes / Foods</label>
-        <input type="text" id="quickNotes" placeholder="e.g. Grilled Chicken + Red Rice + Dhal" style="width:100%;background:#1F2428;border:1px solid #242A2F;padding:0.6rem;border-radius:8px;color:#fff;">
+    </div>
+
+    <!-- 4. NUTRITION TAB -->
+    <div id="tab-nutrition" class="tab-pane">
+      <div class="hero-header">
+        <h1 class="welcome-title">Nutrition &amp; Sri Lankan Fuel Tracker</h1>
+        <p class="welcome-sub">Balance your macros with local authentic nutrition database</p>
       </div>
-      <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
-        <button type="button" class="btn-fitme" style="background:rgba(255,255,255,0.1);color:#ccc;box-shadow:none;" onclick="closeLogMealModal()">Cancel</button>
-        <button type="submit" class="btn-fitme" id="btnSubmitFuel">Save & Recalculate Rings</button>
+
+      <div style="display:grid;grid-template-columns:1fr 1.2fr;gap:1.5rem;">
+        <!-- Quick Food Logger -->
+        <div class="fitme-card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa fa-utensils" style="color:var(--neon-lime);"></i> Quick Meal Logger</div>
+          </div>
+          <div class="card-body">
+            <form id="memberMealForm" onsubmit="submitMemberMeal(event)">
+              <div style="margin-bottom:1rem;">
+                <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Meal Category</label>
+                <select id="mmType" class="form-control">
+                  <option value="lunch">Lunch</option>
+                  <option value="breakfast">Breakfast</option>
+                  <option value="dinner">Dinner</option>
+                  <option value="post_workout">Post-Workout Shake / Fuel</option>
+                  <option value="snack">Healthy Snack</option>
+                </select>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                <div>
+                  <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Calories (kcal)</label>
+                  <input type="number" id="mmCal" value="480" required class="form-control">
+                </div>
+                <div>
+                  <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Protein (g)</label>
+                  <input type="number" id="mmPro" value="35" required class="form-control">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                <div>
+                  <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Carbs (g)</label>
+                  <input type="number" id="mmCarb" value="55" class="form-control">
+                </div>
+                <div>
+                  <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Fats (g)</label>
+                  <input type="number" id="mmFat" value="12" class="form-control">
+                </div>
+              </div>
+              <div style="margin-bottom:1.25rem;">
+                <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Food Items / Notes</label>
+                <input type="text" id="mmNotes" class="form-control" placeholder="e.g. Red Rice, Chicken Curry, Dhal, Gotukola Sambol">
+              </div>
+              <button type="submit" class="btn-fitme" id="btnLogMeal" style="width:100%;justify-content:center;">
+                <i class="fa fa-save"></i> Log Meal &amp; Recalculate Rings
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Sri Lankan Common Foods Quick Reference -->
+        <div class="fitme-card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa fa-bowl-rice" style="color:var(--amber);"></i> Sri Lankan Nutrition Database</div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <table class="table-custom">
+              <thead>
+                <tr><th>Food Item</th><th>Serving</th><th>Calories</th><th>Protein</th></tr>
+              </thead>
+              <tbody>
+                <tr><td style="font-weight:700;color:#fff;">Red Rice (Boiled)</td><td>1 Cup (150g)</td><td>195 kcal</td><td>4.5g</td></tr>
+                <tr><td style="font-weight:700;color:#fff;">Chicken Curry (Skinless)</td><td>100g</td><td>185 kcal</td><td>24.0g</td></tr>
+                <tr><td style="font-weight:700;color:#fff;">Dhal Curry (Parippu)</td><td>1 Cup</td><td>210 kcal</td><td>12.0g</td></tr>
+                <tr><td style="font-weight:700;color:#fff;">Boiled Eggs (2 whole)</td><td>100g</td><td>145 kcal</td><td>13.0g</td></tr>
+                <tr><td style="font-weight:700;color:#fff;">Canned Tuna Sambol</td><td>100g</td><td>130 kcal</td><td>26.0g</td></tr>
+                <tr><td style="font-weight:700;color:#fff;">Pol Roti</td><td>1 piece</td><td>220 kcal</td><td>4.0g</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
-    </form>
-  </div>
+    </div>
+
+    <!-- 5. PROGRESS TAB -->
+    <div id="tab-progress" class="tab-pane">
+      <div class="hero-header">
+        <h1 class="welcome-title">Progress &amp; Body Weight Trend</h1>
+        <p class="welcome-sub">Historical weight curve and gym floor check-in consistency</p>
+      </div>
+
+      <div class="fitme-card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa fa-chart-line" style="color:var(--neon-lime);"></i> Weight Progression (kg)</div>
+          <span style="font-size:0.75rem;color:var(--neon-lime);font-weight:700;">Trending Leaner</span>
+        </div>
+        <div class="card-body">
+          <div style="display:flex;align-items:flex-end;gap:1.5rem;height:200px;padding:1rem 0;border-bottom:1px solid var(--border-color);margin-bottom:1.5rem;">
+            {% for m in measurements %}
+              <div style="flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;">
+                <div style="font-size:0.78rem;font-weight:800;color:var(--neon-lime);margin-bottom:0.4rem;">{{ m.weight_kg }}kg</div>
+                <div style="width:100%;max-width:40px;background:var(--neon-lime);border-radius:6px 6px 0 0;height:{{ m.weight_kg|floatformat:0 }}%;"></div>
+                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem;">{{ m.date|date:"d M" }}</div>
+              </div>
+            {% empty %}
+              <div style="color:var(--text-muted);width:100%;text-align:center;">Log measurements to view dynamic weight bar graph.</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. MEASUREMENTS TAB -->
+    <div id="tab-measurements" class="tab-pane">
+      <div class="hero-header">
+        <h1 class="welcome-title">Body Measurements Tracker</h1>
+        <p class="welcome-sub">Circumference and body composition logging</p>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1.5fr;gap:1.5rem;">
+        <!-- Form -->
+        <div class="fitme-card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa fa-ruler-combined" style="color:var(--neon-lime);"></i> New Measurement Entry</div>
+          </div>
+          <div class="card-body">
+            <form id="measurementForm" onsubmit="submitMeasurement(event)">
+              <div style="margin-bottom:1rem;">
+                <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Weight (kg) *</label>
+                <input type="number" step="0.1" id="mWeight" value="74.0" required class="form-control">
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                <div>
+                  <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Chest (cm)</label>
+                  <input type="number" step="0.5" id="mChest" value="103.0" class="form-control">
+                </div>
+                <div>
+                  <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Waist (cm)</label>
+                  <input type="number" step="0.5" id="mWaist" value="81.5" class="form-control">
+                </div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+                <div>
+                  <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Biceps (cm)</label>
+                  <input type="number" step="0.5" id="mBiceps" value="37.0" class="form-control">
+                </div>
+                <div>
+                  <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Body Fat %</label>
+                  <input type="number" step="0.1" id="mFat" value="15.0" class="form-control">
+                </div>
+              </div>
+              <div style="margin-bottom:1.25rem;">
+                <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Notes</label>
+                <input type="text" id="mNotes" class="form-control" placeholder="e.g. Morning fasting measurement">
+              </div>
+              <button type="submit" class="btn-fitme" id="btnLogMeasurement" style="width:100%;justify-content:center;">
+                <i class="fa fa-save"></i> Record Measurements
+              </button>
+            </form>
+          </div>
+        </div>
+
+        <!-- History -->
+        <div class="fitme-card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa fa-history" style="color:var(--cyan);"></i> Measurement History</div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <table class="table-custom" id="measurementsTable">
+              <thead>
+                <tr><th>Date</th><th>Weight</th><th>Waist</th><th>Chest</th><th>Biceps</th><th>Fat %</th></tr>
+              </thead>
+              <tbody>
+                {% for m in measurements %}
+                  <tr>
+                    <td style="font-weight:700;color:#fff;">{{ m.date|date:"d M Y" }}</td>
+                    <td style="color:var(--neon-lime);font-weight:800;">{{ m.weight_kg }} kg</td>
+                    <td>{{ m.waist_cm|default:"--" }} cm</td>
+                    <td>{{ m.chest_cm|default:"--" }} cm</td>
+                    <td>{{ m.biceps_cm|default:"--" }} cm</td>
+                    <td style="color:var(--cyan);">{{ m.body_fat_pct|default:"--" }}%</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">No body measurements recorded yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. TRANSFORMATION TIMELINE TAB -->
+    <div id="tab-timeline" class="tab-pane">
+      <div class="hero-header">
+        <h1 class="welcome-title">Transformation Timeline</h1>
+        <p class="welcome-sub">Visual month-by-month physique transformation log</p>
+      </div>
+
+      <div class="fitme-card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa fa-camera-retro" style="color:var(--neon-lime);"></i> Check-in Photo Log</div>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:1.5rem;">
+            {% for c in checkins %}
+              <div style="background:var(--card-surface);border:1px solid var(--border-color);border-radius:12px;overflow:hidden;padding:1rem;">
+                <div style="height:220px;background:#000;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:0.75rem;">
+                  {% if c.photo_front %}
+                    <img src="{{ c.photo_front.url }}" alt="Check-in Photo" style="width:100%;height:100%;object-fit:cover;">
+                  {% else %}
+                    <i class="fa fa-user" style="font-size:3rem;color:var(--text-muted);"></i>
+                  {% endif %}
+                </div>
+                <div style="font-weight:800;font-size:0.95rem;color:#fff;">{{ c.checkin_date|date:"d M Y" }}</div>
+                <div style="color:var(--neon-lime);font-weight:700;font-size:0.85rem;margin-top:0.2rem;">{{ c.weight_kg }} kg</div>
+                {% if c.notes %}<p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.4rem;">{{ c.notes }}</p>{% endif %}
+              </div>
+            {% empty %}
+              <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);">
+                <i class="fa fa-camera" style="font-size:2.5rem;margin-bottom:0.75rem;opacity:0.4;display:block;"></i>
+                Monthly physique check-in photos will appear along your timeline here.
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. MEMBERSHIP TAB -->
+    <div id="tab-membership" class="tab-pane">
+      <div class="hero-header">
+        <h1 class="welcome-title">Membership &amp; Receipts</h1>
+        <p class="welcome-sub">Biometric gate credentials, subscription validity, and payment receipts</p>
+      </div>
+
+      <div class="fitme-card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa fa-id-card" style="color:var(--neon-lime);"></i> Current Subscription Status</div>
+          <span class="biometric-status-badge">ACTIVE</span>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:1.25rem;margin-bottom:2rem;">
+            <div style="background:var(--card-surface);padding:1.25rem;border-radius:12px;">
+              <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Membership Plan</div>
+              <div style="font-family:'Montserrat';font-weight:800;font-size:1.2rem;color:#fff;margin-top:0.25rem;">
+                {% if subscription %}{{ subscription.plan.name }}{% else %}Individual Standard{% endif %}
+              </div>
+            </div>
+            <div style="background:var(--card-surface);padding:1.25rem;border-radius:12px;">
+              <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Biometric Hardware PIN</div>
+              <div style="font-family:monospace;font-weight:900;font-size:1.4rem;color:var(--neon-lime);margin-top:0.25rem;">
+                {% if bio_profile %}{{ bio_profile.zk_pin }}{% else %}#1001{% endif %}
+              </div>
+            </div>
+            <div style="background:var(--card-surface);padding:1.25rem;border-radius:12px;">
+              <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Facility Location</div>
+              <div style="font-weight:800;font-size:1.05rem;color:#fff;margin-top:0.25rem;">Pitigala (80420)</div>
+            </div>
+          </div>
+
+          <h3 style="font-family:'Montserrat';font-weight:800;font-size:1.05rem;margin-bottom:1rem;">Official 80mm POS Thermal Receipts</h3>
+          <table class="table-custom">
+            <thead>
+              <tr><th>Receipt #</th><th>Date</th><th>Amount (LKR)</th><th>Payment Method</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {% for r in recent_receipts %}
+                <tr>
+                  <td style="font-family:monospace;font-weight:700;color:var(--neon-lime);">{{ r.receipt_number }}</td>
+                  <td>{{ r.issued_at|date:"d M Y H:i" }}</td>
+                  <td style="font-weight:800;color:#fff;">LKR {{ r.total_paid }}</td>
+                  <td>{{ r.get_payment_method_display }}</td>
+                  <td>
+                    <a href="/receipt/{{ r.id }}/" target="_blank" class="btn-fitme" style="padding:0.3rem 0.8rem;font-size:0.75rem;">
+                      <i class="fa fa-print"></i> 80mm Print
+                    </a>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">No payment receipts on file.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
 </div>
 
-<!-- Toast -->
-<div id="memberToast" style="position:fixed;bottom:25px;right:25px;background:#15191D;border:2px solid #76C043;box-shadow:0 8px 30px rgba(118,192,67,0.3);padding:1rem 1.5rem;border-radius:12px;display:none;align-items:center;gap:0.75rem;z-index:1000;font-weight:700;">
-  <i class="fa fa-check-circle" style="color:#76C043;font-size:1.4rem;"></i>
-  <span id="memberToastMsg">Logged fuel successfully!</span>
-</div>
-
 <script>
-  function showMemberToast(msg) {
+  function showToast(msg) {
     const t = document.getElementById('memberToast');
     document.getElementById('memberToastMsg').textContent = msg;
     t.style.display = 'flex';
-    setTimeout(() => { t.style.display = 'none'; }, 4000);
+    setTimeout(() => { t.style.display = 'none'; }, 4500);
   }
 
-  function openLogMealModal() {
-    document.getElementById('quickMealModal').style.display = 'flex';
-  }
-  function closeLogMealModal() {
-    document.getElementById('quickMealModal').style.display = 'none';
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if (btn) btn.classList.add('active');
   }
 
-  async function submitQuickFuel(e) {
+  // Submit Workout Log
+  async function submitWorkoutLog(e) {
     e.preventDefault();
-    const mealType = document.getElementById('quickMealType').value;
-    const calories = document.getElementById('quickCal').value;
-    const protein = document.getElementById('quickPro').value;
-    const notes = document.getElementById('quickNotes').value;
-
-    const btn = document.getElementById('btnSubmitFuel');
+    const btn = document.getElementById('btnLogWorkout');
     btn.disabled = true;
-    btn.textContent = 'Recalculating...';
+    btn.textContent = 'Saving...';
+
+    const payload = {
+      workout_name: document.getElementById('wlRoutine').value,
+      exercise_name: document.getElementById('wlExercise').value,
+      sets: document.getElementById('wlSets').value,
+      reps: document.getElementById('wlReps').value,
+      weight_kg: document.getElementById('wlWeight').value,
+      notes: document.getElementById('wlNotes').value,
+    };
+
+    try {
+      const res = await fetch('/dashboard/api/log-workout/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message);
+        document.getElementById('workoutLogForm').reset();
+        const emptyRow = document.getElementById('emptyWorkoutRow');
+        if (emptyRow) emptyRow.remove();
+
+        // Prepend row
+        const table = document.getElementById('workoutLogsTable').querySelector('tbody');
+        const newRow = table.insertRow(0);
+        newRow.innerHTML = `
+          <td style="color:var(--text-muted);">${data.log.logged_at}</td>
+          <td style="font-weight:700;color:#fff;">${data.log.exercise_name}</td>
+          <td>${data.log.sets} x ${data.log.reps}</td>
+          <td style="color:var(--neon-lime);font-weight:800;">${data.log.weight_kg} kg</td>
+          <td style="color:var(--text-muted);font-size:0.75rem;">${payload.notes || '--'}</td>
+        `;
+      }
+    } catch(err) {
+      alert("Error: " + err);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-save"></i> Save Exercise Set';
+    }
+  }
+
+  // Submit Measurement
+  async function submitMeasurement(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnLogMeasurement');
+    btn.disabled = true;
+
+    const payload = {
+      weight_kg: document.getElementById('mWeight').value,
+      chest_cm: document.getElementById('mChest').value,
+      waist_cm: document.getElementById('mWaist').value,
+      biceps_cm: document.getElementById('mBiceps').value,
+      body_fat_pct: document.getElementById('mFat').value,
+      notes: document.getElementById('mNotes').value,
+    };
+
+    try {
+      const res = await fetch('/dashboard/api/log-measurement/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message);
+        const table = document.getElementById('measurementsTable').querySelector('tbody');
+        const row = table.insertRow(0);
+        row.innerHTML = `
+          <td style="font-weight:700;color:#fff;">${data.measurement.date}</td>
+          <td style="color:var(--neon-lime);font-weight:800;">${data.measurement.weight_kg} kg</td>
+          <td>${data.measurement.waist_cm} cm</td>
+          <td>${data.measurement.chest_cm} cm</td>
+          <td>${payload.biceps_cm || '--'} cm</td>
+          <td style="color:var(--cyan);">${payload.body_fat_pct || '--'}%</td>
+        `;
+      }
+    } catch(err) {
+      alert("Error: " + err);
+    } finally {
+      btn.disabled = false;
+    }
+  }
+
+  // Submit Quick Fuel
+  async function submitMemberMeal(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnLogMeal');
+    btn.disabled = true;
+
+    const payload = {
+      meal_type: document.getElementById('mmType').value,
+      calories: document.getElementById('mmCal').value,
+      protein_g: document.getElementById('mmPro').value,
+      carbs_g: document.getElementById('mmCarb').value,
+      fat_g: document.getElementById('mmFat').value,
+      notes: document.getElementById('mmNotes').value,
+    };
 
     try {
       const res = await fetch('/dashboard/api/quick-meal/', {
@@ -773,91 +1082,56 @@
           'X-CSRFToken': '{{ csrf_token }}',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ meal_type: mealType, calories, protein_g: protein, notes })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.success) {
-        closeLogMealModal();
-        showMemberToast(data.message);
-
-        // Update concentric rings dynamically
+        showToast(data.message);
+        // update rings
         const pRing = document.getElementById('proteinRing');
         const cRing = document.getElementById('calorieRing');
-        const pPct = data.totals.protein_pct / 100;
-        const cPct = data.totals.calories_pct / 100;
-
-        pRing.style.strokeDashoffset = 502.6 * (1 - Math.min(1, pPct));
-        cRing.style.strokeDashoffset = 276.4 * (1 - Math.min(1, cPct));
-
-        // Update stats
-        const centerVal = document.querySelector('.ring-center-val');
-        if (centerVal) centerVal.textContent = data.totals.calories_consumed.toLocaleString();
+        if (pRing && cRing) {
+          const pPct = data.totals.protein_pct / 100;
+          const cPct = data.totals.calories_pct / 100;
+          pRing.style.strokeDashoffset = 502.6 * (1 - Math.min(1, pPct));
+          cRing.style.strokeDashoffset = 276.4 * (1 - Math.min(1, cPct));
+        }
       }
-    } catch (err) {
-      alert("Failed to log fuel: " + err);
+    } catch(err) {
+      alert("Error: " + err);
     } finally {
       btn.disabled = false;
-      btn.textContent = 'Save & Recalculate Rings';
     }
   }
 
-  // Apple-Fitness Rings Dynamic Animation & 3D Morph Slider
+  // Morph Slider Interaction
   document.addEventListener('DOMContentLoaded', () => {
-    const pRing = document.getElementById('proteinRing');
-    const wRing = document.getElementById('waterRing');
-    const cRing = document.getElementById('calorieRing');
-
-    const proteinPct = {{ rings.protein_pct|default:73 }} / 100;
-    const waterPct = {{ rings.water_pct|default:80 }} / 100;
-    const caloriePct = {{ rings.calories_pct|default:66 }} / 100;
-
-    // Outer: C = 502.6
-    pRing.style.strokeDashoffset = 502.6 * (1 - Math.min(1, proteinPct));
-    // Middle: C = 389.5
-    wRing.style.strokeDashoffset = 389.5 * (1 - Math.min(1, waterPct));
-    // Inner: C = 276.4
-    cRing.style.strokeDashoffset = 276.4 * (1 - Math.min(1, caloriePct));
-
-    // ── 3D Morph Comparison Slider Interaction ──
     const container = document.getElementById('morphContainer');
     const afterLayer = document.getElementById('afterLayer');
     const morphLine = document.getElementById('morphLine');
     const morphHandle = document.getElementById('morphHandle');
 
-    let isDragging = false;
+    if (container) {
+      let isDragging = false;
+      function updateSlider(clientX) {
+        const rect = container.getBoundingClientRect();
+        let pos = (clientX - rect.left) / rect.width;
+        if (pos < 0) pos = 0;
+        if (pos > 1) pos = 1;
+        const pct = (pos * 100).toFixed(2);
+        afterLayer.style.clipPath = `inset(0 0 0 ${pct}%)`;
+        morphLine.style.left = `${pct}%`;
+        morphHandle.style.left = `${pct}%`;
+      }
 
-    function updateSlider(clientX) {
-      const rect = container.getBoundingClientRect();
-      let pos = (clientX - rect.left) / rect.width;
-      if (pos < 0) pos = 0;
-      if (pos > 1) pos = 1;
-      const pct = (pos * 100).toFixed(2);
+      container.addEventListener('mousedown', (e) => { isDragging = true; updateSlider(e.clientX); });
+      window.addEventListener('mouseup', () => { isDragging = false; });
+      window.addEventListener('mousemove', (e) => { if (!isDragging) return; updateSlider(e.clientX); });
 
-      afterLayer.style.clipPath = `inset(0 0 0 ${pct}%)`;
-      morphLine.style.left = `${pct}%`;
-      morphHandle.style.left = `${pct}%`;
+      container.addEventListener('touchstart', (e) => { isDragging = true; updateSlider(e.touches[0].clientX); });
+      window.addEventListener('touchend', () => { isDragging = false; });
+      window.addEventListener('touchmove', (e) => { if (!isDragging) return; updateSlider(e.touches[0].clientX); });
     }
-
-    container.addEventListener('mousedown', (e) => {
-      isDragging = true;
-      updateSlider(e.clientX);
-    });
-    window.addEventListener('mouseup', () => { isDragging = false; });
-    window.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-      updateSlider(e.clientX);
-    });
-
-    // Touch support for mobile
-    container.addEventListener('touchstart', (e) => {
-      isDragging = true;
-      updateSlider(e.touches[0].clientX);
-    });
-    window.addEventListener('touchend', () => { isDragging = false; });
-    window.addEventListener('touchmove', (e) => {
-      if (!isDragging) return;
-      updateSlider(e.touches[0].clientX);
-    });
   });
 </script>
 </body>

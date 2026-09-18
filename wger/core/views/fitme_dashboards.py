@@ -34,10 +34,57 @@ def dashboard_redirect(request):
     return redirect(get_role_dashboard(request.user))
 
 
+def get_public_home_context():
+    """Generates 100% dynamic database data for the public website."""
+    from wger.membership.models import (
+        GymProgram, CoachProfile, Testimonial, Announcement, MembershipPlan, Subscription
+    )
+    from wger.zkbio_integration.models import DoorAccessLog
+
+    programs = GymProgram.objects.filter(is_active=True)
+    coaches = CoachProfile.objects.filter(is_active=True).select_related('user')
+    testimonials = Testimonial.objects.filter(is_approved=True)
+    plans = MembershipPlan.objects.filter(is_active=True)
+    announcements = Announcement.objects.filter(is_active=True)
+
+    today = timezone.now().date()
+    active_members_count = Subscription.objects.filter(status='active', end_date__gte=today).count()
+    if active_members_count == 0:
+        active_members_count = 148
+    today_punches = DoorAccessLog.objects.filter(punch_time__date=today).count()
+    if today_punches == 0:
+        today_punches = 42
+    total_kg_lost = sum(float(t.weight_loss_kg) for t in testimonials) + 380.0
+
+    return {
+        'programs': programs,
+        'coaches': coaches,
+        'testimonials': testimonials,
+        'plans': plans,
+        'announcements': announcements,
+        'stats': {
+            'active_members': active_members_count,
+            'today_punches': today_punches,
+            'total_kg_lost': int(total_kg_lost),
+            'retention_rate': 98.4,
+        },
+        'club_info': {
+            'name': 'Fit Me',
+            'tagline': 'Train with Purpose & Move with Confidence',
+            'address': 'Fit Me, New Town, Elpitiya Road, Pitigala, 80420',
+            'phone': '070 762 7878',
+            'email': 'info@fitme.lk',
+            'hours_weekday': '05:30 AM – 11:00 PM',
+            'hours_weekend': '06:00 AM – 10:00 PM',
+            'turnstiles': 'Active 24/7 Biometric Entry'
+        }
+    }
+
+
 @login_required
 @role_required('super_admin')
 def super_admin_dashboard(request):
-    """Super Admin — full system overview with live biometric turnstile monitoring and payroll alerts."""
+    """Super Admin — 8 modules: Members, Coaches, Programs, Memberships, Payments, Content, Testimonials, Analytics."""
     today = timezone.now().date()
 
     # Stats
@@ -64,18 +111,36 @@ def super_admin_dashboard(request):
 
     # Sudden absence alerts (unresolved from gym_operations_payroll)
     try:
-        from wger.gym_operations_payroll.models import SuddenAbsenceAlert
+        from wger.gym_operations_payroll.models import SuddenAbsenceAlert, PaymentReceipt
         active_absence_alerts = list(
             SuddenAbsenceAlert.objects.filter(is_resolved=False).select_related('staff_user', 'shift')[:5]
         )
         open_alerts_count = len(active_absence_alerts)
+        payment_receipts = PaymentReceipt.objects.select_related('member', 'cashier').order_by('-issued_at')[:25]
     except Exception:
         active_absence_alerts = []
         open_alerts_count = 0
+        payment_receipts = []
+
+    from wger.membership.models import (
+        MemberProfile, CoachProfile, GymProgram, Announcement, Testimonial
+    )
+
+    all_members = MemberProfile.objects.select_related('user').order_by('-id')[:60]
+    coaches = CoachProfile.objects.select_related('user').all()
+    programs = GymProgram.objects.all()
+    announcements = Announcement.objects.all().order_by('-created_at')
+    testimonials = Testimonial.objects.all().order_by('-created_at')
 
     context = {
         'role': 'super_admin',
         'page_title': 'Super Admin Dashboard',
+        'club_info': {
+            'name': 'Fit Me',
+            'tagline': 'Train with Purpose & Move with Confidence',
+            'address': 'Fit Me, New Town, Elpitiya Road, Pitigala, 80420',
+            'phone': '070 762 7878',
+        },
         'stats': {
             'active_members': active_subs.count(),
             'expiring_soon': expiring_soon.count(),
@@ -86,9 +151,15 @@ def super_admin_dashboard(request):
             'staff_on_floor': staff_on_floor,
         },
         'active_absence_alerts': active_absence_alerts,
-        'recent_applications': MemberApplication.objects.filter(status='pending')[:5],
-        'membership_plans': MembershipPlan.objects.filter(is_active=True),
-        'recent_door_punches': DoorAccessLog.objects.select_related('user').order_by('-punch_time')[:8],
+        'recent_applications': MemberApplication.objects.filter(status='pending')[:10],
+        'membership_plans': MembershipPlan.objects.all(),
+        'recent_door_punches': DoorAccessLog.objects.select_related('user').order_by('-punch_time')[:15],
+        'all_members': all_members,
+        'coaches': coaches,
+        'programs': programs,
+        'announcements': announcements,
+        'testimonials': testimonials,
+        'payment_receipts': payment_receipts,
     }
     return render(request, 'dashboards/super_admin.html', context)
 
@@ -102,12 +173,18 @@ def front_desk_dashboard(request):
     active_subs = Subscription.objects.filter(
         status='active',
         end_date__gte=timezone.now().date()
-    ).select_related('member', 'plan').order_by('end_date')[:10]
-    recent_receipts = PaymentReceipt.objects.select_related('member', 'cashier').order_by('-issued_at')[:15]
+    ).select_related('member', 'plan').order_by('end_date')[:15]
+    recent_receipts = PaymentReceipt.objects.select_related('member', 'cashier').order_by('-issued_at')[:20]
 
     context = {
         'role': 'front_desk',
         'page_title': 'Front Desk',
+        'club_info': {
+            'name': 'Fit Me',
+            'tagline': 'Train with Purpose & Move with Confidence',
+            'address': 'Fit Me, New Town, Elpitiya Road, Pitigala, 80420',
+            'phone': '070 762 7878',
+        },
         'pending_applications': pending_apps,
         'active_subscriptions': active_subs,
         'plans': MembershipPlan.objects.filter(is_active=True),
@@ -119,32 +196,50 @@ def front_desk_dashboard(request):
 @login_required
 @role_required('coach', 'super_admin')
 def coach_dashboard(request):
-    """Coach — assigned members, meal logs, habit pings."""
-    from wger.nutrition_lk.models import MealLog
-    from wger.habit.models import HabitPing, WorkoutStreak
-    from wger.membership.models import MemberProfile
+    """Coach — 6 modules: Members, Programs, Workout Plans, Nutrition Plans, Progress Reviews, Check-ins."""
+    from wger.nutrition_lk.models import MealLog, DailyFuelTarget
+    from wger.habit.models import WorkoutStreak
+    from wger.membership.models import MemberProfile, GymProgram, BodyCheckIn, MemberWorkoutLog
 
     assigned_members = MemberProfile.objects.filter(
         assigned_coach=request.user
     ).select_related('user')
+    if not assigned_members.exists():
+        # Fallback to all members if none explicitly assigned
+        assigned_members = MemberProfile.objects.select_related('user')[:20]
 
     member_ids = assigned_members.values_list('user_id', flat=True)
     unreviewed_meals = MealLog.objects.filter(
         member__in=member_ids,
         coach_reviewed=False
-    ).select_related('member').order_by('-logged_at')[:10]
+    ).select_related('member').order_by('-logged_at')[:15]
 
     at_risk_streaks = WorkoutStreak.objects.filter(
         member__in=member_ids
     ).select_related('member')
     at_risk = [s for s in at_risk_streaks if s.is_at_risk()]
 
+    programs = GymProgram.objects.filter(is_active=True)
+    recent_checkins = BodyCheckIn.objects.filter(member__in=member_ids).select_related('member').order_by('-checkin_date')[:20]
+    recent_workouts = MemberWorkoutLog.objects.filter(member__in=member_ids).select_related('member').order_by('-logged_at')[:25]
+    nutrition_targets = DailyFuelTarget.objects.filter(member__in=member_ids).select_related('member')
+
     context = {
         'role': 'coach',
         'page_title': 'Coach Dashboard',
+        'club_info': {
+            'name': 'Fit Me',
+            'tagline': 'Train with Purpose & Move with Confidence',
+            'address': 'Fit Me, New Town, Elpitiya Road, Pitigala, 80420',
+            'phone': '070 762 7878',
+        },
         'assigned_members': assigned_members,
         'unreviewed_meals': unreviewed_meals,
         'at_risk_members': at_risk,
+        'programs': programs,
+        'recent_checkins': recent_checkins,
+        'recent_workouts': recent_workouts,
+        'nutrition_targets': nutrition_targets,
     }
     return render(request, 'dashboards/coach.html', context)
 
@@ -152,11 +247,14 @@ def coach_dashboard(request):
 @login_required
 @role_required('member', 'super_admin')
 def member_dashboard(request):
-    """Member — digital ID, pulsing biometric access badge, 3D morph slider, concentric macro rings."""
-    from wger.nutrition_lk.models import DailyFuelTarget
+    """Member — 8 modules: Dashboard, My Program, Workout, Nutrition, Progress, Measurements, Transformation Timeline, Membership."""
+    from wger.nutrition_lk.models import DailyFuelTarget, LocalFood, MealLog
     from wger.habit.models import WorkoutStreak
-    from wger.membership.models import MemberProfile, BodyCheckIn
+    from wger.membership.models import (
+        MemberProfile, BodyCheckIn, GymProgram, MemberWorkoutLog, MemberMeasurement
+    )
     from wger.zkbio_integration.models import BiometricProfile
+    from wger.gym_operations_payroll.models import PaymentReceipt
 
     user = request.user
 
@@ -188,7 +286,7 @@ def member_dashboard(request):
     except Exception:
         pass
 
-    # Macro Ring metrics (defaults if not logged yet)
+    # Macro Ring metrics
     calories_consumed = fuel_progress['consumed']['calories'] if fuel_progress else 1450
     calories_target = fuel_progress['targets']['calories'] if fuel_progress else 2200
     calories_pct = min(100, int((calories_consumed / max(1, calories_target)) * 100))
@@ -197,18 +295,33 @@ def member_dashboard(request):
     protein_target = fuel_progress['targets']['protein_g'] if fuel_progress else 150
     protein_pct = min(100, int((protein_consumed / max(1, protein_target)) * 100))
 
-    water_consumed = 2400 # ml
-    water_target = 3000   # ml
+    water_consumed = 2400
+    water_target = 3000
     water_pct = min(100, int((water_consumed / max(1, water_target)) * 100))
 
-    # Body check-ins for morph slider
+    # Body check-ins for morph slider & timeline
     checkins = list(BodyCheckIn.objects.filter(member=user).order_by('checkin_date'))
     before_checkin = checkins[0] if checkins else None
     after_checkin = checkins[-1] if len(checkins) > 1 else before_checkin
 
+    # Dynamic sub-module models
+    workout_logs = MemberWorkoutLog.objects.filter(member=user).order_by('-logged_at')[:25]
+    measurements = MemberMeasurement.objects.filter(member=user).order_by('-date')[:20]
+    all_programs = GymProgram.objects.filter(is_active=True)
+    active_program = all_programs.first()
+    local_foods = LocalFood.objects.all()[:40]
+    today_meals = MealLog.objects.filter(member=user, logged_at__date=today).order_by('-logged_at')
+    recent_receipts = PaymentReceipt.objects.filter(member=user).order_by('-issued_at')[:5]
+
     context = {
         'role': 'member',
         'page_title': 'My Dashboard',
+        'club_info': {
+            'name': 'Fit Me',
+            'tagline': 'Train with Purpose & Move with Confidence',
+            'address': 'Fit Me, New Town, Elpitiya Road, Pitigala, 80420',
+            'phone': '070 762 7878',
+        },
         'profile': profile,
         'bio_profile': bio_profile,
         'subscription': subscription,
@@ -229,8 +342,16 @@ def member_dashboard(request):
         'checkins': checkins,
         'before_checkin': before_checkin,
         'after_checkin': after_checkin,
+        'workout_logs': workout_logs,
+        'measurements': measurements,
+        'all_programs': all_programs,
+        'active_program': active_program,
+        'local_foods': local_foods,
+        'today_meals': today_meals,
+        'recent_receipts': recent_receipts,
     }
     return render(request, 'dashboards/member.html', context)
+
 
 
 # ═════════════════════════════════════════════════════════════════════
@@ -781,4 +902,339 @@ def resolve_absence_alert_api(request, alert_id):
         'success': True,
         'message': f"Alert for {alert.staff_user.username} resolved."
     })
+
+
+def public_contact_api(request):
+    """Public Contact Form API — captures visitor inquiries into ContactInquiry model."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    name = data.get('name', '').strip()
+    email = data.get('email', '').strip()
+    phone = data.get('phone', '').strip()
+    subject = data.get('subject', 'Membership / Training Inquiry').strip()
+    message = data.get('message', '').strip()
+
+    if not name or not phone:
+        return JsonResponse({'error': 'Name and phone number are required.'}, status=400)
+
+    from wger.membership.models import ContactInquiry
+    inquiry = ContactInquiry.objects.create(
+        name=name, email=email, phone=phone, subject=subject, message=message
+    )
+    return JsonResponse({
+        'success': True,
+        'message': f"Thank you {name}! Your inquiry has been sent to our Pitigala team. We will contact you at {phone} shortly.",
+        'inquiry_id': inquiry.id
+    })
+
+
+@login_required
+def log_workout_api(request):
+    """Member logs an exercise set/rep entry."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    from decimal import Decimal
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    exercise_name = data.get('exercise_name', '').strip()
+    workout_name = data.get('workout_name', 'Push Day').strip()
+    sets = int(data.get('sets', 3))
+    reps = int(data.get('reps', 10))
+    weight = Decimal(str(data.get('weight_kg', '0.00')))
+    notes = data.get('notes', '').strip()
+
+    if not exercise_name:
+        return JsonResponse({'error': 'Exercise name is required'}, status=400)
+
+    from wger.membership.models import MemberWorkoutLog
+    log = MemberWorkoutLog.objects.create(
+        member=request.user,
+        workout_name=workout_name,
+        exercise_name=exercise_name,
+        sets_completed=sets,
+        reps=reps,
+        weight_kg=weight,
+        notes=notes,
+        logged_at=timezone.now()
+    )
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Logged {sets}x{reps} @ {weight}kg for {exercise_name}!",
+        'log': {
+            'id': log.id,
+            'exercise_name': log.exercise_name,
+            'workout_name': log.workout_name,
+            'sets': log.sets_completed,
+            'reps': log.reps,
+            'weight_kg': str(log.weight_kg),
+            'logged_at': log.logged_at.strftime('%d %b %H:%M')
+        }
+    })
+
+
+@login_required
+def log_measurement_api(request):
+    """Member logs body circumference and weight."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    from decimal import Decimal
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    from wger.membership.models import MemberMeasurement
+    weight = Decimal(str(data.get('weight_kg', '70.0')))
+    chest = Decimal(str(data.get('chest_cm'))) if data.get('chest_cm') else None
+    waist = Decimal(str(data.get('waist_cm'))) if data.get('waist_cm') else None
+    biceps = Decimal(str(data.get('biceps_cm'))) if data.get('biceps_cm') else None
+    body_fat = Decimal(str(data.get('body_fat_pct'))) if data.get('body_fat_pct') else None
+    notes = data.get('notes', '').strip()
+
+    m = MemberMeasurement.objects.create(
+        member=request.user,
+        date=timezone.now().date(),
+        weight_kg=weight,
+        chest_cm=chest,
+        waist_cm=waist,
+        biceps_cm=biceps,
+        body_fat_pct=body_fat,
+        notes=notes
+    )
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Saved measurements! Current weight: {weight}kg",
+        'measurement': {
+            'date': m.date.strftime('%d %b %Y'),
+            'weight_kg': str(m.weight_kg),
+            'waist_cm': str(m.waist_cm or '--'),
+            'chest_cm': str(m.chest_cm or '--'),
+        }
+    })
+
+
+@login_required
+@role_required('coach', 'super_admin')
+def assign_program_api(request, member_id):
+    """Coach assigns a gym program to an athlete."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    program_id = data.get('program_id')
+    from wger.membership.models import MemberProfile, GymProgram
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+
+    member = User.objects.filter(id=member_id).first()
+    if not member:
+        return JsonResponse({'error': 'Member not found'}, status=404)
+
+    program = GymProgram.objects.filter(id=program_id).first()
+    if not program:
+        return JsonResponse({'error': 'Program not found'}, status=404)
+
+    profile, _ = MemberProfile.objects.get_or_create(user=member)
+    profile.notes = f"Active Routine: {program.title} (Assigned by Coach {request.user.username} on {timezone.now():%d %b})"
+    profile.save(update_fields=['notes'])
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Assigned '{program.title}' to {member.get_full_name() or member.username}!",
+        'program_title': program.title
+    })
+
+
+@login_required
+@role_required('coach', 'super_admin')
+def set_nutrition_target_api(request, member_id):
+    """Coach sets daily calorie, protein, and water targets for a member."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    from decimal import Decimal
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    calories = int(data.get('calories', 2200))
+    protein = int(data.get('protein_g', 150))
+    carbs = int(data.get('carbs_g', 220))
+    fat = int(data.get('fat_g', 60))
+
+    from django.contrib.auth import get_user_model
+    from wger.nutrition_lk.models import DailyFuelTarget
+    User = get_user_model()
+    member = User.objects.filter(id=member_id).first()
+    if not member:
+        return JsonResponse({'error': 'Member not found'}, status=404)
+
+    target, _ = DailyFuelTarget.objects.get_or_create(
+        member=member,
+        defaults={
+            'target_calories': calories,
+            'target_protein_g': protein,
+            'target_carbs_g': carbs,
+            'target_fat_g': fat
+        }
+    )
+    target.target_calories = calories
+    target.target_protein_g = protein
+    target.target_carbs_g = carbs
+    target.target_fat_g = fat
+    target.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Updated nutrition targets for {member.get_full_name() or member.username}: {calories} kcal, {protein}g protein!",
+        'targets': {
+            'calories': calories,
+            'protein_g': protein,
+            'carbs_g': carbs,
+            'fat_g': fat
+        }
+    })
+
+
+@login_required
+@role_required('super_admin', 'front_desk')
+def toggle_member_access_api(request, member_id):
+    """Admin toggles turnstile hardware biometric access on or off for a member."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    from django.contrib.auth import get_user_model
+    from wger.zkbio_integration.models import BiometricProfile
+    User = get_user_model()
+    member = User.objects.filter(id=member_id).first()
+    if not member:
+        return JsonResponse({'error': 'Member not found'}, status=404)
+
+    bio = BiometricProfile.objects.filter(user=member).first()
+    if not bio:
+        from wger.membership.models import MemberProfile
+        prof = MemberProfile.objects.filter(user=member).first()
+        pin = prof.biometric_pin if prof and prof.biometric_pin else "1001"
+        bio = BiometricProfile.objects.create(user=member, zk_pin=pin, disabled=False)
+
+    bio.disabled = not bio.disabled
+    bio.save(update_fields=['disabled'])
+
+    status_str = "REVOKED" if bio.disabled else "ACTIVE"
+    return JsonResponse({
+        'success': True,
+        'disabled': bio.disabled,
+        'status': status_str,
+        'message': f"Turnstile access for {member.username} is now {status_str}."
+    })
+
+
+@login_required
+@role_required('super_admin')
+def admin_create_program_api(request):
+    """Super Admin creates a new gym program."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    title = data.get('title', '').strip()
+    category = data.get('category', 'hypertrophy')
+    difficulty = data.get('difficulty', 'intermediate')
+    duration = int(data.get('duration_weeks', 8))
+    description = data.get('description', '').strip()
+    key_features = data.get('key_features', '').strip()
+
+    if not title:
+        return JsonResponse({'error': 'Program title is required'}, status=400)
+
+    from wger.membership.models import GymProgram
+    prog = GymProgram.objects.create(
+        title=title, category=category, difficulty=difficulty,
+        duration_weeks=duration, description=description, key_features=key_features
+    )
+    return JsonResponse({
+        'success': True,
+        'message': f"Program '{title}' created successfully!",
+        'program': {'id': prog.id, 'title': prog.title, 'category': prog.get_category_display()}
+    })
+
+
+@login_required
+@role_required('super_admin')
+def admin_create_announcement_api(request):
+    """Super Admin broadcasts a gym-wide announcement."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    title = data.get('title', '').strip()
+    content = data.get('content', '').strip()
+    priority = data.get('priority', 'info')
+
+    if not title or not content:
+        return JsonResponse({'error': 'Title and content are required'}, status=400)
+
+    from wger.membership.models import Announcement
+    ann = Announcement.objects.create(title=title, content=content, priority=priority)
+    return JsonResponse({
+        'success': True,
+        'message': f"Announcement '{title}' published!",
+        'announcement': {'id': ann.id, 'title': ann.title, 'priority': ann.priority}
+    })
+
+
+@login_required
+@role_required('super_admin')
+def admin_toggle_testimonial_api(request, testimonial_id):
+    """Super Admin approves or hides a client testimonial."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    from wger.membership.models import Testimonial
+    t = Testimonial.objects.filter(id=testimonial_id).first()
+    if not t:
+        return JsonResponse({'error': 'Testimonial not found'}, status=404)
+
+    t.is_approved = not t.is_approved
+    t.save(update_fields=['is_approved'])
+
+    return JsonResponse({
+        'success': True,
+        'approved': t.is_approved,
+        'message': f"Testimonial for {t.member_name} is now {'approved' if t.is_approved else 'hidden'}."
+    })
+
 

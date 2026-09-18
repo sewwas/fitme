@@ -269,3 +269,162 @@ class BodyCheckIn(models.Model):
 
     def __str__(self):
         return f"{self.member.username} check-in on {self.checkin_date}"
+
+
+class GymProgram(models.Model):
+    """Catalog of Training Programs available at Fit Me."""
+    CATEGORY_CHOICES = [
+        ('hypertrophy', 'Hypertrophy & Muscle Build'),
+        ('fat_loss', 'Fat Loss & Shred'),
+        ('strength', 'Power & Strength'),
+        ('hiit', 'HIIT & Conditioning'),
+        ('calisthenics', 'Bodyweight & Calisthenics'),
+        ('personal_training', '1-on-1 Personal Training'),
+    ]
+    DIFFICULTY_CHOICES = [
+        ('beginner', 'Beginner'),
+        ('intermediate', 'Intermediate'),
+        ('advanced', 'Advanced / Athlete'),
+    ]
+
+    title = models.CharField(max_length=120)
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='hypertrophy')
+    difficulty = models.CharField(max_length=20, choices=DIFFICULTY_CHOICES, default='intermediate')
+    duration_weeks = models.IntegerField(default=8)
+    sessions_per_week = models.IntegerField(default=4)
+    description = models.TextField()
+    key_features = models.TextField(help_text="Comma-separated or newline list of features")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['title']
+
+    def __str__(self):
+        return f"{self.title} ({self.get_category_display()})"
+
+
+class CoachProfile(models.Model):
+    """Trainer & Coach Details for public directory and coach portal."""
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='coach_profile'
+    )
+    title = models.CharField(max_length=100, default="Certified Strength & Conditioning Coach")
+    specialties = models.CharField(max_length=200, help_text="e.g. Hypertrophy, Sri Lankan Nutrition, Powerlifting")
+    certifications = models.CharField(max_length=250, blank=True)
+    years_experience = models.IntegerField(default=5)
+    bio = models.TextField(blank=True)
+    avatar = models.ImageField(upload_to='coaches/avatars/', blank=True, null=True)
+    phone = models.CharField(max_length=20, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Coach: {self.user.get_full_name() or self.user.username} — {self.title}"
+
+
+class ContactInquiry(models.Model):
+    """Inquiries submitted via the public website contact form."""
+    name = models.CharField(max_length=120)
+    email = models.EmailField()
+    phone = models.CharField(max_length=25)
+    subject = models.CharField(max_length=150, default="Membership / Training Inquiry")
+    message = models.TextField()
+    is_resolved = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Inquiry from {self.name} ({self.phone}) - {self.subject}"
+
+
+class Testimonial(models.Model):
+    """Member transformation stories showcased on the public website and admin."""
+    member_name = models.CharField(max_length=100)
+    program_name = models.CharField(max_length=100, default="Fit Me 12-Week Transformation")
+    quote = models.TextField()
+    weight_loss_kg = models.DecimalField(max_digits=5, decimal_places=1, default=Decimal('0.0'))
+    muscle_gain_kg = models.DecimalField(max_digits=5, decimal_places=1, default=Decimal('0.0'))
+    duration_months = models.IntegerField(default=3)
+    before_photo = models.ImageField(upload_to='testimonials/before/', blank=True, null=True)
+    after_photo = models.ImageField(upload_to='testimonials/after/', blank=True, null=True)
+    is_featured = models.BooleanField(default=True)
+    is_approved = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.member_name} ({self.program_name})"
+
+
+class Announcement(models.Model):
+    """Gym-wide notices and broadcast messages."""
+    PRIORITY_CHOICES = [
+        ('info', 'Information'),
+        ('warning', 'Operational Notice'),
+        ('critical', 'Urgent / Important'),
+    ]
+    title = models.CharField(max_length=150)
+    content = models.TextField()
+    priority = models.CharField(max_length=15, choices=PRIORITY_CHOICES, default='info')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"[{self.priority.upper()}] {self.title}"
+
+
+class MemberWorkoutLog(models.Model):
+    """Real-time workout logging for member and coach review."""
+    member = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='fitme_workout_logs'
+    )
+    workout_name = models.CharField(max_length=100, default="Push Day")
+    exercise_name = models.CharField(max_length=100)
+    sets_completed = models.IntegerField(default=3)
+    reps = models.IntegerField(default=10)
+    weight_kg = models.DecimalField(max_digits=5, decimal_places=2, default=Decimal('0.00'))
+    notes = models.CharField(max_length=200, blank=True)
+    logged_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        ordering = ['-logged_at']
+
+    def __str__(self):
+        return f"{self.member.username} - {self.exercise_name}: {self.sets_completed}x{self.reps} @ {self.weight_kg}kg"
+
+
+class MemberMeasurement(models.Model):
+    """Body circumference and metric log for progress tracking."""
+    member = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='fitme_measurements'
+    )
+    date = models.DateField(default=timezone.now)
+    weight_kg = models.DecimalField(max_digits=5, decimal_places=2)
+    chest_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    waist_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    biceps_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    thighs_cm = models.DecimalField(max_digits=5, decimal_places=1, null=True, blank=True)
+    body_fat_pct = models.DecimalField(max_digits=4, decimal_places=1, null=True, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-date']
+
+    def __str__(self):
+        return f"{self.member.username} metrics on {self.date}: {self.weight_kg}kg"
+

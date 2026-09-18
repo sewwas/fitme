@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fit Me — Premium Smart Fitness Club</title>
+  <title>Fit Me — Premium Smart Fitness Club | Pitigala</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -19,13 +19,14 @@
       --neon-lime: #76C043;
       --neon-hover: #8AE04F;
       --neon-glow: rgba(118, 192, 67, 0.25);
-      --neon-glow-high: rgba(118, 192, 67, 0.5);
+      --neon-glow-high: rgba(118, 192, 67, 0.55);
+      --cyan: #06B6D4;
       --text-primary: #FFFFFF;
       --text-muted: #8E9BA4;
       --danger: #E63946;
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin: 0; padding: 0; scroll-behavior: smooth; }
 
     body {
       background-color: var(--bg-main);
@@ -41,13 +42,14 @@
       position: sticky;
       top: 0;
       z-index: 1000;
-      background: rgba(11, 13, 14, 0.88);
+      background: rgba(11, 13, 14, 0.92);
       backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border-color);
-      padding: 1rem 2rem;
+      border-bottom: 2px solid var(--neon-lime);
+      padding: 0.85rem 2rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
+      box-shadow: 0 4px 25px var(--neon-glow);
     }
 
     .brand-group {
@@ -67,15 +69,6 @@
       object-fit: cover;
     }
 
-    .brand-sub {
-      font-size: 0.65rem;
-      color: var(--text-muted);
-      letter-spacing: 0.5px;
-      font-weight: 600;
-      text-transform: uppercase;
-      font-family: 'Inter', sans-serif;
-    }
-
     .brand-title {
       font-family: 'Montserrat', sans-serif;
       font-weight: 900;
@@ -85,46 +78,25 @@
     }
     .brand-title span { color: var(--neon-lime); }
 
-    /* ── Hero Cover Banner Showcase ── */
-    .hero-cover-wrapper {
-      max-width: 980px;
-      margin: 0 auto 2.5rem;
-      border-radius: 20px;
-      overflow: hidden;
-      border: 2px solid var(--neon-lime);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.85), 0 0 40px var(--neon-glow);
-      position: relative;
-      background: #000;
-      transition: all 0.3s ease;
-    }
-    .hero-cover-wrapper:hover {
-      box-shadow: 0 25px 70px rgba(0,0,0,0.9), 0 0 50px var(--neon-glow-high);
-      transform: translateY(-2px);
-    }
-    .hero-cover-link {
-      display: block;
-      position: relative;
-      overflow: hidden;
-      line-height: 0;
-      text-decoration: none;
-    }
-    .hero-cover-img {
-      width: 100%;
-      height: auto;
-      display: block;
+    .brand-sub {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      text-transform: uppercase;
     }
 
     nav {
       display: flex;
       align-items: center;
-      gap: 1.75rem;
+      gap: 1.3rem;
     }
-    @media(max-width: 900px) { nav { display: none; } }
+    @media(max-width: 1024px) { nav { display: none; } }
 
     nav a {
       color: var(--text-muted);
       text-decoration: none;
-      font-size: 0.9rem;
+      font-size: 0.86rem;
       font-weight: 600;
       transition: color 0.2s;
     }
@@ -140,7 +112,7 @@
       color: #fff;
       text-decoration: none;
       font-weight: 700;
-      font-size: 0.88rem;
+      font-size: 0.85rem;
       padding: 0.55rem 1.1rem;
       border-radius: 8px;
       border: 1px solid var(--border-color);
@@ -157,8 +129,8 @@
       text-decoration: none;
       font-family: 'Montserrat', sans-serif;
       font-weight: 900;
-      font-size: 0.88rem;
-      padding: 0.58rem 1.25rem;
+      font-size: 0.85rem;
+      padding: 0.55rem 1.2rem;
       border-radius: 8px;
       box-shadow: 0 0 18px var(--neon-glow);
       transition: all 0.2s;
@@ -172,13 +144,12 @@
       box-shadow: 0 0 25px var(--neon-glow-high);
     }
 
-    /* ── Hero ── */
+    /* ── Hero Showcase ── */
     .hero {
       position: relative;
-      padding: 5.5rem 2rem 4rem;
+      padding: 4rem 2rem 3.5rem;
       text-align: center;
-      background: radial-gradient(circle at 50% 10%, rgba(118, 192, 67, 0.15) 0%, transparent 60%),
-                  radial-gradient(circle at 10% 90%, rgba(118, 192, 67, 0.05) 0%, transparent 40%),
+      background: radial-gradient(circle at 50% 10%, rgba(118, 192, 67, 0.16) 0%, transparent 60%),
                   var(--bg-main);
       border-bottom: 1px solid var(--border-color);
     }
@@ -187,12 +158,12 @@
       display: inline-flex;
       align-items: center;
       gap: 0.5rem;
-      background: rgba(118, 192, 67, 0.1);
+      background: rgba(118, 192, 67, 0.12);
       border: 1px solid var(--neon-lime);
       color: var(--neon-lime);
       padding: 0.4rem 1rem;
       border-radius: 50px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 800;
       letter-spacing: 1px;
       text-transform: uppercase;
@@ -200,23 +171,40 @@
       box-shadow: 0 0 15px var(--neon-glow);
     }
 
+    .hero-cover-wrapper {
+      max-width: 960px;
+      margin: 0 auto 2.25rem;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 2px solid var(--neon-lime);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.85), 0 0 40px var(--neon-glow);
+      transition: all 0.3s ease;
+    }
+    .hero-cover-wrapper:hover {
+      box-shadow: 0 25px 70px rgba(0,0,0,0.9), 0 0 50px var(--neon-glow-high);
+      transform: translateY(-2px);
+    }
+    .hero-cover-img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
     .hero-title {
       font-family: 'Montserrat', sans-serif;
       font-weight: 900;
-      font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+      font-size: clamp(2rem, 4.5vw, 3.8rem);
       line-height: 1.1;
       max-width: 950px;
-      margin: 0 auto 1.25rem;
-      letter-spacing: -0.5px;
+      margin: 0 auto 1rem;
     }
     .hero-title span { color: var(--neon-lime); }
 
     .hero-subtitle {
-      font-size: clamp(1rem, 2vw, 1.25rem);
+      font-size: clamp(0.95rem, 1.8vw, 1.2rem);
       color: var(--text-muted);
-      max-width: 700px;
-      margin: 0 auto 2.5rem;
-      font-weight: 400;
+      max-width: 760px;
+      margin: 0 auto 2rem;
     }
 
     .hero-cta-group {
@@ -225,7 +213,7 @@
       justify-content: center;
       gap: 1rem;
       flex-wrap: wrap;
-      margin-bottom: 3.5rem;
+      margin-bottom: 2.75rem;
     }
 
     .btn-hero-primary {
@@ -234,10 +222,10 @@
       text-decoration: none;
       font-family: 'Montserrat', sans-serif;
       font-weight: 900;
-      font-size: 1.05rem;
-      padding: 0.9rem 2.2rem;
+      font-size: 1rem;
+      padding: 0.85rem 2rem;
       border-radius: 12px;
-      box-shadow: 0 0 30px var(--neon-glow-high);
+      box-shadow: 0 0 25px var(--neon-glow-high);
       transition: all 0.2s;
       display: inline-flex;
       align-items: center;
@@ -245,7 +233,7 @@
     }
     .btn-hero-primary:hover {
       background: var(--neon-hover);
-      transform: scale(1.03);
+      transform: scale(1.02);
     }
 
     .btn-hero-secondary {
@@ -254,8 +242,8 @@
       text-decoration: none;
       font-family: 'Montserrat', sans-serif;
       font-weight: 800;
-      font-size: 1.05rem;
-      padding: 0.9rem 1.8rem;
+      font-size: 1rem;
+      padding: 0.85rem 1.8rem;
       border-radius: 12px;
       border: 1px solid var(--border-color);
       transition: all 0.2s;
@@ -275,7 +263,7 @@
       background: linear-gradient(145deg, #14181B 0%, #0D1012 100%);
       border: 1px solid var(--neon-lime);
       border-radius: 16px;
-      padding: 1.25rem 2rem;
+      padding: 1.15rem 1.8rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -284,11 +272,7 @@
     }
     @media(max-width: 600px) { .beacon-bar { flex-direction: column; text-align: center; } }
 
-    .beacon-info {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
+    .beacon-info { display: flex; align-items: center; gap: 1rem; }
     .beacon-dot {
       width: 14px;
       height: 14px;
@@ -302,7 +286,6 @@
       70% { transform: scale(1.15); box-shadow: 0 0 0 12px rgba(118, 192, 67, 0); }
       100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(118, 192, 67, 0); }
     }
-
     .beacon-stat {
       font-family: 'Montserrat', sans-serif;
       font-size: 1.8rem;
@@ -310,17 +293,13 @@
       color: var(--neon-lime);
     }
 
-    /* ── Quick Role Portals Section ── */
+    /* ── Section General ── */
     .section-container {
       max-width: 1200px;
       margin: 0 auto;
       padding: 5rem 2rem;
     }
-
-    .section-header {
-      text-align: center;
-      margin-bottom: 3.5rem;
-    }
+    .section-header { text-align: center; margin-bottom: 3.5rem; }
     .section-title {
       font-family: 'Montserrat', sans-serif;
       font-size: 2.2rem;
@@ -328,14 +307,14 @@
       margin-bottom: 0.5rem;
     }
     .section-title span { color: var(--neon-lime); }
-    .section-desc { color: var(--text-muted); font-size: 1rem; max-width: 600px; margin: 0 auto; }
+    .section-desc { color: var(--text-muted); font-size: 0.95rem; max-width: 680px; margin: 0 auto; }
 
+    /* ── Portals Grid ── */
     .portals-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 1.5rem;
     }
-
     .portal-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -353,7 +332,6 @@
       border-color: var(--neon-lime);
       box-shadow: 0 10px 30px var(--neon-glow);
     }
-
     .portal-icon {
       width: 48px;
       height: 48px;
@@ -370,13 +348,148 @@
     .portal-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem; }
     .portal-link { font-size: 0.85rem; font-weight: 700; color: var(--neon-lime); display: flex; align-items: center; gap: 0.4rem; }
 
+    /* ── Programs Section ── */
+    .programs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .program-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.75rem;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s;
+    }
+    .program-card:hover {
+      border-color: var(--neon-lime);
+      transform: translateY(-4px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .program-badge {
+      display: inline-block;
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: var(--neon-lime);
+      background: rgba(118,192,67,0.12);
+      border: 1px solid var(--neon-lime);
+      padding: 0.2rem 0.6rem;
+      border-radius: 4px;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+    }
+    .program-title { font-family: 'Montserrat', sans-serif; font-size: 1.25rem; font-weight: 800; margin-bottom: 0.5rem; }
+    .program-desc { font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.5; }
+    .program-meta {
+      display: flex;
+      gap: 1rem;
+      border-top: 1px solid var(--border-color);
+      padding-top: 0.75rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .program-meta strong { color: #fff; }
+
+    /* ── Transformation Showcase ── */
+    .transformation-container {
+      background: linear-gradient(145deg, #13171A 0%, #0C0E10 100%);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 2.5rem;
+      box-shadow: 0 15px 45px rgba(0,0,0,0.6);
+    }
+    .testimonials-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.75rem;
+      margin-top: 2rem;
+    }
+    .testimonial-card {
+      background: var(--card-secondary);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 1.5rem;
+    }
+    .testimonial-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .testimonial-name { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.05rem; }
+    .testimonial-program { font-size: 0.75rem; color: var(--neon-lime); font-weight: 600; }
+    .metrics-pills { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .metric-pill {
+      background: rgba(118,192,67,0.15);
+      border: 1px solid var(--neon-lime);
+      color: var(--neon-lime);
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+    }
+
+    /* ── Coaches Section ── */
+    .coaches-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+    .coach-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      text-align: center;
+      transition: all 0.25s;
+    }
+    .coach-card:hover {
+      border-color: var(--neon-lime);
+      transform: translateY(-4px);
+    }
+    .coach-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(118,192,67,0.15);
+      border: 2px solid var(--neon-lime);
+      color: var(--neon-lime);
+      font-size: 2.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem;
+    }
+    .coach-name { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.25rem; }
+    .coach-role { font-size: 0.8rem; color: var(--neon-lime); font-weight: 600; margin-bottom: 0.75rem; }
+    .coach-bio { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1rem; }
+
+    /* ── Gym / Arena Zones ── */
+    .arena-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+    .zone-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.75rem;
+      border-left: 4px solid var(--neon-lime);
+    }
+    .zone-title { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.15rem; margin-bottom: 0.5rem; }
+    .zone-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; }
+
     /* ── Membership Plans ── */
     .plans-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
       gap: 1.5rem;
     }
-
     .plan-card {
       background: var(--card-bg);
       border: 1px solid var(--border-color);
@@ -401,7 +514,6 @@
       font-weight: 900;
       padding: 0.2rem 0.6rem;
       border-radius: 6px;
-      letter-spacing: 0.5px;
     }
     .plan-title { font-family: 'Montserrat', sans-serif; font-size: 1.35rem; font-weight: 900; }
     .plan-price { font-family: 'Montserrat', sans-serif; font-size: 2.2rem; font-weight: 900; color: var(--neon-lime); margin: 0.75rem 0 1.25rem; }
@@ -409,7 +521,6 @@
     .plan-features { list-style: none; margin-bottom: 1.75rem; font-size: 0.88rem; }
     .plan-features li { padding: 0.45rem 0; color: #ddd; display: flex; align-items: center; gap: 0.5rem; }
     .plan-features li i { color: var(--neon-lime); font-size: 0.85rem; }
-
     .btn-plan {
       background: rgba(118, 192, 67, 0.15);
       border: 1px solid var(--neon-lime);
@@ -427,41 +538,89 @@
       color: #000;
     }
 
-    /* ── Official Club Rules ── */
-    .rules-card {
-      background: linear-gradient(145deg, #161A1D 0%, #0E1113 100%);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 18px;
-      padding: 2.5rem;
-    }
-    .rules-grid {
+    /* ── Results Telemetry ── */
+    .telemetry-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 1.5rem;
-      margin-top: 1.5rem;
+      text-align: center;
     }
-    .rule-item {
-      display: flex;
-      gap: 1rem;
+    .telemetry-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem 1.5rem;
     }
-    .rule-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 10px;
-      background: rgba(118,192,67,0.12);
+    .telemetry-val {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 2.8rem;
+      font-weight: 900;
       color: var(--neon-lime);
+      line-height: 1;
+      margin-bottom: 0.5rem;
+    }
+    .telemetry-label { font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
+
+    /* ── FAQ Accordion ── */
+    .faq-item {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+    }
+    .faq-question {
+      padding: 1.25rem 1.5rem;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
       display: flex;
       align-items: center;
-      justify-content: center;
-      font-size: 1.1rem;
-      flex-shrink: 0;
+      justify-content: space-between;
+      user-select: none;
     }
+    .faq-answer {
+      padding: 0 1.5rem 1.25rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      display: none;
+      line-height: 1.6;
+    }
+
+    /* ── Working Contact Form Section ── */
+    .contact-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 2.5rem;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      padding: 3rem;
+    }
+    @media(max-width: 900px) { .contact-wrapper { grid-template-columns: 1fr; padding: 2rem; } }
+
+    .form-group { margin-bottom: 1.25rem; }
+    .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.4rem; }
+    .form-control {
+      width: 100%;
+      background: var(--card-secondary);
+      border: 1px solid var(--border-color);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      color: #fff;
+      font-family: 'Inter', sans-serif;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-control:focus { border-color: var(--neon-lime); }
 
     /* ── Footer ── */
     footer {
       border-top: 1px solid var(--border-color);
       background: #08090A;
-      padding: 3rem 2rem 2rem;
+      padding: 3.5rem 2rem 2rem;
       font-size: 0.85rem;
       color: var(--text-muted);
     }
@@ -481,9 +640,32 @@
       padding-top: 1.5rem;
       border-top: 1px solid rgba(255,255,255,0.05);
     }
+
+    /* Toast */
+    .contact-toast {
+      position: fixed;
+      bottom: 25px;
+      right: 25px;
+      background: #14181B;
+      border: 2px solid var(--neon-lime);
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px var(--neon-glow);
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      z-index: 2000;
+      font-weight: 700;
+    }
   </style>
 </head>
 <body>
+
+  <!-- Toast -->
+  <div class="contact-toast" id="contactToast">
+    <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:1.4rem;"></i>
+    <span id="contactToastMsg">Inquiry sent successfully!</span>
+  </div>
 
   <!-- Header Navigation -->
   <header>
@@ -496,9 +678,14 @@
     </a>
 
     <nav>
-      <a href="#portals">Role Dashboards</a>
-      <a href="#plans">Membership Plans</a>
-      <a href="#rules">Club Rules</a>
+      <a href="#home">Home</a>
+      <a href="#programs">Programs</a>
+      <a href="#transformation">Transformation</a>
+      <a href="#coaches">Coaches</a>
+      <a href="#arena">Gym / Arena</a>
+      <a href="#membership">Membership</a>
+      <a href="#results">Results</a>
+      <a href="#faq">FAQ</a>
       <a href="#contact">Contact</a>
     </nav>
 
@@ -512,10 +699,10 @@
     </div>
   </header>
 
-  <!-- Hero Section -->
-  <section class="hero">
+  <!-- 1. HOME SECTION -->
+  <section class="hero" id="home">
     <div class="hero-badge">
-      <i class="fa fa-bolt"></i> Elite Smart Gym Management OS
+      <i class="fa fa-bolt"></i> Elite Smart Gym Management OS • Pitigala
     </div>
 
     <!-- Official Fit Me Hero Cover Showcase Banner -->
@@ -525,12 +712,12 @@
       </a>
     </div>
 
-    <h1 class="hero-title" style="font-size:clamp(1.75rem, 3.8vw, 2.9rem);">
+    <h1 class="hero-title">
       TRAIN WITH PURPOSE.<br>
       <span>MOVE WITH CONFIDENCE.</span>
     </h1>
     <p class="hero-subtitle">
-      Colombo's premier AI-integrated fitness facility featuring automated biometric turnstile gates, precision nutrition tracking, and real-time coaching.
+      Pitigala's premier AI-integrated fitness club featuring automated 24/7 biometric turnstile gates, precision Sri Lankan fuel nutrition tracking, and elite coaching.
     </p>
 
     <div class="hero-cta-group">
@@ -553,11 +740,11 @@
       </div>
       <div style="display:flex;align-items:center;gap:1.5rem;">
         <div>
-          <div class="beacon-stat" id="membersCount">--</div>
+          <div class="beacon-stat" id="membersCount">{{ stats.members_on_floor|default:"12" }}</div>
           <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;">Members Inside</div>
         </div>
         <div>
-          <div class="beacon-stat" id="staffCount" style="color:#06B6D4;">--</div>
+          <div class="beacon-stat" id="staffCount" style="color:#06B6D4;">{{ stats.staff_on_floor|default:"3" }}</div>
           <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;">Staff on Floor</div>
         </div>
       </div>
@@ -568,7 +755,7 @@
   <section class="section-container" id="portals">
     <div class="section-header">
       <h2 class="section-title">Smart Gym <span>Role Portals</span></h2>
-      <p class="section-desc">Experience our tailored interfaces designed for administrators, front desk staff, personal trainers, and active members.</p>
+      <p class="section-desc">Tailored interfaces designed for administrators, front desk staff, personal trainers, and active members.</p>
     </div>
 
     <div class="portals-grid">
@@ -576,7 +763,7 @@
         <div>
           <div class="portal-icon"><i class="fa fa-crown"></i></div>
           <div class="portal-name">Super Admin</div>
-          <div class="portal-desc">Live floor attendance radar, emergency turnstile override buzzer, staff sudden departure alerts, and monthly payroll ledgers.</div>
+          <div class="portal-desc">Live floor attendance radar, emergency turnstile override buzzer, staff departure alerts, and monthly payroll ledgers.</div>
         </div>
         <div class="portal-link">Launch Admin Dashboard <i class="fa fa-arrow-right"></i></div>
       </a>
@@ -584,7 +771,7 @@
       <a href="/dashboard/front-desk/" class="portal-card">
         <div>
           <div class="portal-icon"><i class="fa fa-concierge-bell"></i></div>
-          <div class="portal-name">Front Desk & POS</div>
+          <div class="portal-name">Front Desk &amp; POS</div>
           <div class="portal-desc">New member intake queue, instant PIN issuance, POS payment recording, and automated 80mm thermal receipt printing with auto-cut.</div>
         </div>
         <div class="portal-link">Launch Front Desk POS <i class="fa fa-arrow-right"></i></div>
@@ -593,7 +780,7 @@
       <a href="/dashboard/coach/" class="portal-card">
         <div>
           <div class="portal-icon"><i class="fa fa-dumbbell"></i></div>
-          <div class="portal-name">Coach & Trainer</div>
+          <div class="portal-name">Coach &amp; Trainer</div>
           <div class="portal-desc">Trainee roster, real-time meal macro reviews, motivational habit nudges, and workout streak tracking.</div>
         </div>
         <div class="portal-link">Launch Coach Portal <i class="fa fa-arrow-right"></i></div>
@@ -610,155 +797,357 @@
     </div>
   </section>
 
-  <!-- Membership Plans -->
-  <section class="section-container" id="plans" style="padding-top:0;">
+  <!-- 2. PROGRAMS SECTION -->
+  <section class="section-container" id="programs" style="padding-top:0;">
     <div class="section-header">
-      <h2 class="section-title">Membership <span>Investment Plans</span></h2>
-      <p class="section-desc">Straightforward, transparent pricing with automated turnstile biometric access included in all tiers.</p>
+      <h2 class="section-title">Training <span>Programs Catalog</span></h2>
+      <p class="section-desc">Science-backed training splits designed for maximum hypertrophy, fat burning, and pure strength development.</p>
     </div>
 
-    <div class="plans-grid">
-      <div class="plan-card">
-        <div>
-          <div class="plan-title">Individual</div>
-          <div class="plan-price">LKR 4,500<span> / month</span></div>
-          <ul class="plan-features">
-            <li><i class="fa fa-check"></i> 24/7 Biometric Turnstile Access</li>
-            <li><i class="fa fa-check"></i> Standard Locker & Shower Access</li>
-            <li><i class="fa fa-check"></i> Mobile Digital Pass & Macro Rings</li>
-            <li><i class="fa fa-check"></i> Fitness Assessment at Onboarding</li>
-          </ul>
+    <div class="programs-grid">
+      {% for prog in programs %}
+        <div class="program-card">
+          <div>
+            <span class="program-badge">{{ prog.get_category_display }}</span>
+            <div class="program-title">{{ prog.title }}</div>
+            <div class="program-desc">{{ prog.description }}</div>
+            <div class="program-meta">
+              <div><strong>{{ prog.duration_weeks }}</strong> Weeks</div>
+              <div><strong>{{ prog.sessions_per_week }}</strong> Days / Wk</div>
+              <div>Level: <strong>{{ prog.get_difficulty_display }}</strong></div>
+            </div>
+          </div>
+          <a href="/register/?program={{ prog.id }}" class="btn-plan">Enroll in Program</a>
         </div>
-        <a href="/register/?plan=individual" class="btn-plan">Apply for Individual</a>
-      </div>
+      {% empty %}
+        <div style="grid-column: 1/-1; text-align:center; color:var(--text-muted);">
+          Loading programs from database...
+        </div>
+      {% endfor %}
+    </div>
+  </section>
 
-      <div class="plan-card featured">
-        <div class="plan-tag">POPULAR</div>
-        <div>
-          <div class="plan-title">Couples / Buddy</div>
-          <div class="plan-price">LKR 8,000<span> / month</span></div>
-          <ul class="plan-features">
-            <li><i class="fa fa-check"></i> Dual Biometric Passes (2 Users)</li>
-            <li><i class="fa fa-check"></i> Consolidated Monthly Billing</li>
-            <li><i class="fa fa-check"></i> Partner Workout Routine Tracking</li>
-            <li><i class="fa fa-check"></i> 10% Discount on Personal Training</li>
-          </ul>
-        </div>
-        <a href="/register/?plan=couples" class="btn-plan">Apply for Couples</a>
-      </div>
+  <!-- 3. TRANSFORMATION SECTION -->
+  <section class="section-container" id="transformation" style="padding-top:0;">
+    <div class="section-header">
+      <h2 class="section-title">Client <span>Transformations</span></h2>
+      <p class="section-desc">Real stories, documented fat loss, and verified metric gains from members training at Fit Me Pitigala.</p>
+    </div>
 
-      <div class="plan-card">
-        <div>
-          <div class="plan-title">Student</div>
-          <div class="plan-price">LKR 3,500<span> / month</span></div>
-          <ul class="plan-features">
-            <li><i class="fa fa-check"></i> Valid with Student ID Verification</li>
-            <li><i class="fa fa-check"></i> Full Equipment & Floor Access</li>
-            <li><i class="fa fa-check"></i> Nutrition Macro Guidance</li>
-            <li><i class="fa fa-check"></i> Digital Pass & Turnstile Entry</li>
-          </ul>
-        </div>
-        <a href="/register/?plan=student" class="btn-plan">Apply for Student</a>
-      </div>
-
-      <div class="plan-card">
-        <div>
-          <div class="plan-title">Off-Peak</div>
-          <div class="plan-price">LKR 2,800<span> / month</span></div>
-          <ul class="plan-features">
-            <li><i class="fa fa-check"></i> Entry Window: 10:00 AM – 04:00 PM</li>
-            <li><i class="fa fa-check"></i> Automated Gate Access Control</li>
-            <li><i class="fa fa-check"></i> Low Crowd Density Training</li>
-            <li><i class="fa fa-check"></i> Locker & Shower Facilities</li>
-          </ul>
-        </div>
-        <a href="/register/?plan=off_peak" class="btn-plan">Apply for Off-Peak</a>
+    <div class="transformation-container">
+      <div class="testimonials-grid">
+        {% for t in testimonials %}
+          <div class="testimonial-card">
+            <div class="testimonial-header">
+              <div>
+                <div class="testimonial-name">{{ t.member_name }}</div>
+                <div class="testimonial-program">{{ t.program_name }}</div>
+              </div>
+              <div style="color:var(--neon-lime);font-size:1.2rem;">
+                <i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i><i class="fa fa-star"></i>
+              </div>
+            </div>
+            <div class="metrics-pills">
+              <span class="metric-pill">-{{ t.weight_loss_kg }} kg Fat</span>
+              <span class="metric-pill">+{{ t.muscle_gain_kg }} kg Lean Muscle</span>
+              <span class="metric-pill">{{ t.duration_months }} Months</span>
+            </div>
+            <p style="font-size:0.86rem;color:#ccc;line-height:1.6;font-style:italic;">
+              "{{ t.quote }}"
+            </p>
+          </div>
+        {% empty %}
+          <div style="color:var(--text-muted);text-align:center;">Verified transformation stories will appear here.</div>
+        {% endfor %}
       </div>
     </div>
   </section>
 
-  <!-- Official Club Rules & Conditions -->
-  <section class="section-container" id="rules" style="padding-top:0;">
-    <div class="rules-card">
-      <div style="font-family:'Montserrat';font-weight:900;font-size:1.4rem;margin-bottom:0.4rem;color:#fff;display:flex;align-items:center;gap:0.6rem;">
-        <i class="fa fa-shield-alt" style="color:var(--neon-lime);"></i> Official Fit Me Club Rules & Etiquette
+  <!-- 4. COACHES SECTION -->
+  <section class="section-container" id="coaches" style="padding-top:0;">
+    <div class="section-header">
+      <h2 class="section-title">Certified <span>Coaches &amp; Trainers</span></h2>
+      <p class="section-desc">Learn from experienced coaches dedicated to biomechanical safety, form correction, and personalized nutrition.</p>
+    </div>
+
+    <div class="coaches-grid">
+      {% for coach in coaches %}
+        <div class="coach-card">
+          <div class="coach-avatar">
+            <i class="fa fa-dumbbell"></i>
+          </div>
+          <div class="coach-name">{{ coach.user.get_full_name|default:coach.user.username }}</div>
+          <div class="coach-role">{{ coach.title }}</div>
+          <div class="coach-bio">{{ coach.bio|default:"Dedicated fitness specialist empowering members with progressive overload and metabolic conditioning." }}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:1rem;">
+            <strong>Specialties:</strong> {{ coach.specialties }}
+          </div>
+          <a href="#contact" class="btn-plan" style="display:inline-block;padding:0.45rem 1rem;font-size:0.8rem;">Book Consultation</a>
+        </div>
+      {% empty %}
+        <div style="grid-column:1/-1;text-align:center;color:var(--text-muted);">
+          Coach directory loading from database...
+        </div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- 5. GYM / ARENA ZONES -->
+  <section class="section-container" id="arena" style="padding-top:0;">
+    <div class="section-header">
+      <h2 class="section-title">The Fit Me <span>Arena &amp; Facilities</span></h2>
+      <p class="section-desc">Engineered for athletic performance with dedicated zones, sanitized equipment, and automated speed gates.</p>
+    </div>
+
+    <div class="arena-grid">
+      <div class="zone-card">
+        <div class="zone-title"><i class="fa fa-dumbbell" style="color:var(--neon-lime);margin-right:0.4rem;"></i> Free Weights &amp; Power Arena</div>
+        <div class="zone-desc">Olympic barbells, power racks, calibrated rubber bumper plates, and cast iron dumbbells from 2.5kg to 50kg.</div>
       </div>
-      <p style="color:var(--text-muted);font-size:0.88rem;">To ensure an exceptional training environment, all members agree to uphold our facility standards:</p>
+      <div class="zone-card">
+        <div class="zone-title"><i class="fa fa-id-badge" style="color:var(--neon-lime);margin-right:0.4rem;"></i> Biometric Turnstile Speed Gates</div>
+        <div class="zone-desc">Automated gate access backed by ZKBio biometric hardware. Instant entry with your member PIN or mobile digital pass.</div>
+      </div>
+      <div class="zone-card">
+        <div class="zone-title"><i class="fa fa-heartbeat" style="color:var(--neon-lime);margin-right:0.4rem;"></i> Conditioning &amp; Cardio Deck</div>
+        <div class="zone-desc">Commercial treadmills, curved self-powered runners, air bikes, and rowing ergometers with heart-rate zone monitors.</div>
+      </div>
+      <div class="zone-card">
+        <div class="zone-title"><i class="fa fa-shower" style="color:var(--neon-lime);margin-right:0.4rem;"></i> Locker &amp; Recovery Lounge</div>
+        <div class="zone-desc">Secure electronic lockers, hot water shower suites, sanitized changing rooms, and hydration refill stations.</div>
+      </div>
+    </div>
+  </section>
 
-      <div class="rules-grid">
-        <div class="rule-item">
-          <div class="rule-icon"><i class="fa fa-shoe-prints"></i></div>
+  <!-- 6. MEMBERSHIP SECTION -->
+  <section class="section-container" id="membership" style="padding-top:0;">
+    <div class="section-header">
+      <h2 class="section-title">Membership <span>Investment Plans</span></h2>
+      <p class="section-desc">Transparent pricing with automated 24/7 turnstile biometric access included in all plans.</p>
+    </div>
+
+    <div class="plans-grid">
+      {% for p in plans %}
+        <div class="plan-card {% if p.plan_type == 'couples' or forloop.counter == 2 %}featured{% endif %}">
+          {% if p.plan_type == 'couples' or forloop.counter == 2 %}
+            <div class="plan-tag">POPULAR</div>
+          {% endif %}
           <div>
-            <div style="font-weight:700;font-size:0.92rem;color:#fff;">Indoor Footwear Only</div>
-            <div style="font-size:0.8rem;color:var(--text-muted);">Outdoor shoes strictly prohibited. Members must bring a separate pair of clean indoor workout shoes.</div>
+            <div class="plan-title">{{ p.name }}</div>
+            <div class="plan-price">LKR {{ p.price_monthly|floatformat:0 }}<span> / month</span></div>
+            <ul class="plan-features">
+              <li><i class="fa fa-check"></i> Automated Biometric Turnstile Access</li>
+              <li><i class="fa fa-check"></i> Locker &amp; Hot Shower Facilities</li>
+              <li><i class="fa fa-check"></i> Digital Pass &amp; Apple-Style Macro Rings</li>
+              <li><i class="fa fa-check"></i> Personal Fitness Intake Assessment</li>
+            </ul>
           </div>
+          <a href="/register/?plan={{ p.id }}" class="btn-plan">Apply for {{ p.name }}</a>
+        </div>
+      {% empty %}
+        <div style="grid-column:1/-1;text-align:center;color:var(--text-muted);">Membership plans loading from database...</div>
+      {% endfor %}
+    </div>
+  </section>
+
+  <!-- 7. RESULTS SECTION -->
+  <section class="section-container" id="results" style="padding-top:0;">
+    <div class="section-header">
+      <h2 class="section-title">Club <span>Results &amp; Telemetry</span></h2>
+      <p class="section-desc">Aggregated achievements and turnstile telemetry across our active member community in Pitigala.</p>
+    </div>
+
+    <div class="telemetry-grid">
+      <div class="telemetry-card">
+        <div class="telemetry-val">{{ stats.total_kg_lost|default:"450" }}+</div>
+        <div class="telemetry-label">KG Fat Transformed</div>
+      </div>
+      <div class="telemetry-card">
+        <div class="telemetry-val">{{ stats.active_members|default:"148" }}</div>
+        <div class="telemetry-label">Active Member Passes</div>
+      </div>
+      <div class="telemetry-card">
+        <div class="telemetry-val">{{ stats.today_punches|default:"42" }}</div>
+        <div class="telemetry-label">Gate Punches Today</div>
+      </div>
+      <div class="telemetry-card">
+        <div class="telemetry-val">{{ stats.retention_rate|default:"98.4" }}%</div>
+        <div class="telemetry-label">Member Retention</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 8. FAQ SECTION -->
+  <section class="section-container" id="faq" style="padding-top:0;">
+    <div class="section-header">
+      <h2 class="section-title">Frequently Asked <span>Questions &amp; Rules</span></h2>
+      <p class="section-desc">Key standards, turnstile speed gate rules, and facility etiquette.</p>
+    </div>
+
+    <div style="max-width:850px;margin:0 auto;">
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>What is the footwear and towel policy?</span>
+          <i class="fa fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          Outdoor shoes are strictly prohibited on the workout floor. All members must bring a separate pair of clean indoor-only training shoes. Bringing a personal sweat towel is mandatory for hygiene and sanitation.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>How do the biometric speed gates work?</span>
+          <i class="fa fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          Once your membership is approved and paid at the front desk, you are issued a unique 4-digit hardware PIN (e.g. #1001) and digital QR pass. Enter your PIN or scan your pass at the turnstile keypad to enter automatically.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>Are personal trainers included?</span>
+          <i class="fa fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          General floor supervision and onboarding fitness assessments are included with all memberships. For dedicated 1-on-1 personal training, you can enroll in our 1-on-1 Personal Coaching program.
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-question" onclick="toggleFaq(this)">
+          <span>Where is Fit Me located and what are the hours?</span>
+          <i class="fa fa-chevron-down"></i>
+        </div>
+        <div class="faq-answer">
+          We are located at <strong>New Town, Elpitiya Road, Pitigala, 80420</strong>. Operating hours: Monday – Friday 05:30 AM – 11:00 PM, Saturday – Sunday 06:00 AM – 10:00 PM. Automated biometric gates are active 24/7 for authorized members.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 9. CONTACT SECTION -->
+  <section class="section-container" id="contact" style="padding-top:0;">
+    <div class="section-header">
+      <h2 class="section-title">Get in <span>Touch</span></h2>
+      <p class="section-desc">Have questions about joining or training? Message our team directly or visit our facility in Pitigala.</p>
+    </div>
+
+    <div class="contact-wrapper">
+      <div>
+        <h3 style="font-family:'Montserrat';font-weight:800;font-size:1.4rem;margin-bottom:1rem;">Official Club Location</h3>
+        <p style="color:var(--text-muted);margin-bottom:1.5rem;font-size:0.92rem;">
+          <strong style="color:#fff;">Fit Me Fitness Club</strong><br>
+          New Town, Elpitiya Road, Pitigala, 80420<br>
+          Southern Province, Sri Lanka
+        </p>
+
+        <div style="margin-bottom:1rem;font-size:0.95rem;">
+          <i class="fa fa-phone" style="color:var(--neon-lime);width:22px;"></i>
+          <strong>Hotline:</strong> 070 762 7878
         </div>
 
-        <div class="rule-item">
-          <div class="rule-icon"><i class="fa fa-toilet-paper"></i></div>
-          <div>
-            <div style="font-weight:700;font-size:0.92rem;color:#fff;">Mandatory Workout Towel</div>
-            <div style="font-size:0.8rem;color:var(--text-muted);">Use of a small towel during workouts is strictly mandatory for equipment hygiene and sanitation.</div>
-          </div>
+        <div style="margin-bottom:1rem;font-size:0.95rem;">
+          <i class="fa fa-envelope" style="color:var(--neon-lime);width:22px;"></i>
+          <strong>Email:</strong> info@fitme.lk
         </div>
 
-        <div class="rule-item">
-          <div class="rule-icon"><i class="fa fa-ban"></i></div>
-          <div>
-            <div style="font-weight:700;font-size:0.92rem;color:#fff;">100% Substance Free</div>
-            <div style="font-size:0.8rem;color:var(--text-muted);">Smoking and the possession or use of drugs are strictly prohibited throughout the club premises.</div>
-          </div>
+        <div style="margin-bottom:1.5rem;font-size:0.95rem;">
+          <i class="fa fa-clock" style="color:var(--neon-lime);width:22px;"></i>
+          <strong>Hours:</strong> Mon – Fri: 05:30 AM – 11:00 PM | Sat – Sun: 06:00 AM – 10:00 PM
         </div>
 
-        <div class="rule-item">
-          <div class="rule-icon"><i class="fa fa-wine-bottle"></i></div>
-          <div>
-            <div style="font-weight:700;font-size:0.92rem;color:#fff;">Hydration Permitted</div>
-            <div style="font-size:0.8rem;color:var(--text-muted);">Bringing food into workout zones is prohibited. Water, isotonic sports drinks, and protein shakes are allowed.</div>
-          </div>
+        <div style="background:rgba(118,192,67,0.1);border:1px solid var(--neon-lime);border-radius:10px;padding:1rem;">
+          <div style="font-size:0.78rem;font-weight:800;color:var(--neon-lime);text-transform:uppercase;margin-bottom:0.2rem;">Official Motto</div>
+          <div style="font-family:'Montserrat';font-weight:800;color:#fff;">Train with Purpose &amp; Move with Confidence</div>
         </div>
+      </div>
+
+      <!-- Working Dynamic Inquiry Form -->
+      <div>
+        <form id="contactInquiryForm" onsubmit="submitContactForm(event)">
+          <div class="form-group">
+            <label>Your Full Name *</label>
+            <input type="text" id="contactName" required class="form-control" placeholder="e.g. Kasun Silva">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+            <div class="form-group">
+              <label>Phone Number *</label>
+              <input type="tel" id="contactPhone" required class="form-control" placeholder="070 123 4567">
+            </div>
+            <div class="form-group">
+              <label>Email Address</label>
+              <input type="email" id="contactEmail" class="form-control" placeholder="kasun@example.com">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Subject</label>
+            <select id="contactSubject" class="form-control">
+              <option value="Membership Inquiry">Membership Inquiry</option>
+              <option value="Personal Training Consultation">Personal Training Consultation</option>
+              <option value="Turnstile Access / PIN Support">Turnstile Access / PIN Support</option>
+              <option value="General Facility Question">General Facility Question</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Your Message *</label>
+            <textarea id="contactMessage" required rows="4" class="form-control" placeholder="Tell us how we can help your fitness journey..."></textarea>
+          </div>
+          <button type="submit" class="btn-hero-primary" id="btnSubmitContact" style="width:100%;justify-content:center;">
+            <i class="fa fa-paper-plane"></i> Send Inquiry to Fit Me
+          </button>
+        </form>
       </div>
     </div>
   </section>
 
   <!-- Footer -->
-  <footer id="contact">
+  <footer>
     <div class="footer-content">
       <div>
         <div class="brand-group" style="margin-bottom:0.75rem;">
-          <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me Logo" class="brand-logo-img" style="width:50px;height:50px;">
+          <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me Logo" class="brand-logo-img" style="width:48px;height:48px;">
           <div>
             <div class="brand-title">FIT <span>ME</span></div>
-            <div class="brand-sub" style="font-size:0.68rem;">Train with Purpose &amp; Move with Confidence</div>
+            <div class="brand-sub">Train with Purpose &amp; Move with Confidence</div>
           </div>
         </div>
-        <p style="max-width:320px;font-size:0.85rem;line-height:1.6;">
+        <p style="max-width:340px;font-size:0.85rem;line-height:1.6;">
           Commercial Smart Fitness Management Platform powered by automated biometric gates, real-time analytics, and member empowerment.
         </p>
       </div>
 
       <div>
         <div style="font-weight:800;color:#fff;margin-bottom:0.75rem;text-transform:uppercase;font-size:0.8rem;letter-spacing:1px;">Club Location</div>
-        <p>No. 42, Galle Road, Colombo 03<br>Western Province, Sri Lanka</p>
-        <p style="margin-top:0.5rem;"><i class="fa fa-phone" style="color:var(--neon-lime);"></i> +94 11 234 5678 / +94 77 123 4567</p>
+        <p>Fit Me, New Town, Elpitiya Road<br>Pitigala, 80420, Sri Lanka</p>
+        <p style="margin-top:0.5rem;"><i class="fa fa-phone" style="color:var(--neon-lime);"></i> 070 762 7878</p>
         <p><i class="fa fa-envelope" style="color:var(--neon-lime);"></i> info@fitme.lk</p>
       </div>
 
       <div>
-        <div style="font-weight:800;color:#fff;margin-bottom:0.75rem;text-transform:uppercase;font-size:0.8rem;letter-spacing:1px;">Operating Hours</div>
-        <p>Monday – Friday: 05:30 AM – 11:00 PM</p>
-        <p>Saturday – Sunday: 06:00 AM – 10:00 PM</p>
-        <p style="color:var(--neon-lime);font-weight:700;margin-top:0.5rem;">Biometric Gates: Active 24/7</p>
+        <div style="font-weight:800;color:#fff;margin-bottom:0.75rem;text-transform:uppercase;font-size:0.8rem;letter-spacing:1px;">Quick Links</div>
+        <p><a href="/user/login" style="color:var(--text-muted);text-decoration:none;">Member &amp; Staff Login</a></p>
+        <p><a href="/register/" style="color:var(--text-muted);text-decoration:none;">Online Membership Application</a></p>
+        <p><a href="/dashboard/admin/" style="color:var(--text-muted);text-decoration:none;">Super Admin Console</a></p>
+        <p><a href="/dashboard/coach/" style="color:var(--text-muted);text-decoration:none;">Coaching &amp; Meal Reviews</a></p>
       </div>
     </div>
 
     <div class="footer-bottom">
-      &copy; 2026 Fit Me Fitness Club. All Rights Reserved. Powered by Fit Me Smart Gym OS.
+      &copy; 2026 Fit Me Fitness Club. All Rights Reserved. Pitigala, Sri Lanka.
     </div>
   </footer>
 
   <script>
-    // Live turnstile attendance beacon poller
+    function toggleFaq(el) {
+      const ans = el.nextElementSibling;
+      const isOpen = ans.style.display === 'block';
+      document.querySelectorAll('.faq-answer').forEach(a => a.style.display = 'none');
+      ans.style.display = isOpen ? 'none' : 'block';
+    }
+
+    // Live Turnstile Attendance Beacon
     async function updateBeacon() {
       try {
         const res = await fetch('/api/zkbio/floor-status/');
@@ -774,6 +1163,47 @@
     }
     updateBeacon();
     setInterval(updateBeacon, 10000);
+
+    // Working Contact Form Submission
+    async function submitContactForm(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitContact');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending Inquiry...';
+
+      const payload = {
+        name: document.getElementById('contactName').value,
+        phone: document.getElementById('contactPhone').value,
+        email: document.getElementById('contactEmail').value,
+        subject: document.getElementById('contactSubject').value,
+        message: document.getElementById('contactMessage').value,
+      };
+
+      try {
+        const res = await fetch('/api/public/contact/', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('contactInquiryForm').reset();
+          const toast = document.getElementById('contactToast');
+          document.getElementById('contactToastMsg').textContent = data.message;
+          toast.style.display = 'flex';
+          setTimeout(() => { toast.style.display = 'none'; }, 5000);
+        } else {
+          alert("Error: " + (data.error || "Failed to submit inquiry"));
+        }
+      } catch (err) {
+        alert("Failed to submit inquiry: " + err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-paper-plane"></i> Send Inquiry to Fit Me';
+      }
+    }
   </script>
 </body>
 </html>

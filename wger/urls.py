@@ -320,7 +320,20 @@ urlpatterns += [
         path('api/members/<int:member_id>/ping/', __import__('wger.core.views.fitme_dashboards', fromlist=['ping_member_api']).ping_member_api, name='api-member-ping'),
         path('api/quick-meal/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_quick_meal_api']).log_quick_meal_api, name='api-quick-meal'),
         path('api/alerts/<int:alert_id>/resolve/', __import__('wger.core.views.fitme_dashboards', fromlist=['resolve_absence_alert_api']).resolve_absence_alert_api, name='api-alert-resolve'),
+        # New 31-Module Dynamic APIs
+        path('api/log-workout/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_workout_api']).log_workout_api, name='api-log-workout'),
+        path('api/log-measurement/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_measurement_api']).log_measurement_api, name='api-log-measurement'),
+        path('api/members/<int:member_id>/assign-plan/', __import__('wger.core.views.fitme_dashboards', fromlist=['assign_program_api']).assign_program_api, name='api-member-assign-plan'),
+        path('api/members/<int:member_id>/set-nutrition/', __import__('wger.core.views.fitme_dashboards', fromlist=['set_nutrition_target_api']).set_nutrition_target_api, name='api-member-set-nutrition'),
+        path('api/members/<int:member_id>/toggle-access/', __import__('wger.core.views.fitme_dashboards', fromlist=['toggle_member_access_api']).toggle_member_access_api, name='api-member-toggle-access'),
+        path('api/programs/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_program_api']).admin_create_program_api, name='api-admin-create-program'),
+        path('api/announcements/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_announcement_api']).admin_create_announcement_api, name='api-admin-create-announcement'),
+        path('api/testimonials/<int:testimonial_id>/toggle/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_testimonial_api']).admin_toggle_testimonial_api, name='api-admin-toggle-testimonial'),
     ], 'fitme'))),
+
+    # ── Fit Me Public Website Contact API ──
+    path('api/public/contact/', __import__('wger.core.views.fitme_dashboards', fromlist=['public_contact_api']).public_contact_api, name='public-contact-api'),
+
 
     # ── Legacy /fitme/ Redirects to clean routes ──
     path('fitme/dashboard/admin/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/dashboard/admin/', permanent=False)),

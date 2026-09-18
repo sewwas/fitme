@@ -4,29 +4,38 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Coach Dashboard — Fit Me</title>
-<link rel="icon" href="{% static 'images/logos/fitme-logo.png' %}">
+<title>Fit Me — Coach &amp; Trainer Portal | Pitigala</title>
+<link rel="icon" href="{% static 'images/logos/fitme-official-logo.jpg' %}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="{% static 'fontawesomefree/css/all.min.css' %}">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 <style>
   :root {
     --bg-dark: #0B0D0E;
     --card-bg: #121517;
     --card-surface: #1F2428;
     --neon-lime: #76C043;
+    --neon-hover: #8AE04F;
     --neon-glow: rgba(118, 192, 67, 0.25);
     --neon-glow-high: rgba(118, 192, 67, 0.55);
-    --danger: #E63946;
-    --danger-glow: rgba(230, 57, 70, 0.35);
-    --warning: #F59E0B;
     --cyan: #06B6D4;
+    --amber: #F59E0B;
+    --danger: #E63946;
     --text-primary: #F8FAFC;
     --text-muted: #8B9299;
     --border-color: #242A2F;
   }
+
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; }
+  body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
 
   /* ── Topbar ── */
   .topbar {
@@ -36,40 +45,72 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    position: sticky; top: 0; z-index: 100;
+    position: sticky;
+    top: 0;
+    z-index: 100;
     box-shadow: 0 4px 25px var(--neon-glow);
   }
-  .brand { display: flex; align-items: center; gap: 0.75rem; }
+  .brand { display: flex; align-items: center; gap: 0.75rem; text-decoration: none; }
   .brand img {
-    height: 38px;
-    width: 38px;
-    border-radius: 50%;
+    height: 38px; width: 38px; border-radius: 50%;
     border: 1.5px solid var(--neon-lime);
     box-shadow: 0 0 10px rgba(118, 192, 67, 0.3);
     object-fit: cover;
   }
-  .brand-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; color: var(--neon-lime); letter-spacing: 2px; }
-  .role-badge { background: var(--cyan); color: #000; padding: 0.2rem 0.65rem; border-radius: 4px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-
-  /* ── Layout ── */
-  .layout { display: flex; min-height: calc(100vh - 65px); }
-  .sidebar { width: 230px; background: #101315; border-right: 1px solid var(--border-color); padding: 1.5rem 0; flex-shrink: 0; }
-  .sidebar-section { padding: 0.5rem 1.25rem 0.25rem; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 800; }
-  .sidebar a {
-    display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 1.25rem; color: #ccc; text-decoration: none; font-size: 0.88rem;
-    border-left: 3px solid transparent; transition: all 0.18s;
+  .brand-name {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.35rem;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 1px;
   }
-  .sidebar a:hover, .sidebar a.active { color: var(--neon-lime); border-left-color: var(--neon-lime); background: rgba(118, 192, 67, 0.08); }
-  .sidebar a i { width: 18px; text-align: center; }
+  .brand-name span { color: var(--neon-lime); }
+  .role-badge {
+    background: var(--cyan); color: #000; padding: 0.2rem 0.65rem;
+    border-radius: 4px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
+    margin-left: 0.75rem;
+  }
 
-  /* ── Main ── */
-  .main { flex: 1; padding: 2rem; overflow-y: auto; }
-  .page-title { font-family: 'Montserrat', sans-serif; font-size: 1.75rem; font-weight: 900; }
-  .subtitle { color: var(--text-muted); font-size: 0.88rem; margin: 0.25rem 0 1.75rem; }
+  /* ── Layout & Sidebar (6 Sub-modules) ── */
+  .layout-container { display: flex; flex: 1; min-height: calc(100vh - 65px); }
+  .sidebar {
+    width: 230px; background: #0E1113; border-right: 1px solid var(--border-color);
+    padding: 1.5rem 0; flex-shrink: 0;
+  }
+  @media(max-width: 900px) {
+    .layout-container { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); display: flex; overflow-x: auto; padding: 0.5rem; }
+  }
 
-  /* ── Stat Cards ── */
-  .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 2rem; }
-  @media(max-width: 800px) { .stats-grid { grid-template-columns: 1fr; } }
+  .sidebar-section {
+    padding: 0.5rem 1.25rem 0.25rem; font-size: 0.65rem; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 1px; font-weight: 800;
+  }
+  @media(max-width: 900px) { .sidebar-section { display: none; } }
+
+  .nav-tab-btn {
+    width: 100%; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem;
+    color: #ccc; background: none; border: none; border-left: 3px solid transparent;
+    text-align: left; font-size: 0.88rem; font-family: 'Inter', sans-serif; font-weight: 600;
+    cursor: pointer; transition: all 0.2s; white-space: nowrap;
+  }
+  .nav-tab-btn:hover, .nav-tab-btn.active {
+    color: var(--neon-lime); border-left-color: var(--neon-lime); background: rgba(118, 192, 67, 0.08);
+  }
+  .nav-tab-btn i { width: 20px; text-align: center; }
+
+  /* ── Main Content ── */
+  .main-content { flex: 1; padding: 2.2rem 2rem; overflow-y: auto; }
+  @media(max-width: 768px) { .main-content { padding: 1.5rem 1rem; } }
+
+  .tab-pane { display: none; }
+  .tab-pane.active { display: block; }
+
+  .page-title { font-family: 'Montserrat', sans-serif; font-size: 1.85rem; font-weight: 900; }
+  .page-sub { color: var(--text-muted); font-size: 0.88rem; margin: 0.25rem 0 1.75rem; }
+
+  /* ── Stats Grid ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
   .stat-card {
     background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px;
     padding: 1.35rem; transition: transform 0.2s;
@@ -77,11 +118,8 @@
   .stat-num { font-family: 'Montserrat', sans-serif; font-size: 2.2rem; font-weight: 900; line-height: 1; margin-top: 0.4rem; }
   .stat-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; letter-spacing: 1px; }
 
-  /* ── Section Grid ── */
-  .grid-2 { display: grid; grid-template-columns: 1fr 1.1fr; gap: 1.5rem; }
-  @media(max-width: 960px) { .grid-2 { grid-template-columns: 1fr; } }
-
-  .fitme-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; }
+  /* ── Cards & Tables ── */
+  .fitme-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; margin-bottom: 1.5rem; }
   .card-header {
     padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color);
     display: flex; align-items: center; justify-content: space-between; background: rgba(31, 36, 40, 0.35);
@@ -89,230 +127,360 @@
   .card-title { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 0.55rem; }
   .card-body { padding: 1.25rem 1.5rem; }
 
-  /* ── Member Chip ── */
-  .member-chip {
-    display: flex; align-items: center; gap: 0.85rem; padding: 0.85rem; border-radius: 10px;
-    background: var(--card-surface); margin-bottom: 0.75rem; border: 1px solid rgba(255,255,255,0.04);
-  }
-  .member-avatar {
-    width: 38px; height: 38px; border-radius: 50%; background: var(--neon-lime); color: #000;
-    font-weight: 900; display: flex; align-items: center; justify-content: center; font-size: 0.95rem;
-  }
-  .member-name { font-weight: 700; font-size: 0.88rem; color: #fff; }
-  .member-goal { font-size: 0.74rem; color: var(--text-muted); }
+  .table-custom { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .table-custom th { text-align: left; padding: 0.75rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); font-weight: 700; text-transform: uppercase; font-size: 0.72rem; }
+  .table-custom td { padding: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
 
-  .at-risk-badge {
-    background: rgba(230, 57, 70, 0.18); color: var(--danger); border: 1px solid var(--danger);
-    padding: 0.15rem 0.55rem; border-radius: 4px; font-size: 0.68rem; font-weight: 800;
+  .form-control {
+    width: 100%; background: var(--card-surface); border: 1px solid var(--border-color);
+    padding: 0.65rem 0.9rem; border-radius: 8px; color: #fff; font-family: 'Inter', sans-serif; font-size: 0.88rem; outline: none;
   }
-
-  /* ── Meal Item ── */
-  .meal-item {
-    display: flex; align-items: center; gap: 1rem; padding: 0.85rem 0; border-bottom: 1px solid var(--border-color);
-  }
-  .meal-thumb {
-    width: 52px; height: 52px; border-radius: 8px; background: var(--card-surface);
-    display: flex; align-items: center; justify-content: center; overflow: hidden;
-  }
-  .meal-thumb img { width: 100%; height: 100%; object-fit: cover; }
-  .meal-thumb i { font-size: 1.4rem; color: var(--text-muted); }
-  .meal-info { flex: 1; }
-  .meal-member { font-weight: 700; font-size: 0.88rem; }
-  .meal-meta { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.15rem; }
-  .meal-macros { font-size: 0.75rem; color: var(--neon-lime); font-weight: 600; margin-top: 0.2rem; }
+  .form-control:focus { border-color: var(--neon-lime); }
 
   .btn-action {
-    padding: 0.4rem 0.9rem; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer; border: none;
-    display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.15s;
+    padding: 0.45rem 0.95rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700;
+    cursor: pointer; border: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.15s;
   }
   .btn-lime { background: var(--neon-lime); color: #000; }
   .btn-lime:hover { background: #8AE04F; box-shadow: 0 0 12px var(--neon-glow); }
   .btn-cyan { background: var(--cyan); color: #000; }
   .btn-cyan:hover { background: #22D3EE; }
 
-  /* Modal */
-  .modal-overlay {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center;
-  }
-  .modal-box {
-    background: var(--card-bg); border: 2px solid var(--neon-lime); border-radius: 16px;
-    padding: 2rem; max-width: 480px; width: 90%; box-shadow: 0 10px 40px var(--neon-glow);
-  }
-
+  /* Toast */
   .fitme-toast {
-    position: fixed; bottom: 25px; right: 25px; background: #15191D; border: 2px solid var(--neon-lime);
-    box-shadow: 0 8px 30px var(--neon-glow); padding: 1rem 1.5rem; border-radius: 12px;
-    display: none; align-items: center; gap: 0.75rem; z-index: 1000; font-weight: 700;
+    position: fixed; bottom: 25px; right: 25px; background: #14181B; border: 2px solid var(--neon-lime);
+    padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 10px 40px var(--neon-glow);
+    display: none; align-items: center; gap: 0.75rem; z-index: 2000; font-weight: 700;
   }
 </style>
 </head>
 <body>
 
+<!-- Toast -->
+<div class="fitme-toast" id="coachToast">
+  <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:1.4rem;"></i>
+  <span id="coachToastMsg">Action completed successfully!</span>
+</div>
+
+<!-- Topbar -->
 <header class="topbar">
-  <div class="brand">
-    <img src="{% static 'images/logos/fitme-logo.png' %}" alt="Fit Me">
-    <span class="brand-name">Fit Me</span>
-    <span class="role-badge">Coaching Portal</span>
+  <div style="display:flex;align-items:center;">
+    <a href="/" class="brand">
+      <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me">
+      <span class="brand-name">FIT <span>ME</span></span>
+    </a>
+    <span class="role-badge">Coach Portal • Pitigala</span>
   </div>
   <div style="display:flex;align-items:center;gap:1.25rem;color:var(--text-muted);font-size:0.88rem;">
-    <span><i class="fa fa-user-circle"></i> Coach {{ request.user.username }}</span>
-    <a href="/dashboard/admin/" style="color:var(--text-muted);text-decoration:none;"><i class="fa fa-shield-alt"></i> Super Admin</a>
+    <span><i class="fa fa-user-circle"></i> Coach {{ request.user.first_name|default:request.user.username }}</span>
+    <a href="/dashboard/member/" style="color:var(--text-muted);text-decoration:none;"><i class="fa fa-id-card"></i> Member View</a>
+    <a href="/dashboard/admin/" style="color:var(--text-muted);text-decoration:none;"><i class="fa fa-shield-alt"></i> Admin</a>
     <form method="post" action="/account/logout/" style="display:inline;">{% csrf_token %}
       <button type="submit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;"><i class="fa fa-sign-out-alt"></i> Logout</button>
     </form>
   </div>
 </header>
 
-<div class="layout">
+<div class="layout-container">
+  <!-- Sidebar Navigation with All 6 Modules -->
   <aside class="sidebar">
-    <div class="sidebar-section">Coaching Tools</div>
-    <a href="/dashboard/coach/" class="active"><i class="fa fa-dumbbell"></i> Roster & Meals</a>
-    <a href="/dashboard/member/"><i class="fa fa-user"></i> Member Portal View</a>
-    <div class="sidebar-section" style="margin-top:1rem;">Role Navigation</div>
-    <a href="/dashboard/front-desk/"><i class="fa fa-id-card"></i> Front Desk</a>
-    <a href="/dashboard/admin/"><i class="fa fa-chart-line"></i> Super Admin</a>
+    <div class="sidebar-section">Coaching Modules</div>
+    <button class="nav-tab-btn active" onclick="switchTab('tab-members', this)"><i class="fa fa-users"></i> 1. Members</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-programs', this)"><i class="fa fa-dumbbell"></i> 2. Programs</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-workoutplans', this)"><i class="fa fa-clipboard-list"></i> 3. Workout Plans</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-nutritionplans', this)"><i class="fa fa-apple-alt"></i> 4. Nutrition Plans</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-progressreviews', this)"><i class="fa fa-utensils"></i> 5. Progress Reviews</button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-checkins', this)"><i class="fa fa-camera"></i> 6. Check-ins</button>
   </aside>
 
-  <main class="main">
-    <h1 class="page-title">Coaching & Meal Review Hub</h1>
-    <p class="subtitle">Monitor member streaks, evaluate daily food logs, and dispatch habit nudges.</p>
+  <!-- Main Content Area -->
+  <main class="main-content">
 
-    <!-- Stat Cards -->
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-label">Assigned Athletes</div>
-        <div class="stat-num" style="color:var(--neon-lime);">{{ assigned_members.count }}</div>
+    <!-- 1. MEMBERS TAB -->
+    <div id="tab-members" class="tab-pane active">
+      <h1 class="page-title">Assigned Athlete Roster</h1>
+      <p class="page-sub">Monitor member attendance streaks, dispatch habit reminders, and evaluate risk flags.</p>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Assigned Athletes</div>
+          <div class="stat-num" style="color:var(--neon-lime);">{{ assigned_members.count }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending Meal Reviews</div>
+          <div class="stat-num" style="color:var(--amber);">{{ unreviewed_meals.count }}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">At-Risk Streaks (Missed 2+ Days)</div>
+          <div class="stat-num" style="color:var(--danger);">{{ at_risk_members|length }}</div>
+        </div>
       </div>
-      <div class="stat-card">
-        <div class="stat-label">Pending Meal Reviews</div>
-        <div class="stat-num" id="unreviewedCount" style="color:var(--warning);">{{ unreviewed_meals.count }}</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">At-Risk Streaks (Missed 2+ Days)</div>
-        <div class="stat-num" style="color:var(--danger);">{{ at_risk_members|length }}</div>
+
+      <div class="fitme-card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa fa-users" style="color:var(--neon-lime);"></i> Active Member Directory</div>
+          <span style="font-size:0.75rem;color:var(--text-muted);">{{ assigned_members.count }} Total</span>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Member</th><th>Goal</th><th>Hardware PIN</th><th>Status</th><th>Actions</th></tr>
+            </thead>
+            <tbody>
+              {% for mp in assigned_members %}
+                <tr>
+                  <td>
+                    <div style="font-weight:700;color:#fff;">{{ mp.user.get_full_name|default:mp.user.username }}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">{{ mp.phone|default:"070 762 7878" }}</div>
+                  </td>
+                  <td>{{ mp.get_primary_goal_display|default:"General Fitness" }}</td>
+                  <td style="font-family:monospace;font-weight:800;color:var(--neon-lime);">{{ mp.biometric_pin|default:"#1001" }}</td>
+                  <td>
+                    {% for ar in at_risk_members %}
+                      {% if ar.member.id == mp.user.id %}
+                        <span style="background:rgba(230,57,70,0.15);color:var(--danger);border:1px solid var(--danger);padding:0.15rem 0.5rem;border-radius:4px;font-size:0.7rem;font-weight:800;">2d+ Inactive</span>
+                      {% endif %}
+                    {% endfor %}
+                    <span style="color:var(--neon-lime);font-size:0.75rem;font-weight:700;"><i class="fa fa-check-circle"></i> Active</span>
+                  </td>
+                  <td>
+                    <button class="btn-action btn-cyan" onclick="sendNudge({{ mp.user.id }}, '{{ mp.user.first_name|default:mp.user.username }}')">
+                      <i class="fa fa-bell"></i> Nudge
+                    </button>
+                    <button class="btn-action btn-lime" onclick="openAssignModal({{ mp.user.id }}, '{{ mp.user.first_name|default:mp.user.username }}')">
+                      <i class="fa fa-dumbbell"></i> Assign Split
+                    </button>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">No members assigned to your roster yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
 
-    <div class="grid-2">
-      <!-- Member Roster & Motivational Nudges -->
+    <!-- 2. PROGRAMS TAB -->
+    <div id="tab-programs" class="tab-pane">
+      <h1 class="page-title">Training Programs Catalog</h1>
+      <p class="page-sub">Master training templates available to prescribe for athletes.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1.5rem;">
+        {% for prog in programs %}
+          <div class="fitme-card" style="padding:1.5rem;display:flex;flex-direction:column;justify-content:space-between;">
+            <div>
+              <span style="font-size:0.7rem;color:var(--neon-lime);background:rgba(118,192,67,0.12);border:1px solid var(--neon-lime);padding:0.2rem 0.5rem;border-radius:4px;font-weight:800;text-transform:uppercase;">
+                {{ prog.get_category_display }}
+              </span>
+              <h3 style="font-family:'Montserrat';font-weight:800;font-size:1.2rem;margin:0.75rem 0 0.4rem;color:#fff;">{{ prog.title }}</h3>
+              <p style="font-size:0.85rem;color:var(--text-muted);line-height:1.5;margin-bottom:1rem;">{{ prog.description }}</p>
+              <div style="font-size:0.78rem;color:#aaa;border-top:1px solid var(--border-color);padding-top:0.75rem;margin-bottom:1rem;">
+                Duration: <strong style="color:#fff;">{{ prog.duration_weeks }} wks</strong> • Sessions: <strong style="color:#fff;">{{ prog.sessions_per_week }}/wk</strong>
+              </div>
+            </div>
+            <button class="btn-action btn-lime" style="width:100%;justify-content:center;" onclick="switchTab('tab-members', document.querySelectorAll('.nav-tab-btn')[0])">
+              Assign to Athlete
+            </button>
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- 3. WORKOUT PLANS TAB -->
+    <div id="tab-workoutplans" class="tab-pane">
+      <h1 class="page-title">Athlete Workout Activity &amp; Prescriptions</h1>
+      <p class="page-sub">Live feed of exercises, sets, reps, and resistance logged by athletes.</p>
+
       <div class="fitme-card">
         <div class="card-header">
-          <div class="card-title">
-            <i class="fa fa-users" style="color:var(--neon-lime);"></i>
-            My Assigned Members
-          </div>
-          <span style="font-size:0.75rem;color:var(--text-muted);font-weight:600;">{{ assigned_members.count }} Total</span>
+          <div class="card-title"><i class="fa fa-history" style="color:var(--cyan);"></i> Athlete Workout Activity Feed</div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <table class="table-custom">
+            <thead>
+              <tr><th>Athlete</th><th>Workout</th><th>Exercise</th><th>Sets &amp; Reps</th><th>Weight</th><th>Time</th></tr>
+            </thead>
+            <tbody>
+              {% for w in recent_workouts %}
+                <tr>
+                  <td style="font-weight:700;color:#fff;">{{ w.member.get_full_name|default:w.member.username }}</td>
+                  <td>{{ w.workout_name }}</td>
+                  <td style="color:var(--neon-lime);font-weight:700;">{{ w.exercise_name }}</td>
+                  <td>{{ w.sets_completed }} x {{ w.reps }}</td>
+                  <td style="font-weight:800;color:#fff;">{{ w.weight_kg }} kg</td>
+                  <td style="color:var(--text-muted);font-size:0.75rem;">{{ w.logged_at|date:"d M H:i" }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="6" style="text-align:center;color:var(--text-muted);padding:2rem;">No athlete workout records logged today.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. NUTRITION PLANS TAB -->
+    <div id="tab-nutritionplans" class="tab-pane">
+      <h1 class="page-title">Macronutrient Target Configurator</h1>
+      <p class="page-sub">Set daily target calories, protein, carbs, and hydration for your athletes.</p>
+
+      <div class="fitme-card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa fa-sliders-h" style="color:var(--neon-lime);"></i> Configure Daily Nutrition Targets</div>
         </div>
         <div class="card-body">
-          {% for mp in assigned_members %}
-            <div class="member-chip">
-              <div class="member-avatar">{{ mp.user.username|first|upper }}</div>
-              <div style="flex:1;">
-                <div class="member-name">{{ mp.user.get_full_name|default:mp.user.username }}</div>
-                <div class="member-goal">{{ mp.get_primary_goal_display|default:"General Fitness" }}</div>
+          <form id="coachNutritionForm" onsubmit="submitCoachNutrition(event)" style="max-width:550px;">
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Select Athlete *</label>
+              <select id="cnMemberId" class="form-control" required>
+                {% for mp in assigned_members %}
+                  <option value="{{ mp.user.id }}">{{ mp.user.get_full_name|default:mp.user.username }} (PIN: {{ mp.biometric_pin|default:"#1001" }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+              <div>
+                <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Daily Target Calories (kcal) *</label>
+                <input type="number" id="cnCalories" value="2300" required class="form-control">
               </div>
-              {% for ar in at_risk_members %}
-                {% if ar.member.id == mp.user.id %}
-                  <span class="at-risk-badge"><i class="fa fa-fire-extinguisher"></i> 2d+ Inactive</span>
-                  <button class="btn-action btn-cyan" id="pingBtn-{{ mp.user.id }}" onclick="sendNudge({{ mp.user.id }}, '{{ mp.user.first_name|default:mp.user.username }}')">
-                    <i class="fa fa-bell"></i> Nudge
-                  </button>
-                {% endif %}
-              {% endfor %}
-            </div>
-          {% empty %}
-            <div style="text-align:center;padding:2rem;color:var(--text-muted);">
-              <i class="fa fa-user-clock" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>
-              No members assigned to your roster yet.
-            </div>
-          {% endfor %}
-        </div>
-      </div>
-
-      <!-- Meal Log Review Queue -->
-      <div class="fitme-card">
-        <div class="card-header">
-          <div class="card-title">
-            <i class="fa fa-utensils" style="color:var(--warning);"></i>
-            Meal Photo & Macro Reviews
-          </div>
-          <span class="badge" style="background:rgba(245,158,11,0.15);color:var(--warning);" id="badgeMeals">{{ unreviewed_meals.count }} PENDING</span>
-        </div>
-        <div class="card-body" id="mealsListContainer">
-          {% for meal in unreviewed_meals %}
-            <div class="meal-item" id="meal-item-{{ meal.id }}">
-              <div class="meal-thumb">
-                {% if meal.photo %}
-                  <img src="{{ meal.photo.url }}" alt="Meal">
-                {% else %}
-                  <i class="fa fa-bowl-rice"></i>
-                {% endif %}
+              <div>
+                <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Daily Target Protein (g) *</label>
+                <input type="number" id="cnProtein" value="160" required class="form-control">
               </div>
-              <div class="meal-info">
-                <div class="meal-member">{{ meal.member.get_full_name|default:meal.member.username }}</div>
-                <div class="meal-meta">{{ meal.get_meal_type_display|title }} • {{ meal.logged_at|date:"H:i, d M" }}</div>
-                <div class="meal-macros">
-                  {{ meal.total_calories|floatformat:0 }} kcal • {{ meal.total_protein_g|floatformat:0 }}g Protein • {{ meal.total_carbs_g|floatformat:0 }}g Carbs
-                </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+              <div>
+                <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Target Carbs (g)</label>
+                <input type="number" id="cnCarbs" value="240" class="form-control">
               </div>
-              <button class="btn-action btn-lime" onclick="openReviewModal({{ meal.id }}, '{{ meal.member.first_name|default:meal.member.username }}', '{{ meal.get_meal_type_display }}', '{{ meal.total_calories|floatformat:0 }} kcal, {{ meal.total_protein_g|floatformat:0 }}g protein')">
-                <i class="fa fa-comment-dots"></i> Review
-              </button>
+              <div>
+                <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Target Fats (g)</label>
+                <input type="number" id="cnFat" value="65" class="form-control">
+              </div>
             </div>
-          {% empty %}
-            <div id="noMealsMsg" style="text-align:center;padding:2.5rem;color:var(--text-muted);">
-              <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:2rem;margin-bottom:0.5rem;display:block;"></i>
-              All member meal logs reviewed! Great work, Coach.
-            </div>
-          {% endfor %}
+            <button type="submit" class="btn-action btn-lime" id="btnSaveNutrition" style="padding:0.7rem 1.5rem;font-size:0.85rem;">
+              <i class="fa fa-save"></i> Save Athlete Nutrition Targets
+            </button>
+          </form>
         </div>
       </div>
     </div>
+
+    <!-- 5. PROGRESS REVIEWS TAB -->
+    <div id="tab-progressreviews" class="tab-pane">
+      <h1 class="page-title">Meal Log &amp; Progress Reviews</h1>
+      <p class="page-sub">Evaluate daily food photos and macros logged by athletes with 1-click coach feedback.</p>
+
+      <div class="fitme-card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa fa-utensils" style="color:var(--amber);"></i> Pending Athlete Meals</div>
+          <span style="font-size:0.75rem;color:var(--amber);font-weight:700;">{{ unreviewed_meals.count }} PENDING</span>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(320px, 1fr));gap:1.5rem;">
+            {% for meal in unreviewed_meals %}
+              <div class="fitme-card" id="meal-card-{{ meal.id }}" style="padding:1.25rem;background:var(--card-surface);margin-bottom:0;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;">
+                  <div style="font-weight:800;color:#fff;">{{ meal.member.get_full_name|default:meal.member.username }}</div>
+                  <div style="font-size:0.75rem;color:var(--text-muted);">{{ meal.logged_at|date:"d M H:i" }}</div>
+                </div>
+                <div style="font-size:0.82rem;color:var(--neon-lime);font-weight:700;margin-bottom:0.5rem;">
+                  {{ meal.meal_type|title }}: {{ meal.total_calories }} kcal • {{ meal.total_protein_g }}g Protein
+                </div>
+                <p style="font-size:0.82rem;color:#ccc;margin-bottom:1rem;">
+                  {{ meal.notes|default:"Red Rice + Grilled Chicken + Dhal" }}
+                </p>
+                <div style="display:flex;gap:0.5rem;">
+                  <input type="text" id="feedback-{{ meal.id }}" class="form-control" style="font-size:0.78rem;" placeholder="e.g. Excellent protein ratio!">
+                  <button class="btn-action btn-lime" onclick="reviewMeal({{ meal.id }})">Approve</button>
+                </div>
+              </div>
+            {% empty %}
+              <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);">
+                <i class="fa fa-check-circle" style="font-size:2.5rem;margin-bottom:0.75rem;color:var(--neon-lime);display:block;"></i>
+                All athlete meals are fully reviewed!
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. CHECK-INS TAB -->
+    <div id="tab-checkins" class="tab-pane">
+      <h1 class="page-title">Athlete Check-in Gallery</h1>
+      <p class="page-sub">Monthly physique check-in photos and circumference metrics.</p>
+
+      <div class="fitme-card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa fa-camera" style="color:var(--neon-lime);"></i> Recent Body Check-ins</div>
+        </div>
+        <div class="card-body">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:1.5rem;">
+            {% for c in recent_checkins %}
+              <div style="background:var(--card-surface);border-radius:12px;overflow:hidden;padding:1rem;border:1px solid var(--border-color);">
+                <div style="height:220px;background:#000;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:0.75rem;">
+                  {% if c.photo_front %}
+                    <img src="{{ c.photo_front.url }}" alt="Checkin" style="width:100%;height:100%;object-fit:cover;">
+                  {% else %}
+                    <i class="fa fa-user" style="font-size:3rem;color:var(--text-muted);"></i>
+                  {% endif %}
+                </div>
+                <div style="font-weight:800;color:#fff;">{{ c.member.get_full_name|default:c.member.username }}</div>
+                <div style="color:var(--neon-lime);font-weight:700;font-size:0.85rem;margin-top:0.2rem;">{{ c.weight_kg }} kg • {{ c.checkin_date|date:"d M Y" }}</div>
+                {% if c.notes %}<p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;">{{ c.notes }}</p>{% endif %}
+              </div>
+            {% empty %}
+              <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);">
+                Athlete check-in logs will be displayed here.
+              </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
-<!-- Meal Review Modal -->
-<div class="modal-overlay" id="mealModal">
-  <div class="modal-box">
-    <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;margin-bottom:0.5rem;" id="modalMealTitle">Review Member Meal</h3>
-    <p style="font-size:0.8rem;color:var(--text-muted);margin-bottom:1.25rem;" id="modalMealSub">Details</p>
-
-    <div style="margin-bottom:1rem;">
-      <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.4rem;">Coach Feedback & Macro Rating</label>
-      <textarea id="coachFeedbackText" rows="3" style="width:100%;background:var(--card-surface);border:1px solid var(--border-color);border-radius:8px;padding:0.75rem;color:#fff;font-family:inherit;font-size:0.85rem;" placeholder="Awesome macro balance! Keep protein high."></textarea>
+<!-- Modal: Assign Program -->
+<div id="assignProgramModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:2000;align-items:center;justify-content:center;">
+  <div style="background:#14181B;border:2px solid var(--neon-lime);border-radius:16px;padding:2rem;max-width:440px;width:90%;">
+    <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;margin-bottom:0.5rem;" id="modalAssignTitle">Assign Program Routine</h3>
+    <input type="hidden" id="modalAthleteId">
+    <div style="margin:1.25rem 0;">
+      <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Select Program</label>
+      <select id="modalProgramSelect" class="form-control">
+        {% for prog in programs %}
+          <option value="{{ prog.id }}">{{ prog.title }} ({{ prog.duration_weeks }} wks)</option>
+        {% endfor %}
+      </select>
     </div>
-
-    <div style="display:flex;gap:0.75rem;justify-content:flex-end;">
-      <button class="btn-action" style="background:rgba(255,255,255,0.1);color:#ccc;" onclick="closeReviewModal()">Cancel</button>
-      <button class="btn-action btn-lime" id="btnSubmitReview" onclick="submitMealReview()">Approve & Send Feedback</button>
+    <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
+      <button type="button" class="btn-action" style="background:#333;color:#fff;" onclick="closeAssignModal()">Cancel</button>
+      <button type="button" class="btn-action btn-lime" onclick="confirmAssignProgram()">Confirm Prescription</button>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
-<div class="fitme-toast" id="coachToast">
-  <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:1.4rem;"></i>
-  <span id="coachToastMsg">Action completed successfully.</span>
-</div>
-
 <script>
-  let activeMealId = null;
-
   function showToast(msg) {
-    const toast = document.getElementById('coachToast');
+    const t = document.getElementById('coachToast');
     document.getElementById('coachToastMsg').textContent = msg;
-    toast.style.display = 'flex';
-    setTimeout(() => { toast.style.display = 'none'; }, 4000);
+    t.style.display = 'flex';
+    setTimeout(() => { t.style.display = 'none'; }, 4500);
   }
 
-  // 1. Dynamic Nudge Trigger
+  function switchTab(tabId, btn) {
+    document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(tabId).classList.add('active');
+    if (btn) btn.classList.add('active');
+  }
+
+  // Motivational Nudge
   async function sendNudge(memberId, name) {
-    const btn = document.getElementById(`pingBtn-${memberId}`);
-    if (btn) {
-      btn.disabled = true;
-      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Sending...';
-    }
     try {
       const res = await fetch(`/dashboard/api/members/${memberId}/ping/`, {
         method: 'POST',
@@ -320,43 +488,86 @@
           'X-CSRFToken': '{{ csrf_token }}',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ message: `Hey ${name}! Coach noticed you missed your session. Let's get that streak back on fire today! 💪` })
+        body: JSON.stringify({ message: `Hey ${name}! We missed you on the gym floor today. Let's hit that streak! 💪` })
       });
       const data = await res.json();
       if (data.success) {
-        showToast(`Motivational nudge dispatched to ${name}!`);
-        if (btn) {
-          btn.innerHTML = '<i class="fa fa-check"></i> Nudge Sent';
-          btn.style.background = 'rgba(118,192,67,0.2)';
-          btn.style.color = 'var(--neon-lime)';
-        }
+        showToast(data.message);
       }
-    } catch (e) {
-      alert("Failed to send nudge: " + e);
-      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fa fa-bell"></i> Nudge'; }
+    } catch(err) {
+      alert("Error: " + err);
     }
   }
 
-  // 2. Meal Review Modal
-  function openReviewModal(mealId, memberName, mealType, macros) {
-    activeMealId = mealId;
-    document.getElementById('modalMealTitle').textContent = `Review ${memberName}'s ${mealType}`;
-    document.getElementById('modalMealSub').textContent = `Logged Macros: ${macros}`;
-    document.getElementById('coachFeedbackText').value = "Great portion size and clean protein source. Keep up the high energy!";
-    document.getElementById('mealModal').style.display = 'flex';
+  // Assign Program Modal
+  function openAssignModal(memberId, name) {
+    document.getElementById('modalAthleteId').value = memberId;
+    document.getElementById('modalAssignTitle').textContent = `Assign Split to ${name}`;
+    document.getElementById('assignProgramModal').style.display = 'flex';
   }
-  function closeReviewModal() {
-    document.getElementById('mealModal').style.display = 'none';
+  function closeAssignModal() {
+    document.getElementById('assignProgramModal').style.display = 'none';
   }
 
-  async function submitMealReview() {
-    if (!activeMealId) return;
-    const btn = document.getElementById('btnSubmitReview');
-    btn.disabled = true;
-    const feedback = document.getElementById('coachFeedbackText').value;
+  async function confirmAssignProgram() {
+    const memberId = document.getElementById('modalAthleteId').value;
+    const programId = document.getElementById('modalProgramSelect').value;
 
     try {
-      const res = await fetch(`/dashboard/api/meals/${activeMealId}/review/`, {
+      const res = await fetch(`/dashboard/api/members/${memberId}/assign-plan/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ program_id: programId })
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeAssignModal();
+        showToast(data.message);
+      }
+    } catch(err) {
+      alert("Error: " + err);
+    }
+  }
+
+  // Nutrition Form Submit
+  async function submitCoachNutrition(e) {
+    e.preventDefault();
+    const memberId = document.getElementById('cnMemberId').value;
+    const payload = {
+      calories: document.getElementById('cnCalories').value,
+      protein_g: document.getElementById('cnProtein').value,
+      carbs_g: document.getElementById('cnCarbs').value,
+      fat_g: document.getElementById('cnFat').value,
+    };
+
+    try {
+      const res = await fetch(`/dashboard/api/members/${memberId}/set-nutrition/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message);
+      }
+    } catch(err) {
+      alert("Error: " + err);
+    }
+  }
+
+  // Review Meal
+  async function reviewMeal(mealId) {
+    const feedbackInput = document.getElementById(`feedback-${mealId}`);
+    const feedback = feedbackInput ? feedbackInput.value : 'Great balanced meal!';
+
+    try {
+      const res = await fetch(`/dashboard/api/meals/${mealId}/review/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': '{{ csrf_token }}',
@@ -366,21 +577,12 @@
       });
       const data = await res.json();
       if (data.success) {
-        closeReviewModal();
-        showToast("Meal feedback recorded and delivered to member!");
-        const row = document.getElementById(`meal-item-${activeMealId}`);
-        if (row) row.remove();
-
-        const countElem = document.getElementById('unreviewedCount');
-        if (countElem) {
-          let c = parseInt(countElem.textContent) || 1;
-          countElem.textContent = Math.max(0, c - 1);
-        }
+        showToast(data.message);
+        const card = document.getElementById(`meal-card-${mealId}`);
+        if (card) card.style.opacity = '0.4';
       }
-    } catch (e) {
-      alert("Failed to review meal: " + e);
-    } finally {
-      btn.disabled = false;
+    } catch(err) {
+      alert("Error: " + err);
     }
   }
 </script>
