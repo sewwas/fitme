@@ -1,0 +1,160 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Front Desk — Fit Me</title>
+<link rel="icon" href="{% static 'images/logos/fitme-logo.png' %}">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Inter:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'fontawesomefree/css/all.min.css' %}">
+<style>
+  :root { --green:#7BC900;--green-dark:#5A9400;--green-glow:rgba(123,201,0,0.18);--bg:#0B0D0E;--surface:#1F2428;--surface2:#2D3339;--text:#F8FAFC;--muted:#8B9299;--danger:#E63946;--warning:#FFBB00; }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  .topbar{background:var(--surface);border-bottom:2px solid var(--green);padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px var(--green-glow);}
+  .brand{display:flex;align-items:center;gap:.75rem;}.brand img{width:36px;}.brand-name{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--green);letter-spacing:2px;}
+  .role-badge{background:var(--green);color:#000;padding:.15rem .6rem;border-radius:4px;font-size:.65rem;font-weight:700;text-transform:uppercase;}
+  .layout{display:flex;min-height:calc(100vh - 58px);}
+  .sidebar{width:210px;background:var(--surface);border-right:1px solid #2a2f35;padding:1.5rem 0;flex-shrink:0;}
+  .sidebar a{display:flex;align-items:center;gap:.65rem;padding:.6rem 1.25rem;color:#ccc;text-decoration:none;font-size:.875rem;border-left:3px solid transparent;transition:all .18s;}
+  .sidebar a:hover,.sidebar a.active{color:var(--green);border-left-color:var(--green);background:rgba(123,201,0,.06);}
+  .main{flex:1;padding:2rem;}
+  h1{font-family:'Montserrat',sans-serif;font-size:1.6rem;font-weight:900;margin-bottom:.25rem;}
+  .subtitle{color:var(--muted);font-size:.875rem;margin-bottom:2rem;}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+  @media(max-width:800px){.grid-2{grid-template-columns:1fr;}}
+  .card{background:var(--surface);border:1px solid #2a2f35;border-radius:12px;overflow:hidden;}
+  .card-header{padding:1rem 1.5rem;border-bottom:1px solid #2a2f35;display:flex;align-items:center;justify-content:space-between;}
+  .card-title{font-family:'Montserrat',sans-serif;font-weight:700;font-size:.9rem;}
+  .card-body{padding:1rem 1.5rem;}
+  table{width:100%;border-collapse:collapse;font-size:.84rem;}
+  th{color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;padding:.5rem .75rem;text-align:left;border-bottom:1px solid #2a2f35;}
+  td{padding:.65rem .75rem;border-bottom:1px solid #1e2328;color:#d0d4d8;}
+  tr:last-child td{border-bottom:none;}
+  tr:hover td{background:rgba(123,201,0,.04);}
+  .btn{padding:.4rem .9rem;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;transition:all .15s;}
+  .btn-green{background:var(--green);color:#000;}.btn-green:hover{background:var(--green-dark);color:#fff;}
+  .btn-red{background:var(--danger);color:#fff;}
+  .btn-outline{background:transparent;color:var(--green);border:1px solid var(--green);}.btn-outline:hover{background:var(--green);color:#000;}
+  .badge{padding:.18rem .5rem;border-radius:4px;font-size:.68rem;font-weight:700;}
+  .badge-green{background:rgba(123,201,0,.15);color:var(--green);}
+  .badge-yellow{background:rgba(255,187,0,.15);color:var(--warning);}
+  .badge-red{background:rgba(230,57,70,.15);color:var(--danger);}
+
+  /* Door Buzzer */
+  .buzzer-card{background:var(--surface);border:2px solid var(--green);border-radius:16px;padding:2rem;text-align:center;margin-bottom:1.5rem;box-shadow:0 0 30px var(--green-glow);}
+  .buzzer-btn{width:120px;height:120px;border-radius:50%;background:var(--green);color:#000;font-family:'Montserrat',sans-serif;font-size:1rem;font-weight:900;cursor:pointer;border:4px solid #5A9400;transition:all .2s;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.3rem;margin:0 auto;}
+  .buzzer-btn:hover{box-shadow:0 0 40px rgba(123,201,0,.5);transform:scale(1.05);}
+  .buzzer-btn:active{transform:scale(.96);box-shadow:0 0 20px rgba(123,201,0,.3);}
+  .buzzer-label{font-size:.8rem;color:var(--muted);margin-top:.75rem;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <img src="{% static 'images/logos/fitme-logo.png' %}" alt="Fit Me">
+    <span class="brand-name">Fit Me</span>
+    <span class="role-badge">Front Desk</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:1rem;color:var(--muted);font-size:.875rem;">
+    <span><i class="fa fa-user-circle"></i> {{ request.user.username }}</span>
+    <a href="/fitme/dashboard/admin/" style="color:var(--muted);text-decoration:none;"><i class="fa fa-chevron-left"></i> Admin</a>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <a href="/fitme/dashboard/front-desk/" class="active"><i class="fa fa-inbox"></i> Application Queue</a>
+    <a href="#"><i class="fa fa-credit-card"></i> Payments</a>
+    <a href="#"><i class="fa fa-id-badge"></i> Active Members</a>
+    <a href="#"><i class="fa fa-door-open"></i> Door Control</a>
+    <a href="/fitme/dashboard/admin/"><i class="fa fa-chart-bar"></i> Admin View</a>
+  </nav>
+
+  <main class="main">
+    <h1>Front Desk</h1>
+    <p class="subtitle">Member applications, payments, and door access control.</p>
+
+    <!-- Emergency Door Buzzer -->
+    <div class="buzzer-card">
+      <h3 style="font-family:'Montserrat',sans-serif;font-weight:700;margin-bottom:1rem;font-size:1rem;">Emergency Door Override</h3>
+      <button class="buzzer-btn" onclick="this.style.background='#fff';setTimeout(()=>this.style.background='var(--green)',800);">
+        <i class="fa fa-door-open" style="font-size:1.5rem;"></i>
+        <span>OPEN</span>
+      </button>
+      <div class="buzzer-label">Press to buzz open the main door for 5 seconds</div>
+    </div>
+
+    <div class="grid-2">
+      <!-- Pending Applications -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fa fa-inbox" style="color:var(--green);margin-right:.5rem;"></i>Pending Applications</span>
+          <span style="background:var(--green);color:#000;padding:.15rem .5rem;border-radius:4px;font-size:.7rem;font-weight:700;">{{ pending_applications.count }}</span>
+        </div>
+        <div class="card-body">
+          {% if pending_applications %}
+          <table>
+            <thead><tr><th>Name</th><th>Plan</th><th>Goal</th><th>Actions</th></tr></thead>
+            <tbody>
+              {% for app in pending_applications %}
+              <tr>
+                <td>
+                  <strong>{{ app.full_name }}</strong><br>
+                  <span style="font-size:.75rem;color:var(--muted);">{{ app.email }}</span>
+                </td>
+                <td>{{ app.desired_plan.name|default:"—" }}</td>
+                <td>{{ app.primary_goal|default:"—"|title }}</td>
+                <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
+                  <a href="#" class="btn btn-green"><i class="fa fa-check"></i> Approve</a>
+                  <a href="#" class="btn btn-red"><i class="fa fa-times"></i> Reject</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p style="color:var(--muted);text-align:center;padding:2rem 0;"><i class="fa fa-check-circle" style="color:var(--green);"></i> All applications reviewed</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Expiring Subscriptions -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fa fa-clock" style="color:var(--warning);margin-right:.5rem;"></i>Expiring Soon</span>
+        </div>
+        <div class="card-body">
+          {% if active_subscriptions %}
+          <table>
+            <thead><tr><th>Member</th><th>Plan</th><th>Expires</th><th>Status</th></tr></thead>
+            <tbody>
+              {% for sub in active_subscriptions %}
+              <tr>
+                <td>{{ sub.member.get_full_name|default:sub.member.username }}</td>
+                <td>{{ sub.plan.name }}</td>
+                <td>{{ sub.end_date|date:"M d, Y" }}</td>
+                <td>
+                  {% if sub.days_remaining <= 3 %}
+                    <span class="badge badge-red">{{ sub.days_remaining }}d left</span>
+                  {% elif sub.days_remaining <= 7 %}
+                    <span class="badge badge-yellow">{{ sub.days_remaining }}d left</span>
+                  {% else %}
+                    <span class="badge badge-green">Active</span>
+                  {% endif %}
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p style="color:var(--muted);text-align:center;padding:2rem 0;">No expiring subscriptions</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

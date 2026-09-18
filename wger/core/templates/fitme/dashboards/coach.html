@@ -1,0 +1,153 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Coach — Fit Me</title>
+<link rel="icon" href="{% static 'images/logos/fitme-logo.png' %}">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Inter:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'fontawesomefree/css/all.min.css' %}">
+<style>
+  :root{--green:#7BC900;--green-dark:#5A9400;--green-glow:rgba(123,201,0,0.18);--bg:#0B0D0E;--surface:#1F2428;--surface2:#2D3339;--text:#F8FAFC;--muted:#8B9299;--danger:#E63946;--warning:#FFBB00;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);}
+  .topbar{background:var(--surface);border-bottom:2px solid var(--green);padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px var(--green-glow);}
+  .brand{display:flex;align-items:center;gap:.75rem;}.brand img{width:36px;}.brand-name{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--green);letter-spacing:2px;}
+  .role-badge{background:#2563eb;color:#fff;padding:.15rem .6rem;border-radius:4px;font-size:.65rem;font-weight:700;text-transform:uppercase;}
+  .layout{display:flex;min-height:calc(100vh - 58px);}
+  .sidebar{width:210px;background:var(--surface);border-right:1px solid #2a2f35;padding:1.5rem 0;flex-shrink:0;}
+  .sidebar a{display:flex;align-items:center;gap:.65rem;padding:.6rem 1.25rem;color:#ccc;text-decoration:none;font-size:.875rem;border-left:3px solid transparent;transition:all .18s;}
+  .sidebar a:hover,.sidebar a.active{color:var(--green);border-left-color:var(--green);background:rgba(123,201,0,.06);}
+  .main{flex:1;padding:2rem;}
+  h1{font-family:'Montserrat',sans-serif;font-size:1.6rem;font-weight:900;margin-bottom:.25rem;}
+  .subtitle{color:var(--muted);font-size:.875rem;margin-bottom:2rem;}
+  .grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.25rem;margin-bottom:2rem;}
+  @media(max-width:900px){.grid-3{grid-template-columns:1fr;}}
+  .card{background:var(--surface);border:1px solid #2a2f35;border-radius:12px;overflow:hidden;}
+  .card-header{padding:1rem 1.5rem;border-bottom:1px solid #2a2f35;display:flex;align-items:center;justify-content:space-between;}
+  .card-title{font-family:'Montserrat',sans-serif;font-weight:700;font-size:.9rem;}
+  .card-body{padding:1rem 1.5rem;}
+  .member-chip{display:flex;align-items:center;gap:.75rem;padding:.65rem 0;border-bottom:1px solid #1e2328;}
+  .member-chip:last-child{border-bottom:none;}
+  .member-avatar{width:36px;height:36px;border-radius:50%;background:rgba(123,201,0,.15);display:flex;align-items:center;justify-content:center;color:var(--green);font-weight:700;font-size:.85rem;flex-shrink:0;}
+  .member-name{font-size:.85rem;font-weight:600;}
+  .member-goal{font-size:.72rem;color:var(--muted);}
+  .at-risk-badge{background:rgba(230,57,70,.12);color:var(--danger);padding:.2rem .5rem;border-radius:4px;font-size:.68rem;font-weight:700;margin-left:auto;}
+  .meal-item{padding:.65rem 0;border-bottom:1px solid #1e2328;display:flex;align-items:center;gap:.75rem;}
+  .meal-item:last-child{border-bottom:none;}
+  .meal-thumb{width:44px;height:44px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--muted);overflow:hidden;flex-shrink:0;}
+  .meal-thumb img{width:100%;height:100%;object-fit:cover;}
+  .meal-info{flex:1;}
+  .meal-member{font-size:.8rem;font-weight:600;}
+  .meal-time{font-size:.7rem;color:var(--muted);}
+  .meal-macros{font-size:.72rem;color:var(--green);}
+  .btn{padding:.4rem .9rem;border-radius:6px;font-size:.75rem;font-weight:600;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;transition:all .15s;}
+  .btn-green{background:var(--green);color:#000;}.btn-green:hover{background:var(--green-dark);color:#fff;}
+  .btn-outline{background:transparent;color:var(--green);border:1px solid var(--green);}.btn-outline:hover{background:var(--green);color:#000;}
+  .empty-state{text-align:center;padding:1.5rem 0;color:var(--muted);font-size:.85rem;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <img src="{% static 'images/logos/fitme-logo.png' %}" alt="Fit Me">
+    <span class="brand-name">Fit Me</span>
+    <span class="role-badge">Coach</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:1rem;color:var(--muted);font-size:.875rem;">
+    <span><i class="fa fa-user-circle"></i> {{ request.user.get_full_name|default:request.user.username }}</span>
+    <form method="post" action="/account/logout/" style="display:inline;">{% csrf_token %}
+      <button type="submit" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.875rem;"><i class="fa fa-sign-out-alt"></i> Logout</button>
+    </form>
+  </div>
+</div>
+
+<div class="layout">
+  <nav class="sidebar">
+    <a href="/fitme/dashboard/coach/" class="active"><i class="fa fa-home"></i> Dashboard</a>
+    <a href="#"><i class="fa fa-users"></i> My Members</a>
+    <a href="#"><i class="fa fa-utensils"></i> Meal Logs</a>
+    <a href="#"><i class="fa fa-dumbbell"></i> Workouts</a>
+    <a href="#"><i class="fa fa-comments"></i> Messages</a>
+    <a href="#"><i class="fa fa-microphone"></i> Voice Notes</a>
+  </nav>
+
+  <main class="main">
+    <h1>Coach Dashboard</h1>
+    <p class="subtitle">Manage your members' progress, meals, and habits.</p>
+
+    <!-- Stats row -->
+    <div class="grid-3" style="grid-template-columns:repeat(3,1fr);">
+      <div style="background:var(--surface);border:1px solid #2a2f35;border-radius:12px;padding:1.25rem;">
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:.4rem;">ASSIGNED MEMBERS</div>
+        <div style="font-family:'Montserrat';font-size:2.2rem;font-weight:900;color:var(--green);">{{ assigned_members.count }}</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid #2a2f35;border-radius:12px;padding:1.25rem;">
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:.4rem;">UNREVIEWED MEALS</div>
+        <div style="font-family:'Montserrat';font-size:2.2rem;font-weight:900;color:var(--warning);">{{ unreviewed_meals.count }}</div>
+      </div>
+      <div style="background:var(--surface);border:1px solid #2a2f35;border-radius:12px;padding:1.25rem;">
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:.4rem;">AT-RISK MEMBERS</div>
+        <div style="font-family:'Montserrat';font-size:2.2rem;font-weight:900;color:var(--danger);">{{ at_risk_members|length }}</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;">
+      <!-- Members List -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fa fa-users" style="color:var(--green);margin-right:.5rem;"></i>My Members</span>
+          <span style="font-size:.75rem;color:var(--muted);">{{ assigned_members.count }} total</span>
+        </div>
+        <div class="card-body">
+          {% for mp in assigned_members %}
+          <div class="member-chip">
+            <div class="member-avatar">{{ mp.user.username|first|upper }}</div>
+            <div>
+              <div class="member-name">{{ mp.user.get_full_name|default:mp.user.username }}</div>
+              <div class="member-goal">{{ mp.get_primary_goal_display }}</div>
+            </div>
+            {% for ar in at_risk_members %}
+              {% if ar.member.id == mp.user.id %}
+                <span class="at-risk-badge"><i class="fa fa-exclamation-triangle"></i> Missed 2+ days</span>
+              {% endif %}
+            {% endfor %}
+            <a href="#" class="btn btn-outline" style="margin-left:auto;padding:.25rem .65rem;font-size:.7rem;">View</a>
+          </div>
+          {% empty %}
+          <div class="empty-state"><i class="fa fa-user-plus" style="font-size:1.5rem;display:block;margin-bottom:.5rem;"></i>No members assigned yet.</div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- Unreviewed Meals -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fa fa-utensils" style="color:var(--warning);margin-right:.5rem;"></i>Meal Log Review</span>
+          {% if unreviewed_meals %}
+          <span style="background:var(--warning);color:#000;padding:.15rem .5rem;border-radius:4px;font-size:.7rem;font-weight:700;">{{ unreviewed_meals.count }}</span>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          {% for meal in unreviewed_meals %}
+          <div class="meal-item">
+            <div class="meal-thumb">
+              {% if meal.photo %}<img src="{{ meal.photo.url }}" alt="meal">{% else %}<i class="fa fa-bowl-food"></i>{% endif %}
+            </div>
+            <div class="meal-info">
+              <div class="meal-member">{{ meal.member.get_full_name|default:meal.member.username }}</div>
+              <div class="meal-time">{{ meal.get_meal_type_display }} · {{ meal.logged_at|date:"M d, H:i" }}</div>
+              <div class="meal-macros">{{ meal.total_calories|floatformat:0 }} kcal · {{ meal.total_protein_g|floatformat:0 }}g protein</div>
+            </div>
+            <a href="#" class="btn btn-green" style="padding:.25rem .65rem;font-size:.7rem;">Review</a>
+          </div>
+          {% empty %}
+          <div class="empty-state"><i class="fa fa-check-circle" style="color:var(--green);font-size:1.5rem;display:block;margin-bottom:.5rem;"></i>All meals reviewed!</div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

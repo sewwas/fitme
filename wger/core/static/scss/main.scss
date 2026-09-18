@@ -1,0 +1,295 @@
+/*
+ * Fit Me — Brand customization for Bootstrap
+ * Brand: Lime green (#7BC900) on dark/black
+ * Tagline: Train with Purpose & Move with Confidence
+ */
+
+/* ── Fit Me brand palette ── */
+$fitme-green:        #7BC900 !default;   /* lime green — primary brand color     */
+$fitme-green-dark:   #5A9400 !default;   /* darker green for hover states        */
+$fitme-green-glow:   #AAFF00 !default;   /* neon accent for highlights           */
+$fitme-black:        #0D0D0D !default;   /* near-black background                */
+$fitme-dark:         #1A1A1A !default;   /* card/sidebar backgrounds             */
+$fitme-charcoal:     #222222 !default;   /* navbar / footer background           */
+$fitme-grey:         #888888 !default;   /* muted text                           */
+$fitme-light:        #F2F2F2 !default;   /* light content area                   */
+$fitme-light-2:      #E0E0E0 !default;
+$fitme-danger:       #E63946 !default;
+$fitme-warning:      #FFBB00 !default;
+
+$link-color: $fitme-green !default;
+
+@import "../../../../node_modules/bootstrap/scss/functions";
+@import "../../../../node_modules/bootstrap/scss/variables";
+
+$theme-colors: (
+    "primary":   $fitme-green,
+    "secondary": $fitme-charcoal,
+    "success":   $fitme-green-dark,
+    "info":      $info,
+    "warning":   $fitme-warning,
+    "danger":    $fitme-danger,
+    "light":     $fitme-light,
+    "dark":      $fitme-black
+);
+
+$font-family-sans-serif: "Open Sans Light";
+$enable-responsive-font-sizes: true;
+
+/*
+ * Import the rest of the bootstrap files
+ */
+@import "../../../../node_modules/bootstrap/scss/bootstrap";
+
+/* ═══════════════════════════════════════════════════════
+   Fit Me — Global Overrides
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Body ── */
+body {
+    background-color: $fitme-light;
+    color: #1a1a1a;
+}
+
+/* ── Navbar ── */
+.navbar {
+    background-color: $fitme-charcoal !important;
+    border-bottom: 3px solid $fitme-green;
+    box-shadow: 0 2px 16px rgba(123, 201, 0, 0.18);
+}
+
+.navbar-brand img {
+    filter: drop-shadow(0 0 6px rgba(123, 201, 0, 0.6));
+}
+
+.navbar-brand-text {
+    color: $fitme-green !important;
+    font-weight: 800;
+    font-size: 1.35rem;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 10px rgba(123, 201, 0, 0.4);
+}
+
+.navbar .nav-link,
+.navbar .nav-link.text-white {
+    color: #e0e0e0 !important;
+    font-weight: 500;
+    transition: color 0.2s;
+}
+
+.navbar .nav-link:hover,
+.navbar .nav-link:focus {
+    color: $fitme-green !important;
+}
+
+.navbar .nav-link.text-decoration-underline {
+    color: $fitme-green !important;
+    text-decoration-color: $fitme-green !important;
+}
+
+.navbar-toggler {
+    border-color: $fitme-green;
+}
+
+.navbar-toggler-icon {
+    filter: invert(1);
+}
+
+/* ── Dropdown menus ── */
+.dropdown-menu {
+    background-color: $fitme-dark;
+    border: 1px solid $fitme-green;
+    border-radius: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.dropdown-item {
+    color: #ddd;
+    transition: background 0.15s, color 0.15s;
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    background-color: $fitme-green;
+    color: #0d0d0d !important;
+    font-weight: 600;
+}
+
+.dropdown-header {
+    color: $fitme-green;
+    font-weight: 700;
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.dropdown-divider {
+    border-color: #333;
+}
+
+/* ── Buttons ── */
+.btn-primary {
+    background-color: $fitme-green;
+    border-color: $fitme-green;
+    color: #0d0d0d;
+    font-weight: 700;
+    transition: all 0.2s;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+    background-color: $fitme-green-dark;
+    border-color: $fitme-green-dark;
+    color: #fff;
+    box-shadow: 0 0 12px rgba(123, 201, 0, 0.4);
+}
+
+/* ── Cards ── */
+.card {
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    transition: box-shadow 0.2s;
+}
+
+.card:hover {
+    box-shadow: 0 4px 20px rgba(123, 201, 0, 0.12);
+}
+
+.card-header {
+    background-color: $fitme-charcoal;
+    color: $fitme-green;
+    font-weight: 700;
+    border-bottom: 2px solid $fitme-green;
+    border-radius: 10px 10px 0 0 !important;
+}
+
+/* ── Footer ── */
+#main-footer {
+    background-color: $fitme-charcoal !important;
+    border-top: 3px solid $fitme-green !important;
+    color: #aaa;
+}
+
+#main-footer a {
+    color: $fitme-grey;
+    transition: color 0.2s;
+}
+
+#main-footer a:hover {
+    color: $fitme-green;
+}
+
+#main-footer .btn-light {
+    background-color: $fitme-dark;
+    border-color: #333;
+    color: #ccc;
+}
+
+#main-footer .btn-light:hover {
+    background-color: $fitme-green;
+    color: #0d0d0d;
+}
+
+/* ── Page header ── */
+.page-header {
+    color: $fitme-charcoal;
+    font-weight: 700;
+}
+
+/* ── Links ── */
+a {
+    color: darken($fitme-green, 10%);
+}
+
+a:hover {
+    color: $fitme-green;
+}
+
+/* ── Alerts ── */
+.alert-info {
+    background-color: rgba(123, 201, 0, 0.1);
+    border-color: $fitme-green;
+    color: $fitme-charcoal;
+}
+
+/* ── Tables ── */
+.table thead th {
+    background-color: $fitme-charcoal;
+    color: $fitme-green;
+    border-bottom: 2px solid $fitme-green;
+}
+
+/* ── Progress bars ── */
+.progress-bar {
+    background-color: $fitme-green;
+}
+
+/* ── Badges ── */
+.badge.bg-primary {
+    background-color: $fitme-green !important;
+    color: #0d0d0d;
+}
+
+/* ── Login page ── */
+.fitme-login-wrapper {
+    min-height: 100vh;
+    background: linear-gradient(135deg, rgba(13,13,13,0.92) 0%, rgba(26,26,26,0.88) 100%),
+                url('../images/logos/fitme-banner.png') center center / cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.fitme-login-card {
+    background: rgba(26,26,26,0.95);
+    border: 1px solid $fitme-green;
+    border-radius: 16px;
+    box-shadow: 0 0 40px rgba(123,201,0,0.25);
+    padding: 2.5rem;
+    width: 100%;
+    max-width: 420px;
+}
+
+.fitme-login-card .form-control {
+    background-color: #2a2a2a;
+    border-color: #444;
+    color: #eee;
+}
+
+.fitme-login-card .form-control:focus {
+    border-color: $fitme-green;
+    box-shadow: 0 0 0 0.2rem rgba(123, 201, 0, 0.25);
+    background-color: #2a2a2a;
+    color: #fff;
+}
+
+.fitme-login-card label {
+    color: #ccc;
+    font-weight: 500;
+}
+
+.fitme-login-logo {
+    width: 90px;
+    margin: 0 auto 1rem;
+    display: block;
+    filter: drop-shadow(0 0 12px rgba(123, 201, 0, 0.5));
+}
+
+.fitme-brand-name {
+    font-size: 2rem;
+    font-weight: 900;
+    text-align: center;
+    color: $fitme-green;
+    text-shadow: 0 0 16px rgba(123, 201, 0, 0.4);
+    letter-spacing: 1px;
+    margin-bottom: 0.1rem;
+}
+
+.fitme-tagline {
+    text-align: center;
+    color: #888;
+    font-size: 0.8rem;
+    margin-bottom: 1.8rem;
+    font-style: italic;
+}

@@ -1,0 +1,259 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Member — Fit Me</title>
+<link rel="icon" href="{% static 'images/logos/fitme-logo.png' %}">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Inter:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'fontawesomefree/css/all.min.css' %}">
+<style>
+  :root{--green:#7BC900;--green-dark:#5A9400;--green-glow:rgba(123,201,0,0.18);--bg:#0B0D0E;--surface:#1F2428;--surface2:#2D3339;--text:#F8FAFC;--muted:#8B9299;--danger:#E63946;--warning:#FFBB00;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+  .topbar{background:var(--surface);border-bottom:2px solid var(--green);padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px var(--green-glow);}
+  .brand{display:flex;align-items:center;gap:.75rem;}.brand img{width:36px;}.brand-name{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--green);letter-spacing:2px;}
+  .main{max-width:1000px;margin:0 auto;padding:2rem 1.5rem;}
+  .welcome{font-family:'Montserrat',sans-serif;font-size:1.75rem;font-weight:900;margin-bottom:.25rem;}
+  .tagline{color:var(--muted);font-size:.875rem;margin-bottom:2rem;}
+  .grid-top{display:grid;grid-template-columns:320px 1fr;gap:1.5rem;margin-bottom:1.5rem;}
+  @media(max-width:700px){.grid-top{grid-template-columns:1fr;}}
+  .card{background:var(--surface);border:1px solid #2a2f35;border-radius:14px;overflow:hidden;}
+  .card-header{padding:1rem 1.5rem;border-bottom:1px solid #2a2f35;display:flex;align-items:center;justify-content:space-between;}
+  .card-title{font-family:'Montserrat',sans-serif;font-weight:700;font-size:.9rem;}
+  .card-body{padding:1.25rem 1.5rem;}
+
+  /* Digital ID Card */
+  .id-card{
+    background:linear-gradient(135deg,#1a1f24 0%,#111417 100%);
+    border:2px solid var(--green);border-radius:16px;padding:1.5rem;
+    box-shadow:0 0 40px var(--green-glow);position:relative;overflow:hidden;
+  }
+  .id-card::before{content:'';position:absolute;top:-40px;right:-40px;width:150px;height:150px;border-radius:50%;background:rgba(123,201,0,.06);}
+  .id-card-brand{display:flex;align-items:center;gap:.5rem;margin-bottom:1rem;}
+  .id-card-brand img{width:28px;}
+  .id-card-brand span{font-family:'Bebas Neue';font-size:1.2rem;color:var(--green);letter-spacing:2px;}
+  .id-photo{width:70px;height:70px;border-radius:50%;border:3px solid var(--green);background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;margin-bottom:.75rem;}
+  .id-photo i{font-size:2rem;color:var(--muted);}
+  .id-name{font-family:'Montserrat',sans-serif;font-size:1.15rem;font-weight:900;margin-bottom:.2rem;}
+  .id-plan{font-size:.75rem;color:var(--green);font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+  .id-divider{border:none;border-top:1px solid #2a2f35;margin:.75rem 0;}
+  .id-field{display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:.35rem;}
+  .id-field-label{color:var(--muted);}
+  .id-field-value{color:var(--text);font-weight:600;}
+  .id-status{display:inline-flex;align-items:center;gap:.4rem;background:rgba(123,201,0,.12);color:var(--green);padding:.3rem .75rem;border-radius:20px;font-size:.75rem;font-weight:700;margin-top:.5rem;}
+  .id-status.expired{background:rgba(230,57,70,.12);color:var(--danger);}
+
+  /* Streak */
+  .streak-display{text-align:center;padding:.5rem 0;}
+  .streak-number{font-family:'Bebas Neue';font-size:4.5rem;color:var(--green);line-height:1;text-shadow:0 0 20px rgba(123,201,0,.4);}
+  .streak-label{font-size:.8rem;color:var(--muted);margin-bottom:.25rem;}
+  .streak-emoji{font-size:2rem;margin-bottom:.25rem;}
+  .streak-best{font-size:.72rem;color:var(--muted);margin-top:.25rem;}
+  .streak-checkins{font-size:.72rem;color:var(--muted);}
+
+  /* Fuel Tank */
+  .macro-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.75rem;}
+  .macro-item{background:var(--surface2);border-radius:10px;padding:.875rem;}
+  .macro-name{font-size:.7rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-bottom:.3rem;}
+  .macro-values{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:.5rem;}
+  .macro-consumed{font-family:'Montserrat';font-size:1.1rem;font-weight:900;color:var(--text);}
+  .macro-target{font-size:.7rem;color:var(--muted);}
+  .macro-bar{height:6px;background:#2a2f35;border-radius:3px;overflow:hidden;}
+  .macro-fill{height:100%;border-radius:3px;transition:width .5s ease;}
+  .macro-fill.calories{background:var(--green);}
+  .macro-fill.protein{background:#60a5fa;}
+  .macro-fill.carbs{background:#f59e0b;}
+  .macro-fill.fat{background:#f87171;}
+  .macro-pct{font-size:.68rem;color:var(--muted);margin-top:.25rem;}
+
+  /* Bottom grid */
+  .grid-bottom{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:1.5rem;}
+  @media(max-width:700px){.grid-bottom{grid-template-columns:1fr;}}
+  .checkin-list{list-style:none;}
+  .checkin-list li{display:flex;align-items:center;justify-content:space-between;padding:.5rem 0;border-bottom:1px solid #1e2328;font-size:.84rem;}
+  .checkin-list li:last-child{border-bottom:none;}
+  .empty-state{text-align:center;padding:2rem 0;color:var(--muted);font-size:.875rem;}
+  .empty-state i{font-size:2rem;display:block;margin-bottom:.5rem;color:#2a2f35;}
+  .btn{padding:.5rem 1.1rem;border-radius:8px;font-weight:600;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;transition:all .15s;font-size:.82rem;}
+  .btn-green{background:var(--green);color:#000;}.btn-green:hover{background:var(--green-dark);color:#fff;box-shadow:0 0 12px rgba(123,201,0,.3);}
+  .btn-outline{background:transparent;color:var(--green);border:1px solid var(--green);}.btn-outline:hover{background:var(--green);color:#000;}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="brand">
+    <img src="{% static 'images/logos/fitme-logo.png' %}" alt="Fit Me">
+    <span class="brand-name">Fit Me</span>
+  </div>
+  <div style="display:flex;align-items:center;gap:1rem;color:var(--muted);font-size:.875rem;">
+    <a href="/en/dashboard" style="color:var(--muted);text-decoration:none;"><i class="fa fa-th-large"></i> Full App</a>
+    <form method="post" action="/account/logout/" style="display:inline;">{% csrf_token %}
+      <button type="submit" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:.875rem;"><i class="fa fa-sign-out-alt"></i> Logout</button>
+    </form>
+  </div>
+</div>
+
+<main class="main">
+  <div class="welcome">Welcome back, {{ request.user.first_name|default:request.user.username }}! 💪</div>
+  <p class="tagline">Train with Purpose & Move with Confidence</p>
+
+  <div class="grid-top">
+    <!-- Digital ID Card -->
+    <div class="id-card">
+      <div class="id-card-brand">
+        <img src="{% static 'images/logos/fitme-logo.png' %}" alt="Fit Me">
+        <span>Fit Me</span>
+      </div>
+      <div class="id-photo">
+        {% if profile and profile.profile_photo %}
+          <img src="{{ profile.profile_photo.url }}" style="width:100%;height:100%;object-fit:cover;">
+        {% else %}
+          <i class="fa fa-user"></i>
+        {% endif %}
+      </div>
+      <div class="id-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+      <div class="id-plan">{% if subscription %}{{ subscription.plan.name }}{% else %}No Active Plan{% endif %}</div>
+      <hr class="id-divider">
+      <div class="id-field">
+        <span class="id-field-label">Member ID</span>
+        <span class="id-field-value">#{{ request.user.id|stringformat:"05d" }}</span>
+      </div>
+      {% if subscription %}
+      <div class="id-field">
+        <span class="id-field-label">Valid Until</span>
+        <span class="id-field-value">{{ subscription.end_date|date:"d M Y" }}</span>
+      </div>
+      <div class="id-field">
+        <span class="id-field-label">Days Remaining</span>
+        <span class="id-field-value" style="color:{% if subscription.days_remaining <= 7 %}var(--warning){% else %}var(--green){% endif %};">{{ subscription.days_remaining }} days</span>
+      </div>
+      {% if subscription.is_active %}
+        <div class="id-status"><i class="fa fa-check-circle"></i> ACTIVE</div>
+      {% else %}
+        <div class="id-status expired"><i class="fa fa-times-circle"></i> EXPIRED</div>
+      {% endif %}
+      {% else %}
+        <div class="id-status expired"><i class="fa fa-times-circle"></i> NO SUBSCRIPTION</div>
+      {% endif %}
+    </div>
+
+    <!-- Right column: Streak + Fuel Tank -->
+    <div style="display:flex;flex-direction:column;gap:1.25rem;">
+      <!-- Streak Card -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fa fa-fire" style="color:#f97316;margin-right:.5rem;"></i>Attendance Streak</span>
+        </div>
+        <div class="card-body">
+          <div class="streak-display">
+            <div class="streak-emoji">{% if streak.current_streak >= 7 %}🔥{% elif streak.current_streak >= 3 %}⚡{% else %}💪{% endif %}</div>
+            <div class="streak-number">{{ streak.current_streak }}</div>
+            <div class="streak-label">Day Streak</div>
+            <div class="streak-best">Best: {{ streak.longest_streak }} days</div>
+            <div class="streak-checkins">Total check-ins: {{ streak.total_checkins }}</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily Fuel Tank -->
+      <div class="card" style="flex:1;">
+        <div class="card-header">
+          <span class="card-title"><i class="fa fa-tachometer-alt" style="color:var(--green);margin-right:.5rem;"></i>Today's Fuel Tank</span>
+          <a href="#" class="btn btn-outline" style="font-size:.7rem;padding:.2rem .6rem;">Log Meal</a>
+        </div>
+        <div class="card-body">
+          {% if fuel_progress %}
+          <div class="macro-grid">
+            <div class="macro-item">
+              <div class="macro-name">Calories</div>
+              <div class="macro-values">
+                <span class="macro-consumed">{{ fuel_progress.consumed.calories|floatformat:0 }}</span>
+                <span class="macro-target">/ {{ fuel_progress.targets.calories }} kcal</span>
+              </div>
+              <div class="macro-bar"><div class="macro-fill calories" style="width:{{ fuel_progress.pct_calories }}%;"></div></div>
+              <div class="macro-pct">{{ fuel_progress.pct_calories }}%</div>
+            </div>
+            <div class="macro-item">
+              <div class="macro-name">Protein</div>
+              <div class="macro-values">
+                <span class="macro-consumed">{{ fuel_progress.consumed.protein_g|floatformat:0 }}g</span>
+                <span class="macro-target">/ {{ fuel_progress.targets.protein_g }}g</span>
+              </div>
+              <div class="macro-bar"><div class="macro-fill protein" style="width:{{ fuel_progress.pct_protein }}%;"></div></div>
+              <div class="macro-pct">{{ fuel_progress.pct_protein }}%</div>
+            </div>
+            <div class="macro-item">
+              <div class="macro-name">Carbs</div>
+              <div class="macro-values">
+                <span class="macro-consumed">{{ fuel_progress.consumed.carbs_g|floatformat:0 }}g</span>
+                <span class="macro-target">/ {{ fuel_progress.targets.carbs_g }}g</span>
+              </div>
+              <div class="macro-bar"><div class="macro-fill carbs" style="width:{{ fuel_progress.pct_carbs }}%;"></div></div>
+              <div class="macro-pct">{{ fuel_progress.pct_carbs }}%</div>
+            </div>
+            <div class="macro-item">
+              <div class="macro-name">Fat</div>
+              <div class="macro-values">
+                <span class="macro-consumed">{{ fuel_progress.consumed.fat_g|floatformat:0 }}g</span>
+                <span class="macro-target">/ {{ fuel_progress.targets.fat_g }}g</span>
+              </div>
+              <div class="macro-bar"><div class="macro-fill fat" style="width:{{ fuel_progress.pct_fat }}%;"></div></div>
+              <div class="macro-pct">{{ fuel_progress.pct_fat }}%</div>
+            </div>
+          </div>
+          {% else %}
+          <div class="empty-state">
+            <i class="fa fa-utensils"></i>
+            No fuel targets set yet.<br>
+            <small>Your coach will set your daily macro goals.</small>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Body Check-ins (Morph Slider) -->
+  <div class="grid-bottom">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="fa fa-camera" style="color:var(--green);margin-right:.5rem;"></i>Progress Photos</span>
+        <a href="#" class="btn btn-outline" style="font-size:.7rem;padding:.2rem .6rem;"><i class="fa fa-plus"></i> New Check-in</a>
+      </div>
+      <div class="card-body">
+        {% if checkins %}
+        <ul class="checkin-list">
+          {% for c in checkins %}
+          <li>
+            <span>{{ c.checkin_date|date:"M d, Y" }}</span>
+            <span style="color:var(--green);font-weight:600;">{% if c.weight_kg %}{{ c.weight_kg }} kg{% else %}—{% endif %}</span>
+          </li>
+          {% endfor %}
+        </ul>
+        {% else %}
+        <div class="empty-state">
+          <i class="fa fa-image"></i>
+          No progress check-ins yet.<br>
+          <small>Start your transformation journey today!</small>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title"><i class="fa fa-bell" style="color:var(--warning);margin-right:.5rem;"></i>Coach Messages</span>
+      </div>
+      <div class="card-body">
+        <div class="empty-state">
+          <i class="fa fa-comments"></i>
+          No messages yet.<br>
+          <small>Your coach will send tips and feedback here.</small>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+</body>
+</html>

@@ -1,0 +1,286 @@
+{% load static i18n %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Super Admin — Fit Me</title>
+<link rel="icon" href="{% static 'images/logos/fitme-logo.png' %}">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Inter:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'fontawesomefree/css/all.min.css' %}">
+<style>
+  :root {
+    --green: #7BC900;
+    --green-dark: #5A9400;
+    --green-glow: rgba(123,201,0,0.18);
+    --bg: #0B0D0E;
+    --surface: #1F2428;
+    --surface2: #2D3339;
+    --text: #F8FAFC;
+    --muted: #8B9299;
+    --danger: #E63946;
+    --warning: #FFBB00;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── Topbar ── */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 2px solid var(--green);
+    padding: 0.75rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 2px 20px var(--green-glow);
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 0.75rem; }
+  .topbar-brand img { width: 38px; }
+  .topbar-brand .brand-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.6rem; color: var(--green); letter-spacing: 2px; }
+  .topbar-brand .role-badge { background: var(--green); color: #000; padding: 0.15rem 0.6rem; border-radius: 4px; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+  .topbar-user { display: flex; align-items: center; gap: 1rem; color: var(--muted); font-size: 0.9rem; }
+  .topbar-user a { color: var(--muted); text-decoration: none; }
+  .topbar-user a:hover { color: var(--green); }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: calc(100vh - 60px); }
+  .sidebar {
+    width: 220px; background: var(--surface); border-right: 1px solid #2a2f35;
+    padding: 1.5rem 0; flex-shrink: 0;
+  }
+  .sidebar-section { padding: 0.5rem 1rem 0.25rem; font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 700; }
+  .sidebar a {
+    display: flex; align-items: center; gap: 0.65rem;
+    padding: 0.6rem 1.25rem; color: #ccc; text-decoration: none; font-size: 0.875rem;
+    border-left: 3px solid transparent; transition: all 0.18s;
+  }
+  .sidebar a:hover, .sidebar a.active { color: var(--green); border-left-color: var(--green); background: rgba(123,201,0,0.06); }
+  .sidebar a i { width: 16px; text-align: center; }
+
+  /* ── Main Content ── */
+  .main { flex: 1; padding: 2rem; overflow-y: auto; }
+  .page-header { margin-bottom: 2rem; }
+  .page-header h1 { font-family: 'Montserrat', sans-serif; font-size: 1.75rem; font-weight: 900; color: var(--text); }
+  .page-header p { color: var(--muted); font-size: 0.875rem; margin-top: 0.25rem; }
+
+  /* ── Stat Cards ── */
+  .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem; margin-bottom: 2rem; }
+  .stat-card {
+    background: var(--surface); border: 1px solid #2a2f35; border-radius: 12px;
+    padding: 1.25rem 1.5rem; transition: box-shadow 0.2s;
+    position: relative; overflow: hidden;
+  }
+  .stat-card:hover { box-shadow: 0 4px 24px var(--green-glow); border-color: var(--green); }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; background: var(--green); opacity: 0; transition: opacity 0.2s; }
+  .stat-card:hover::before { opacity: 1; }
+  .stat-icon { width: 40px; height: 40px; border-radius: 10px; background: rgba(123,201,0,0.12); display: flex; align-items: center; justify-content: center; margin-bottom: 0.75rem; }
+  .stat-icon i { color: var(--green); font-size: 1rem; }
+  .stat-value { font-family: 'Montserrat', sans-serif; font-size: 2rem; font-weight: 900; color: var(--text); line-height: 1; }
+  .stat-label { font-size: 0.75rem; color: var(--muted); margin-top: 0.25rem; }
+  .stat-card.danger .stat-icon { background: rgba(230,57,70,0.12); }
+  .stat-card.danger .stat-icon i { color: var(--danger); }
+  .stat-card.warning .stat-icon { background: rgba(255,187,0,0.12); }
+  .stat-card.warning .stat-icon i { color: var(--warning); }
+
+  /* ── Section Cards ── */
+  .section-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 900px) { .section-grid { grid-template-columns: 1fr; } }
+  .card {
+    background: var(--surface); border: 1px solid #2a2f35; border-radius: 12px; overflow: hidden;
+  }
+  .card-header {
+    padding: 1rem 1.5rem; border-bottom: 1px solid #2a2f35;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .card-title { font-family: 'Montserrat', sans-serif; font-weight: 700; font-size: 0.9rem; color: var(--text); }
+  .card-badge { background: var(--green); color: #000; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+  .card-body { padding: 1rem 1.5rem; }
+
+  /* ── Table ── */
+  .data-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  .data-table th { color: var(--muted); font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; padding: 0.5rem 0.75rem; text-align: left; border-bottom: 1px solid #2a2f35; }
+  .data-table td { padding: 0.65rem 0.75rem; border-bottom: 1px solid #1e2328; color: #d0d4d8; }
+  .data-table tr:last-child td { border-bottom: none; }
+  .data-table tr:hover td { background: rgba(123,201,0,0.04); }
+
+  /* ── Badges ── */
+  .badge { padding: 0.2rem 0.55rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+  .badge-green { background: rgba(123,201,0,0.15); color: var(--green); }
+  .badge-red { background: rgba(230,57,70,0.15); color: var(--danger); }
+  .badge-yellow { background: rgba(255,187,0,0.15); color: var(--warning); }
+  .badge-grey { background: #2a2f35; color: var(--muted); }
+
+  /* ── Alert Banner ── */
+  .alert-banner {
+    background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.3);
+    border-radius: 8px; padding: 0.75rem 1.25rem; margin-bottom: 1.5rem;
+    display: flex; align-items: center; gap: 0.75rem; color: #f8a0a8; font-size: 0.875rem;
+  }
+
+  /* ── Plans Grid ── */
+  .plans-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+  .plan-card { background: var(--surface2); border-radius: 8px; padding: 0.875rem 1rem; border: 1px solid #2a2f35; }
+  .plan-name { font-weight: 700; font-size: 0.85rem; margin-bottom: 0.25rem; }
+  .plan-price { font-family: 'Montserrat', sans-serif; font-size: 1.25rem; font-weight: 900; color: var(--green); }
+  .plan-price span { font-size: 0.7rem; color: var(--muted); font-family: 'Inter', sans-serif; font-weight: 400; }
+
+  /* ── Btn ── */
+  .btn { padding: 0.45rem 1rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: none; text-decoration: none; display: inline-flex; align-items: center; gap: 0.4rem; transition: all 0.15s; }
+  .btn-green { background: var(--green); color: #000; }
+  .btn-green:hover { background: var(--green-dark); color: #fff; }
+  .btn-outline { background: transparent; color: var(--green); border: 1px solid var(--green); }
+  .btn-outline:hover { background: var(--green); color: #000; }
+</style>
+</head>
+<body>
+
+<!-- Topbar -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <img src="{% static 'images/logos/fitme-logo.png' %}" alt="Fit Me">
+    <span class="brand-name">Fit Me</span>
+    <span class="role-badge">Super Admin</span>
+  </div>
+  <div class="topbar-user">
+    <span><i class="fa fa-user-circle"></i> {{ request.user.get_full_name|default:request.user.username }}</span>
+    <a href="/en/user/login">
+      <form method="post" action="/account/logout/" style="display:inline;">
+        {% csrf_token %}
+        <button type="submit" style="background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.875rem;">
+          <i class="fa fa-sign-out-alt"></i> Logout
+        </button>
+      </form>
+    </a>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-section">Overview</div>
+    <a href="/fitme/dashboard/admin/" class="active"><i class="fa fa-home"></i> Dashboard</a>
+    <a href="/fitme/dashboard/front-desk/"><i class="fa fa-users"></i> Front Desk</a>
+
+    <div class="sidebar-section" style="margin-top:1rem;">Manage</div>
+    <a href="#"><i class="fa fa-id-card"></i> Members</a>
+    <a href="#"><i class="fa fa-calendar"></i> Schedules</a>
+    <a href="#"><i class="fa fa-door-open"></i> Door Access</a>
+    <a href="#"><i class="fa fa-utensils"></i> Nutrition</a>
+
+    <div class="sidebar-section" style="margin-top:1rem;">Finance</div>
+    <a href="#"><i class="fa fa-money-bill-wave"></i> Payroll</a>
+    <a href="#"><i class="fa fa-chart-bar"></i> Revenue</a>
+    <a href="#"><i class="fa fa-file-pdf"></i> Payslips</a>
+
+    <div class="sidebar-section" style="margin-top:1rem;">System</div>
+    <a href="/en/gym/list"><i class="fa fa-building"></i> Gym Config</a>
+    <a href="/en/user/list"><i class="fa fa-user-cog"></i> User List</a>
+    <a href="/api/v2/"><i class="fa fa-code"></i> REST API</a>
+  </nav>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <h1>Good day, {{ request.user.first_name|default:"Admin" }} 👋</h1>
+      <p>Here's what's happening at Fit Me today — {{ "now"|date:"l, N j, Y" }}.</p>
+    </div>
+
+    <!-- Absence Alerts -->
+    {% if stats.open_absence_alerts > 0 %}
+    <div class="alert-banner">
+      <i class="fa fa-exclamation-triangle" style="color:var(--danger);"></i>
+      <strong>{{ stats.open_absence_alerts }} staff absence alert{{ stats.open_absence_alerts|pluralize }}</strong> — A staff member left mid-shift without approval.
+      <a href="#" class="btn btn-outline" style="margin-left:auto;">View Alerts</a>
+    </div>
+    {% endif %}
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa fa-users"></i></div>
+        <div class="stat-value">{{ stats.active_members }}</div>
+        <div class="stat-label">Active Members</div>
+      </div>
+      <div class="stat-card warning">
+        <div class="stat-icon"><i class="fa fa-clock"></i></div>
+        <div class="stat-value">{{ stats.expiring_soon }}</div>
+        <div class="stat-label">Expiring in 7 Days</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa fa-file-alt"></i></div>
+        <div class="stat-value">{{ stats.pending_applications }}</div>
+        <div class="stat-label">Pending Applications</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-icon"><i class="fa fa-door-open"></i></div>
+        <div class="stat-value">{{ stats.today_access_count }}</div>
+        <div class="stat-label">Today's Access Events</div>
+      </div>
+      {% if stats.open_absence_alerts > 0 %}
+      <div class="stat-card danger">
+        <div class="stat-icon"><i class="fa fa-exclamation-circle"></i></div>
+        <div class="stat-value">{{ stats.open_absence_alerts }}</div>
+        <div class="stat-label">Open Absence Alerts</div>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Lower section -->
+    <div class="section-grid">
+      <!-- Pending Applications -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fa fa-inbox" style="color:var(--green);margin-right:0.5rem;"></i>Pending Applications</span>
+          {% if stats.pending_applications > 0 %}
+            <span class="card-badge">{{ stats.pending_applications }}</span>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          {% if recent_applications %}
+          <table class="data-table">
+            <thead><tr><th>Name</th><th>Plan</th><th>Applied</th><th></th></tr></thead>
+            <tbody>
+              {% for app in recent_applications %}
+              <tr>
+                <td>{{ app.full_name }}</td>
+                <td>{{ app.desired_plan.name|default:"—" }}</td>
+                <td>{{ app.applied_at|date:"M d" }}</td>
+                <td>
+                  <a href="/fitme/dashboard/front-desk/" class="btn btn-green" style="padding:0.25rem 0.65rem;font-size:0.7rem;">Review</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <p style="color:var(--muted);font-size:0.875rem;text-align:center;padding:1.5rem 0;"><i class="fa fa-check-circle" style="color:var(--green);margin-right:0.5rem;"></i>No pending applications</p>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Membership Plans -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title"><i class="fa fa-tags" style="color:var(--green);margin-right:0.5rem;"></i>Membership Plans</span>
+          <a href="#" class="btn btn-outline" style="font-size:0.7rem;padding:0.25rem 0.65rem;">Edit Pricing</a>
+        </div>
+        <div class="card-body">
+          <div class="plans-grid">
+            {% for plan in membership_plans %}
+            <div class="plan-card">
+              <div class="plan-name">{{ plan.name }}</div>
+              <div class="plan-price">LKR {{ plan.price_monthly|floatformat:0 }} <span>/mo</span></div>
+              <div style="font-size:0.72rem;color:var(--muted);margin-top:0.25rem;">Max {{ plan.max_members }} member{{ plan.max_members|pluralize }}</div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+
+</body>
+</html>

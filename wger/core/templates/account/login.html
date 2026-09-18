@@ -1,0 +1,115 @@
+{% extends "template.html" %}
+{% load i18n wger_extras static %}
+
+{% block title %}Login — Fit Me{% endblock %}
+
+{% block header %}
+<style>
+/* Override template.html container for login full-bleed */
+#main { padding: 0 !important; }
+#main > .container { max-width: 100% !important; padding: 0 !important; }
+</style>
+{% endblock %}
+
+
+{% block template %}
+<div class="fitme-login-wrapper">
+    <div class="fitme-login-card">
+
+        <!-- Logo & Brand -->
+        <img src="{% static 'images/logos/fitme-logo.png' %}" class="fitme-login-logo" alt="Fit Me logo">
+        <div class="fitme-brand-name">Fit Me</div>
+        <div class="fitme-tagline">Train with Purpose &amp; Move with Confidence</div>
+
+        <!-- Messages -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} py-2 mb-3">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- Credentials form -->
+        <form method="post" class="wger-form" novalidate>
+            {% csrf_token %}
+            {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+            {% endif %}
+
+            {% for error in form.non_field_errors %}
+                <div class="alert alert-danger py-2">{{ error }}</div>
+            {% endfor %}
+
+            <div class="mb-3">
+                <label for="{{ form.login.id_for_label }}" class="form-label">{{ form.login.label }}</label>
+                {{ form.login }}
+                {% for error in form.login.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="mb-2">
+                <label for="{{ form.password.id_for_label }}" class="form-label">{{ form.password.label }}</label>
+                {{ form.password }}
+                {% for error in form.password.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
+
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                {% if form.remember %}
+                    <div class="form-check mb-0">
+                        {{ form.remember }}
+                        <label for="{{ form.remember.id_for_label }}" class="form-check-label" style="color:#aaa;">
+                            {{ form.remember.label }}
+                        </label>
+                    </div>
+                {% else %}
+                    <span></span>
+                {% endif %}
+                <a href="{% url 'core:user:password_reset' %}" style="color:#7BC900;font-size:0.85rem;">
+                    {% translate "Forgot password?" %}
+                </a>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 py-2" style="font-size:1.05rem;letter-spacing:0.5px;">
+                {% translate "Login" %}
+            </button>
+        </form>
+
+        {% if allow_registration %}
+            <div class="d-flex align-items-center my-3" style="color:#555;">
+                <hr class="flex-grow-1 my-0" style="border-color:#444;">
+                <span class="px-3" style="font-size:0.82rem;">{% translate "No account?" %}</span>
+                <hr class="flex-grow-1 my-0" style="border-color:#444;">
+            </div>
+            <a href="{% url 'core:user:registration' %}" class="btn btn-outline-primary w-100">
+                {% translate "Register" %}
+            </a>
+        {% endif %}
+
+        {% if PASSKEY_LOGIN_ENABLED %}
+            <hr style="border-color:#333;margin:1.2rem 0;">
+            <button type="submit" form="mfa_login" id="passkey_login"
+                    class="btn btn-outline-secondary w-100">
+                <span class="{% fa_class 'key' %} me-1"></span>
+                {% translate "Sign in with a passkey" %}
+            </button>
+        {% endif %}
+
+        {% if use_social_auth %}
+            <hr style="border-color:#333;margin:1.2rem 0;">
+            {% include "user/social_login.html" %}
+        {% endif %}
+
+    </div>
+</div>
+{% endblock %}
+
+
+{% block extra_body %}
+    {% if PASSKEY_LOGIN_ENABLED %}
+        {% include "mfa/webauthn/snippets/login_script.html" %}
+    {% endif %}
+{% endblock %}
