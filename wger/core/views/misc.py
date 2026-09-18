@@ -48,7 +48,7 @@ def index(request):
         return HttpResponseRedirect(get_role_dashboard(request.user))
     else:
         from django.shortcuts import render
-        return render(request, 'fitme/home.html')
+        return render(request, 'home.html')
 
 
 def demo_entries(request):

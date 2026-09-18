@@ -92,7 +92,7 @@ def super_admin_dashboard(request):
         'membership_plans': MembershipPlan.objects.filter(is_active=True),
         'recent_door_punches': DoorAccessLog.objects.select_related('user').order_by('-punch_time')[:8],
     }
-    return render(request, 'fitme/dashboards/super_admin.html', context)
+    return render(request, 'dashboards/super_admin.html', context)
 
 
 @login_required
@@ -115,7 +115,7 @@ def front_desk_dashboard(request):
         'plans': MembershipPlan.objects.filter(is_active=True),
         'recent_receipts': recent_receipts,
     }
-    return render(request, 'fitme/dashboards/front_desk.html', context)
+    return render(request, 'dashboards/front_desk.html', context)
 
 
 @login_required
@@ -148,7 +148,7 @@ def coach_dashboard(request):
         'unreviewed_meals': unreviewed_meals,
         'at_risk_members': at_risk,
     }
-    return render(request, 'fitme/dashboards/coach.html', context)
+    return render(request, 'dashboards/coach.html', context)
 
 
 @login_required
@@ -232,7 +232,7 @@ def member_dashboard(request):
         'before_checkin': before_checkin,
         'after_checkin': after_checkin,
     }
-    return render(request, 'fitme/dashboards/member.html', context)
+    return render(request, 'dashboards/member.html', context)
 
 
 # ═════════════════════════════════════════════════════════════════════
@@ -242,11 +242,11 @@ def member_dashboard(request):
 def public_registration_view(request):
     """
     Public Membership Registration Form — captures all 8 sections from official club document.
-    Endpoint: /fitme/register/
+    Endpoint: /register/
     """
     if request.method == 'GET':
         plans = MembershipPlan.objects.filter(is_active=True)
-        return render(request, 'fitme/register.html', {'plans': plans})
+        return render(request, 'register.html', {'plans': plans})
 
     elif request.method == 'POST':
         data = request.POST
@@ -631,7 +631,7 @@ def view_receipt(request, receipt_id):
     if not (is_staff_or_admin or request.user == receipt.member):
         return HttpResponseForbidden("Unauthorized to view this receipt")
 
-    return render(request, 'fitme/receipt_80mm.html', {'receipt': receipt})
+    return render(request, 'receipt_80mm.html', {'receipt': receipt})
 
 
 @login_required
