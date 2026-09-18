@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -286,11 +287,10 @@
       <a href="/" class="back-link">
         <i class="fa fa-arrow-left"></i> Home
       </a>
-      <div class="brand-badge">
-        <i class="fa fa-dumbbell"></i>
-      </div>
+      <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me" style="width: 88px; height: 88px; border-radius: 50%; border: 3px solid var(--neon-lime); box-shadow: 0 0 25px var(--neon-glow); margin: 0 auto 0.85rem; display: block; object-fit: cover;">
       <div class="club-title">FIT <span>ME</span> FITNESS CLUB</div>
-      <div class="form-doc-title">Membership Registration Form</div>
+      <div style="font-size: 0.85rem; color: #8E9BA4; letter-spacing: 0.5px; margin-top: 0.2rem; font-weight: 600;">Train with Purpose &amp; Move with Confidence</div>
+      <div class="form-doc-title" style="margin-top:0.75rem;display:inline-block;background:rgba(118,192,67,0.12);border:1px solid var(--neon-lime);color:var(--neon-lime);padding:0.35rem 1.25rem;border-radius:50px;font-size:0.85rem;">Official Membership Registration Form</div>
     </div>
 
     <!-- Success Screen (Shown after submit) -->

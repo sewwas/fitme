@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -57,26 +58,61 @@
       color: #fff;
     }
 
-    .brand-badge {
-      width: 42px;
-      height: 42px;
-      border-radius: 10px;
-      background: linear-gradient(135deg, #182015 0%, #0B0D0E 100%);
+    .brand-logo-img {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
       border: 2px solid var(--neon-lime);
-      display: flex;
-      align-items: center;
-      justify-content: center;
       box-shadow: 0 0 15px var(--neon-glow);
+      object-fit: cover;
     }
-    .brand-badge i { color: var(--neon-lime); font-size: 1.2rem; }
+
+    .brand-sub {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      font-family: 'Inter', sans-serif;
+    }
 
     .brand-title {
       font-family: 'Montserrat', sans-serif;
       font-weight: 900;
       font-size: 1.35rem;
       letter-spacing: 1px;
+      line-height: 1.1;
     }
     .brand-title span { color: var(--neon-lime); }
+
+    /* ── Hero Cover Banner Showcase ── */
+    .hero-cover-wrapper {
+      max-width: 980px;
+      margin: 0 auto 2.5rem;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 2px solid var(--neon-lime);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.85), 0 0 40px var(--neon-glow);
+      position: relative;
+      background: #000;
+      transition: all 0.3s ease;
+    }
+    .hero-cover-wrapper:hover {
+      box-shadow: 0 25px 70px rgba(0,0,0,0.9), 0 0 50px var(--neon-glow-high);
+      transform: translateY(-2px);
+    }
+    .hero-cover-link {
+      display: block;
+      position: relative;
+      overflow: hidden;
+      line-height: 0;
+      text-decoration: none;
+    }
+    .hero-cover-img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
 
     nav {
       display: flex;
@@ -452,10 +488,11 @@
   <!-- Header Navigation -->
   <header>
     <a href="/" class="brand-group">
-      <div class="brand-badge">
-        <i class="fa fa-dumbbell"></i>
+      <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me Logo" class="brand-logo-img">
+      <div>
+        <div class="brand-title">FIT <span>ME</span></div>
+        <div class="brand-sub">Train with Purpose &amp; Move with Confidence</div>
       </div>
-      <div class="brand-title">FIT <span>ME</span></div>
     </a>
 
     <nav>
@@ -466,7 +503,7 @@
     </nav>
 
     <div class="header-actions">
-      <a href="/en/user/login" class="btn-login">
+      <a href="/user/login" class="btn-login">
         <i class="fa fa-key" style="color:var(--neon-lime);margin-right:4px;"></i> Portal Login
       </a>
       <a href="/fitme/register/" class="btn-register">
@@ -480,7 +517,15 @@
     <div class="hero-badge">
       <i class="fa fa-bolt"></i> Elite Smart Gym Management OS
     </div>
-    <h1 class="hero-title">
+
+    <!-- Official Fit Me Hero Cover Showcase Banner -->
+    <div class="hero-cover-wrapper">
+      <a href="/fitme/register/" class="hero-cover-link" title="Click to Register Online">
+        <img src="{% static 'images/logos/fitme-official-cover.jpg' %}" alt="Fit Me - Transform Your Body - Join Now" class="hero-cover-img">
+      </a>
+    </div>
+
+    <h1 class="hero-title" style="font-size:clamp(1.75rem, 3.8vw, 2.9rem);">
       TRAIN WITH PURPOSE.<br>
       <span>MOVE WITH CONFIDENCE.</span>
     </h1>
@@ -492,7 +537,7 @@
       <a href="/fitme/register/" class="btn-hero-primary">
         <i class="fa fa-file-signature"></i> Membership Registration Form
       </a>
-      <a href="/en/user/login" class="btn-hero-secondary">
+      <a href="/user/login" class="btn-hero-secondary">
         <i class="fa fa-user-shield"></i> Member / Staff Sign In
       </a>
     </div>
@@ -681,8 +726,11 @@
     <div class="footer-content">
       <div>
         <div class="brand-group" style="margin-bottom:0.75rem;">
-          <div class="brand-badge"><i class="fa fa-dumbbell"></i></div>
-          <div class="brand-title">FIT <span>ME</span></div>
+          <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me Logo" class="brand-logo-img" style="width:50px;height:50px;">
+          <div>
+            <div class="brand-title">FIT <span>ME</span></div>
+            <div class="brand-sub" style="font-size:0.68rem;">Train with Purpose &amp; Move with Confidence</div>
+          </div>
         </div>
         <p style="max-width:320px;font-size:0.85rem;line-height:1.6;">
           Commercial Smart Fitness Management Platform powered by automated biometric gates, real-time analytics, and member empowerment.

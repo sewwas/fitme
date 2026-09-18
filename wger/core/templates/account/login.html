@@ -1,111 +1,316 @@
 {% extends "template.html" %}
 {% load i18n wger_extras static %}
 
-{% block title %}Login — Fit Me{% endblock %}
+{% block title %}Login — Fit Me Fitness Club{% endblock %}
 
 {% block header %}
 <style>
 /* Override template.html container for login full-bleed */
 #main { padding: 0 !important; }
 #main > .container { max-width: 100% !important; padding: 0 !important; }
+
+.fitme-login-viewport {
+    min-height: calc(100vh - 70px);
+    background: radial-gradient(circle at 10% 20%, rgba(118, 192, 67, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(118, 192, 67, 0.05) 0%, transparent 40%),
+                #0B0D0E;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2.5rem 1.5rem;
+}
+
+.fitme-auth-container {
+    width: 100%;
+    max-width: 1020px;
+    background: #121517;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 24px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 1.15fr 1fr;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), 0 0 35px rgba(118, 192, 67, 0.15);
+}
+
+@media (max-width: 850px) {
+    .fitme-auth-container {
+        grid-template-columns: 1fr;
+        max-width: 480px;
+    }
+}
+
+/* ── Left Side: Official Cover Showcase ── */
+.fitme-auth-cover {
+    position: relative;
+    min-height: 480px;
+    background: #0B0D0E;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+}
+
+.fitme-cover-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    transition: transform 0.6s ease;
+}
+.fitme-auth-cover:hover .fitme-cover-img {
+    transform: scale(1.02);
+}
+
+.fitme-cover-gradient {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, rgba(11, 13, 14, 0.2) 0%, rgba(11, 13, 14, 0.6) 50%, #0B0D0E 100%);
+    pointer-events: none;
+}
+
+.fitme-cover-content {
+    position: relative;
+    z-index: 2;
+    padding: 2rem;
+}
+
+.fitme-cover-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(118, 192, 67, 0.15);
+    border: 1px solid #76C043;
+    color: #76C043;
+    padding: 0.35rem 0.85rem;
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 0.85rem;
+    box-shadow: 0 0 12px rgba(118, 192, 67, 0.3);
+}
+
+.fitme-cover-tagline {
+    font-size: 0.9rem;
+    color: #CBD5E1;
+    font-weight: 500;
+    line-height: 1.4;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+}
+
+/* ── Right Side: Official Login Card ── */
+.fitme-auth-form-pane {
+    padding: 2.75rem 2.5rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    background: #14181B;
+}
+
+@media (max-width: 500px) {
+    .fitme-auth-form-pane {
+        padding: 2rem 1.5rem;
+    }
+}
+
+.fitme-login-brand-header {
+    text-align: center;
+    margin-bottom: 1.75rem;
+}
+
+.fitme-official-logo {
+    width: 82px;
+    height: 82px;
+    border-radius: 50%;
+    border: 2px solid #76C043;
+    box-shadow: 0 0 20px rgba(118, 192, 67, 0.35);
+    object-fit: cover;
+    margin: 0 auto 0.85rem;
+    display: block;
+}
+
+.fitme-login-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.45rem;
+    font-weight: 900;
+    color: #fff;
+    letter-spacing: 0.5px;
+}
+.fitme-login-title span { color: #76C043; }
+
+.fitme-login-subtitle {
+    font-size: 0.82rem;
+    color: #8E9BA4;
+    margin-top: 0.2rem;
+}
+
+.fitme-auth-form-pane .form-control {
+    background-color: #0E1113;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-radius: 10px;
+    padding: 0.65rem 0.85rem;
+    font-size: 0.95rem;
+}
+
+.fitme-auth-form-pane .form-control:focus {
+    border-color: #76C043;
+    background-color: #0E1113;
+    box-shadow: 0 0 0 3px rgba(118, 192, 67, 0.25);
+    color: #fff;
+}
+
+.fitme-auth-form-pane label {
+    color: #CBD5E1;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-bottom: 0.35rem;
+}
+
+.btn-fitme-submit {
+    background: #76C043;
+    color: #000;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 0.98rem;
+    border-radius: 10px;
+    border: none;
+    padding: 0.75rem;
+    width: 100%;
+    transition: all 0.2s;
+    box-shadow: 0 0 18px rgba(118, 192, 67, 0.3);
+}
+.btn-fitme-submit:hover {
+    background: #8AE04F;
+    transform: translateY(-1px);
+    box-shadow: 0 0 25px rgba(118, 192, 67, 0.5);
+    color: #000;
+}
 </style>
 {% endblock %}
 
 
 {% block template %}
-<div class="fitme-login-wrapper">
-    <div class="fitme-login-card">
+<div class="fitme-login-viewport">
+    <div class="fitme-auth-container">
 
-        <!-- Logo & Brand -->
-        <img src="{% static 'images/logos/fitme-logo.png' %}" class="fitme-login-logo" alt="Fit Me logo">
-        <div class="fitme-brand-name">Fit Me</div>
-        <div class="fitme-tagline">Train with Purpose &amp; Move with Confidence</div>
-
-        <!-- Messages -->
-        {% if messages %}
-            {% for message in messages %}
-                <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} py-2 mb-3">
-                    {{ message }}
+        <!-- Left Side: Official Fit Me Cover Banner -->
+        <div class="fitme-auth-cover">
+            <img src="{% static 'images/logos/fitme-official-cover.jpg' %}" alt="Fit Me - Transform Your Body" class="fitme-cover-img">
+            <div class="fitme-cover-gradient"></div>
+            <div class="fitme-cover-content">
+                <div class="fitme-cover-badge">
+                    <i class="fa fa-bolt"></i> Colombo's Smart Gym OS
                 </div>
-            {% endfor %}
-        {% endif %}
+                <div class="fitme-cover-tagline">
+                    <strong style="color:#fff;font-size:1.05rem;display:block;margin-bottom:0.25rem;">Train with Purpose &amp; Move with Confidence</strong>
+                    Automated biometric turnstiles, precision athletic telemetry, and tailored workout scheduling.
+                </div>
+            </div>
+        </div>
 
-        <!-- Credentials form -->
-        <form method="post" class="wger-form" novalidate>
-            {% csrf_token %}
-            {% if redirect_field_value %}
-                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
+        <!-- Right Side: Official Login Form -->
+        <div class="fitme-auth-form-pane">
+
+            <!-- Logo & Brand -->
+            <div class="fitme-login-brand-header">
+                <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" class="fitme-official-logo" alt="Fit Me Logo">
+                <div class="fitme-login-title">FIT <span>ME</span> PORTAL</div>
+                <div class="fitme-login-subtitle">Sign in to access Member, Staff &amp; Admin consoles</div>
+            </div>
+
+            <!-- Messages -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert {% if message.tags == 'error' %}alert-danger{% elif message.tags == 'warning' %}alert-warning{% elif message.tags == 'success' %}alert-success{% else %}alert-info{% endif %} py-2 mb-3">
+                        {{ message }}
+                    </div>
+                {% endfor %}
             {% endif %}
 
-            {% for error in form.non_field_errors %}
-                <div class="alert alert-danger py-2">{{ error }}</div>
-            {% endfor %}
-
-            <div class="mb-3">
-                <label for="{{ form.login.id_for_label }}" class="form-label">{{ form.login.label }}</label>
-                {{ form.login }}
-                {% for error in form.login.errors %}
-                    <div class="invalid-feedback d-block">{{ error }}</div>
-                {% endfor %}
-            </div>
-
-            <div class="mb-2">
-                <label for="{{ form.password.id_for_label }}" class="form-label">{{ form.password.label }}</label>
-                {{ form.password }}
-                {% for error in form.password.errors %}
-                    <div class="invalid-feedback d-block">{{ error }}</div>
-                {% endfor %}
-            </div>
-
-            <div class="d-flex justify-content-between align-items-center mb-4">
-                {% if form.remember %}
-                    <div class="form-check mb-0">
-                        {{ form.remember }}
-                        <label for="{{ form.remember.id_for_label }}" class="form-check-label" style="color:#aaa;">
-                            {{ form.remember.label }}
-                        </label>
-                    </div>
-                {% else %}
-                    <span></span>
+            <!-- Credentials form -->
+            <form method="post" class="wger-form" novalidate>
+                {% csrf_token %}
+                {% if redirect_field_value %}
+                    <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}">
                 {% endif %}
-                <a href="{% url 'core:user:password_reset' %}" style="color:#7BC900;font-size:0.85rem;">
-                    {% translate "Forgot password?" %}
+
+                {% for error in form.non_field_errors %}
+                    <div class="alert alert-danger py-2">{{ error }}</div>
+                {% endfor %}
+
+                <div class="mb-3">
+                    <label for="{{ form.login.id_for_label }}" class="form-label">{{ form.login.label }}</label>
+                    {{ form.login }}
+                    {% for error in form.login.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="mb-2">
+                    <label for="{{ form.password.id_for_label }}" class="form-label">{{ form.password.label }}</label>
+                    {{ form.password }}
+                    {% for error in form.password.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    {% if form.remember %}
+                        <div class="form-check mb-0">
+                            {{ form.remember }}
+                            <label for="{{ form.remember.id_for_label }}" class="form-check-label" style="color:#aaa;font-size:0.85rem;">
+                                {{ form.remember.label }}
+                            </label>
+                        </div>
+                    {% else %}
+                        <span></span>
+                    {% endif %}
+                    <a href="{% url 'core:user:password_reset' %}" style="color:#76C043;font-size:0.82rem;font-weight:600;text-decoration:none;">
+                        {% translate "Forgot password?" %}
+                    </a>
+                </div>
+
+                <button type="submit" class="btn-fitme-submit">
+                    <i class="fa fa-right-to-bracket" style="margin-right:6px;"></i> {% translate "Sign In to Portal" %}
+                </button>
+            </form>
+
+            <div class="d-flex align-items-center my-3" style="color:#555;">
+                <hr class="flex-grow-1 my-0" style="border-color:rgba(255,255,255,0.08);">
+                <span class="px-3" style="font-size:0.72rem;font-weight:800;letter-spacing:1px;color:#8E9BA4;">NEW TO FIT ME?</span>
+                <hr class="flex-grow-1 my-0" style="border-color:rgba(255,255,255,0.08);">
+            </div>
+
+            <a href="/fitme/register/" class="btn w-100 py-2 mb-2" style="background:transparent;border:2px solid #76C043;color:#76C043;font-family:'Montserrat',sans-serif;font-weight:800;font-size:0.88rem;border-radius:10px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;" onmouseover="this.style.background='#76C043';this.style.color='#000'" onmouseout="this.style.background='transparent';this.style.color='#76C043'">
+                <i class="fa fa-file-signature"></i> Membership Registration Form
+            </a>
+
+            <div class="text-center mt-3">
+                <a href="/" style="color:#8E9BA4;font-size:0.82rem;text-decoration:none;">
+                    <i class="fa fa-arrow-left"></i> Back to Club Homepage
                 </a>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100 py-2" style="font-size:1.05rem;letter-spacing:0.5px;">
-                {% translate "Login" %}
-            </button>
-        </form>
+            {% if PASSKEY_LOGIN_ENABLED %}
+                <hr style="border-color:#333;margin:1.2rem 0;">
+                <button type="submit" form="mfa_login" id="passkey_login"
+                        class="btn btn-outline-secondary w-100">
+                    <span class="{% fa_class 'key' %} me-1"></span>
+                    {% translate "Sign in with a passkey" %}
+                </button>
+            {% endif %}
 
-        <div class="d-flex align-items-center my-3" style="color:#555;">
-            <hr class="flex-grow-1 my-0" style="border-color:#333;">
-            <span class="px-3" style="font-size:0.78rem;font-weight:800;letter-spacing:1px;color:#8E9BA4;">NEW TO FIT ME?</span>
-            <hr class="flex-grow-1 my-0" style="border-color:#333;">
+            {% if use_social_auth %}
+                <hr style="border-color:#333;margin:1.2rem 0;">
+                {% include "user/social_login.html" %}
+            {% endif %}
+
         </div>
-        <a href="/fitme/register/" class="btn w-100 py-2 mb-2" style="background:transparent;border:2px solid #76C043;color:#76C043;font-family:'Montserrat',sans-serif;font-weight:800;font-size:0.92rem;border-radius:10px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;" onmouseover="this.style.background='#76C043';this.style.color='#000'" onmouseout="this.style.background='transparent';this.style.color='#76C043'">
-            <i class="fa fa-file-signature"></i> Membership Registration Form
-        </a>
-        <div class="text-center mt-3">
-            <a href="/" style="color:#8E9BA4;font-size:0.82rem;text-decoration:none;">
-                <i class="fa fa-arrow-left"></i> Back to Club Homepage
-            </a>
-        </div>
-
-        {% if PASSKEY_LOGIN_ENABLED %}
-            <hr style="border-color:#333;margin:1.2rem 0;">
-            <button type="submit" form="mfa_login" id="passkey_login"
-                    class="btn btn-outline-secondary w-100">
-                <span class="{% fa_class 'key' %} me-1"></span>
-                {% translate "Sign in with a passkey" %}
-            </button>
-        {% endif %}
-
-        {% if use_social_auth %}
-            <hr style="border-color:#333;margin:1.2rem 0;">
-            {% include "user/social_login.html" %}
-        {% endif %}
-
     </div>
 </div>
 {% endblock %}

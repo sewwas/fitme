@@ -40,7 +40,14 @@
     box-shadow: 0 4px 25px var(--neon-glow);
   }
   .brand { display: flex; align-items: center; gap: 0.75rem; }
-  .brand img { height: 38px; }
+  .brand img {
+    height: 38px;
+    width: 38px;
+    border-radius: 50%;
+    border: 1.5px solid var(--neon-lime);
+    box-shadow: 0 0 10px rgba(118, 192, 67, 0.3);
+    object-fit: cover;
+  }
   .brand-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; color: var(--neon-lime); letter-spacing: 2px; }
   .role-badge { background: var(--cyan); color: #000; padding: 0.2rem 0.65rem; border-radius: 4px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 

@@ -299,6 +299,11 @@ urlpatterns = i18n_patterns(
 # URLs without language prefix
 #
 urlpatterns += [
+    # ── Login Redirects ──
+    path('login/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/user/login', permanent=False)),
+    path('en/user/login', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/user/login', permanent=False)),
+    path('en/user/login/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/user/login', permanent=False)),
+
     # ── Fit Me Role Dashboards ──
     path('fitme/dashboard/', include(([
         path('', __import__('wger.core.views.fitme_dashboards', fromlist=['dashboard_redirect']).dashboard_redirect, name='fitme-dashboard'),
