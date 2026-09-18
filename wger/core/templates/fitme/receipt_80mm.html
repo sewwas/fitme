@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Receipt #{{ receipt.receipt_number }} — Fit Me 80mm Thermal</title>
+  <style>
+    /* ── 80mm Thermal POS Specifications ── */
+    @page {
+      size: 80mm auto;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      width: 72mm;
+      margin: 0 auto;
+      padding: 3mm 2mm 12mm 2mm;
+      font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.25;
+      color: #000;
+      background: #fff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .text-left { text-align: left; }
+    .bold { font-weight: 900; }
+    .uppercase { text-transform: uppercase; }
+
+    .header {
+      text-align: center;
+      padding-bottom: 4px;
+      margin-bottom: 6px;
+      border-bottom: 2px dashed #000;
+    }
+
+    .logo-title {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      margin-bottom: 2px;
+    }
+
+    .subtitle {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .store-info {
+      font-size: 9px;
+      margin-top: 3px;
+      line-height: 1.2;
+    }
+
+    .divider {
+      border-bottom: 1px dashed #000;
+      margin: 5px 0;
+    }
+
+    .divider-double {
+      border-bottom: 2px solid #000;
+      margin: 6px 0;
+    }
+
+    .meta-table {
+      width: 100%;
+      font-size: 11px;
+      margin-bottom: 4px;
+    }
+
+    .meta-table td {
+      padding: 1px 0;
+      vertical-align: top;
+    }
+
+    .pin-box {
+      border: 2px solid #000;
+      padding: 5px 2px;
+      margin: 6px 0;
+      text-align: center;
+      background: #f4f4f4;
+    }
+
+    .pin-title {
+      font-size: 9px;
+      letter-spacing: 1px;
+      font-weight: 800;
+    }
+
+    .pin-value {
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 3px;
+      margin: 2px 0;
+    }
+
+    .items-table {
+      width: 100%;
+      font-size: 11px;
+      border-collapse: collapse;
+      margin: 6px 0;
+    }
+
+    .items-table th {
+      border-bottom: 1px dashed #000;
+      padding: 3px 0;
+      text-align: left;
+      font-size: 10px;
+    }
+
+    .items-table td {
+      padding: 3px 0;
+      vertical-align: top;
+    }
+
+    .totals-table {
+      width: 100%;
+      font-size: 11px;
+      margin-top: 4px;
+    }
+
+    .totals-table td {
+      padding: 2px 0;
+    }
+
+    .grand-total {
+      font-size: 14px;
+      font-weight: 900;
+      border-top: 1px dashed #000;
+      border-bottom: 2px solid #000;
+      padding: 4px 0 !important;
+    }
+
+    .barcode-area {
+      text-align: center;
+      margin: 8px 0 4px;
+    }
+
+    .barcode-bars {
+      display: inline-block;
+      letter-spacing: 1px;
+      font-size: 11px;
+      font-weight: 900;
+      font-family: monospace;
+      padding: 2px 4px;
+      border: 1px solid #000;
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 9px;
+      margin-top: 8px;
+      line-height: 1.3;
+    }
+
+    /* ── Autocut paper feed buffer ── */
+    .cut-feed {
+      height: 15mm;
+      width: 100%;
+    }
+
+    /* ── Screen Preview Bar (Hidden during actual 80mm print) ── */
+    .screen-actions {
+      position: fixed;
+      top: 10px;
+      right: 10px;
+      background: #0B0D0E;
+      padding: 8px 12px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+      display: flex;
+      gap: 8px;
+      z-index: 9999;
+    }
+
+    .btn-print {
+      background: #76C043;
+      color: #000;
+      border: none;
+      font-weight: 800;
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .btn-close {
+      background: #333;
+      color: #fff;
+      border: none;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    @media print {
+      .screen-actions {
+        display: none !important;
+      }
+      body {
+        padding-top: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Screen Floating Control (Hidden in Print) -->
+  <div class="screen-actions">
+    <button class="btn-print" onclick="window.print()">
+      🖨️ PRINT 80mm (AUTOCUT)
+    </button>
+    <button class="btn-close" onclick="window.close();">
+      ✕ CLOSE
+    </button>
+  </div>
+
+  <!-- Thermal Receipt Body -->
+  <div class="header">
+    <div class="logo-title">FIT ME</div>
+    <div class="subtitle">PREMIUM SMART FITNESS CLUB</div>
+    <div class="store-info">
+      No. 42, Galle Road, Colombo 03<br>
+      Tel: +94 11 234 5678 / +94 77 123 4567<br>
+      www.fitme.lk • info@fitme.lk
+    </div>
+  </div>
+
+  <table class="meta-table">
+    <tr>
+      <td class="bold">RECEIPT #:</td>
+      <td class="text-right bold">{{ receipt.receipt_number }}</td>
+    </tr>
+    <tr>
+      <td>DATE/TIME:</td>
+      <td class="text-right">{{ receipt.issued_at|date:"d/m/Y h:i A" }}</td>
+    </tr>
+    <tr>
+      <td>CASHIER:</td>
+      <td class="text-right">{{ receipt.cashier.get_full_name|default:receipt.cashier.username }}</td>
+    </tr>
+    <tr>
+      <td>MEMBER:</td>
+      <td class="text-right bold">{{ receipt.member.get_full_name|default:receipt.member.username }}</td>
+    </tr>
+    <tr>
+      <td>PHONE:</td>
+      <td class="text-right">{{ receipt.member.member_profile.phone|default:"-" }}</td>
+    </tr>
+  </table>
+
+  <!-- Turnstile Biometric Access PIN Box -->
+  <div class="pin-box">
+    <div class="pin-title">TURNSTILE ACCESS PIN</div>
+    <div class="pin-value">#{{ receipt.member_pin }}</div>
+    <div style="font-size:9px;font-weight:700;">STATUS: DOOR ACCESS ACTIVE</div>
+  </div>
+
+  <!-- Purchased Items Table -->
+  <table class="items-table">
+    <thead>
+      <tr>
+        <th>DESCRIPTION</th>
+        <th class="text-right">AMOUNT (LKR)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          <div class="bold">{{ receipt.plan_name }}</div>
+          <div style="font-size:9px;">
+            Validity: {{ receipt.validity_start|date:"d/m/Y" }} - {{ receipt.validity_end|date:"d/m/Y" }}<br>
+            Duration: {{ receipt.duration_days }} Days Active
+          </div>
+        </td>
+        <td class="text-right bold">
+          {{ receipt.amount_paid|floatformat:2 }}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Totals Section -->
+  <table class="totals-table">
+    <tr>
+      <td>SUBTOTAL:</td>
+      <td class="text-right">LKR {{ receipt.amount_paid|floatformat:2 }}</td>
+    </tr>
+    <tr>
+      <td>DISCOUNT:</td>
+      <td class="text-right">LKR 0.00</td>
+    </tr>
+    <tr class="grand-total">
+      <td class="bold">TOTAL PAID:</td>
+      <td class="text-right bold">LKR {{ receipt.amount_paid|floatformat:2 }}</td>
+    </tr>
+    <tr>
+      <td style="padding-top:4px;">PAYMENT METHOD:</td>
+      <td class="text-right bold uppercase" style="padding-top:4px;">{{ receipt.payment_method }}</td>
+    </tr>
+  </table>
+
+  <div class="divider-double"></div>
+
+  <!-- Barcode / Digital Code Area -->
+  <div class="barcode-area">
+    <div class="barcode-bars">||| | |||| | ||| || |||</div>
+    <div style="font-size:9px;margin-top:2px;letter-spacing:1px;">*{{ receipt.receipt_number }}*</div>
+  </div>
+
+  <!-- Footer Policies -->
+  <div class="footer">
+    <div class="bold" style="font-size:10px;margin-bottom:2px;">THANK YOU FOR TRAINING WITH US!</div>
+    Please keep this receipt for entrance verification.<br>
+    Pass valid with hardware PIN #{{ receipt.member_pin }}.<br>
+    Anti-passback cooldown: 60 seconds.<br>
+    Fees non-refundable & non-transferable.<br>
+    Powered by Fit Me Smart Gym OS
+  </div>
+
+  <!-- Feed Buffer to clear thermal paper cutter before autocut -->
+  <div class="cut-feed"></div>
+
+  <script>
+    // Auto-invoke print dialog if autoprint parameter or opened in popup
+    window.addEventListener('DOMContentLoaded', () => {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('autoprint') === '1' || params.get('print') === 'true') {
+        setTimeout(() => {
+          window.print();
+        }, 400);
+      }
+    });
+  </script>
+</body>
+</html>

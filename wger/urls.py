@@ -316,6 +316,9 @@ urlpatterns += [
         path('api/alerts/<int:alert_id>/resolve/', __import__('wger.core.views.fitme_dashboards', fromlist=['resolve_absence_alert_api']).resolve_absence_alert_api, name='api-alert-resolve'),
     ], 'fitme'))),
 
+    # ── Fit Me 80mm Thermal Receipt View ──
+    path('fitme/receipt/<int:receipt_id>/', __import__('wger.core.views.fitme_dashboards', fromlist=['view_receipt']).view_receipt, name='fitme-receipt'),
+
     # ── Fit Me Hardware & Operations Integrations ──
     path('api/zkbio/', include(('wger.zkbio_integration.urls', 'zkbio_integration'), namespace='zkbio_integration')),
     path('operations/', include(('wger.gym_operations_payroll.urls', 'gym_operations_payroll'), namespace='gym_operations_payroll')),

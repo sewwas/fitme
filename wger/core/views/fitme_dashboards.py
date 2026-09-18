@@ -98,12 +98,14 @@ def super_admin_dashboard(request):
 @login_required
 @role_required('front_desk', 'super_admin')
 def front_desk_dashboard(request):
-    """Front Desk — member queue and payments."""
+    """Front Desk — member queue, payments, and 80mm thermal receipts."""
+    from wger.gym_operations_payroll.models import PaymentReceipt
     pending_apps = MemberApplication.objects.filter(status='pending').order_by('-applied_at')
     active_subs = Subscription.objects.filter(
         status='active',
         end_date__gte=timezone.now().date()
     ).select_related('member', 'plan').order_by('end_date')[:10]
+    recent_receipts = PaymentReceipt.objects.select_related('member', 'cashier').order_by('-issued_at')[:15]
 
     context = {
         'role': 'front_desk',
@@ -111,6 +113,7 @@ def front_desk_dashboard(request):
         'pending_applications': pending_apps,
         'active_subscriptions': active_subs,
         'plans': MembershipPlan.objects.filter(is_active=True),
+        'recent_receipts': recent_receipts,
     }
     return render(request, 'fitme/dashboards/front_desk.html', context)
 
@@ -383,13 +386,33 @@ def approve_application_api(request, app_id):
     app.created_user = user
     app.save()
 
+    # Issue PaymentReceipt for 80mm thermal printing
+    from wger.gym_operations_payroll.models import PaymentReceipt
+    receipt = PaymentReceipt.objects.create(
+        receipt_number=PaymentReceipt.generate_next_receipt_number(),
+        subscription=sub,
+        member=user,
+        plan_name=plan.name if plan else 'Standard',
+        duration_days=getattr(plan, 'duration_days', 30),
+        validity_start=sub.start_date,
+        validity_end=sub.end_date,
+        amount_paid=sub.amount_paid,
+        payment_method='cash',
+        cashier=request.user,
+        member_pin=profile.biometric_pin or '',
+        notes='Initial membership approval & enrollment'
+    )
+
     return JsonResponse({
         'success': True,
         'message': f"Application approved for {app.full_name}!",
         'username': user.username,
         'pin': profile.biometric_pin,
         'plan': plan.name if plan else 'Standard',
-        'sub_id': sub.id
+        'sub_id': sub.id,
+        'receipt_id': receipt.id,
+        'receipt_number': receipt.receipt_number,
+        'receipt_url': f"/fitme/receipt/{receipt.id}/?autoprint=1"
     })
 
 
@@ -423,7 +446,7 @@ def reject_application_api(request, app_id):
 @login_required
 @role_required('front_desk', 'super_admin')
 def record_payment_api(request):
-    """Records payment, activates subscription, and provisions door access."""
+    """Records payment, activates subscription, provisions door access, and issues 80mm thermal receipt."""
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
@@ -435,6 +458,8 @@ def record_payment_api(request):
 
     from django.contrib.auth import get_user_model
     from wger.zkbio_integration.models import BiometricProfile
+    from wger.membership.models import MemberProfile
+    from wger.gym_operations_payroll.models import PaymentReceipt
     User = get_user_model()
 
     member_id = data.get('member_id')
@@ -468,10 +493,53 @@ def record_payment_api(request):
         bio.sync_status = 'PENDING'
         bio.save()
 
+    profile = MemberProfile.objects.filter(user=member).first()
+    pin = profile.biometric_pin if profile else (bio.zk_pin if bio else '')
+
+    # Issue 80mm Thermal Payment Receipt
+    receipt = PaymentReceipt.objects.create(
+        receipt_number=PaymentReceipt.generate_next_receipt_number(),
+        subscription=sub,
+        member=member,
+        plan_name=plan.name if plan else 'Standard',
+        duration_days=getattr(plan, 'duration_days', 30),
+        validity_start=sub.start_date,
+        validity_end=sub.end_date,
+        amount_paid=amount,
+        payment_method=method,
+        cashier=request.user,
+        member_pin=pin,
+        notes='Front Desk POS Payment'
+    )
+
     return JsonResponse({
         'success': True,
-        'message': f"Payment recorded for {member.username}. Subscription active until {sub.end_date:%d %b %Y}."
+        'message': f"Payment recorded for {member.username}. Subscription active until {sub.end_date:%d %b %Y}.",
+        'receipt_id': receipt.id,
+        'receipt_number': receipt.receipt_number,
+        'receipt_url': f"/fitme/receipt/{receipt.id}/?autoprint=1"
     })
+
+
+@login_required
+def view_receipt(request, receipt_id):
+    """Renders 80mm thermal receipt with auto-cut for POS printing."""
+    from wger.gym_operations_payroll.models import PaymentReceipt
+    from django.shortcuts import get_object_or_404
+    from django.http import HttpResponseForbidden
+
+    receipt = get_object_or_404(PaymentReceipt, id=receipt_id)
+
+    # Allow staff, cashiers, super admins, or the receipt recipient member
+    is_staff_or_admin = (
+        request.user.is_staff or
+        request.user.is_superuser or
+        request.user.groups.filter(name__in=['front_desk', 'super_admin']).exists()
+    )
+    if not (is_staff_or_admin or request.user == receipt.member):
+        return HttpResponseForbidden("Unauthorized to view this receipt")
+
+    return render(request, 'fitme/receipt_80mm.html', {'receipt': receipt})
 
 
 @login_required

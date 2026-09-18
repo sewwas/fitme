@@ -296,8 +296,59 @@
                 </tr>
               {% endfor %}
             </tbody>
-          </table>
         </div>
+      </div>
+    </div>
+
+    <!-- Recent 80mm Thermal Receipts & Invoices (Auto-Cut Ready) -->
+    <div class="fitme-card" style="margin-top: 2rem;">
+      <div class="card-header">
+        <div class="card-title">
+          <i class="fa fa-print" style="color:var(--neon-lime);"></i>
+          Recent 80mm POS Receipts (Auto-Cut Ready)
+        </div>
+        <span class="badge badge-green" id="receiptCount">{{ recent_receipts|length }} ISSUED</span>
+      </div>
+      <div class="card-body" style="padding:0;">
+        <table id="receiptsTable">
+          <thead>
+            <tr>
+              <th>Receipt #</th>
+              <th>Member / Access PIN</th>
+              <th>Plan</th>
+              <th>Amount</th>
+              <th>Method</th>
+              <th>Cashier</th>
+              <th>Date & Time</th>
+              <th style="text-align:right;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in recent_receipts %}
+              <tr id="receipt-row-{{ r.id }}">
+                <td><span style="font-family:monospace;font-weight:800;color:var(--neon-lime);letter-spacing:0.5px;">{{ r.receipt_number }}</span></td>
+                <td>
+                  <div style="font-weight:700;color:var(--text-primary);">{{ r.member.get_full_name|default:r.member.username }}</div>
+                  <div style="font-size:0.75rem;color:var(--text-muted);"><i class="fa fa-key" style="color:var(--neon-lime);font-size:0.7rem;"></i> PIN: #{{ r.member_pin }}</div>
+                </td>
+                <td><span style="font-weight:600;">{{ r.plan_name }}</span></td>
+                <td style="font-weight:800;color:#fff;">LKR {{ r.amount_paid|floatformat:0 }}</td>
+                <td><span class="badge badge-green" style="font-size:0.65rem;text-transform:uppercase;">{{ r.payment_method }}</span></td>
+                <td>{{ r.cashier.username|default:"FrontDesk" }}</td>
+                <td style="font-size:0.75rem;color:var(--text-muted);">{{ r.issued_at|date:"d M Y H:i" }}</td>
+                <td style="text-align:right;">
+                  <button class="btn-action btn-approve" onclick="printReceipt({{ r.id }})" style="font-size:0.72rem;padding:0.35rem 0.65rem;">
+                    <i class="fa fa-print"></i> 80mm Print
+                  </button>
+                </td>
+              </tr>
+            {% empty %}
+              <tr id="noReceiptsRow">
+                <td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">No 80mm thermal receipts recorded yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
     </div>
   </main>
@@ -485,6 +536,13 @@
     }
   }
 
+  // 80mm Thermal Receipt Pop-up Trigger
+  function printReceipt(receiptId) {
+    if (!receiptId) return;
+    const printUrl = `/fitme/receipt/${receiptId}/?autoprint=1`;
+    window.open(printUrl, '_blank', 'width=380,height=650,top=50,left=100,scrollbars=yes');
+  }
+
   // 1. Dynamic Application Approval
   async function approveApp(appId) {
     if (!confirm("Approve application, create member login, and assign turnstile biometric PIN?")) return;
@@ -503,6 +561,13 @@
         if (row) {
           row.style.background = 'rgba(118,192,67,0.15)';
           setTimeout(() => { row.remove(); }, 600);
+        }
+        if (data.receipt_id) {
+          setTimeout(() => {
+            if (confirm(`Do you want to print the 80mm thermal receipt (${data.receipt_number}) now?`)) {
+              printReceipt(data.receipt_id);
+            }
+          }, 350);
         }
       } else {
         alert("Error: " + data.error);
@@ -586,6 +651,9 @@
       if (data.success) {
         closePaymentModal();
         showToast(data.message);
+        if (data.receipt_id) {
+          printReceipt(data.receipt_id);
+        }
         setTimeout(() => location.reload(), 1500);
       }
     } catch (err) {

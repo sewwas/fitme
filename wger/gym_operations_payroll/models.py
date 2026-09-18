@@ -192,3 +192,91 @@ class PayrollLedger(models.Model):
         earnings = self.base_salary + self.overtime_pay + self.pt_commissions
         deductions = self.late_minutes_penalty + self.sudden_absence_penalty
         return max(Decimal('0.00'), earnings - deductions)
+
+
+class PaymentReceipt(models.Model):
+    """
+    Fit Me POS & Membership 80mm Thermal Receipt / Invoice Record.
+    Auto-generates sequential receipt number: FM-RCP-YYYY-XXXX.
+    """
+    receipt_number = models.CharField(max_length=30, unique=True, db_index=True)
+    subscription = models.ForeignKey(
+        'membership.Subscription',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='receipts'
+    )
+    member = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='payment_receipts'
+    )
+    plan_name = models.CharField(max_length=100)
+    duration_days = models.IntegerField(default=30)
+    validity_start = models.DateField()
+    validity_end = models.DateField()
+    amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    payment_method = models.CharField(max_length=30, default='cash')
+    cashier = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='issued_receipts'
+    )
+    member_pin = models.CharField(max_length=20, blank=True, help_text="Assigned hardware turnstile PIN")
+    notes = models.TextField(blank=True)
+    issued_at = models.DateTimeField(default=timezone.now)
+
+    class Meta:
+        verbose_name = 'Payment Receipt'
+        verbose_name_plural = 'Payment Receipts'
+        ordering = ['-issued_at']
+
+    def __str__(self):
+        return f"{self.receipt_number} — {self.member.username} (LKR {self.amount_paid})"
+
+    @classmethod
+    def generate_next_receipt_number(cls):
+        year = timezone.now().year
+        prefix = f"FM-RCP-{year}-"
+        last = cls.objects.filter(receipt_number__startswith=prefix).order_by('-receipt_number').first()
+        if last:
+            try:
+                seq = int(last.receipt_number.split('-')[-1]) + 1
+            except (ValueError, IndexError):
+                seq = 1
+        else:
+            seq = 1
+        return f"{prefix}{seq:04d}"
+
+
+class BuddyMembership(models.Model):
+    """
+    Links two members under a single Couples / Buddy membership billing subscription.
+    Both members receive independent biometric hardware PINs for turnstile access.
+    """
+    primary_member = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='primary_buddy_memberships'
+    )
+    partner_member = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='partner_buddy_memberships'
+    )
+    subscription = models.ForeignKey(
+        'membership.Subscription',
+        on_delete=models.CASCADE,
+        related_name='buddy_links'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Buddy Membership'
+        verbose_name_plural = 'Buddy Memberships'
+        unique_together = ['primary_member', 'partner_member']
+
+    def __str__(self):
+        return f"Buddy: {self.primary_member.username} & {self.partner_member.username}"
+
