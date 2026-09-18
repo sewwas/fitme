@@ -6,155 +6,456 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Front Desk — Fit Me</title>
 <link rel="icon" href="{% static 'images/logos/fitme-logo.png' %}">
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&family=Inter:wght@300;400;500&family=Bebas+Neue&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'fontawesomefree/css/all.min.css' %}">
 <style>
-  :root { --green:#7BC900;--green-dark:#5A9400;--green-glow:rgba(123,201,0,0.18);--bg:#0B0D0E;--surface:#1F2428;--surface2:#2D3339;--text:#F8FAFC;--muted:#8B9299;--danger:#E63946;--warning:#FFBB00; }
-  *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
-  .topbar{background:var(--surface);border-bottom:2px solid var(--green);padding:.75rem 2rem;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 20px var(--green-glow);}
-  .brand{display:flex;align-items:center;gap:.75rem;}.brand img{width:36px;}.brand-name{font-family:'Bebas Neue',sans-serif;font-size:1.5rem;color:var(--green);letter-spacing:2px;}
-  .role-badge{background:var(--green);color:#000;padding:.15rem .6rem;border-radius:4px;font-size:.65rem;font-weight:700;text-transform:uppercase;}
-  .layout{display:flex;min-height:calc(100vh - 58px);}
-  .sidebar{width:210px;background:var(--surface);border-right:1px solid #2a2f35;padding:1.5rem 0;flex-shrink:0;}
-  .sidebar a{display:flex;align-items:center;gap:.65rem;padding:.6rem 1.25rem;color:#ccc;text-decoration:none;font-size:.875rem;border-left:3px solid transparent;transition:all .18s;}
-  .sidebar a:hover,.sidebar a.active{color:var(--green);border-left-color:var(--green);background:rgba(123,201,0,.06);}
-  .main{flex:1;padding:2rem;}
-  h1{font-family:'Montserrat',sans-serif;font-size:1.6rem;font-weight:900;margin-bottom:.25rem;}
-  .subtitle{color:var(--muted);font-size:.875rem;margin-bottom:2rem;}
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
-  @media(max-width:800px){.grid-2{grid-template-columns:1fr;}}
-  .card{background:var(--surface);border:1px solid #2a2f35;border-radius:12px;overflow:hidden;}
-  .card-header{padding:1rem 1.5rem;border-bottom:1px solid #2a2f35;display:flex;align-items:center;justify-content:space-between;}
-  .card-title{font-family:'Montserrat',sans-serif;font-weight:700;font-size:.9rem;}
-  .card-body{padding:1rem 1.5rem;}
-  table{width:100%;border-collapse:collapse;font-size:.84rem;}
-  th{color:var(--muted);font-size:.68rem;text-transform:uppercase;letter-spacing:.08em;padding:.5rem .75rem;text-align:left;border-bottom:1px solid #2a2f35;}
-  td{padding:.65rem .75rem;border-bottom:1px solid #1e2328;color:#d0d4d8;}
-  tr:last-child td{border-bottom:none;}
-  tr:hover td{background:rgba(123,201,0,.04);}
-  .btn{padding:.4rem .9rem;border-radius:6px;font-size:.78rem;font-weight:600;cursor:pointer;border:none;text-decoration:none;display:inline-flex;align-items:center;gap:.4rem;transition:all .15s;}
-  .btn-green{background:var(--green);color:#000;}.btn-green:hover{background:var(--green-dark);color:#fff;}
-  .btn-red{background:var(--danger);color:#fff;}
-  .btn-outline{background:transparent;color:var(--green);border:1px solid var(--green);}.btn-outline:hover{background:var(--green);color:#000;}
-  .badge{padding:.18rem .5rem;border-radius:4px;font-size:.68rem;font-weight:700;}
-  .badge-green{background:rgba(123,201,0,.15);color:var(--green);}
-  .badge-yellow{background:rgba(255,187,0,.15);color:var(--warning);}
-  .badge-red{background:rgba(230,57,70,.15);color:var(--danger);}
+  :root {
+    --bg-dark: #0B0D0E;
+    --card-bg: #121517;
+    --card-surface: #1F2428;
+    --neon-lime: #76C043;
+    --neon-glow: rgba(118, 192, 67, 0.25);
+    --neon-glow-high: rgba(118, 192, 67, 0.55);
+    --danger: #E63946;
+    --danger-glow: rgba(230, 57, 70, 0.35);
+    --warning: #F59E0B;
+    --cyan: #06B6D4;
+    --text-primary: #F8FAFC;
+    --text-muted: #8B9299;
+    --border-color: #242A2F;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Inter', sans-serif; background: var(--bg-dark); color: var(--text-primary); min-height: 100vh; }
 
-  /* Door Buzzer */
-  .buzzer-card{background:var(--surface);border:2px solid var(--green);border-radius:16px;padding:2rem;text-align:center;margin-bottom:1.5rem;box-shadow:0 0 30px var(--green-glow);}
-  .buzzer-btn{width:120px;height:120px;border-radius:50%;background:var(--green);color:#000;font-family:'Montserrat',sans-serif;font-size:1rem;font-weight:900;cursor:pointer;border:4px solid #5A9400;transition:all .2s;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:.3rem;margin:0 auto;}
-  .buzzer-btn:hover{box-shadow:0 0 40px rgba(123,201,0,.5);transform:scale(1.05);}
-  .buzzer-btn:active{transform:scale(.96);box-shadow:0 0 20px rgba(123,201,0,.3);}
-  .buzzer-label{font-size:.8rem;color:var(--muted);margin-top:.75rem;}
+  /* ── Topbar ── */
+  .topbar {
+    background: #101315;
+    border-bottom: 2px solid var(--neon-lime);
+    padding: 0.75rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 25px var(--neon-glow);
+  }
+  .brand { display: flex; align-items: center; gap: 0.75rem; }
+  .brand img { height: 38px; }
+  .brand-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; color: var(--neon-lime); letter-spacing: 2px; }
+  .role-badge { background: var(--neon-lime); color: #000; padding: 0.2rem 0.65rem; border-radius: 4px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
+
+  /* ── Layout ── */
+  .layout { display: flex; min-height: calc(100vh - 65px); }
+  .sidebar { width: 230px; background: #101315; border-right: 1px solid var(--border-color); padding: 1.5rem 0; flex-shrink: 0; }
+  .sidebar-section { padding: 0.5rem 1.25rem 0.25rem; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 800; }
+  .sidebar a {
+    display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 1.25rem; color: #ccc; text-decoration: none; font-size: 0.88rem;
+    border-left: 3px solid transparent; transition: all 0.18s;
+  }
+  .sidebar a:hover, .sidebar a.active { color: var(--neon-lime); border-left-color: var(--neon-lime); background: rgba(118, 192, 67, 0.08); }
+  .sidebar a i { width: 18px; text-align: center; }
+
+  /* ── Main ── */
+  .main { flex: 1; padding: 2rem; overflow-y: auto; }
+  .page-title { font-family: 'Montserrat', sans-serif; font-size: 1.75rem; font-weight: 900; }
+  .subtitle { color: var(--text-muted); font-size: 0.88rem; margin: 0.25rem 0 1.75rem; }
+
+  /* ── Buzzer Card ── */
+  .buzzer-card {
+    background: linear-gradient(145deg, #181D20 0%, #0F1214 100%);
+    border: 2px solid var(--neon-lime);
+    border-radius: 16px;
+    padding: 1.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    box-shadow: 0 0 35px var(--neon-glow);
+  }
+  .buzzer-text h3 { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.15rem; color: #fff; }
+  .buzzer-text p { font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem; }
+  .btn-buzz-pulse {
+    background: var(--neon-lime);
+    color: #000;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 0.95rem;
+    padding: 0.85rem 1.8rem;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    box-shadow: 0 0 20px var(--neon-glow-high);
+    transition: all 0.2s;
+  }
+  .btn-buzz-pulse:hover { background: #8AE04F; transform: scale(1.03); }
+  .btn-buzz-pulse:active { transform: scale(0.97); }
+
+  /* ── Grids & Tables ── */
+  .grid-2 { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; }
+  @media(max-width: 1024px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  .fitme-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; }
+  .card-header {
+    padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color);
+    display: flex; align-items: center; justify-content: space-between; background: rgba(31, 36, 40, 0.35);
+  }
+  .card-title { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 0.55rem; }
+  .card-body { padding: 1.25rem 1.5rem; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+  th { text-align: left; padding: 0.65rem 0.75rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); font-weight: 700; text-transform: uppercase; font-size: 0.7rem; }
+  td { padding: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+
+  .btn-action {
+    padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.76rem; font-weight: 700; cursor: pointer; border: none;
+    display: inline-flex; align-items: center; gap: 0.35rem; transition: all 0.15s;
+  }
+  .btn-approve { background: var(--neon-lime); color: #000; }
+  .btn-approve:hover { background: #8AE04F; box-shadow: 0 0 10px var(--neon-glow); }
+  .btn-reject { background: rgba(230, 57, 70, 0.2); color: var(--danger); border: 1px solid var(--danger); }
+  .btn-reject:hover { background: var(--danger); color: #fff; }
+
+  .badge { padding: 0.2rem 0.55rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; }
+  .badge-green { background: rgba(118,192,67,0.15); color: var(--neon-lime); border: 1px solid var(--neon-lime); }
+  .badge-yellow { background: rgba(245,158,11,0.15); color: var(--warning); border: 1px solid var(--warning); }
+  .badge-red { background: rgba(230,57,70,0.15); color: var(--danger); border: 1px solid var(--danger); }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.75); z-index: 500; align-items: center; justify-content: center;
+  }
+  .modal-box {
+    background: var(--card-bg); border: 2px solid var(--neon-lime); border-radius: 16px;
+    padding: 2rem; max-width: 460px; width: 90%; box-shadow: 0 10px 40px var(--neon-glow);
+  }
+  .form-group { margin-bottom: 1.25rem; }
+  .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600; }
+  .form-control {
+    width: 100%; background: var(--card-surface); border: 1px solid var(--border-color);
+    padding: 0.65rem 0.85rem; border-radius: 8px; color: #fff; font-size: 0.9rem;
+  }
+  .form-control:focus { outline: none; border-color: var(--neon-lime); }
+
+  /* Toast */
+  .fitme-toast {
+    position: fixed; bottom: 25px; right: 25px; background: #15191D; border: 2px solid var(--neon-lime);
+    box-shadow: 0 8px 30px var(--neon-glow); padding: 1rem 1.5rem; border-radius: 12px;
+    display: none; align-items: center; gap: 0.75rem; z-index: 1000; font-weight: 700;
+  }
 </style>
 </head>
 <body>
-<div class="topbar">
+
+<header class="topbar">
   <div class="brand">
     <img src="{% static 'images/logos/fitme-logo.png' %}" alt="Fit Me">
     <span class="brand-name">Fit Me</span>
-    <span class="role-badge">Front Desk</span>
+    <span class="role-badge">Front Desk Operations</span>
   </div>
-  <div style="display:flex;align-items:center;gap:1rem;color:var(--muted);font-size:.875rem;">
+  <div style="display:flex;align-items:center;gap:1.25rem;color:var(--text-muted);font-size:0.88rem;">
     <span><i class="fa fa-user-circle"></i> {{ request.user.username }}</span>
-    <a href="/fitme/dashboard/admin/" style="color:var(--muted);text-decoration:none;"><i class="fa fa-chevron-left"></i> Admin</a>
+    <a href="/fitme/dashboard/admin/" style="color:var(--text-muted);text-decoration:none;"><i class="fa fa-shield-alt"></i> Super Admin</a>
+    <form method="post" action="/account/logout/" style="display:inline;">{% csrf_token %}
+      <button type="submit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;"><i class="fa fa-sign-out-alt"></i> Logout</button>
+    </form>
   </div>
-</div>
+</header>
 
 <div class="layout">
-  <nav class="sidebar">
-    <a href="/fitme/dashboard/front-desk/" class="active"><i class="fa fa-inbox"></i> Application Queue</a>
-    <a href="#"><i class="fa fa-credit-card"></i> Payments</a>
-    <a href="#"><i class="fa fa-id-badge"></i> Active Members</a>
-    <a href="#"><i class="fa fa-door-open"></i> Door Control</a>
-    <a href="/fitme/dashboard/admin/"><i class="fa fa-chart-bar"></i> Admin View</a>
-  </nav>
+  <aside class="sidebar">
+    <div class="sidebar-section">Front Desk Ops</div>
+    <a href="/fitme/dashboard/front-desk/" class="active"><i class="fa fa-inbox"></i> Intake Queue</a>
+    <a href="#" onclick="openPaymentModal(); return false;"><i class="fa fa-credit-card"></i> Record Payment</a>
+    <a href="/fitme/dashboard/member/"><i class="fa fa-id-badge"></i> Member Portal View</a>
+    <div class="sidebar-section" style="margin-top:1rem;">System Links</div>
+    <a href="/fitme/dashboard/admin/"><i class="fa fa-chart-line"></i> Super Admin</a>
+    <a href="/admin/"><i class="fa fa-cog"></i> Django Backend</a>
+  </aside>
 
   <main class="main">
-    <h1>Front Desk</h1>
-    <p class="subtitle">Member applications, payments, and door access control.</p>
+    <h1 class="page-title">Front Desk Operations</h1>
+    <p class="subtitle">Real-time intake queue, turnstile door buzzer, and subscription payments.</p>
 
-    <!-- Emergency Door Buzzer -->
+    <!-- Emergency Turnstile Door Buzzer -->
     <div class="buzzer-card">
-      <h3 style="font-family:'Montserrat',sans-serif;font-weight:700;margin-bottom:1rem;font-size:1rem;">Emergency Door Override</h3>
-      <button class="buzzer-btn" onclick="this.style.background='#fff';setTimeout(()=>this.style.background='var(--green)',800);">
-        <i class="fa fa-door-open" style="font-size:1.5rem;"></i>
-        <span>OPEN</span>
+      <div class="buzzer-text">
+        <h3>Emergency Turnstile Remote Override (192.168.1.23)</h3>
+        <p>Press to buzz open the biometric turnstile gate for 5 seconds for arriving visitors or walk-ins.</p>
+      </div>
+      <button class="btn-buzz-pulse" id="btnFrontBuzzer" onclick="buzzTurnstile()">
+        <i class="fa fa-door-open"></i>
+        <span>BUZZ DOOR OPEN</span>
       </button>
-      <div class="buzzer-label">Press to buzz open the main door for 5 seconds</div>
     </div>
 
     <div class="grid-2">
-      <!-- Pending Applications -->
-      <div class="card">
+      <!-- Pending Applications Intake Queue -->
+      <div class="fitme-card">
         <div class="card-header">
-          <span class="card-title"><i class="fa fa-inbox" style="color:var(--green);margin-right:.5rem;"></i>Pending Applications</span>
-          <span style="background:var(--green);color:#000;padding:.15rem .5rem;border-radius:4px;font-size:.7rem;font-weight:700;">{{ pending_applications.count }}</span>
+          <div class="card-title">
+            <i class="fa fa-inbox" style="color:var(--neon-lime);"></i>
+            Member Application Queue
+          </div>
+          <span class="badge badge-green" id="appCount">{{ pending_applications.count }} PENDING</span>
         </div>
-        <div class="card-body">
-          {% if pending_applications %}
-          <table>
-            <thead><tr><th>Name</th><th>Plan</th><th>Goal</th><th>Actions</th></tr></thead>
+        <div class="card-body" style="padding:0;">
+          <table id="applicationsTable">
+            <thead>
+              <tr>
+                <th>Applicant</th>
+                <th>Desired Plan</th>
+                <th>Goal</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
             <tbody>
               {% for app in pending_applications %}
-              <tr>
-                <td>
-                  <strong>{{ app.full_name }}</strong><br>
-                  <span style="font-size:.75rem;color:var(--muted);">{{ app.email }}</span>
-                </td>
-                <td>{{ app.desired_plan.name|default:"—" }}</td>
-                <td>{{ app.primary_goal|default:"—"|title }}</td>
-                <td style="display:flex;gap:.4rem;flex-wrap:wrap;">
-                  <a href="#" class="btn btn-green"><i class="fa fa-check"></i> Approve</a>
-                  <a href="#" class="btn btn-red"><i class="fa fa-times"></i> Reject</a>
-                </td>
-              </tr>
+                <tr id="app-row-{{ app.id }}">
+                  <td>
+                    <div style="font-weight:700;color:var(--text-primary);">{{ app.full_name }}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">{{ app.email }} • {{ app.phone }}</div>
+                  </td>
+                  <td><span style="color:var(--neon-lime);font-weight:700;">{{ app.desired_plan.name|default:"Individual" }}</span></td>
+                  <td>{{ app.primary_goal|default:"General Fitness"|title }}</td>
+                  <td style="text-align:right;">
+                    <div style="display:inline-flex;gap:0.45rem;">
+                      <button class="btn-action btn-approve" onclick="approveApp({{ app.id }})">
+                        <i class="fa fa-check"></i> Approve & Issue PIN
+                      </button>
+                      <button class="btn-action btn-reject" onclick="rejectApp({{ app.id }})">
+                        <i class="fa fa-times"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr id="noAppsRow">
+                  <td colspan="4" style="text-align:center;padding:2.5rem;color:var(--text-muted);">
+                    <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:2rem;display:block;margin-bottom:0.5rem;"></i>
+                    All intake applications reviewed!
+                  </td>
+                </tr>
               {% endfor %}
             </tbody>
           </table>
-          {% else %}
-          <p style="color:var(--muted);text-align:center;padding:2rem 0;"><i class="fa fa-check-circle" style="color:var(--green);"></i> All applications reviewed</p>
-          {% endif %}
         </div>
       </div>
 
-      <!-- Expiring Subscriptions -->
-      <div class="card">
+      <!-- Active / Expiring Subscriptions with Quick Extend -->
+      <div class="fitme-card">
         <div class="card-header">
-          <span class="card-title"><i class="fa fa-clock" style="color:var(--warning);margin-right:.5rem;"></i>Expiring Soon</span>
+          <div class="card-title">
+            <i class="fa fa-clock" style="color:var(--warning);"></i>
+            Subscriptions & Biometric Status
+          </div>
+          <button class="btn-action btn-approve" onclick="openPaymentModal()">
+            <i class="fa fa-plus"></i> Record Payment
+          </button>
         </div>
-        <div class="card-body">
-          {% if active_subscriptions %}
+        <div class="card-body" style="padding:0;">
           <table>
-            <thead><tr><th>Member</th><th>Plan</th><th>Expires</th><th>Status</th></tr></thead>
+            <thead>
+              <tr>
+                <th>Member</th>
+                <th>Plan</th>
+                <th>Expires</th>
+                <th>Biometrics</th>
+              </tr>
+            </thead>
             <tbody>
               {% for sub in active_subscriptions %}
-              <tr>
-                <td>{{ sub.member.get_full_name|default:sub.member.username }}</td>
-                <td>{{ sub.plan.name }}</td>
-                <td>{{ sub.end_date|date:"M d, Y" }}</td>
-                <td>
-                  {% if sub.days_remaining <= 3 %}
-                    <span class="badge badge-red">{{ sub.days_remaining }}d left</span>
-                  {% elif sub.days_remaining <= 7 %}
-                    <span class="badge badge-yellow">{{ sub.days_remaining }}d left</span>
-                  {% else %}
-                    <span class="badge badge-green">Active</span>
-                  {% endif %}
-                </td>
-              </tr>
+                <tr>
+                  <td>
+                    <div style="font-weight:700;">{{ sub.member.get_full_name|default:sub.member.username }}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">ID: #{{ sub.member.id|stringformat:"04d" }}</div>
+                  </td>
+                  <td>{{ sub.plan.name }}</td>
+                  <td>{{ sub.end_date|date:"d M Y" }}</td>
+                  <td>
+                    {% if sub.days_remaining <= 3 %}
+                      <span class="badge badge-red">{{ sub.days_remaining }}d left</span>
+                    {% elif sub.days_remaining <= 7 %}
+                      <span class="badge badge-yellow">{{ sub.days_remaining }}d left</span>
+                    {% else %}
+                      <span class="badge badge-green">ACTIVE</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted);">No active subscriptions found.</td>
+                </tr>
               {% endfor %}
             </tbody>
           </table>
-          {% else %}
-          <p style="color:var(--muted);text-align:center;padding:2rem 0;">No expiring subscriptions</p>
-          {% endif %}
         </div>
       </div>
     </div>
   </main>
 </div>
+
+<!-- Record Payment Modal -->
+<div class="modal-overlay" id="paymentModal">
+  <div class="modal-box">
+    <h3 style="font-family:'Montserrat';font-weight:800;margin-bottom:1rem;color:#fff;">Record Membership Payment</h3>
+    <form id="paymentForm" onsubmit="submitPayment(event)">
+      <div class="form-group">
+        <label>Select Member</label>
+        <select class="form-control" id="payMemberId" required>
+          {% for sub in active_subscriptions %}
+            <option value="{{ sub.member.id }}">{{ sub.member.get_full_name|default:sub.member.username }} (#{{ sub.member.id }})</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Membership Tier</label>
+        <select class="form-control" id="payPlanId" required>
+          {% for plan in plans %}
+            <option value="{{ plan.id }}">{{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Payment Method</label>
+        <select class="form-control" id="payMethod">
+          <option value="cash">Cash at Counter</option>
+          <option value="card">Card / POS Terminal</option>
+          <option value="bank_transfer">Bank Transfer</option>
+        </select>
+      </div>
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.5rem;">
+        <button type="button" class="btn-action btn-reject" onclick="closePaymentModal()">Cancel</button>
+        <button type="submit" class="btn-action btn-approve" style="padding:0.5rem 1.2rem;">Confirm & Activate Door Access</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="fitme-toast" id="frontToast">
+  <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:1.4rem;"></i>
+  <span id="frontToastMsg">Action completed successfully.</span>
+</div>
+
+<script>
+  function showToast(msg) {
+    const toast = document.getElementById('frontToast');
+    document.getElementById('frontToastMsg').textContent = msg;
+    toast.style.display = 'flex';
+    setTimeout(() => { toast.style.display = 'none'; }, 4000);
+  }
+
+  // 1. Dynamic Application Approval
+  async function approveApp(appId) {
+    if (!confirm("Approve application, create member login, and assign turnstile biometric PIN?")) return;
+    try {
+      const res = await fetch(`/fitme/dashboard/api/applications/${appId}/approve/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`Approved! User '${data.username}' created. Hardware PIN: #${data.pin}`);
+        const row = document.getElementById(`app-row-${appId}`);
+        if (row) {
+          row.style.background = 'rgba(118,192,67,0.15)';
+          setTimeout(() => { row.remove(); }, 600);
+        }
+      } else {
+        alert("Error: " + data.error);
+      }
+    } catch (e) {
+      alert("Request failed: " + e);
+    }
+  }
+
+  // 2. Dynamic Application Rejection
+  async function rejectApp(appId) {
+    const reason = prompt("Enter reason for rejection:", "Did not meet requirements");
+    if (!reason) return;
+    try {
+      const res = await fetch(`/fitme/dashboard/api/applications/${appId}/reject/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ reason })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast("Application rejected.");
+        const row = document.getElementById(`app-row-${appId}`);
+        if (row) row.remove();
+      }
+    } catch (e) {
+      alert("Error: " + e);
+    }
+  }
+
+  // 3. Emergency Turnstile Buzzer
+  async function buzzTurnstile() {
+    const btn = document.getElementById('btnFrontBuzzer');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> BUZZING...';
+    try {
+      const res = await fetch('/api/zkbio/remote-buzzer/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      showToast(data.message || "Turnstile buzzer pulsed for 5 seconds!");
+    } catch (e) {
+      alert("Buzzer failed: " + e);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-door-open"></i> BUZZ DOOR OPEN';
+    }
+  }
+
+  // 4. Modal and Payment Recording
+  function openPaymentModal() {
+    document.getElementById('paymentModal').style.display = 'flex';
+  }
+  function closePaymentModal() {
+    document.getElementById('paymentModal').style.display = 'none';
+  }
+
+  async function submitPayment(e) {
+    e.preventDefault();
+    const memberId = document.getElementById('payMemberId').value;
+    const planId = document.getElementById('payPlanId').value;
+    const paymentMethod = document.getElementById('payMethod').value;
+
+    try {
+      const res = await fetch('/fitme/dashboard/api/record-payment/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ member_id: memberId, plan_id: planId, payment_method: paymentMethod })
+      });
+      const data = await res.json();
+      if (data.success) {
+        closePaymentModal();
+        showToast(data.message);
+        setTimeout(() => location.reload(), 1500);
+      }
+    } catch (err) {
+      alert("Payment failed: " + err);
+    }
+  }
+</script>
 </body>
 </html>

@@ -1,0 +1,194 @@
+from decimal import Decimal
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
+
+
+class MembershipPlan(models.Model):
+    """
+    Tiered Gym Membership Plans:
+    - Single: Standard 1-member plan.
+    - Couples / Buddy: Links 2 users to 1 billing entity.
+    - Student: Discounted rate.
+    - Off-Peak: Allowed entry restricted by time window (e.g., 10:00 - 16:00).
+    """
+    PLAN_CHOICES = [
+        ('SINGLE', 'Single Member'),
+        ('COUPLES', 'Couples / Buddy (2 Users, 1 Billing Entity)'),
+        ('STUDENT', 'Student'),
+        ('OFF_PEAK', 'Off-Peak Window Restricted'),
+    ]
+
+    name = models.CharField(max_length=80)
+    plan_type = models.CharField(max_length=20, choices=PLAN_CHOICES, default='SINGLE')
+    price_monthly = models.DecimalField(max_digits=10, decimal_places=2)
+    duration_days = models.IntegerField(default=30)
+    max_members = models.IntegerField(default=1, help_text="Set to 2 for Couples/Buddy plan")
+
+    # For Couples/Buddy plans: links 2 users to 1 primary billing entity
+    primary_member = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='primary_billed_plans',
+        help_text="Primary billing entity"
+    )
+    secondary_member = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='buddy_plans',
+        help_text="Buddy member linked to primary billing entity"
+    )
+
+    # Allowed entry time window (00:00:00 - 23:59:59 for full access; restricted for off-peak)
+    allowed_entry_start = models.TimeField(default='00:00:00', help_text="Allowed entry window start")
+    allowed_entry_end = models.TimeField(default='23:59:59', help_text="Allowed entry window end")
+
+    description = models.TextField(blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Membership Plan'
+        verbose_name_plural = 'Membership Plans'
+        ordering = ['price_monthly']
+
+    def __str__(self):
+        return f"{self.name} ({self.get_plan_type_display()}) — LKR {self.price_monthly}"
+
+    def is_entry_allowed_at(self, current_time):
+        """Validates if entry is allowed given the current time."""
+        if self.plan_type != 'OFF_PEAK':
+            return True
+        return self.allowed_entry_start <= current_time <= self.allowed_entry_end
+
+
+class StaffShift(models.Model):
+    """
+    Staff Shift Roster & Attendance Tracking.
+    Monitors shift times, punch timestamps, late arrivals, overtime, and off-floor status.
+    """
+    STATUS_CHOICES = [
+        ('SCHEDULED', 'Scheduled'),
+        ('ON_FLOOR', 'On Floor (Active)'),
+        ('OFF_FLOOR', 'Off Floor — Unapproved Departure'),
+        ('LEAVE', 'Approved Leave'),
+        ('COMPLETED', 'Shift Completed'),
+    ]
+
+    staff_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        limit_choices_to={'is_staff': True},
+        related_name='staff_shifts'
+    )
+    shift_date = models.DateField(db_index=True)
+    scheduled_start = models.TimeField()
+    scheduled_end = models.TimeField()
+
+    actual_first_in = models.DateTimeField(null=True, blank=True)
+    actual_last_out = models.DateTimeField(null=True, blank=True)
+
+    unapproved_absence_minutes = models.IntegerField(default=0)
+    overtime_minutes = models.IntegerField(default=0)
+    is_off_floor = models.BooleanField(default=False, db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='SCHEDULED')
+
+    approved_leave = models.BooleanField(default=False)
+    leave_reason = models.TextField(blank=True)
+    base_hourly_rate = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal('500.00'))
+
+    class Meta:
+        verbose_name = 'Staff Shift'
+        verbose_name_plural = 'Staff Shifts'
+        ordering = ['-shift_date', 'scheduled_start']
+
+    def __str__(self):
+        return f"{self.staff_user.username} - {self.shift_date} ({self.scheduled_start} - {self.scheduled_end}) [{self.status}]"
+
+    def calculate_late_minutes(self):
+        """Computes minutes late based on scheduled start and actual first punch."""
+        if not self.actual_first_in:
+            return 0
+        scheduled_dt = timezone.make_aware(
+            timezone.datetime.combine(self.shift_date, self.scheduled_start)
+        )
+        if self.actual_first_in > scheduled_dt:
+            delta = self.actual_first_in - scheduled_dt
+            return int(delta.total_seconds() / 60)
+        return 0
+
+
+class SuddenAbsenceAlert(models.Model):
+    """
+    Triggered when an on-shift staff member punches out during working hours
+    without an approved leave request for >20 minutes. Alerts the Super Admin.
+    """
+    shift = models.ForeignKey(
+        StaffShift,
+        on_delete=models.CASCADE,
+        related_name='absence_alerts'
+    )
+    staff_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='staff_absence_alerts'
+    )
+    exit_time = models.DateTimeField(default=timezone.now)
+    minutes_off_floor = models.IntegerField(default=20)
+    is_resolved = models.BooleanField(default=False)
+    admin_notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Sudden Absence Alert'
+        verbose_name_plural = 'Sudden Absence Alerts'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"CRITICAL: {self.staff_user.username} departed floor @ {self.exit_time:%H:%M} ({self.minutes_off_floor}m off floor)"
+
+
+class PayrollLedger(models.Model):
+    """
+    Automated Monthly Net Salary Ledger:
+    Net = Base_Salary + Overtime_Pay + PT_Commissions - (Late_Minutes_Penalty + Sudden_Absence_Penalty)
+    """
+    staff_user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='payroll_ledgers'
+    )
+    month = models.DateField(help_text="First day of payroll month, e.g. 2026-09-01")
+    base_salary = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    overtime_pay = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    pt_commissions = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Personal Training session commissions")
+    late_minutes_penalty = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    sudden_absence_penalty = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+
+    is_finalized = models.BooleanField(default=False)
+    finalized_at = models.DateTimeField(null=True, blank=True)
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Payroll Ledger'
+        verbose_name_plural = 'Payroll Ledgers'
+        unique_together = ['staff_user', 'month']
+        ordering = ['-month', 'staff_user']
+
+    def __str__(self):
+        return f"Payroll: {self.staff_user.username} — {self.month:%B %Y} (Net: LKR {self.net_salary:,.2f})"
+
+    @property
+    def net_salary(self):
+        """
+        Net = Base_Salary + Overtime_Pay + PT_Commissions - (Late_Minutes_Penalty + Sudden_Absence_Penalty)
+        """
+        earnings = self.base_salary + self.overtime_pay + self.pt_commissions
+        deductions = self.late_minutes_penalty + self.sudden_absence_penalty
+        return max(Decimal('0.00'), earnings - deductions)

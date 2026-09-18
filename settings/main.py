@@ -36,6 +36,9 @@ env = environ.Env(
     # set casting, default value
     DJANGO_DEBUG=(bool, False)
 )
+env_file = BASE_DIR.parent / '.env'
+if env_file.exists():
+    env.read_env(env_file)
 
 # A list of keys used in the docker repo as defaults. To prevent instances using
 # these defaults in production, servers with these keys will warn and generate
@@ -176,10 +179,10 @@ SERVER_EMAIL = DEFAULT_FROM_EMAIL
 EMAIL_FROM_ADDRESS = DEFAULT_FROM_EMAIL
 
 # Management
-WGER_SETTINGS['ALLOW_GUEST_USERS'] = env.bool('ALLOW_GUEST_USERS', True)
-WGER_SETTINGS['ALLOW_REGISTRATION'] = env.bool('ALLOW_REGISTRATION', True)
-WGER_SETTINGS['ALLOW_UPLOAD_VIDEOS'] = env.bool('ALLOW_UPLOAD_VIDEOS', True)
-WGER_SETTINGS['DOWNLOAD_INGREDIENTS_FROM'] = env.str('DOWNLOAD_INGREDIENTS_FROM', 'WGER')
+WGER_SETTINGS['ALLOW_GUEST_USERS'] = env.bool('ALLOW_GUEST_USERS', False)
+WGER_SETTINGS['ALLOW_REGISTRATION'] = env.bool('ALLOW_REGISTRATION', False)
+WGER_SETTINGS['ALLOW_UPLOAD_VIDEOS'] = env.bool('ALLOW_UPLOAD_VIDEOS', False)
+WGER_SETTINGS['DOWNLOAD_INGREDIENTS_FROM'] = env.str('DOWNLOAD_INGREDIENTS_FROM', 'None')
 WGER_SETTINGS['EXERCISE_CACHE_TTL'] = env.int('EXERCISE_CACHE_TTL', 604800)
 WGER_SETTINGS['MIN_ACCOUNT_AGE_TO_TRUST'] = env.int('MIN_ACCOUNT_AGE_TO_TRUST', 21)  # in days
 WGER_SETTINGS['SYNC_EXERCISES_CELERY'] = env.bool('SYNC_EXERCISES_CELERY', False)

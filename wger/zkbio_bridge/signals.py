@@ -21,6 +21,7 @@ def sync_user_to_zkbio(sender, instance, created, **kwargs):
     }
     
     try:
-        requests.post(f"{ZKBIO_DAEMON_URL}/sync", json=payload, timeout=5)
-    except requests.exceptions.RequestException as e:
-        print(f"Failed to sync user {instance.id} to ZKBio Bridge: {e}")
+        requests.post(f"{ZKBIO_DAEMON_URL}/sync", json=payload, timeout=0.2)
+    except Exception:
+        # Local daemon pulls via /api/zkbio/pending-sync/ asynchronously
+        pass

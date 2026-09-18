@@ -39,21 +39,41 @@ def dashboard_redirect(request):
 @login_required
 @role_required('super_admin')
 def super_admin_dashboard(request):
-    """Super Admin — full system overview."""
+    """Super Admin — full system overview with live biometric turnstile monitoring and payroll alerts."""
     today = timezone.now().date()
 
     # Stats
     active_subs = Subscription.objects.filter(status='active', end_date__gte=today)
     expiring_soon = active_subs.filter(end_date__lte=today + timezone.timedelta(days=7))
     pending_apps = MemberApplication.objects.filter(status='pending').count()
-    today_punches = DoorPunch.objects.filter(punch_time__date=today).count()
 
-    # Sudden absence alerts (unresolved)
+    # ZKBio Integration live floor counters & punches
+    from wger.zkbio_integration.models import DoorAccessLog
+    today_punches = DoorAccessLog.objects.filter(punch_time__date=today).count()
+
+    today_logs = DoorAccessLog.objects.filter(
+        punch_time__date=today,
+        event_type__in=['ENTRY', 'EXIT']
+    ).select_related('user').order_by('punch_time')
+
+    latest_per_user = {}
+    for log in today_logs:
+        key = log.user_id if log.user_id else f"pin_{log.zk_pin}"
+        latest_per_user[key] = (log.event_type, log.user)
+
+    members_on_floor = sum(1 for et, u in latest_per_user.values() if et == 'ENTRY' and not (u and u.is_staff))
+    staff_on_floor = sum(1 for et, u in latest_per_user.values() if et == 'ENTRY' and (u and u.is_staff))
+
+    # Sudden absence alerts (unresolved from gym_operations_payroll)
     try:
-        from wger.payroll.models import SuddenAbsenceAlert
-        open_alerts = SuddenAbsenceAlert.objects.filter(returned_at__isnull=True).count()
+        from wger.gym_operations_payroll.models import SuddenAbsenceAlert
+        active_absence_alerts = list(
+            SuddenAbsenceAlert.objects.filter(is_resolved=False).select_related('staff_user', 'shift')[:5]
+        )
+        open_alerts_count = len(active_absence_alerts)
     except Exception:
-        open_alerts = 0
+        active_absence_alerts = []
+        open_alerts_count = 0
 
     context = {
         'role': 'super_admin',
@@ -63,10 +83,14 @@ def super_admin_dashboard(request):
             'expiring_soon': expiring_soon.count(),
             'pending_applications': pending_apps,
             'today_access_count': today_punches,
-            'open_absence_alerts': open_alerts,
+            'open_absence_alerts': open_alerts_count,
+            'members_on_floor': members_on_floor,
+            'staff_on_floor': staff_on_floor,
         },
+        'active_absence_alerts': active_absence_alerts,
         'recent_applications': MemberApplication.objects.filter(status='pending')[:5],
         'membership_plans': MembershipPlan.objects.filter(is_active=True),
+        'recent_door_punches': DoorAccessLog.objects.select_related('user').order_by('-punch_time')[:8],
     }
     return render(request, 'fitme/dashboards/super_admin.html', context)
 
@@ -127,21 +151,30 @@ def coach_dashboard(request):
 @login_required
 @role_required('member', 'super_admin')
 def member_dashboard(request):
-    """Member — digital ID, streak, fuel tank."""
+    """Member — digital ID, pulsing biometric access badge, 3D morph slider, concentric macro rings."""
     from wger.nutrition_lk.models import DailyFuelTarget
     from wger.habit.models import WorkoutStreak
     from wger.membership.models import MemberProfile, BodyCheckIn
+    from wger.zkbio_integration.models import BiometricProfile
 
     user = request.user
 
-    # Get or create member profile
+    # Get or create member profile & biometric profile
     profile = MemberProfile.objects.filter(user=user).first()
+    bio_profile = BiometricProfile.objects.filter(user=user).first()
+    if not bio_profile and profile and profile.biometric_pin:
+        bio_profile, _ = BiometricProfile.objects.get_or_create(
+            user=user,
+            defaults={'zk_pin': profile.biometric_pin}
+        )
 
     # Active subscription
     today = timezone.now().date()
     subscription = Subscription.objects.filter(
         member=user, status='active', end_date__gte=today
     ).first()
+
+    door_access_active = bool(subscription and subscription.is_active and not (bio_profile and bio_profile.disabled))
 
     # Streak
     streak, _ = WorkoutStreak.objects.get_or_create(member=user)
@@ -151,19 +184,385 @@ def member_dashboard(request):
     try:
         target = DailyFuelTarget.objects.get(member=user)
         fuel_progress = target.daily_progress()
-    except DailyFuelTarget.DoesNotExist:
+    except Exception:
         pass
 
+    # Macro Ring metrics (defaults if not logged yet)
+    calories_consumed = fuel_progress['consumed']['calories'] if fuel_progress else 1450
+    calories_target = fuel_progress['targets']['calories'] if fuel_progress else 2200
+    calories_pct = min(100, int((calories_consumed / max(1, calories_target)) * 100))
+
+    protein_consumed = fuel_progress['consumed']['protein_g'] if fuel_progress else 110
+    protein_target = fuel_progress['targets']['protein_g'] if fuel_progress else 150
+    protein_pct = min(100, int((protein_consumed / max(1, protein_target)) * 100))
+
+    water_consumed = 2400 # ml
+    water_target = 3000   # ml
+    water_pct = min(100, int((water_consumed / max(1, water_target)) * 100))
+
     # Body check-ins for morph slider
-    checkins = BodyCheckIn.objects.filter(member=user).order_by('checkin_date')[:6]
+    checkins = list(BodyCheckIn.objects.filter(member=user).order_by('checkin_date'))
+    before_checkin = checkins[0] if checkins else None
+    after_checkin = checkins[-1] if len(checkins) > 1 else before_checkin
 
     context = {
         'role': 'member',
         'page_title': 'My Dashboard',
         'profile': profile,
+        'bio_profile': bio_profile,
         'subscription': subscription,
+        'door_access_active': door_access_active,
         'streak': streak,
         'fuel_progress': fuel_progress,
+        'rings': {
+            'calories_consumed': calories_consumed,
+            'calories_target': calories_target,
+            'calories_pct': calories_pct,
+            'protein_consumed': protein_consumed,
+            'protein_target': protein_target,
+            'protein_pct': protein_pct,
+            'water_consumed': water_consumed,
+            'water_target': water_target,
+            'water_pct': water_pct,
+        },
         'checkins': checkins,
+        'before_checkin': before_checkin,
+        'after_checkin': after_checkin,
     }
     return render(request, 'fitme/dashboards/member.html', context)
+
+
+# ═════════════════════════════════════════════════════════════════════
+# DYNAMIC INTERACTION ENDPOINTS (AJAX / REST)
+# ═════════════════════════════════════════════════════════════════════
+
+@login_required
+@role_required('front_desk', 'super_admin')
+def approve_application_api(request, app_id):
+    """Dynamically approves an intake application, creates user, PIN, and biometric profile."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    app = MemberApplication.objects.filter(id=app_id, status='pending').first()
+    if not app:
+        return JsonResponse({'error': 'Pending application not found'}, status=404)
+
+    from django.contrib.auth import get_user_model
+    from django.contrib.auth.models import Group
+    from wger.membership.models import MemberProfile
+    from wger.zkbio_integration.models import BiometricProfile
+    User = get_user_model()
+
+    # Generate unique username
+    base_username = app.email.split('@')[0].lower().replace('.', '_').replace('-', '_')
+    username = base_username
+    counter = 1
+    while User.objects.filter(username=username).exists():
+        username = f"{base_username}_{counter}"
+        counter += 1
+
+    # Create User
+    user, created = User.objects.get_or_create(
+        email=app.email,
+        defaults={
+            'username': username,
+            'first_name': app.full_name.split()[0] if app.full_name else 'Member',
+            'last_name': " ".join(app.full_name.split()[1:]) if len(app.full_name.split()) > 1 else '',
+            'is_active': True,
+        }
+    )
+    if created:
+        user.set_password('fitme123!')
+        user.save()
+
+    # Assign Member Group
+    member_group, _ = Group.objects.get_or_create(name='member')
+    user.groups.add(member_group)
+
+    # MemberProfile & PIN
+    profile, _ = MemberProfile.objects.get_or_create(user=user)
+    if not profile.biometric_pin:
+        last_pin = MemberProfile.objects.exclude(biometric_pin__isnull=True).order_by('-biometric_pin').first()
+        next_pin = str(int(last_pin.biometric_pin) + 1) if last_pin and last_pin.biometric_pin and last_pin.biometric_pin.isdigit() else "1001"
+        profile.biometric_pin = next_pin
+    profile.phone = app.phone
+    profile.primary_goal = app.primary_goal or 'general_fitness'
+    profile.date_of_birth = app.date_of_birth
+    profile.save()
+
+    # BiometricProfile for ZKBio Turnstile hardware
+    bio_profile, _ = BiometricProfile.objects.get_or_create(
+        user=user,
+        defaults={
+            'zk_pin': profile.biometric_pin,
+            'sync_status': 'PENDING',
+            'disabled': False,
+        }
+    )
+    bio_profile.disabled = False
+    bio_profile.sync_status = 'PENDING'
+    bio_profile.save()
+
+    # Create active subscription
+    today = timezone.now().date()
+    plan = app.desired_plan or MembershipPlan.objects.first()
+    sub = Subscription.objects.create(
+        member=user,
+        plan=plan,
+        start_date=today,
+        end_date=today + timezone.timedelta(days=getattr(plan, 'duration_days', 30)),
+        status='active',
+        payment_method='cash',
+        amount_paid=getattr(plan, 'price_monthly', 4500),
+        approved_by=request.user,
+        payment_date=timezone.now()
+    )
+
+    # Mark application as approved
+    app.status = 'approved'
+    app.reviewed_by = request.user
+    app.reviewed_at = timezone.now()
+    app.created_user = user
+    app.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Application approved for {app.full_name}!",
+        'username': user.username,
+        'pin': profile.biometric_pin,
+        'plan': plan.name if plan else 'Standard',
+        'sub_id': sub.id
+    })
+
+
+@login_required
+@role_required('front_desk', 'super_admin')
+def reject_application_api(request, app_id):
+    """Dynamically rejects an intake application."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    app = MemberApplication.objects.filter(id=app_id).first()
+    if not app:
+        return JsonResponse({'error': 'Application not found'}, status=404)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+        reason = data.get('reason', 'Application rejected by front desk')
+    except Exception:
+        reason = request.POST.get('reason', 'Application rejected by front desk')
+
+    app.status = 'rejected'
+    app.reviewed_by = request.user
+    app.reviewed_at = timezone.now()
+    app.review_notes = reason
+    app.save()
+
+    return JsonResponse({'success': True, 'message': f"Application {app_id} rejected."})
+
+
+@login_required
+@role_required('front_desk', 'super_admin')
+def record_payment_api(request):
+    """Records payment, activates subscription, and provisions door access."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    from django.contrib.auth import get_user_model
+    from wger.zkbio_integration.models import BiometricProfile
+    User = get_user_model()
+
+    member_id = data.get('member_id')
+    plan_id = data.get('plan_id')
+    method = data.get('payment_method', 'cash')
+    amount = data.get('amount_paid', 4500)
+
+    member = User.objects.filter(id=member_id).first()
+    if not member:
+        return JsonResponse({'error': 'Member not found'}, status=404)
+
+    plan = MembershipPlan.objects.filter(id=plan_id).first() or MembershipPlan.objects.first()
+
+    today = timezone.now().date()
+    sub = Subscription.objects.create(
+        member=member,
+        plan=plan,
+        start_date=today,
+        end_date=today + timezone.timedelta(days=getattr(plan, 'duration_days', 30)),
+        status='active',
+        payment_method=method,
+        amount_paid=amount,
+        approved_by=request.user,
+        payment_date=timezone.now()
+    )
+
+    # Ensure biometric access is restored
+    bio = BiometricProfile.objects.filter(user=member).first()
+    if bio:
+        bio.disabled = False
+        bio.sync_status = 'PENDING'
+        bio.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Payment recorded for {member.username}. Subscription active until {sub.end_date:%d %b %Y}."
+    })
+
+
+@login_required
+@role_required('coach', 'super_admin')
+def review_meal_api(request, meal_id):
+    """Coach approves or provides feedback on a logged meal."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    from wger.nutrition_lk.models import MealLog
+    meal = MealLog.objects.filter(id=meal_id).first()
+    if not meal:
+        return JsonResponse({'error': 'Meal not found'}, status=404)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    feedback = data.get('feedback', 'Great balanced macros! Keep pushing.')
+    meal.coach_reviewed = True
+    meal.coach_feedback = feedback
+    meal.save(update_fields=['coach_reviewed', 'coach_feedback'])
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Meal {meal_id} reviewed successfully!",
+        'feedback': feedback
+    })
+
+
+@login_required
+@role_required('coach', 'super_admin')
+def ping_member_api(request, member_id):
+    """Coach sends motivational ping or attendance nudge to an at-risk member."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    from django.contrib.auth import get_user_model
+    from wger.habit.models import HabitPing
+    User = get_user_model()
+
+    member = User.objects.filter(id=member_id).first()
+    if not member:
+        return JsonResponse({'error': 'Member not found'}, status=404)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    msg = data.get('message', 'Hey champion! We missed you on the gym floor. Your goals are waiting — see you today! 💪')
+    ping = HabitPing.objects.create(
+        from_coach=request.user,
+        to_member=member,
+        ping_type='nudge',
+        message=msg
+    )
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Motivational nudge delivered to {member.get_full_name() or member.username}!",
+        'ping_id': ping.id
+    })
+
+
+@login_required
+def log_quick_meal_api(request):
+    """Member logs quick calories and macros directly from dashboard."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    from wger.nutrition_lk.models import MealLog, DailyFuelTarget
+    calories = float(data.get('calories', 400))
+    protein = float(data.get('protein_g', 30))
+    carbs = float(data.get('carbs_g', 45))
+    fat = float(data.get('fat_g', 10))
+    meal_type = data.get('meal_type', 'snack')
+    notes = data.get('notes', 'Quick dashboard log')
+
+    meal = MealLog.objects.create(
+        member=request.user,
+        meal_type=meal_type,
+        logged_at=timezone.now(),
+        notes=notes,
+        total_calories=calories,
+        total_protein_g=protein,
+        total_carbs_g=carbs,
+        total_fat_g=fat
+    )
+
+    # Compute updated totals for today
+    today = timezone.now().date()
+    today_meals = MealLog.objects.filter(member=request.user, logged_at__date=today)
+    tot_cal = sum(float(m.total_calories) for m in today_meals)
+    tot_pro = sum(float(m.total_protein_g) for m in today_meals)
+
+    # Targets
+    target = DailyFuelTarget.objects.filter(member=request.user).first()
+    target_cal = float(target.target_calories) if target else 2200.0
+    target_pro = float(target.target_protein_g) if target else 150.0
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Logged {meal_type.title()} ({int(calories)} kcal, {int(protein)}g protein)!",
+        'meal_id': meal.id,
+        'totals': {
+            'calories_consumed': int(tot_cal),
+            'calories_target': int(target_cal),
+            'calories_pct': min(100, int((tot_cal / max(1, target_cal)) * 100)),
+            'protein_consumed': int(tot_pro),
+            'protein_target': int(target_pro),
+            'protein_pct': min(100, int((tot_pro / max(1, target_pro)) * 100)),
+        }
+    })
+
+
+@login_required
+@role_required('super_admin')
+def resolve_absence_alert_api(request, alert_id):
+    """Super Admin dynamically resolves an unapproved departure alert."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    from wger.gym_operations_payroll.models import SuddenAbsenceAlert
+    alert = SuddenAbsenceAlert.objects.filter(id=alert_id).first()
+    if not alert:
+        return JsonResponse({'error': 'Alert not found'}, status=404)
+
+    alert.is_resolved = True
+    alert.admin_notes = f"Resolved dynamically by Super Admin {request.user.username} at {timezone.now():%H:%M}"
+    alert.save(update_fields=['is_resolved', 'admin_notes'])
+
+    # Restore shift status if shift is attached
+    if alert.shift:
+        alert.shift.is_off_floor = False
+        alert.shift.status = 'ON_FLOOR'
+        alert.shift.save(update_fields=['is_off_floor', 'status'])
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Alert for {alert.staff_user.username} resolved."
+    })
+

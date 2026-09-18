@@ -94,6 +94,8 @@ INSTALLED_APPS = [
     'wger.membership',
     'wger.nutrition_lk',
     'wger.habit',
+    'wger.zkbio_integration',
+    'wger.gym_operations_payroll',
 
     # reCaptcha support, see https://github.com/praekelt/django-recaptcha
     'django_recaptcha',
@@ -400,44 +402,8 @@ TIME_ZONE = 'UTC'
 # upstream need to be added here as well (plus their country flag)
 # https://github.com/django/django/blob/main/django/conf/global_settings.py
 AVAILABLE_LANGUAGES = (
-    ('bg', 'Bulgarian'),
-    ('ca', 'Catalan'),
-    ('cs', 'Czech'),
-    ('de', 'German'),
-    ('el', 'Greek'),
     ('en', 'English'),
-    ('en-au', 'Australian English'),
-    ('en-gb', 'British English'),
-    ('es', 'Spanish'),
-    ('es-ar', 'Argentinian Spanish'),
-    ('es-co', 'Colombian Spanish'),
-    ('es-mx', 'Mexican Spanish'),
-    ('es-ni', 'Nicaraguan Spanish'),
-    ('es-ve', 'Venezuelan Spanish'),
-    ('fi', 'Finnish'),
-    ('fr', 'French'),
-    ('he', 'Hebrew'),
-    ('hr', 'Croatian'),
-    ('it', 'Italian'),
-    ('ko', 'Korean'),
-    ('mk', 'Macedonian'),
-    ('nl', 'Dutch'),
-    ('nb', 'Norwegian'),
-    ('pl', 'Polish'),
-    ('pt', 'Portuguese'),
-    ('pt-br', 'Brazilian Portuguese'),
-    ('ro', 'Romanian'),
-    ('ru', 'Russian'),
-    ('sk', 'Slovak'),
-    ('sl', 'Slovenian'),
-    ('sr', 'Serbian'),
-    ('sv', 'Swedish'),
-    ('ta', 'Tamil'),
-    ('th', 'Thai'),
-    ('tr', 'Turkish'),
-    ('uk', 'Ukrainian'),
-    ('zh-hans', 'Chinese simplified'),
-    ('zh-hant', 'Traditional Chinese'),
+    ('si', 'Sinhala'),
 )
 
 # Default language code for this installation.
@@ -653,12 +619,12 @@ USER_AGENTS_CACHE = 'default'
 # Application specific configuration options
 #
 WGER_SETTINGS = {
-    'ALLOW_GUEST_USERS': True,
-    'ALLOW_REGISTRATION': True,
+    'ALLOW_GUEST_USERS': False,
+    'ALLOW_REGISTRATION': False,
     'ALLOW_UPLOAD_VIDEOS': False,
-    'EMAIL_FROM': 'wger Workout Manager <wger@example.com>',
+    'EMAIL_FROM': 'Fit Me Admin <admin@fitme.com>',
     'EXERCISE_CACHE_TTL': 4 * 604800,  # one month; entries are invalidated on write
-    'DOWNLOAD_INGREDIENTS_FROM': DOWNLOAD_INGREDIENT_WGER,
+    'DOWNLOAD_INGREDIENTS_FROM': 'None',
     'INGREDIENT_CACHE_TTL': 604800,  # one week
     'INGREDIENT_IMAGE_CHECK_INTERVAL': datetime.timedelta(weeks=12),
     'ROUTINE_CACHE_TTL': 4 * 604800,  # one month
@@ -668,22 +634,25 @@ WGER_SETTINGS = {
     'SYNC_EXERCISE_VIDEOS_CELERY': False,
     'SYNC_INGREDIENTS_CELERY': False,
     'SYNC_OFF_DAILY_DELTA_CELERY': False,
-    'SYNC_INGREDIENTS_DUMP_URL': 'https://wger.de/media/ingredients/ingredients.jsonl.gz',
+    'SYNC_INGREDIENTS_DUMP_URL': None,
     'EXPORT_INGREDIENTS_BULK_CELERY': False,
     'CACHE_API_EXERCISES_CELERY': False,
     'CACHE_API_EXERCISES_CELERY_FORCE_UPDATE': False,
 
-    # Socials
+    # Socials - Disabled for private gym operations
     'TWITTER': False,
-    'MASTODON': 'https://fosstodon.org/@wger',
-    'USE_CELERY': False,
+    'MASTODON': False,
+    'USE_CELERY': True,
     'USE_RECAPTCHA': False,
-    'WGER_INSTANCE': 'https://wger.de',
+    'WGER_INSTANCE': 'https://fitme.lk',
 
     # Trophy system settings
     'TROPHIES_ENABLED': True,
-    'TROPHIES_INACTIVE_USER_DAYS': 30,  # Days of inactivity before skipping trophy evaluation
+    'TROPHIES_INACTIVE_USER_DAYS': 30,
 }
+
+ACCOUNT_ALLOW_REGISTRATION = False
+ACCOUNT_LOGIN_METHODS = {'username', 'email'}
 
 #
 # How long a workout session may last. Doubles as the window in which a log

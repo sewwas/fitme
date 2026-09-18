@@ -1,0 +1,110 @@
+from django.db import models
+from django.conf import settings
+from django.utils import timezone
+
+
+class BiometricProfile(models.Model):
+    """
+    Maps Wger User / UserProfile to ZKTeco Biometric Turnstile Controller hardware context.
+    Controller IP: 192.168.1.23, ZKBio CVAccess service: localhost:8098
+    """
+    SYNC_STATUS_CHOICES = [
+        ('PENDING', 'Pending Sync'),
+        ('SYNCED', 'Synced with Hardware'),
+        ('FAILED', 'Hardware Sync Failed'),
+        ('REVOKED', 'Revoked / Disabled'),
+    ]
+
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='biometric_profile'
+    )
+    zk_pin = models.CharField(
+        max_length=20,
+        unique=True,
+        db_index=True,
+        help_text="Unique ZKTeco hardware PIN"
+    )
+    card_number = models.CharField(
+        max_length=50,
+        blank=True,
+        null=True,
+        help_text="RFID / Proximity card number"
+    )
+    face_enrolled = models.BooleanField(
+        default=False,
+        help_text="Face template enrolled on terminal"
+    )
+    fingerprint_enrolled = models.BooleanField(
+        default=False,
+        help_text="Fingerprint template enrolled"
+    )
+    door_group_id = models.IntegerField(
+        default=1,
+        help_text="ZKBio access level / door group ID"
+    )
+    sync_status = models.CharField(
+        max_length=20,
+        choices=SYNC_STATUS_CHOICES,
+        default='PENDING',
+        db_index=True
+    )
+    disabled = models.BooleanField(
+        default=False,
+        help_text="Hardware door permission revoked if subscription expires or user suspended"
+    )
+    last_sync_time = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Biometric Profile'
+        verbose_name_plural = 'Biometric Profiles'
+        ordering = ['zk_pin']
+
+    def __str__(self):
+        status = "DISABLED" if self.disabled else self.sync_status
+        return f"{self.user.username} (PIN: {self.zk_pin}) — [{status}]"
+
+    @property
+    def user_profile(self):
+        """Helper to access core UserProfile if present."""
+        return getattr(self.user, 'userprofile', None)
+
+
+class DoorAccessLog(models.Model):
+    """
+    Real-time log of turnstile door punch events received from local bridge daemon.
+    Enforces anti-passback cooldown (60 seconds) and powers live gym floor tracking.
+    """
+    EVENT_CHOICES = [
+        ('ENTRY', 'Entry Granted'),
+        ('EXIT', 'Exit Granted'),
+        ('DENIED', 'Access Denied'),
+        ('ANTI_PASSBACK', 'Anti-Passback Blocked'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='door_access_logs'
+    )
+    zk_pin = models.CharField(max_length=20, db_index=True, blank=True)
+    punch_time = models.DateTimeField(default=timezone.now, db_index=True)
+    event_type = models.CharField(max_length=20, choices=EVENT_CHOICES, db_index=True)
+    device_ip = models.GenericIPAddressField(default='192.168.1.23')
+    terminal_name = models.CharField(max_length=100, default='MAIN_TURNSTILE')
+    raw_payload = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Door Access Log'
+        verbose_name_plural = 'Door Access Logs'
+        ordering = ['-punch_time']
+
+    def __str__(self):
+        username = self.user.username if self.user else f"PIN:{self.zk_pin}"
+        return f"{username} - {self.event_type} at {self.punch_time:%Y-%m-%d %H:%M:%S}"

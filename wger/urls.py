@@ -305,7 +305,19 @@ urlpatterns += [
         path('front-desk/', __import__('wger.core.views.fitme_dashboards', fromlist=['front_desk_dashboard']).front_desk_dashboard, name='fitme-front-desk'),
         path('coach/', __import__('wger.core.views.fitme_dashboards', fromlist=['coach_dashboard']).coach_dashboard, name='fitme-coach'),
         path('member/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_dashboard']).member_dashboard, name='fitme-member'),
+        # Dynamic Actions
+        path('api/applications/<int:app_id>/approve/', __import__('wger.core.views.fitme_dashboards', fromlist=['approve_application_api']).approve_application_api, name='api-app-approve'),
+        path('api/applications/<int:app_id>/reject/', __import__('wger.core.views.fitme_dashboards', fromlist=['reject_application_api']).reject_application_api, name='api-app-reject'),
+        path('api/record-payment/', __import__('wger.core.views.fitme_dashboards', fromlist=['record_payment_api']).record_payment_api, name='api-record-payment'),
+        path('api/meals/<int:meal_id>/review/', __import__('wger.core.views.fitme_dashboards', fromlist=['review_meal_api']).review_meal_api, name='api-meal-review'),
+        path('api/members/<int:member_id>/ping/', __import__('wger.core.views.fitme_dashboards', fromlist=['ping_member_api']).ping_member_api, name='api-member-ping'),
+        path('api/quick-meal/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_quick_meal_api']).log_quick_meal_api, name='api-quick-meal'),
+        path('api/alerts/<int:alert_id>/resolve/', __import__('wger.core.views.fitme_dashboards', fromlist=['resolve_absence_alert_api']).resolve_absence_alert_api, name='api-alert-resolve'),
     ], 'fitme'))),
+
+    # ── Fit Me Hardware & Operations Integrations ──
+    path('api/zkbio/', include(('wger.zkbio_integration.urls', 'zkbio_integration'), namespace='zkbio_integration')),
+    path('operations/', include(('wger.gym_operations_payroll.urls', 'gym_operations_payroll'), namespace='gym_operations_payroll')),
 
     path('i18n/', include('django.conf.urls.i18n')),
     path('robots.txt', TextTemplateView.as_view(template_name='robots.txt'), name='robots'),

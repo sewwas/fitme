@@ -73,3 +73,221 @@ class Command(BaseCommand):
         ]
         created_count = sum(1 for f in foods if LocalFood.objects.get_or_create(name_en=f['name_en'], defaults=f)[1])
         self.stdout.write(f'  Seeded {created_count} new / {len(foods) - created_count} already existed')
+        self._seed_demo_accounts_and_activities()
+
+    def _seed_demo_accounts_and_activities(self):
+        self.stdout.write('\nSeeding demo accounts, member profiles, applications, and logs...')
+        from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
+        from django.utils import timezone
+        from wger.membership.models import MemberProfile, Subscription, MemberApplication, BodyCheckIn
+        from wger.zkbio_integration.models import BiometricProfile, DoorAccessLog
+        from wger.gym_operations_payroll.models import StaffShift, SuddenAbsenceAlert, PayrollLedger
+        from wger.nutrition_lk.models import MealLog, DailyFuelTarget
+        from wger.habit.models import WorkoutStreak, HabitPing
+        User = get_user_model()
+
+        today = timezone.now().date()
+        ind_plan = MembershipPlan.objects.filter(plan_type='individual').first() or MembershipPlan.objects.first()
+        couples_plan = MembershipPlan.objects.filter(plan_type='couples').first() or ind_plan
+
+        # 1. Super Admin
+        admin_user, _ = User.objects.get_or_create(
+            username='admin',
+            defaults={'email': 'admin@fitme.com', 'first_name': 'Super', 'last_name': 'Admin', 'is_staff': True, 'is_superuser': True}
+        )
+        admin_user.set_password('fitme123!')
+        admin_user.is_staff = True
+        admin_user.is_superuser = True
+        admin_user.save()
+        admin_group, _ = Group.objects.get_or_create(name='super_admin')
+        admin_user.groups.add(admin_group)
+
+        # 2. Front Desk
+        fd_user, _ = User.objects.get_or_create(
+            username='frontdesk',
+            defaults={'email': 'frontdesk@fitme.com', 'first_name': 'Amal', 'last_name': 'Perera', 'is_staff': True}
+        )
+        fd_user.set_password('fitme123!')
+        fd_user.is_staff = True
+        fd_user.save()
+        fd_group, _ = Group.objects.get_or_create(name='front_desk')
+        fd_user.groups.add(fd_group)
+
+        # 3. Coach Kamal
+        coach_user, _ = User.objects.get_or_create(
+            username='coach_kamal',
+            defaults={'email': 'kamal@fitme.com', 'first_name': 'Kamal', 'last_name': 'Gunaratne', 'is_staff': True}
+        )
+        coach_user.set_password('fitme123!')
+        coach_user.is_staff = True
+        coach_user.save()
+        coach_group, _ = Group.objects.get_or_create(name='coach')
+        coach_user.groups.add(coach_group)
+
+        # 4. Member Kasun
+        kasun, _ = User.objects.get_or_create(
+            username='member_kasun',
+            defaults={'email': 'kasun@gmail.com', 'first_name': 'Kasun', 'last_name': 'Jayawardena'}
+        )
+        kasun.set_password('fitme123!')
+        kasun.save()
+        member_group, _ = Group.objects.get_or_create(name='member')
+        kasun.groups.add(member_group)
+
+        profile_kasun, _ = MemberProfile.objects.get_or_create(
+            user=kasun,
+            defaults={
+                'biometric_pin': '1001',
+                'primary_goal': 'muscle_gain',
+                'phone': '0778899001',
+                'assigned_coach': coach_user,
+                'starting_weight_kg': 72.5,
+                'height_cm': 176.0,
+            }
+        )
+        BiometricProfile.objects.get_or_create(
+            user=kasun,
+            defaults={'zk_pin': '1001', 'sync_status': 'SYNCED', 'disabled': False}
+        )
+        Subscription.objects.get_or_create(
+            member=kasun,
+            status='active',
+            defaults={
+                'plan': ind_plan,
+                'start_date': today - timezone.timedelta(days=10),
+                'end_date': today + timezone.timedelta(days=20),
+                'amount_paid': 4500.00,
+                'payment_method': 'card',
+                'approved_by': admin_user
+            }
+        )
+        streak_kasun, _ = WorkoutStreak.objects.get_or_create(
+            member=kasun,
+            defaults={'current_streak': 5, 'longest_streak': 14, 'last_checkin_date': today, 'total_checkins': 32}
+        )
+        DailyFuelTarget.objects.get_or_create(
+            member=kasun,
+            defaults={'target_calories': 2200, 'target_protein_g': 150, 'target_carbs_g': 250, 'target_fat_g': 65}
+        )
+
+        # 5. Member Nuwan (At Risk!)
+        nuwan, _ = User.objects.get_or_create(
+            username='member_nuwan',
+            defaults={'email': 'nuwan@gmail.com', 'first_name': 'Nuwan', 'last_name': 'Bandara'}
+        )
+        nuwan.set_password('fitme123!')
+        nuwan.save()
+        nuwan.groups.add(member_group)
+
+        profile_nuwan, _ = MemberProfile.objects.get_or_create(
+            user=nuwan,
+            defaults={
+                'biometric_pin': '1002',
+                'primary_goal': 'weight_loss',
+                'phone': '0714455667',
+                'assigned_coach': coach_user,
+                'starting_weight_kg': 88.0,
+                'height_cm': 172.0,
+            }
+        )
+        BiometricProfile.objects.get_or_create(
+            user=nuwan,
+            defaults={'zk_pin': '1002', 'sync_status': 'SYNCED', 'disabled': False}
+        )
+        Subscription.objects.get_or_create(
+            member=nuwan,
+            status='active',
+            defaults={
+                'plan': ind_plan,
+                'start_date': today - timezone.timedelta(days=25),
+                'end_date': today + timezone.timedelta(days=5),
+                'amount_paid': 4500.00,
+                'payment_method': 'cash',
+                'approved_by': admin_user
+            }
+        )
+        WorkoutStreak.objects.get_or_create(
+            member=nuwan,
+            defaults={'current_streak': 1, 'longest_streak': 8, 'last_checkin_date': today - timezone.timedelta(days=3), 'total_checkins': 15}
+        )
+
+        # 6. Unreviewed Meal Logs
+        MealLog.objects.get_or_create(
+            member=kasun,
+            notes='Lunch - Red rice, chicken curry, dhal & gotukola sambol',
+            defaults={
+                'meal_type': 'lunch',
+                'logged_at': timezone.now() - timezone.timedelta(hours=2),
+                'total_calories': 680,
+                'total_protein_g': 48,
+                'total_carbs_g': 78,
+                'total_fat_g': 16,
+                'coach_reviewed': False
+            }
+        )
+        MealLog.objects.get_or_create(
+            member=nuwan,
+            notes='Breakfast - 5 string hoppers with fish curry',
+            defaults={
+                'meal_type': 'breakfast',
+                'logged_at': timezone.now() - timezone.timedelta(hours=5),
+                'total_calories': 410,
+                'total_protein_g': 24,
+                'total_carbs_g': 55,
+                'total_fat_g': 9,
+                'coach_reviewed': False
+            }
+        )
+
+        # 7. Front Desk Pending Applications
+        apps_data = [
+            {'full_name': 'Ruwan Perera', 'email': 'ruwan.p@outlook.com', 'phone': '0771234567', 'primary_goal': 'weight_loss', 'desired_plan': ind_plan},
+            {'full_name': 'Dilshan Silva', 'email': 'dilshan.silva@gmail.com', 'phone': '0719876543', 'primary_goal': 'muscle_gain', 'desired_plan': couples_plan},
+            {'full_name': 'Anusha Fernando', 'email': 'anusha.f@yahoo.com', 'phone': '0755554433', 'primary_goal': 'general_fitness', 'desired_plan': ind_plan},
+        ]
+        for a in apps_data:
+            MemberApplication.objects.get_or_create(email=a['email'], defaults=a)
+
+        # 8. Staff Shift & Sudden Absence Alert
+        shift_today, _ = StaffShift.objects.get_or_create(
+            staff_user=coach_user,
+            shift_date=today,
+            defaults={
+                'scheduled_start': '08:00:00',
+                'scheduled_end': '17:00:00',
+                'status': 'OFF_FLOOR',
+                'is_off_floor': True,
+                'actual_first_in': timezone.now() - timezone.timedelta(hours=4)
+            }
+        )
+        SuddenAbsenceAlert.objects.get_or_create(
+            shift=shift_today,
+            staff_user=coach_user,
+            is_resolved=False,
+            defaults={
+                'exit_time': timezone.now() - timezone.timedelta(minutes=35),
+                'minutes_off_floor': 35,
+                'admin_notes': 'Coach left premises mid-shift during floor duty.'
+            }
+        )
+
+        # 9. Door Access Logs today (Turnstile 192.168.1.23)
+        DoorAccessLog.objects.get_or_create(
+            zk_pin='1001',
+            punch_time=timezone.now() - timezone.timedelta(hours=1),
+            defaults={'user': kasun, 'event_type': 'ENTRY', 'device_ip': '192.168.1.23'}
+        )
+        DoorAccessLog.objects.get_or_create(
+            zk_pin='1002',
+            punch_time=timezone.now() - timezone.timedelta(hours=2),
+            defaults={'user': nuwan, 'event_type': 'ENTRY', 'device_ip': '192.168.1.23'}
+        )
+        DoorAccessLog.objects.get_or_create(
+            zk_pin='ADMIN',
+            punch_time=timezone.now() - timezone.timedelta(hours=5),
+            defaults={'user': admin_user, 'event_type': 'ENTRY', 'device_ip': '192.168.1.23'}
+        )
+
+        self.stdout.write('  Seeded accounts, applications, shifts, alerts, and punches successfully!')
+

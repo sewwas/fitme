@@ -1,0 +1,118 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: fitme-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-wger}
+      POSTGRES_USER: ${POSTGRES_USER:-wger}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-fitmepassword123!}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wger"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: fitme-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fitme-portal-web
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DJANGO_DEBUG: "False"
+      DJANGO_DB_ENGINE: "django.db.backends.postgresql"
+      DJANGO_DB_DATABASE: ${POSTGRES_DB:-wger}
+      DJANGO_DB_USER: ${POSTGRES_USER:-wger}
+      DJANGO_DB_PASSWORD: ${POSTGRES_PASSWORD:-fitmepassword123!}
+      DJANGO_DB_HOST: "db"
+      DJANGO_DB_PORT: "5432"
+      SECRET_KEY: ${SECRET_KEY:-fitme-production-secret-key-super-secure-2026}
+      CELERY_BROKER_URL: "redis://redis:6379/1"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/1"
+      ZKBIO_BRIDGE_TOKEN: ${FITME_BRIDGE_TOKEN:-fitme-zkbio-secret-bridge-token-2026}
+      ALLOW_REGISTRATION: "False"
+      ALLOW_GUEST_USERS: "False"
+    ports:
+      - "8000:8000"
+    volumes:
+      - media_data:/wger/media
+      - static_data:/wger/static
+    command: >
+      sh -c "python manage.py migrate --noinput &&
+             python manage.py collectstatic --noinput &&
+             gunicorn wger.wsgi:application --bind 0.0.0.0:8000 --workers 3 --timeout 120"
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fitme-celery-worker
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    environment:
+      DJANGO_DB_ENGINE: "django.db.backends.postgresql"
+      DJANGO_DB_DATABASE: ${POSTGRES_DB:-wger}
+      DJANGO_DB_USER: ${POSTGRES_USER:-wger}
+      DJANGO_DB_PASSWORD: ${POSTGRES_PASSWORD:-fitmepassword123!}
+      DJANGO_DB_HOST: "db"
+      DJANGO_DB_PORT: "5432"
+      SECRET_KEY: ${SECRET_KEY:-fitme-production-secret-key-super-secure-2026}
+      CELERY_BROKER_URL: "redis://redis:6379/1"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/1"
+    volumes:
+      - media_data:/wger/media
+    command: celery -A wger worker -l info -c 4
+
+  celery_beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fitme-celery-beat
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+    environment:
+      DJANGO_DB_ENGINE: "django.db.backends.postgresql"
+      DJANGO_DB_DATABASE: ${POSTGRES_DB:-wger}
+      DJANGO_DB_USER: ${POSTGRES_USER:-wger}
+      DJANGO_DB_PASSWORD: ${POSTGRES_PASSWORD:-fitmepassword123!}
+      DJANGO_DB_HOST: "db"
+      DJANGO_DB_PORT: "5432"
+      SECRET_KEY: ${SECRET_KEY:-fitme-production-secret-key-super-secure-2026}
+      CELERY_BROKER_URL: "redis://redis:6379/1"
+      CELERY_RESULT_BACKEND: "redis://redis:6379/1"
+    volumes:
+      - media_data:/wger/media
+    command: celery -A wger beat -l info
+
+volumes:
+  postgres_data:
+  redis_data:
+  media_data:
+  static_data:
