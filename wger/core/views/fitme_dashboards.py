@@ -11,8 +11,6 @@ from django.utils import timezone
 from django.db.models import Sum, Count
 
 from wger.membership.models import Subscription, MemberApplication, MembershipPlan
-from wger.zkbio_bridge.models import DoorPunch
-from wger.payroll.models import Attendance, SuddenAbsenceAlert, Payslip
 from wger.core.views.user import get_role_dashboard
 
 

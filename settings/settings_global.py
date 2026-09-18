@@ -87,10 +87,8 @@ INSTALLED_APPS = [
     'wger.gallery',
     'wger.measurements',
     'wger.trophies',
-    'wger.zkbio_bridge',
-    'wger.payroll',
 
-    # Fit Me custom apps
+    # Fit Me proprietary apps
     'wger.membership',
     'wger.nutrition_lk',
     'wger.habit',
