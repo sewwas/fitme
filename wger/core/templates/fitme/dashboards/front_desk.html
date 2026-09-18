@@ -222,14 +222,25 @@
                 <tr id="app-row-{{ app.id }}">
                   <td>
                     <div style="font-weight:700;color:var(--text-primary);">{{ app.full_name }}</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);">{{ app.email }} • {{ app.phone }}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">
+                      NIC: <span style="color:#fff;">{{ app.nic_passport|default:"-" }}</span> • {{ app.phone }}
+                    </div>
+                    {% if app.has_medical_conditions %}
+                      <span class="badge badge-red" style="font-size:0.65rem;margin-top:2px;">Medical Alert</span>
+                    {% endif %}
+                    {% if app.personal_trainer_needed %}
+                      <span class="badge badge-yellow" style="font-size:0.65rem;margin-top:2px;">Trainer Req</span>
+                    {% endif %}
                   </td>
                   <td><span style="color:var(--neon-lime);font-weight:700;">{{ app.desired_plan.name|default:"Individual" }}</span></td>
                   <td>{{ app.primary_goal|default:"General Fitness"|title }}</td>
                   <td style="text-align:right;">
                     <div style="display:inline-flex;gap:0.45rem;">
+                      <button class="btn-action" style="background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.15);" onclick="inspectApp({{ app.id }}, '{{ app.full_name|escapejs }}', '{{ app.nic_passport|escapejs }}', '{{ app.phone|escapejs }}', '{{ app.email|escapejs }}', '{{ app.address|escapejs }}', '{{ app.gender|escapejs }}', '{{ app.blood_group|escapejs }}', '{{ app.emergency_name|escapejs }}', '{{ app.emergency_relationship|escapejs }}', '{{ app.emergency_phone|escapejs }}', '{{ app.desired_plan.name|default:"Individual"|escapejs }}', '{{ app.plan_duration|escapejs }}', '{{ app.primary_goal|escapejs }}', '{{ app.has_medical_conditions|yesno:"Yes,No" }}', '{{ app.medical_condition_details|escapejs }}', '{{ app.is_under_medication|yesno:"Yes,No" }}', '{{ app.medication_details|escapejs }}', '{{ app.personal_trainer_needed|yesno:"Yes,No" }}', '{{ app.admission_fee|floatformat:0 }}', '{{ app.monthly_fee|floatformat:0 }}', '{{ app.discount|floatformat:0 }}', '{{ app.total_paid|floatformat:0 }}', '{{ app.payment_method|escapejs }}')">
+                        <i class="fa fa-eye"></i> Inspect
+                      </button>
                       <button class="btn-action btn-approve" onclick="approveApp({{ app.id }})">
-                        <i class="fa fa-check"></i> Approve & Issue PIN
+                        <i class="fa fa-check"></i> Approve & PIN
                       </button>
                       <button class="btn-action btn-reject" onclick="rejectApp({{ app.id }})">
                         <i class="fa fa-times"></i>
@@ -439,6 +450,30 @@
   </div>
 </div>
 
+<!-- Inspect Complete Official Registration Form Modal -->
+<div class="modal-overlay" id="inspectAppModal" style="display:none;">
+  <div class="modal-box" style="max-width:620px;max-height:85vh;overflow-y:auto;">
+    <div style="display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:0.75rem;margin-bottom:1.25rem;">
+      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;display:flex;align-items:center;gap:0.55rem;font-size:1.15rem;">
+        <i class="fa fa-file-invoice" style="color:var(--neon-lime);"></i>
+        Official Registration Form Review
+      </h3>
+      <button onclick="closeInspectModal()" style="background:none;border:none;color:#888;font-size:1.25rem;cursor:pointer;">✕</button>
+    </div>
+
+    <div id="inspectContent" style="font-size:0.86rem;line-height:1.6;">
+      <!-- Populated dynamically via JS -->
+    </div>
+
+    <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.5rem;border-top:1px solid rgba(255,255,255,0.1);padding-top:1rem;">
+      <button type="button" class="btn-action btn-reject" onclick="closeInspectModal()">Close</button>
+      <button type="button" class="btn-action btn-approve" id="btnApproveFromInspect" style="padding:0.5rem 1.4rem;">
+        <i class="fa fa-check"></i> Approve & Issue PIN
+      </button>
+    </div>
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="fitme-toast" id="frontToast">
   <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:1.4rem;"></i>
@@ -451,6 +486,65 @@
     document.getElementById('frontToastMsg').textContent = msg;
     toast.style.display = 'flex';
     setTimeout(() => { toast.style.display = 'none'; }, 4000);
+  }
+
+  // Inspect Application Modal Handler
+  function inspectApp(id, name, nic, phone, email, address, gender, blood, emName, emRel, emPhone, plan, duration, goal, hasMed, medDetails, underMeds, medsDetails, trainerNeeded, admFee, monFee, disc, total, payMethod) {
+    const content = document.getElementById('inspectContent');
+    content.innerHTML = `
+      <div style="background:#1F2428;padding:1rem;border-radius:10px;margin-bottom:1rem;border-left:3px solid var(--neon-lime);">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;">Section 1: Personal Information</div>
+        <div style="font-weight:800;font-size:1.1rem;color:#fff;margin-top:2px;">${name}</div>
+        <div style="color:var(--text-muted);font-size:0.8rem;">NIC / Passport: <strong style="color:#fff;">${nic || 'Not provided'}</strong> • Gender: <strong style="color:#fff;">${gender.toUpperCase()}</strong> • Blood Group: <strong style="color:#fff;">${blood || 'N/A'}</strong></div>
+        <div style="color:var(--text-muted);font-size:0.8rem;">Phone: <strong style="color:#fff;">${phone}</strong> • Email: <strong style="color:#fff;">${email}</strong></div>
+        <div style="color:var(--text-muted);font-size:0.8rem;margin-top:2px;">Address: ${address || 'Not provided'}</div>
+      </div>
+
+      <div style="background:#1F2428;padding:1rem;border-radius:10px;margin-bottom:1rem;">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;">Section 2: Emergency Contact</div>
+        <div style="font-weight:700;color:#fff;">${emName || 'None listed'} (${emRel || 'Contact'}) — ${emPhone || '-'}</div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+        <div style="background:#1F2428;padding:1rem;border-radius:10px;">
+          <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;">Plan & Goal</div>
+          <div style="font-weight:800;color:var(--neon-lime);">${plan} (${duration})</div>
+          <div style="font-size:0.8rem;color:var(--text-muted);">Goal: ${goal || 'General Fitness'}</div>
+        </div>
+        <div style="background:#1F2428;padding:1rem;border-radius:10px;">
+          <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;">Trainer Requirement</div>
+          <div style="font-weight:800;color:${trainerNeeded === 'Yes' ? '#F59E0B' : '#fff'};">${trainerNeeded === 'Yes' ? '⚡ Personal Trainer Needed' : 'No (Standard Floor)'}</div>
+        </div>
+      </div>
+
+      <div style="background:#1F2428;padding:1rem;border-radius:10px;margin-bottom:1rem;">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;">Section 5: Medical Information</div>
+        <div style="font-size:0.82rem;margin-top:4px;">
+          Medical Conditions: <strong style="color:${hasMed === 'Yes' ? 'var(--danger)' : '#fff'};">${hasMed}</strong> ${medDetails ? `(${medDetails})` : ''}<br>
+          Under Medication: <strong style="color:${underMeds === 'Yes' ? 'var(--danger)' : '#fff'};">${underMeds}</strong> ${medsDetails ? `(${medsDetails})` : ''}
+        </div>
+      </div>
+
+      <div style="background:#161A1D;border:1px solid var(--border-color);padding:1rem;border-radius:10px;">
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;">Section 7: Payment Details & 80mm Bill</div>
+        <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:0.85rem;">
+          <span>Admission: LKR ${admFee} | Monthly: LKR ${monFee} | Discount: LKR ${disc}</span>
+          <strong style="color:var(--neon-lime);font-size:1rem;">Total: LKR ${total} (${payMethod.toUpperCase()})</strong>
+        </div>
+      </div>
+    `;
+
+    const approveBtn = document.getElementById('btnApproveFromInspect');
+    approveBtn.onclick = () => {
+      closeInspectModal();
+      approveApp(id);
+    };
+
+    document.getElementById('inspectAppModal').style.display = 'flex';
+  }
+
+  function closeInspectModal() {
+    document.getElementById('inspectAppModal').style.display = 'none';
   }
 
   // Intake Modal Handlers

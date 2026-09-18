@@ -239,7 +239,88 @@ def member_dashboard(request):
 # DYNAMIC INTERACTION ENDPOINTS (AJAX / REST)
 # ═════════════════════════════════════════════════════════════════════
 
-@login_required
+def public_registration_view(request):
+    """
+    Public Membership Registration Form — captures all 8 sections from official club document.
+    Endpoint: /fitme/register/
+    """
+    if request.method == 'GET':
+        plans = MembershipPlan.objects.filter(is_active=True)
+        return render(request, 'fitme/register.html', {'plans': plans})
+
+    elif request.method == 'POST':
+        data = request.POST
+
+        full_name = data.get('full_name', '').strip()
+        email = data.get('email', '').strip().lower()
+        phone = data.get('phone', '').strip()
+
+        if not full_name or not email or not phone:
+            return JsonResponse({'error': 'Full Name, Email, and Phone number are required.'}, status=400)
+
+        # Look up or default plan
+        plan_id = data.get('plan_id')
+        plan = MembershipPlan.objects.filter(id=plan_id).first() if plan_id else MembershipPlan.objects.first()
+
+        # Parse numeric fees safely
+        from decimal import Decimal
+        def parse_dec(val, default='0.00'):
+            try:
+                return Decimal(str(val).strip())
+            except Exception:
+                return Decimal(default)
+
+        admission_fee = parse_dec(data.get('admission_fee', '1500.00'))
+        monthly_fee = parse_dec(data.get('monthly_fee', '4500.00'))
+        discount = parse_dec(data.get('discount', '0.00'))
+        total_paid = parse_dec(data.get('total_paid', '6000.00'))
+
+        # Dates & Age
+        dob = data.get('date_of_birth') or None
+        age = int(data.get('age')) if data.get('age') and data.get('age').isdigit() else None
+        start_date = data.get('start_date') or None
+        end_date = data.get('end_date') or None
+
+        app = MemberApplication.objects.create(
+            full_name=full_name,
+            email=email,
+            phone=phone,
+            address=data.get('address', '').strip(),
+            date_of_birth=dob,
+            age=age,
+            gender=data.get('gender', 'male'),
+            nic_passport=data.get('nic_passport', '').strip(),
+            emergency_name=data.get('emergency_name', '').strip(),
+            emergency_relationship=data.get('emergency_relationship', '').strip(),
+            emergency_phone=data.get('emergency_phone', '').strip(),
+            desired_plan=plan,
+            plan_duration=data.get('plan_duration', 'monthly'),
+            start_date=start_date,
+            end_date=end_date,
+            primary_goal=data.get('primary_goal', '').strip(),
+            fitness_goals_other=data.get('fitness_goals_other', '').strip(),
+            has_medical_conditions=(data.get('has_medical') == 'yes'),
+            medical_condition_details=data.get('medical_condition_details', '').strip(),
+            is_under_medication=(data.get('under_meds') == 'yes'),
+            medication_details=data.get('medication_details', '').strip(),
+            blood_group=data.get('blood_group', '').strip(),
+            personal_trainer_needed=(data.get('personal_trainer_needed') == 'yes'),
+            admission_fee=admission_fee,
+            monthly_fee=monthly_fee,
+            discount=discount,
+            total_paid=total_paid,
+            payment_method=data.get('payment_method', 'cash'),
+            agreed_to_rules=True,
+            status='pending'
+        )
+
+        return JsonResponse({
+            'success': True,
+            'message': 'Registration application submitted successfully!',
+            'application_id': app.id
+        })
+
+
 @login_required
 @role_required('front_desk', 'super_admin')
 def create_application_api(request):
@@ -262,7 +343,6 @@ def create_application_api(request):
     if not full_name or not email or not phone:
         return JsonResponse({'error': 'Full name, email, and phone number are required.'}, status=400)
 
-    # Check if applicant or user with this email already exists
     from django.contrib.auth import get_user_model
     User = get_user_model()
     if User.objects.filter(email=email).exists():
@@ -349,6 +429,16 @@ def approve_application_api(request, app_id):
     profile.phone = app.phone
     profile.primary_goal = app.primary_goal or 'general_fitness'
     profile.date_of_birth = app.date_of_birth
+    profile.nic_passport = app.nic_passport or ''
+    profile.address = app.address or ''
+    profile.gender = app.gender or 'male'
+    profile.blood_group = app.blood_group or ''
+    profile.emergency_contact_name = app.emergency_name or ''
+    profile.emergency_relationship = app.emergency_relationship or ''
+    profile.emergency_contact_phone = app.emergency_phone or ''
+    profile.medical_conditions = app.medical_condition_details or ''
+    profile.under_medication = app.medication_details or ''
+    profile.personal_trainer_needed = app.personal_trainer_needed
     profile.save()
 
     # BiometricProfile for ZKBio Turnstile hardware
@@ -364,17 +454,19 @@ def approve_application_api(request, app_id):
     bio_profile.sync_status = 'PENDING'
     bio_profile.save()
 
-    # Create active subscription
+    # Create active subscription with fees
     today = timezone.now().date()
     plan = app.desired_plan or MembershipPlan.objects.first()
+    paid_amt = app.total_paid if app.total_paid and app.total_paid > 0 else getattr(plan, 'price_monthly', 4500)
+
     sub = Subscription.objects.create(
         member=user,
         plan=plan,
-        start_date=today,
-        end_date=today + timezone.timedelta(days=getattr(plan, 'duration_days', 30)),
+        start_date=app.start_date or today,
+        end_date=app.end_date or (today + timezone.timedelta(days=getattr(plan, 'duration_days', 30))),
         status='active',
-        payment_method='cash',
-        amount_paid=getattr(plan, 'price_monthly', 4500),
+        payment_method=app.payment_method or 'cash',
+        amount_paid=paid_amt,
         approved_by=request.user,
         payment_date=timezone.now()
     )
@@ -397,10 +489,10 @@ def approve_application_api(request, app_id):
         validity_start=sub.start_date,
         validity_end=sub.end_date,
         amount_paid=sub.amount_paid,
-        payment_method='cash',
+        payment_method=sub.payment_method,
         cashier=request.user,
         member_pin=profile.biometric_pin or '',
-        notes='Initial membership approval & enrollment'
+        notes=f"Initial membership enrollment ({app.nic_passport or 'Walk-in'})"
     )
 
     return JsonResponse({

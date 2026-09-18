@@ -37,7 +37,7 @@ urlpatterns = [
     ),
     path(
         'features',
-        views.features,
+        RedirectView.as_view(url='/'),
         name='features',
     ),
     path(

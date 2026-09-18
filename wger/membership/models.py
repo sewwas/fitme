@@ -68,6 +68,15 @@ class MemberProfile(models.Model):
         null=True, blank=True,
         related_name='coached_members'
     )
+    # Official Registration Form Extensions
+    nic_passport = models.CharField(max_length=30, blank=True, verbose_name="NIC / Passport No")
+    address = models.TextField(blank=True)
+    gender = models.CharField(max_length=15, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], blank=True)
+    blood_group = models.CharField(max_length=10, blank=True)
+    emergency_relationship = models.CharField(max_length=50, blank=True)
+    medical_conditions = models.TextField(blank=True)
+    under_medication = models.TextField(blank=True)
+    personal_trainer_needed = models.BooleanField(default=False)
     notes = models.TextField(blank=True, help_text="Staff internal notes")
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -142,21 +151,71 @@ class Subscription(models.Model):
 
 
 class MemberApplication(models.Model):
-    """Front desk application queue — new members apply before approval."""
+    """
+    Official Fit Me Fitness Club — Membership Registration Intake Queue.
+    Matches the official physical 2-page registration form across all 8 sections.
+    """
     STATUS_CHOICES = [
         ('pending', 'Pending Review'),
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
     ]
 
-    # Basic info submitted during application
+    # Section 1: Personal Information
     full_name = models.CharField(max_length=150)
-    email = models.EmailField(unique=True)
+    email = models.EmailField()
     phone = models.CharField(max_length=20)
+    address = models.TextField(blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
-    desired_plan = models.ForeignKey(MembershipPlan, on_delete=models.SET_NULL, null=True)
-    primary_goal = models.CharField(max_length=30, blank=True)
-    health_notes = models.TextField(blank=True, help_text="Any health conditions or special notes")
+    age = models.IntegerField(null=True, blank=True)
+    gender = models.CharField(max_length=15, choices=[('male', 'Male'), ('female', 'Female'), ('other', 'Other')], default='male')
+    nic_passport = models.CharField(max_length=30, blank=True, verbose_name="NIC / Passport No")
+
+    # Section 2: Emergency Contact Details
+    emergency_name = models.CharField(max_length=100, blank=True)
+    emergency_relationship = models.CharField(max_length=50, blank=True)
+    emergency_phone = models.CharField(max_length=20, blank=True)
+
+    # Section 3: Payment Plan
+    desired_plan = models.ForeignKey(MembershipPlan, on_delete=models.SET_NULL, null=True, blank=True)
+    plan_duration = models.CharField(max_length=20, choices=[
+        ('monthly', 'Monthly'),
+        ('3_months', '3 Months'),
+        ('6_months', '6 Months'),
+        ('annual', 'Annual'),
+    ], default='monthly')
+    start_date = models.DateField(null=True, blank=True)
+    end_date = models.DateField(null=True, blank=True)
+
+    # Section 4: Fitness Goals
+    primary_goal = models.CharField(max_length=50, blank=True)
+    fitness_goals_other = models.CharField(max_length=150, blank=True)
+
+    # Section 5: Medical Information
+    has_medical_conditions = models.BooleanField(default=False)
+    medical_condition_details = models.TextField(blank=True)
+    is_under_medication = models.BooleanField(default=False)
+    medication_details = models.TextField(blank=True)
+    blood_group = models.CharField(max_length=10, blank=True)
+
+    # Section 6: Trainer Requirement
+    personal_trainer_needed = models.BooleanField(default=False)
+
+    # Section 7: Payment Details
+    admission_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    monthly_fee = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    discount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    total_paid = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'))
+    payment_method = models.CharField(max_length=20, choices=[
+        ('cash', 'Cash'),
+        ('card', 'Card'),
+        ('online', 'Online'),
+    ], default='cash')
+
+    # Section 8: Terms & Conditions
+    agreed_to_rules = models.BooleanField(default=True)
+
+    # Review Status
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='pending')
     reviewed_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -178,7 +237,7 @@ class MemberApplication(models.Model):
         ordering = ['-applied_at']
 
     def __str__(self):
-        return f"{self.full_name} — {self.status}"
+        return f"{self.full_name} ({self.nic_passport}) — {self.status}"
 
 
 class BodyCheckIn(models.Model):

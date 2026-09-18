@@ -292,6 +292,7 @@ urlpatterns = i18n_patterns(
         {'sitemaps': sitemaps},
         name='django.contrib.sitemaps.views.sitemap',
     ),
+    prefix_default_language=False
 )
 
 #
@@ -318,6 +319,10 @@ urlpatterns += [
 
     # ── Fit Me 80mm Thermal Receipt View ──
     path('fitme/receipt/<int:receipt_id>/', __import__('wger.core.views.fitme_dashboards', fromlist=['view_receipt']).view_receipt, name='fitme-receipt'),
+
+    # ── Fit Me Official Membership Registration Form ──
+    path('fitme/register/', __import__('wger.core.views.fitme_dashboards', fromlist=['public_registration_view']).public_registration_view, name='fitme-register'),
+    path('register/', __import__('wger.core.views.fitme_dashboards', fromlist=['public_registration_view']).public_registration_view, name='public-register'),
 
     # ── Fit Me Hardware & Operations Integrations ──
     path('api/zkbio/', include(('wger.zkbio_integration.urls', 'zkbio_integration'), namespace='zkbio_integration')),

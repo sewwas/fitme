@@ -40,13 +40,15 @@ logger = logging.getLogger(__name__)
 # ************************
 def index(request):
     """
-    Index page — redirects authenticated users to their Fit Me role dashboard.
+    Index page — redirects authenticated users to their Fit Me role dashboard,
+    or renders the Fit Me commercial landing page for unauthenticated visitors.
     """
     if request.user.is_authenticated:
         from wger.core.views.fitme_dashboards import get_role_dashboard
         return HttpResponseRedirect(get_role_dashboard(request.user))
     else:
-        return HttpResponseRedirect(reverse('software:features'))
+        from django.shortcuts import render
+        return render(request, 'fitme/home.html')
 
 
 def demo_entries(request):

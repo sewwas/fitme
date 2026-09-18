@@ -1,0 +1,736 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Membership Registration Form — Fit Me Fitness Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-main: #0B0D0E;
+      --card-bg: #121517;
+      --card-secondary: #1A1F23;
+      --input-bg: #15191C;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --neon-lime: #76C043;
+      --neon-hover: #8AE04F;
+      --neon-glow: rgba(118, 192, 67, 0.25);
+      --neon-glow-high: rgba(118, 192, 67, 0.5);
+      --text-primary: #FFFFFF;
+      --text-muted: #8E9BA4;
+      --danger: #E63946;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      padding: 2rem 1rem 4rem;
+      line-height: 1.6;
+    }
+
+    .form-wrapper {
+      max-width: 860px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 10px 50px rgba(0,0,0,0.6), 0 0 35px var(--neon-glow);
+    }
+
+    /* ── Form Header ── */
+    .form-header {
+      background: linear-gradient(135deg, #182015 0%, #0D1012 100%);
+      border-bottom: 2px solid var(--neon-lime);
+      padding: 2.5rem 2rem;
+      text-align: center;
+      position: relative;
+    }
+    .brand-badge {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: #0B0D0E;
+      border: 2px solid var(--neon-lime);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 0.85rem;
+      box-shadow: 0 0 20px var(--neon-glow);
+    }
+    .brand-badge i { color: var(--neon-lime); font-size: 1.6rem; }
+
+    .club-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 1.85rem;
+      letter-spacing: 1.5px;
+      color: #fff;
+    }
+    .club-title span { color: var(--neon-lime); }
+
+    .form-doc-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 1.15rem;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+      text-transform: uppercase;
+    }
+
+    .back-link {
+      position: absolute;
+      top: 1.5rem;
+      left: 1.5rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--neon-lime); }
+
+    /* ── Form Body & Sections ── */
+    .form-body {
+      padding: 2.5rem;
+    }
+    @media(max-width: 600px) { .form-body { padding: 1.5rem; } }
+
+    .section-box {
+      background: var(--card-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 1.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 1.1rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .section-num {
+      background: var(--neon-lime);
+      color: #000;
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+      font-weight: 900;
+    }
+
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0.75rem; }
+    @media(max-width: 768px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+    .form-group label {
+      display: block;
+      font-size: 0.76rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+    .form-group label span.req { color: var(--danger); margin-left: 2px; }
+
+    .form-control {
+      width: 100%;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      color: #fff;
+      padding: 0.7rem 0.9rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-family: 'Inter', sans-serif;
+      transition: all 0.2s;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--neon-lime);
+      box-shadow: 0 0 10px var(--neon-glow);
+    }
+
+    textarea.form-control {
+      resize: vertical;
+      min-height: 70px;
+    }
+
+    /* ── Select & Radio Cards ── */
+    .radio-card-group {
+      display: flex;
+      gap: 0.85rem;
+      flex-wrap: wrap;
+    }
+    .radio-card {
+      flex: 1;
+      min-width: 100px;
+      background: var(--input-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 0.65rem 0.85rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .radio-card:hover { border-color: rgba(118, 192, 67, 0.5); }
+    .radio-card input { accent-color: var(--neon-lime); width: 16px; height: 16px; }
+
+    /* ── Rules Box ── */
+    .rules-list {
+      list-style: none;
+      font-size: 0.85rem;
+      color: #ccc;
+      line-height: 1.6;
+      margin-bottom: 1.25rem;
+    }
+    .rules-list li {
+      margin-bottom: 0.6rem;
+      display: flex;
+      gap: 0.6rem;
+    }
+    .rules-list li i { color: var(--neon-lime); margin-top: 3px; font-size: 0.85rem; flex-shrink: 0; }
+
+    .consent-box {
+      background: rgba(118, 192, 67, 0.08);
+      border: 1px solid var(--neon-lime);
+      border-radius: 10px;
+      padding: 1.25rem;
+      margin-top: 1rem;
+    }
+
+    /* ── Submit Button ── */
+    .btn-submit {
+      width: 100%;
+      background: var(--neon-lime);
+      color: #000;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 1.15rem;
+      letter-spacing: 0.5px;
+      padding: 1rem 2rem;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      box-shadow: 0 0 35px var(--neon-glow-high);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.65rem;
+    }
+    .btn-submit:hover {
+      background: var(--neon-hover);
+      transform: scale(1.01);
+      box-shadow: 0 0 45px var(--neon-glow-high);
+    }
+
+    /* ── Success Card ── */
+    .success-card {
+      display: none;
+      text-align: center;
+      padding: 4rem 2rem;
+    }
+    .success-icon {
+      width: 70px;
+      height: 70px;
+      border-radius: 50%;
+      background: rgba(118, 192, 67, 0.15);
+      border: 2px solid var(--neon-lime);
+      color: var(--neon-lime);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 30px var(--neon-glow);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="form-wrapper">
+
+    <!-- Header -->
+    <div class="form-header">
+      <a href="/" class="back-link">
+        <i class="fa fa-arrow-left"></i> Home
+      </a>
+      <div class="brand-badge">
+        <i class="fa fa-dumbbell"></i>
+      </div>
+      <div class="club-title">FIT <span>ME</span> FITNESS CLUB</div>
+      <div class="form-doc-title">Membership Registration Form</div>
+    </div>
+
+    <!-- Success Screen (Shown after submit) -->
+    <div class="success-card" id="successScreen">
+      <div class="success-icon"><i class="fa fa-check"></i></div>
+      <h2 style="font-family:'Montserrat';font-weight:900;font-size:1.8rem;margin-bottom:0.5rem;">Application Submitted Successfully!</h2>
+      <p style="color:var(--text-muted);max-width:550px;margin:0 auto 1.5rem;">
+        Welcome to Fit Me! Your registration application has been routed to the Front Desk queue for verification, turnstile biometric PIN provisioning, and initial payment processing.
+      </p>
+      <div style="background:#1F2428;border:1px solid var(--neon-lime);border-radius:12px;padding:1.25rem;display:inline-block;margin-bottom:2rem;">
+        <div style="font-size:0.8rem;color:var(--text-muted);text-transform:uppercase;">Application Reference ID</div>
+        <div style="font-family:'Montserrat';font-size:1.6rem;font-weight:900;color:var(--neon-lime);" id="appRefId">FM-APP-0000</div>
+      </div>
+      <div>
+        <a href="/" class="btn-hero-primary" style="background:var(--neon-lime);color:#000;padding:0.75rem 1.8rem;border-radius:8px;text-decoration:none;font-weight:800;">
+          Return to Homepage
+        </a>
+      </div>
+    </div>
+
+    <!-- Registration Form -->
+    <form class="form-body" id="regForm" onsubmit="submitRegistration(event)">
+      {% csrf_token %}
+
+      <!-- 1. Personal Information -->
+      <div class="section-box">
+        <div class="section-title">
+          <span class="section-num">1</span>
+          Personal Information
+        </div>
+        <div class="form-group">
+          <label>Full Name <span class="req">*</span></label>
+          <input type="text" class="form-control" name="full_name" id="fullName" placeholder="e.g. Kasun Chamara Silva" required>
+        </div>
+
+        <div class="form-group">
+          <label>Address <span class="req">*</span></label>
+          <textarea class="form-control" name="address" id="address" placeholder="Residential Street Address, City" required></textarea>
+        </div>
+
+        <div class="grid-3">
+          <div class="form-group">
+            <label>Date of Birth <span class="req">*</span></label>
+            <input type="date" class="form-control" name="date_of_birth" id="dob" onchange="calculateAge()" required>
+          </div>
+          <div class="form-group">
+            <label>Age</label>
+            <input type="number" class="form-control" name="age" id="age" placeholder="Auto-calculated" readonly>
+          </div>
+          <div class="form-group">
+            <label>Gender <span class="req">*</span></label>
+            <select class="form-control" name="gender" id="gender" required>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="form-group">
+            <label>NIC / Passport No <span class="req">*</span></label>
+            <input type="text" class="form-control" name="nic_passport" id="nicPassport" placeholder="e.g. 199612345678 or N1234567" required>
+          </div>
+          <div class="form-group">
+            <label>Contact Number (Phone) <span class="req">*</span></label>
+            <input type="tel" class="form-control" name="phone" id="phone" placeholder="e.g. 077 123 4567" required>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Email Address <span class="req">*</span></label>
+          <input type="email" class="form-control" name="email" id="email" placeholder="e.g. kasun@gmail.com" required>
+        </div>
+      </div>
+
+      <!-- 2. Emergency Contact Details -->
+      <div class="section-box">
+        <div class="section-title">
+          <span class="section-num">2</span>
+          Emergency Contact Details
+        </div>
+        <div class="grid-3">
+          <div class="form-group">
+            <label>Contact Person Name <span class="req">*</span></label>
+            <input type="text" class="form-control" name="emergency_name" id="emName" placeholder="e.g. Sunethra Silva" required>
+          </div>
+          <div class="form-group">
+            <label>Relationship <span class="req">*</span></label>
+            <input type="text" class="form-control" name="emergency_relationship" id="emRel" placeholder="e.g. Spouse / Mother / Sibling" required>
+          </div>
+          <div class="form-group">
+            <label>Contact Number <span class="req">*</span></label>
+            <input type="tel" class="form-control" name="emergency_phone" id="emPhone" placeholder="e.g. 071 987 6543" required>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Payment Plan -->
+      <div class="section-box">
+        <div class="section-title">
+          <span class="section-num">3</span>
+          Payment Plan & Duration
+        </div>
+        <div class="form-group">
+          <label>Duration Plan</label>
+          <div class="radio-card-group">
+            <label class="radio-card">
+              <input type="radio" name="plan_duration" value="monthly" checked onchange="updatePlanDates()">
+              <span>Monthly</span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="plan_duration" value="3_months" onchange="updatePlanDates()">
+              <span>3 Months</span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="plan_duration" value="6_months" onchange="updatePlanDates()">
+              <span>6 Months</span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="plan_duration" value="annual" onchange="updatePlanDates()">
+              <span>Annual</span>
+            </label>
+          </div>
+        </div>
+
+        <div class="grid-3" style="margin-top:1rem;">
+          <div class="form-group">
+            <label>Membership Tier</label>
+            <select class="form-control" name="plan_id" id="planSelect" onchange="updatePlanPrice()">
+              {% for plan in plans %}
+                <option value="{{ plan.id }}" data-price="{{ plan.price_monthly }}">{{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }}</option>
+              {% empty %}
+                <option value="1" data-price="4500">Individual — LKR 4,500</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Start Date</label>
+            <input type="date" class="form-control" name="start_date" id="startDate" onchange="updatePlanDates()">
+          </div>
+          <div class="form-group">
+            <label>End Date</label>
+            <input type="date" class="form-control" name="end_date" id="endDate" readonly>
+          </div>
+        </div>
+      </div>
+
+      <!-- 4. Fitness Goals -->
+      <div class="section-box">
+        <div class="section-title">
+          <span class="section-num">4</span>
+          Fitness Goals
+        </div>
+        <div class="grid-4">
+          <label class="radio-card">
+            <input type="checkbox" name="goals" value="Weight Loss">
+            <span>Weight Loss</span>
+          </label>
+          <label class="radio-card">
+            <input type="checkbox" name="goals" value="Muscle Gain" checked>
+            <span>Muscle Gain</span>
+          </label>
+          <label class="radio-card">
+            <input type="checkbox" name="goals" value="Body Toning">
+            <span>Body Toning</span>
+          </label>
+          <label class="radio-card">
+            <input type="checkbox" name="goals" value="General Fitness">
+            <span>General Fitness</span>
+          </label>
+        </div>
+        <div class="form-group" style="margin-top:1rem;">
+          <label>Other Fitness Goals (Optional)</label>
+          <input type="text" class="form-control" name="fitness_goals_other" placeholder="e.g. Marathon prep, Post-surgery rehab">
+        </div>
+      </div>
+
+      <!-- 5. Medical Information -->
+      <div class="section-box">
+        <div class="section-title">
+          <span class="section-num">5</span>
+          Medical Information
+        </div>
+        <div class="grid-2">
+          <div class="form-group">
+            <label>Any medical conditions?</label>
+            <div class="radio-card-group">
+              <label class="radio-card">
+                <input type="radio" name="has_medical" value="no" checked onclick="toggleMedicalDetails(false)">
+                <span>No</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="has_medical" value="yes" onclick="toggleMedicalDetails(true)">
+                <span>Yes</span>
+              </label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Under medication?</label>
+            <div class="radio-card-group">
+              <label class="radio-card">
+                <input type="radio" name="under_meds" value="no" checked onclick="toggleMedsDetails(false)">
+                <span>No</span>
+              </label>
+              <label class="radio-card">
+                <input type="radio" name="under_meds" value="yes" onclick="toggleMedsDetails(true)">
+                <span>Yes</span>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div id="medicalDetailsBox" style="display:none;margin-bottom:1rem;">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;">If yes, specify medical conditions:</label>
+          <textarea class="form-control" name="medical_condition_details" placeholder="Describe any cardiac, asthma, orthopedic, or metabolic conditions..."></textarea>
+        </div>
+
+        <div id="medsDetailsBox" style="display:none;margin-bottom:1rem;">
+          <label style="font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;">If yes, specify medication details:</label>
+          <textarea class="form-control" name="medication_details" placeholder="List ongoing prescriptions or medications..."></textarea>
+        </div>
+
+        <div class="form-group" style="max-width:280px;">
+          <label>Blood Group</label>
+          <select class="form-control" name="blood_group">
+            <option value="">Select Blood Group</option>
+            <option value="A+">A+</option>
+            <option value="A-">A-</option>
+            <option value="B+">B+</option>
+            <option value="B-">B-</option>
+            <option value="AB+">AB+</option>
+            <option value="AB-">AB-</option>
+            <option value="O+">O+</option>
+            <option value="O-">O-</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 6. Trainer Requirement -->
+      <div class="section-box">
+        <div class="section-title">
+          <span class="section-num">6</span>
+          Trainer Requirement
+        </div>
+        <div class="form-group">
+          <label>Personal Trainer Needed?</label>
+          <div class="radio-card-group">
+            <label class="radio-card">
+              <input type="radio" name="personal_trainer_needed" value="no" checked>
+              <span>No (Standard Floor Access)</span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="personal_trainer_needed" value="yes">
+              <span>Yes (Assign Personal Coach)</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7. Payment Details -->
+      <div class="section-box">
+        <div class="section-title">
+          <span class="section-num">7</span>
+          Payment Details
+        </div>
+        <div class="grid-4">
+          <div class="form-group">
+            <label>Admission Fee (LKR)</label>
+            <input type="number" class="form-control" name="admission_fee" id="admissionFee" value="1500" oninput="calculateTotal()">
+          </div>
+          <div class="form-group">
+            <label>Monthly Fee (LKR)</label>
+            <input type="number" class="form-control" name="monthly_fee" id="monthlyFee" value="4500" oninput="calculateTotal()">
+          </div>
+          <div class="form-group">
+            <label>Discount (LKR)</label>
+            <input type="number" class="form-control" name="discount" id="discount" value="0" oninput="calculateTotal()">
+          </div>
+          <div class="form-group">
+            <label>Total Due (LKR)</label>
+            <input type="number" class="form-control" name="total_paid" id="totalPaid" value="6000" readonly style="color:var(--neon-lime);font-weight:800;font-size:1.1rem;">
+          </div>
+        </div>
+
+        <div class="form-group" style="margin-top:0.75rem;">
+          <label>Payment Method</label>
+          <div class="radio-card-group">
+            <label class="radio-card">
+              <input type="radio" name="payment_method" value="cash" checked>
+              <span>Cash at Counter</span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="payment_method" value="card">
+              <span>Card / POS</span>
+            </label>
+            <label class="radio-card">
+              <input type="radio" name="payment_method" value="online">
+              <span>Online Transfer</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- 8. Terms & Conditions -->
+      <div class="section-box">
+        <div class="section-title">
+          <span class="section-num">8</span>
+          Terms & Conditions / Gym Rules
+        </div>
+
+        <ul class="rules-list">
+          <li>
+            <i class="fa fa-check-circle"></i>
+            <div><strong>Outdoor footwear is strictly not permitted inside the gym.</strong> Members are kindly requested to use a separate pair of clean shoes for indoor use.</div>
+          </li>
+          <li>
+            <i class="fa fa-check-circle"></i>
+            <div><strong>The use of a small towel during workouts is mandatory</strong> for equipment hygiene and sanitation.</div>
+          </li>
+          <li>
+            <i class="fa fa-check-circle"></i>
+            <div><strong>Smoking and the possession or use of drugs are strictly prohibited</strong> within the gym premises and throughout the building.</div>
+          </li>
+          <li>
+            <i class="fa fa-check-circle"></i>
+            <div><strong>Bringing food into the gym is not permitted.</strong> However, hydration beverages (water, electrolytes) are allowed.</div>
+          </li>
+        </ul>
+
+        <div class="consent-box">
+          <label style="display:flex;align-items:flex-start;gap:0.75rem;cursor:pointer;font-size:0.88rem;color:#fff;">
+            <input type="checkbox" name="agreed_to_rules" required style="accent-color:var(--neon-lime);width:20px;height:20px;margin-top:2px;">
+            <div>
+              <strong>I agree to follow all gym rules and confirm I am physically fit for training.</strong><br>
+              <span style="font-size:0.78rem;color:var(--text-muted);">Fit Me Fitness Club is not responsible for injuries or lost personal belongings.</span>
+            </div>
+          </label>
+        </div>
+      </div>
+
+      <!-- Submit Action -->
+      <button type="submit" class="btn-submit" id="btnSubmitForm">
+        <i class="fa fa-paper-plane"></i> Submit Membership Registration
+      </button>
+    </form>
+  </div>
+
+  <script>
+    // Set initial start date to today
+    document.addEventListener('DOMContentLoaded', () => {
+      const today = new Date().toISOString().split('T')[0];
+      document.getElementById('startDate').value = today;
+      updatePlanDates();
+      updatePlanPrice();
+    });
+
+    function calculateAge() {
+      const dobVal = document.getElementById('dob').value;
+      if (!dobVal) return;
+      const dob = new Date(dobVal);
+      const diffMs = Date.now() - dob.getTime();
+      const ageDate = new Date(diffMs);
+      const age = Math.abs(ageDate.getUTCFullYear() - 1970);
+      document.getElementById('age').value = isNaN(age) ? '' : age;
+    }
+
+    function updatePlanDates() {
+      const startVal = document.getElementById('startDate').value;
+      if (!startVal) return;
+      const duration = document.querySelector('input[name="plan_duration"]:checked')?.value || 'monthly';
+      const start = new Date(startVal);
+      let days = 30;
+      if (duration === '3_months') days = 90;
+      else if (duration === '6_months') days = 180;
+      else if (duration === 'annual') days = 365;
+
+      start.setDate(start.getDate() + days);
+      document.getElementById('endDate').value = start.toISOString().split('T')[0];
+    }
+
+    function updatePlanPrice() {
+      const select = document.getElementById('planSelect');
+      const opt = select.options[select.selectedIndex];
+      const price = parseFloat(opt.getAttribute('data-price') || 4500);
+      document.getElementById('monthlyFee').value = price;
+      calculateTotal();
+    }
+
+    function calculateTotal() {
+      const adm = parseFloat(document.getElementById('admissionFee').value) || 0;
+      const mon = parseFloat(document.getElementById('monthlyFee').value) || 0;
+      const disc = parseFloat(document.getElementById('discount').value) || 0;
+      const total = Math.max(0, adm + mon - disc);
+      document.getElementById('totalPaid').value = total;
+    }
+
+    function toggleMedicalDetails(show) {
+      document.getElementById('medicalDetailsBox').style.display = show ? 'block' : 'none';
+    }
+    function toggleMedsDetails(show) {
+      document.getElementById('medsDetailsBox').style.display = show ? 'block' : 'none';
+    }
+
+    // Submit form handler
+    async function submitRegistration(e) {
+      e.preventDefault();
+      const btn = document.getElementById('btnSubmitForm');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing Application...';
+
+      const form = document.getElementById('regForm');
+      const formData = new FormData(form);
+
+      // Collect multiple checkbox goals
+      const goals = [];
+      document.querySelectorAll('input[name="goals"]:checked').forEach(cb => goals.push(cb.value));
+      formData.set('primary_goal', goals.join(', '));
+
+      try {
+        const res = await fetch('/fitme/register/', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('regForm').style.display = 'none';
+          document.getElementById('appRefId').textContent = data.application_id ? `FM-APP-${String(data.application_id).padStart(4, '0')}` : 'FM-APP-0001';
+          document.getElementById('successScreen').style.display = 'block';
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          alert('Error: ' + (data.error || 'Failed to submit application.'));
+        }
+      } catch (err) {
+        alert('Submission failed: ' + err);
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-paper-plane"></i> Submit Membership Registration';
+      }
+    }
+  </script>
+</body>
+</html>

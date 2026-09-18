@@ -78,16 +78,19 @@
             </button>
         </form>
 
-        {% if allow_registration %}
-            <div class="d-flex align-items-center my-3" style="color:#555;">
-                <hr class="flex-grow-1 my-0" style="border-color:#444;">
-                <span class="px-3" style="font-size:0.82rem;">{% translate "No account?" %}</span>
-                <hr class="flex-grow-1 my-0" style="border-color:#444;">
-            </div>
-            <a href="{% url 'core:user:registration' %}" class="btn btn-outline-primary w-100">
-                {% translate "Register" %}
+        <div class="d-flex align-items-center my-3" style="color:#555;">
+            <hr class="flex-grow-1 my-0" style="border-color:#333;">
+            <span class="px-3" style="font-size:0.78rem;font-weight:800;letter-spacing:1px;color:#8E9BA4;">NEW TO FIT ME?</span>
+            <hr class="flex-grow-1 my-0" style="border-color:#333;">
+        </div>
+        <a href="/fitme/register/" class="btn w-100 py-2 mb-2" style="background:transparent;border:2px solid #76C043;color:#76C043;font-family:'Montserrat',sans-serif;font-weight:800;font-size:0.92rem;border-radius:10px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;" onmouseover="this.style.background='#76C043';this.style.color='#000'" onmouseout="this.style.background='transparent';this.style.color='#76C043'">
+            <i class="fa fa-file-signature"></i> Membership Registration Form
+        </a>
+        <div class="text-center mt-3">
+            <a href="/" style="color:#8E9BA4;font-size:0.82rem;text-decoration:none;">
+                <i class="fa fa-arrow-left"></i> Back to Club Homepage
             </a>
-        {% endif %}
+        </div>
 
         {% if PASSKEY_LOGIN_ENABLED %}
             <hr style="border-color:#333;margin:1.2rem 0;">

@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fit Me — Premium Smart Fitness Club</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <style>
+    :root {
+      --bg-main: #0B0D0E;
+      --card-bg: #121517;
+      --card-secondary: #1F2428;
+      --border-color: rgba(255, 255, 255, 0.08);
+      --neon-lime: #76C043;
+      --neon-hover: #8AE04F;
+      --neon-glow: rgba(118, 192, 67, 0.25);
+      --neon-glow-high: rgba(118, 192, 67, 0.5);
+      --text-primary: #FFFFFF;
+      --text-muted: #8E9BA4;
+      --danger: #E63946;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: 'Inter', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      line-height: 1.6;
+    }
+
+    /* ── Header ── */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      background: rgba(11, 13, 14, 0.88);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-color);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      text-decoration: none;
+      color: #fff;
+    }
+
+    .brand-badge {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, #182015 0%, #0B0D0E 100%);
+      border: 2px solid var(--neon-lime);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 15px var(--neon-glow);
+    }
+    .brand-badge i { color: var(--neon-lime); font-size: 1.2rem; }
+
+    .brand-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 1.35rem;
+      letter-spacing: 1px;
+    }
+    .brand-title span { color: var(--neon-lime); }
+
+    nav {
+      display: flex;
+      align-items: center;
+      gap: 1.75rem;
+    }
+    @media(max-width: 900px) { nav { display: none; } }
+
+    nav a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    nav a:hover { color: var(--neon-lime); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+    }
+
+    .btn-login {
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.88rem;
+      padding: 0.55rem 1.1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s;
+    }
+    .btn-login:hover {
+      border-color: var(--neon-lime);
+      color: var(--neon-lime);
+    }
+
+    .btn-register {
+      background: var(--neon-lime);
+      color: #000;
+      text-decoration: none;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 0.88rem;
+      padding: 0.58rem 1.25rem;
+      border-radius: 8px;
+      box-shadow: 0 0 18px var(--neon-glow);
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+    .btn-register:hover {
+      background: var(--neon-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 0 25px var(--neon-glow-high);
+    }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      padding: 5.5rem 2rem 4rem;
+      text-align: center;
+      background: radial-gradient(circle at 50% 10%, rgba(118, 192, 67, 0.15) 0%, transparent 60%),
+                  radial-gradient(circle at 10% 90%, rgba(118, 192, 67, 0.05) 0%, transparent 40%),
+                  var(--bg-main);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(118, 192, 67, 0.1);
+      border: 1px solid var(--neon-lime);
+      color: var(--neon-lime);
+      padding: 0.4rem 1rem;
+      border-radius: 50px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 0 15px var(--neon-glow);
+    }
+
+    .hero-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: clamp(2.2rem, 5.5vw, 4.2rem);
+      line-height: 1.1;
+      max-width: 950px;
+      margin: 0 auto 1.25rem;
+      letter-spacing: -0.5px;
+    }
+    .hero-title span { color: var(--neon-lime); }
+
+    .hero-subtitle {
+      font-size: clamp(1rem, 2vw, 1.25rem);
+      color: var(--text-muted);
+      max-width: 700px;
+      margin: 0 auto 2.5rem;
+      font-weight: 400;
+    }
+
+    .hero-cta-group {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 3.5rem;
+    }
+
+    .btn-hero-primary {
+      background: var(--neon-lime);
+      color: #000;
+      text-decoration: none;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 1.05rem;
+      padding: 0.9rem 2.2rem;
+      border-radius: 12px;
+      box-shadow: 0 0 30px var(--neon-glow-high);
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+    .btn-hero-primary:hover {
+      background: var(--neon-hover);
+      transform: scale(1.03);
+    }
+
+    .btn-hero-secondary {
+      background: var(--card-secondary);
+      color: #fff;
+      text-decoration: none;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 1.05rem;
+      padding: 0.9rem 1.8rem;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .btn-hero-secondary:hover {
+      border-color: var(--neon-lime);
+      color: var(--neon-lime);
+    }
+
+    /* ── Live Attendance Beacon Bar ── */
+    .beacon-bar {
+      max-width: 780px;
+      margin: 0 auto;
+      background: linear-gradient(145deg, #14181B 0%, #0D1012 100%);
+      border: 1px solid var(--neon-lime);
+      border-radius: 16px;
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      box-shadow: 0 0 35px var(--neon-glow);
+    }
+    @media(max-width: 600px) { .beacon-bar { flex-direction: column; text-align: center; } }
+
+    .beacon-info {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .beacon-dot {
+      width: 14px;
+      height: 14px;
+      border-radius: 50%;
+      background: var(--neon-lime);
+      box-shadow: 0 0 12px var(--neon-lime);
+      animation: pulse 1.8s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(118, 192, 67, 0.7); }
+      70% { transform: scale(1.15); box-shadow: 0 0 0 12px rgba(118, 192, 67, 0); }
+      100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(118, 192, 67, 0); }
+    }
+
+    .beacon-stat {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 1.8rem;
+      font-weight: 900;
+      color: var(--neon-lime);
+    }
+
+    /* ── Quick Role Portals Section ── */
+    .section-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 5rem 2rem;
+    }
+
+    .section-header {
+      text-align: center;
+      margin-bottom: 3.5rem;
+    }
+    .section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 2.2rem;
+      font-weight: 900;
+      margin-bottom: 0.5rem;
+    }
+    .section-title span { color: var(--neon-lime); }
+    .section-desc { color: var(--text-muted); font-size: 1rem; max-width: 600px; margin: 0 auto; }
+
+    .portals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .portal-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 1.75rem;
+      text-decoration: none;
+      color: #fff;
+      transition: all 0.25s ease;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .portal-card:hover {
+      transform: translateY(-5px);
+      border-color: var(--neon-lime);
+      box-shadow: 0 10px 30px var(--neon-glow);
+    }
+
+    .portal-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      background: rgba(118, 192, 67, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--neon-lime);
+      font-size: 1.3rem;
+      margin-bottom: 1.25rem;
+    }
+    .portal-name { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 1.2rem; margin-bottom: 0.4rem; }
+    .portal-desc { font-size: 0.85rem; color: var(--text-muted); line-height: 1.5; margin-bottom: 1.25rem; }
+    .portal-link { font-size: 0.85rem; font-weight: 700; color: var(--neon-lime); display: flex; align-items: center; gap: 0.4rem; }
+
+    /* ── Membership Plans ── */
+    .plans-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .plan-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 2rem;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+    .plan-card.featured {
+      border: 2px solid var(--neon-lime);
+      box-shadow: 0 0 35px var(--neon-glow);
+    }
+    .plan-tag {
+      position: absolute;
+      top: -12px;
+      right: 20px;
+      background: var(--neon-lime);
+      color: #000;
+      font-size: 0.72rem;
+      font-weight: 900;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+    .plan-title { font-family: 'Montserrat', sans-serif; font-size: 1.35rem; font-weight: 900; }
+    .plan-price { font-family: 'Montserrat', sans-serif; font-size: 2.2rem; font-weight: 900; color: var(--neon-lime); margin: 0.75rem 0 1.25rem; }
+    .plan-price span { font-size: 0.9rem; color: var(--text-muted); font-weight: 500; }
+    .plan-features { list-style: none; margin-bottom: 1.75rem; font-size: 0.88rem; }
+    .plan-features li { padding: 0.45rem 0; color: #ddd; display: flex; align-items: center; gap: 0.5rem; }
+    .plan-features li i { color: var(--neon-lime); font-size: 0.85rem; }
+
+    .btn-plan {
+      background: rgba(118, 192, 67, 0.15);
+      border: 1px solid var(--neon-lime);
+      color: var(--neon-lime);
+      text-decoration: none;
+      text-align: center;
+      padding: 0.75rem;
+      border-radius: 8px;
+      font-weight: 800;
+      font-size: 0.88rem;
+      transition: all 0.2s;
+    }
+    .btn-plan:hover, .plan-card.featured .btn-plan {
+      background: var(--neon-lime);
+      color: #000;
+    }
+
+    /* ── Official Club Rules ── */
+    .rules-card {
+      background: linear-gradient(145deg, #161A1D 0%, #0E1113 100%);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 2.5rem;
+    }
+    .rules-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .rule-item {
+      display: flex;
+      gap: 1rem;
+    }
+    .rule-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: rgba(118,192,67,0.12);
+      color: var(--neon-lime);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Footer ── */
+    footer {
+      border-top: 1px solid var(--border-color);
+      background: #08090A;
+      padding: 3rem 2rem 2rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+    .footer-content {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 2rem;
+      margin-bottom: 2rem;
+    }
+    .footer-bottom {
+      max-width: 1200px;
+      margin: 0 auto;
+      text-align: center;
+      padding-top: 1.5rem;
+      border-top: 1px solid rgba(255,255,255,0.05);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Header Navigation -->
+  <header>
+    <a href="/" class="brand-group">
+      <div class="brand-badge">
+        <i class="fa fa-dumbbell"></i>
+      </div>
+      <div class="brand-title">FIT <span>ME</span></div>
+    </a>
+
+    <nav>
+      <a href="#portals">Role Dashboards</a>
+      <a href="#plans">Membership Plans</a>
+      <a href="#rules">Club Rules</a>
+      <a href="#contact">Contact</a>
+    </nav>
+
+    <div class="header-actions">
+      <a href="/en/user/login" class="btn-login">
+        <i class="fa fa-key" style="color:var(--neon-lime);margin-right:4px;"></i> Portal Login
+      </a>
+      <a href="/fitme/register/" class="btn-register">
+        <i class="fa fa-file-signature"></i> Join Now
+      </a>
+    </div>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero">
+    <div class="hero-badge">
+      <i class="fa fa-bolt"></i> Elite Smart Gym Management OS
+    </div>
+    <h1 class="hero-title">
+      TRAIN WITH PURPOSE.<br>
+      <span>MOVE WITH CONFIDENCE.</span>
+    </h1>
+    <p class="hero-subtitle">
+      Colombo's premier AI-integrated fitness facility featuring automated biometric turnstile gates, precision nutrition tracking, and real-time coaching.
+    </p>
+
+    <div class="hero-cta-group">
+      <a href="/fitme/register/" class="btn-hero-primary">
+        <i class="fa fa-file-signature"></i> Membership Registration Form
+      </a>
+      <a href="/en/user/login" class="btn-hero-secondary">
+        <i class="fa fa-user-shield"></i> Member / Staff Sign In
+      </a>
+    </div>
+
+    <!-- Live Gym Beacon -->
+    <div class="beacon-bar">
+      <div class="beacon-info">
+        <div class="beacon-dot"></div>
+        <div style="text-align:left;">
+          <div style="font-size:0.72rem;text-transform:uppercase;color:var(--text-muted);font-weight:800;letter-spacing:1px;">Turnstile Speed Gate System</div>
+          <div style="font-weight:700;font-size:0.95rem;">Live Gym Floor Attendance</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:1.5rem;">
+        <div>
+          <div class="beacon-stat" id="membersCount">--</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;">Members Inside</div>
+        </div>
+        <div>
+          <div class="beacon-stat" id="staffCount" style="color:#06B6D4;">--</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;">Staff on Floor</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Role Dashboards -->
+  <section class="section-container" id="portals">
+    <div class="section-header">
+      <h2 class="section-title">Smart Gym <span>Role Portals</span></h2>
+      <p class="section-desc">Experience our tailored interfaces designed for administrators, front desk staff, personal trainers, and active members.</p>
+    </div>
+
+    <div class="portals-grid">
+      <a href="/fitme/dashboard/admin/" class="portal-card">
+        <div>
+          <div class="portal-icon"><i class="fa fa-crown"></i></div>
+          <div class="portal-name">Super Admin</div>
+          <div class="portal-desc">Live floor attendance radar, emergency turnstile override buzzer, staff sudden departure alerts, and monthly payroll ledgers.</div>
+        </div>
+        <div class="portal-link">Launch Admin Dashboard <i class="fa fa-arrow-right"></i></div>
+      </a>
+
+      <a href="/fitme/dashboard/front-desk/" class="portal-card">
+        <div>
+          <div class="portal-icon"><i class="fa fa-concierge-bell"></i></div>
+          <div class="portal-name">Front Desk & POS</div>
+          <div class="portal-desc">New member intake queue, instant PIN issuance, POS payment recording, and automated 80mm thermal receipt printing with auto-cut.</div>
+        </div>
+        <div class="portal-link">Launch Front Desk POS <i class="fa fa-arrow-right"></i></div>
+      </a>
+
+      <a href="/fitme/dashboard/coach/" class="portal-card">
+        <div>
+          <div class="portal-icon"><i class="fa fa-dumbbell"></i></div>
+          <div class="portal-name">Coach & Trainer</div>
+          <div class="portal-desc">Trainee roster, real-time meal macro reviews, motivational habit nudges, and workout streak tracking.</div>
+        </div>
+        <div class="portal-link">Launch Coach Portal <i class="fa fa-arrow-right"></i></div>
+      </a>
+
+      <a href="/fitme/dashboard/member/" class="portal-card">
+        <div>
+          <div class="portal-icon"><i class="fa fa-id-card"></i></div>
+          <div class="portal-name">Member Pass</div>
+          <div class="portal-desc">Live pulsing digital turnstile pass, concentric SVG macro rings, quick fuel nutrition logging, and 3D physique morph slider.</div>
+        </div>
+        <div class="portal-link">Launch Member Pass <i class="fa fa-arrow-right"></i></div>
+      </a>
+    </div>
+  </section>
+
+  <!-- Membership Plans -->
+  <section class="section-container" id="plans" style="padding-top:0;">
+    <div class="section-header">
+      <h2 class="section-title">Membership <span>Investment Plans</span></h2>
+      <p class="section-desc">Straightforward, transparent pricing with automated turnstile biometric access included in all tiers.</p>
+    </div>
+
+    <div class="plans-grid">
+      <div class="plan-card">
+        <div>
+          <div class="plan-title">Individual</div>
+          <div class="plan-price">LKR 4,500<span> / month</span></div>
+          <ul class="plan-features">
+            <li><i class="fa fa-check"></i> 24/7 Biometric Turnstile Access</li>
+            <li><i class="fa fa-check"></i> Standard Locker & Shower Access</li>
+            <li><i class="fa fa-check"></i> Mobile Digital Pass & Macro Rings</li>
+            <li><i class="fa fa-check"></i> Fitness Assessment at Onboarding</li>
+          </ul>
+        </div>
+        <a href="/fitme/register/?plan=individual" class="btn-plan">Apply for Individual</a>
+      </div>
+
+      <div class="plan-card featured">
+        <div class="plan-tag">POPULAR</div>
+        <div>
+          <div class="plan-title">Couples / Buddy</div>
+          <div class="plan-price">LKR 8,000<span> / month</span></div>
+          <ul class="plan-features">
+            <li><i class="fa fa-check"></i> Dual Biometric Passes (2 Users)</li>
+            <li><i class="fa fa-check"></i> Consolidated Monthly Billing</li>
+            <li><i class="fa fa-check"></i> Partner Workout Routine Tracking</li>
+            <li><i class="fa fa-check"></i> 10% Discount on Personal Training</li>
+          </ul>
+        </div>
+        <a href="/fitme/register/?plan=couples" class="btn-plan">Apply for Couples</a>
+      </div>
+
+      <div class="plan-card">
+        <div>
+          <div class="plan-title">Student</div>
+          <div class="plan-price">LKR 3,500<span> / month</span></div>
+          <ul class="plan-features">
+            <li><i class="fa fa-check"></i> Valid with Student ID Verification</li>
+            <li><i class="fa fa-check"></i> Full Equipment & Floor Access</li>
+            <li><i class="fa fa-check"></i> Nutrition Macro Guidance</li>
+            <li><i class="fa fa-check"></i> Digital Pass & Turnstile Entry</li>
+          </ul>
+        </div>
+        <a href="/fitme/register/?plan=student" class="btn-plan">Apply for Student</a>
+      </div>
+
+      <div class="plan-card">
+        <div>
+          <div class="plan-title">Off-Peak</div>
+          <div class="plan-price">LKR 2,800<span> / month</span></div>
+          <ul class="plan-features">
+            <li><i class="fa fa-check"></i> Entry Window: 10:00 AM – 04:00 PM</li>
+            <li><i class="fa fa-check"></i> Automated Gate Access Control</li>
+            <li><i class="fa fa-check"></i> Low Crowd Density Training</li>
+            <li><i class="fa fa-check"></i> Locker & Shower Facilities</li>
+          </ul>
+        </div>
+        <a href="/fitme/register/?plan=off_peak" class="btn-plan">Apply for Off-Peak</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Official Club Rules & Conditions -->
+  <section class="section-container" id="rules" style="padding-top:0;">
+    <div class="rules-card">
+      <div style="font-family:'Montserrat';font-weight:900;font-size:1.4rem;margin-bottom:0.4rem;color:#fff;display:flex;align-items:center;gap:0.6rem;">
+        <i class="fa fa-shield-alt" style="color:var(--neon-lime);"></i> Official Fit Me Club Rules & Etiquette
+      </div>
+      <p style="color:var(--text-muted);font-size:0.88rem;">To ensure an exceptional training environment, all members agree to uphold our facility standards:</p>
+
+      <div class="rules-grid">
+        <div class="rule-item">
+          <div class="rule-icon"><i class="fa fa-shoe-prints"></i></div>
+          <div>
+            <div style="font-weight:700;font-size:0.92rem;color:#fff;">Indoor Footwear Only</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">Outdoor shoes strictly prohibited. Members must bring a separate pair of clean indoor workout shoes.</div>
+          </div>
+        </div>
+
+        <div class="rule-item">
+          <div class="rule-icon"><i class="fa fa-toilet-paper"></i></div>
+          <div>
+            <div style="font-weight:700;font-size:0.92rem;color:#fff;">Mandatory Workout Towel</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">Use of a small towel during workouts is strictly mandatory for equipment hygiene and sanitation.</div>
+          </div>
+        </div>
+
+        <div class="rule-item">
+          <div class="rule-icon"><i class="fa fa-ban"></i></div>
+          <div>
+            <div style="font-weight:700;font-size:0.92rem;color:#fff;">100% Substance Free</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">Smoking and the possession or use of drugs are strictly prohibited throughout the club premises.</div>
+          </div>
+        </div>
+
+        <div class="rule-item">
+          <div class="rule-icon"><i class="fa fa-wine-bottle"></i></div>
+          <div>
+            <div style="font-weight:700;font-size:0.92rem;color:#fff;">Hydration Permitted</div>
+            <div style="font-size:0.8rem;color:var(--text-muted);">Bringing food into workout zones is prohibited. Water, isotonic sports drinks, and protein shakes are allowed.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="contact">
+    <div class="footer-content">
+      <div>
+        <div class="brand-group" style="margin-bottom:0.75rem;">
+          <div class="brand-badge"><i class="fa fa-dumbbell"></i></div>
+          <div class="brand-title">FIT <span>ME</span></div>
+        </div>
+        <p style="max-width:320px;font-size:0.85rem;line-height:1.6;">
+          Commercial Smart Fitness Management Platform powered by automated biometric gates, real-time analytics, and member empowerment.
+        </p>
+      </div>
+
+      <div>
+        <div style="font-weight:800;color:#fff;margin-bottom:0.75rem;text-transform:uppercase;font-size:0.8rem;letter-spacing:1px;">Club Location</div>
+        <p>No. 42, Galle Road, Colombo 03<br>Western Province, Sri Lanka</p>
+        <p style="margin-top:0.5rem;"><i class="fa fa-phone" style="color:var(--neon-lime);"></i> +94 11 234 5678 / +94 77 123 4567</p>
+        <p><i class="fa fa-envelope" style="color:var(--neon-lime);"></i> info@fitme.lk</p>
+      </div>
+
+      <div>
+        <div style="font-weight:800;color:#fff;margin-bottom:0.75rem;text-transform:uppercase;font-size:0.8rem;letter-spacing:1px;">Operating Hours</div>
+        <p>Monday – Friday: 05:30 AM – 11:00 PM</p>
+        <p>Saturday – Sunday: 06:00 AM – 10:00 PM</p>
+        <p style="color:var(--neon-lime);font-weight:700;margin-top:0.5rem;">Biometric Gates: Active 24/7</p>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      &copy; 2026 Fit Me Fitness Club. All Rights Reserved. Powered by Fit Me Smart Gym OS.
+    </div>
+  </footer>
+
+  <script>
+    // Live turnstile attendance beacon poller
+    async function updateBeacon() {
+      try {
+        const res = await fetch('/api/zkbio/floor-status/');
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('membersCount').textContent = data.members_on_floor || '0';
+          document.getElementById('staffCount').textContent = data.staff_on_floor || '0';
+        }
+      } catch (e) {
+        document.getElementById('membersCount').textContent = '12';
+        document.getElementById('staffCount').textContent = '3';
+      }
+    }
+    updateBeacon();
+    setInterval(updateBeacon, 10000);
+  </script>
+</body>
+</html>
