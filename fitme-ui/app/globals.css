@@ -53,6 +53,51 @@ body {
   color: #0B0D0E;
 }
 
+/* Cinematic Keyframe Animations */
+@keyframes ambient-glow {
+  0%, 100% {
+    opacity: 0.08;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.16;
+    transform: scale(1.08);
+  }
+}
+
+@keyframes hero-zoom {
+  0% {
+    transform: scale(1.02);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1.02);
+  }
+}
+
+@keyframes lime-pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(118, 192, 67, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 4px rgba(118, 192, 67, 0.2);
+  }
+}
+
+.animate-ambient-glow {
+  animation: ambient-glow 8s ease-in-out infinite;
+}
+
+.animate-hero-zoom {
+  animation: hero-zoom 20s ease-in-out infinite;
+}
+
+.animate-lime-pulse {
+  animation: lime-pulse 3s ease-in-out infinite;
+}
+
 /* Subtle cinematic effects */
 .radial-glow {
   background: radial-gradient(circle at 50% 30%, rgba(118, 192, 67, 0.08) 0%, rgba(11, 13, 14, 0) 70%);
@@ -63,9 +108,22 @@ body {
 }
 
 .card-hover-border {
-  transition: border-color 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+  transition: border-color 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 .card-hover-border:hover {
-  border-color: rgba(118, 192, 67, 0.4);
-  box-shadow: 0 10px 30px -10px rgba(118, 192, 67, 0.08);
+  border-color: rgba(118, 192, 67, 0.45);
+  box-shadow: 0 12px 35px -8px rgba(118, 192, 67, 0.12);
+  transform: translateY(-2px);
+}
+
+/* Accessible reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

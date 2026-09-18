@@ -1,6 +1,9 @@
+"use client";
+
 import React from "react";
 import { SectionLabel } from "../ui/SectionLabel";
 import { ImageCard } from "../ui/ImageCard";
+import { FadeIn, StaggerContainer, StaggerItem } from "../ui/MotionWrapper";
 
 const ARENA_CARDS = [
   {
@@ -41,9 +44,9 @@ export function ArenaSection() {
       id="arena"
       className="relative w-full bg-[#0B0D0E] py-24 sm:py-32 border-t border-[#2D3339]/50"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1750px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20">
         {/* Header */}
-        <div className="flex flex-col items-start max-w-3xl">
+        <FadeIn direction="up" distance={20} className="flex flex-col items-start max-w-3xl">
           <SectionLabel chapter="CHAPTER 04" label="THE ARENA" />
 
           <h2 className="mt-5 text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#F8FAFC] uppercase">
@@ -56,22 +59,26 @@ export function ArenaSection() {
             equipment with elite coaching culture. No gimmicks, no fluff—just
             purposeful progression.
           </p>
-        </div>
+        </FadeIn>
 
-        {/* 3 Large Image Cards */}
-        <div className="mt-14 sm:mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8">
+        {/* 3 Large Image Cards with Motion Stagger */}
+        <StaggerContainer
+          staggerDelay={0.12}
+          className="mt-14 sm:mt-20 grid grid-cols-1 md:grid-cols-3 gap-6 lg:gap-8"
+        >
           {ARENA_CARDS.map((card) => (
-            <ImageCard
-              key={card.indexNumber}
-              indexNumber={card.indexNumber}
-              title={card.title}
-              subtitle={card.subtitle}
-              description={card.description}
-              imageUrl={card.imageUrl}
-              imageAlt={card.imageAlt}
-            />
+            <StaggerItem key={card.indexNumber}>
+              <ImageCard
+                indexNumber={card.indexNumber}
+                title={card.title}
+                subtitle={card.subtitle}
+                description={card.description}
+                imageUrl={card.imageUrl}
+                imageAlt={card.imageAlt}
+              />
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </div>
     </section>
   );

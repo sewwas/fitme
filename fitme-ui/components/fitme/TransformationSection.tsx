@@ -2,11 +2,14 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import { motion, AnimatePresence } from "motion/react";
 import { SectionLabel } from "../ui/SectionLabel";
+import { FadeIn } from "../ui/MotionWrapper";
 
 interface MilestoneData {
   day: string;
   phase: string;
+  progressPercent: number;
   consistency: string;
   sessionsCompleted: number;
   strengthProgression: string;
@@ -23,6 +26,7 @@ const TRANSFORMATION_TIMELINE: MilestoneData[] = [
   {
     day: "DAY 01",
     phase: "Baseline Assessment",
+    progressPercent: 15,
     consistency: "Initial Setup",
     sessionsCompleted: 1,
     strengthProgression: "Baseline Establish (100%)",
@@ -38,6 +42,7 @@ const TRANSFORMATION_TIMELINE: MilestoneData[] = [
   {
     day: "DAY 30",
     phase: "Neuromuscular Adaptation",
+    progressPercent: 40,
     consistency: "94% Attendance",
     sessionsCompleted: 16,
     strengthProgression: "+12% Compound Volume",
@@ -53,6 +58,7 @@ const TRANSFORMATION_TIMELINE: MilestoneData[] = [
   {
     day: "DAY 90",
     phase: "Hypertrophy & Work Capacity",
+    progressPercent: 75,
     consistency: "96% Attendance",
     sessionsCompleted: 48,
     strengthProgression: "+28% Compound Strength",
@@ -68,6 +74,7 @@ const TRANSFORMATION_TIMELINE: MilestoneData[] = [
   {
     day: "DAY 180",
     phase: "Sustainable Athletic Mastery",
+    progressPercent: 100,
     consistency: "95% Attendance",
     sessionsCompleted: 98,
     strengthProgression: "+42% Over Baseline",
@@ -91,9 +98,9 @@ export function TransformationSection() {
       id="transformation"
       className="relative w-full bg-[#0B0D0E] py-24 sm:py-32 border-t border-[#2D3339]/50"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1750px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20">
         {/* Header */}
-        <div className="flex flex-col items-start max-w-3xl">
+        <FadeIn direction="up" distance={20} className="flex flex-col items-start max-w-3xl">
           <SectionLabel chapter="CHAPTER 03" label="TRANSFORMATION" />
 
           <h2 className="mt-5 text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#F8FAFC] uppercase">
@@ -106,7 +113,7 @@ export function TransformationSection() {
             is the product of consistent training sessions, progressive loads,
             and monitored biomarkers over time.
           </p>
-        </div>
+        </FadeIn>
 
         {/* Interactive Milestone Navigation */}
         <div className="mt-14 sm:mt-20">
@@ -118,12 +125,21 @@ export function TransformationSection() {
                   key={item.day}
                   type="button"
                   onClick={() => setSelectedIndex(idx)}
-                  className={`flex flex-col items-center sm:items-start p-4 sm:p-5 rounded-xl transition-all duration-200 text-left ${
+                  className={`relative flex flex-col items-center sm:items-start p-4 sm:p-5 rounded-xl transition-all duration-300 text-left overflow-hidden ${
                     isSelected
-                      ? "bg-[#0B0D0E] border border-[#76C043]/50 shadow-[0_0_20px_rgba(118,192,67,0.15)]"
-                      : "hover:bg-[#0B0D0E]/50 border border-transparent"
+                      ? "bg-[#0B0D0E] border border-[#76C043]/60 shadow-[0_0_24px_rgba(118,192,67,0.18)]"
+                      : "hover:bg-[#0B0D0E]/60 border border-transparent"
                   }`}
                 >
+                  {/* Subtle active tab indicator */}
+                  {isSelected && (
+                    <motion.div
+                      layoutId="activeMilestonePill"
+                      className="absolute top-0 inset-x-0 h-1 bg-[#76C043] shadow-[0_0_12px_#76C043]"
+                      transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    />
+                  )}
+
                   <span
                     className={`font-mono text-xs uppercase tracking-widest ${
                       isSelected ? "text-[#76C043] font-bold" : "text-[#9CA3AF]"
@@ -146,118 +162,145 @@ export function TransformationSection() {
             })}
           </div>
 
-          {/* Detailed Transformation Panel for Selected Day */}
-          <div className="mt-6 rounded-2xl border border-[#2D3339] bg-[#121517] p-6 sm:p-10 shadow-2xl">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12">
-              {/* Left Column: Core Metrics */}
-              <div className="lg:col-span-7 flex flex-col justify-between">
-                <div>
-                  <div className="flex flex-wrap items-center gap-3">
-                    <span className="font-mono text-sm font-bold text-[#76C043] bg-[#0B0D0E] px-3 py-1 rounded border border-[#2D3339]">
-                      {activeData.day}
-                    </span>
-                    <span className="text-sm font-semibold uppercase tracking-wider text-[#9CA3AF]">
-                      {activeData.phase}
-                    </span>
-                  </div>
-
-                  <h3 className="mt-4 text-2xl sm:text-3xl font-bold tracking-tight text-[#F8FAFC]">
-                    Milestone Achievement
-                  </h3>
-                  <p className="mt-2 text-base text-[#76C043] font-medium">
-                    {activeData.milestone}
-                  </p>
-
-                  <div className="mt-6 p-5 rounded-xl bg-[#0B0D0E] border border-[#2D3339]">
-                    <span className="text-xs font-mono uppercase tracking-widest text-[#9CA3AF]">
-                      Coach Progress Notes
-                    </span>
-                    <p className="mt-2 text-sm sm:text-base leading-relaxed text-[#F8FAFC]/90">
-                      &ldquo;{activeData.notes}&rdquo;
-                    </p>
-                  </div>
-                </div>
-
-                {/* Progress link CTA */}
-                <div className="mt-8 pt-6 border-t border-[#2D3339] flex items-center justify-between">
-                  <Link
-                    href="#membership"
-                    className="inline-flex items-center gap-2 text-sm font-bold tracking-wider uppercase text-[#76C043] hover:text-[#88dc4f] transition-colors"
-                  >
-                    <span>VIEW YOUR PROGRESS</span>
-                    <span className="text-lg">→</span>
-                  </Link>
-
-                  <span className="text-xs font-mono text-[#9CA3AF]">
-                    Audited Training Protocol
-                  </span>
-                </div>
+          {/* Detailed Transformation Panel with Smooth AnimatePresence */}
+          <div className="mt-6 rounded-2xl border border-[#2D3339] bg-[#121517] p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+            {/* Animated Progress Bar Across Phase */}
+            <div className="mb-8">
+              <div className="flex items-center justify-between text-xs font-mono text-[#9CA3AF] mb-2">
+                <span>PHASE COMPLETION INDEX</span>
+                <span className="text-[#76C043] font-bold">{activeData.progressPercent}%</span>
               </div>
-
-              {/* Right Column: Quantitative Telemetry Cards */}
-              <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
-                <div className="rounded-xl bg-[#0B0D0E] border border-[#2D3339] p-5">
-                  <span className="text-xs font-mono uppercase tracking-widest text-[#9CA3AF]">
-                    Training Consistency
-                  </span>
-                  <div className="mt-2 flex items-baseline justify-between">
-                    <span className="text-2xl font-black text-[#F8FAFC]">
-                      {activeData.consistency}
-                    </span>
-                    <span className="text-xs font-mono text-[#76C043]">
-                      Logged Verified
-                    </span>
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-[#0B0D0E] border border-[#2D3339] p-5">
-                  <span className="text-xs font-mono uppercase tracking-widest text-[#9CA3AF]">
-                    Sessions Completed
-                  </span>
-                  <div className="mt-2 flex items-baseline justify-between">
-                    <span className="text-2xl font-black text-[#76C043]">
-                      {activeData.sessionsCompleted}{" "}
-                      <span className="text-xs text-[#9CA3AF] font-normal">
-                        Workouts
-                      </span>
-                    </span>
-                    <span className="text-xs font-mono text-[#9CA3AF]">
-                      On Track
-                    </span>
-                  </div>
-                </div>
-
-                <div className="rounded-xl bg-[#0B0D0E] border border-[#2D3339] p-5 sm:col-span-2 lg:col-span-1">
-                  <span className="text-xs font-mono uppercase tracking-widest text-[#9CA3AF]">
-                    Strength & Volume Progression
-                  </span>
-                  <p className="mt-2 text-lg font-bold text-[#F8FAFC]">
-                    {activeData.strengthProgression}
-                  </p>
-
-                  <div className="mt-3 grid grid-cols-3 gap-2 pt-3 border-t border-[#2D3339]/60 text-xs font-mono">
-                    <div>
-                      <span className="text-[#9CA3AF] block">Bench</span>
-                      <span className="text-[#F8FAFC] font-semibold">
-                        {activeData.stats.benchBaseline}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[#9CA3AF] block">Squat</span>
-                      <span className="text-[#F8FAFC] font-semibold">
-                        {activeData.stats.squatBaseline}
-                      </span>
-                    </div>
-                    <div>
-                      <span className="text-[#9CA3AF] block">Recovery</span>
-                      <span className="text-[#76C043] font-semibold">
-                        {activeData.stats.vo2OrRecovery}
-                      </span>
-                    </div>
-                  </div>
-                </div>
+              <div className="w-full h-2 rounded-full bg-[#0B0D0E] overflow-hidden border border-[#2D3339]">
+                <motion.div
+                  className="h-full bg-gradient-to-r from-[#5ea434] to-[#76C043] rounded-full shadow-[0_0_12px_rgba(118,192,67,0.5)]"
+                  initial={{ width: 0 }}
+                  animate={{ width: `${activeData.progressPercent}%` }}
+                  transition={{ duration: 0.6, ease: [0.21, 0.47, 0.32, 0.98] }}
+                />
               </div>
             </div>
+
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeData.day}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.35, ease: [0.21, 0.47, 0.32, 0.98] }}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12"
+              >
+                {/* Left Column: Core Metrics */}
+                <div className="lg:col-span-7 flex flex-col justify-between">
+                  <div>
+                    <div className="flex flex-wrap items-center gap-3">
+                      <span className="font-mono text-sm font-bold text-[#76C043] bg-[#0B0D0E] px-3 py-1 rounded border border-[#2D3339]">
+                        {activeData.day}
+                      </span>
+                      <span className="text-sm font-semibold uppercase tracking-wider text-[#9CA3AF]">
+                        {activeData.phase}
+                      </span>
+                    </div>
+
+                    <h3 className="mt-4 text-2xl sm:text-3xl font-bold tracking-tight text-[#F8FAFC]">
+                      Milestone Achievement
+                    </h3>
+                    <p className="mt-2 text-base text-[#76C043] font-medium">
+                      {activeData.milestone}
+                    </p>
+
+                    <div className="mt-6 p-5 rounded-xl bg-[#0B0D0E] border border-[#2D3339]">
+                      <span className="text-xs font-mono uppercase tracking-widest text-[#9CA3AF]">
+                        Coach Progress Notes
+                      </span>
+                      <p className="mt-2 text-sm sm:text-base leading-relaxed text-[#F8FAFC]/90">
+                        &ldquo;{activeData.notes}&rdquo;
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Progress link CTA */}
+                  <div className="mt-8 pt-6 border-t border-[#2D3339] flex items-center justify-between">
+                    <Link
+                      href="#membership"
+                      className="group inline-flex items-center gap-2 text-sm font-bold tracking-wider uppercase text-[#76C043] hover:text-[#88dc4f] transition-colors"
+                    >
+                      <span>VIEW YOUR PROGRESS</span>
+                      <span className="text-lg transition-transform duration-200 group-hover:translate-x-1.5">
+                        →
+                      </span>
+                    </Link>
+
+                    <span className="text-xs font-mono text-[#9CA3AF]">
+                      Audited Training Protocol
+                    </span>
+                  </div>
+                </div>
+
+                {/* Right Column: Quantitative Telemetry Cards */}
+                <div className="lg:col-span-5 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 gap-4">
+                  <div className="rounded-xl bg-[#0B0D0E] border border-[#2D3339] p-5">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[#9CA3AF]">
+                      Training Consistency
+                    </span>
+                    <div className="mt-2 flex items-baseline justify-between">
+                      <span className="text-2xl font-black text-[#F8FAFC]">
+                        {activeData.consistency}
+                      </span>
+                      <span className="text-xs font-mono text-[#76C043]">
+                        Logged Verified
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-[#0B0D0E] border border-[#2D3339] p-5">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[#9CA3AF]">
+                      Sessions Completed
+                    </span>
+                    <div className="mt-2 flex items-baseline justify-between">
+                      <span className="text-2xl font-black text-[#76C043]">
+                        {activeData.sessionsCompleted}{" "}
+                        <span className="text-xs text-[#9CA3AF] font-normal">
+                          Workouts
+                        </span>
+                      </span>
+                      <span className="text-xs font-mono text-[#9CA3AF]">
+                        On Track
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-[#0B0D0E] border border-[#2D3339] p-5 sm:col-span-2 lg:col-span-1">
+                    <span className="text-xs font-mono uppercase tracking-widest text-[#9CA3AF]">
+                      Strength & Volume Progression
+                    </span>
+                    <p className="mt-2 text-lg font-bold text-[#F8FAFC]">
+                      {activeData.strengthProgression}
+                    </p>
+
+                    <div className="mt-3 grid grid-cols-3 gap-2 pt-3 border-t border-[#2D3339]/60 text-xs font-mono">
+                      <div>
+                        <span className="text-[#9CA3AF] block">Bench</span>
+                        <span className="text-[#F8FAFC] font-semibold">
+                          {activeData.stats.benchBaseline}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[#9CA3AF] block">Squat</span>
+                        <span className="text-[#F8FAFC] font-semibold">
+                          {activeData.stats.squatBaseline}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[#9CA3AF] block">Recovery</span>
+                        <span className="text-[#76C043] font-semibold">
+                          {activeData.stats.vo2OrRecovery}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </div>

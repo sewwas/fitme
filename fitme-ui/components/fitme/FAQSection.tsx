@@ -1,6 +1,9 @@
+"use client";
+
 import React from "react";
 import { SectionLabel } from "../ui/SectionLabel";
 import { Accordion, AccordionItemData } from "../ui/Accordion";
+import { FadeIn } from "../ui/MotionWrapper";
 
 const FAQ_ITEMS: AccordionItemData[] = [
   {
@@ -53,9 +56,9 @@ export function FAQSection() {
       id="faq"
       className="relative w-full bg-[#0B0D0E] py-24 sm:py-32 border-t border-[#2D3339]/50"
     >
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-8 lg:px-12">
         {/* Header */}
-        <div className="flex flex-col items-start">
+        <FadeIn direction="up" distance={20} className="flex flex-col items-start">
           <SectionLabel label="QUESTIONS & ANSWERS" />
 
           <h2 className="mt-5 text-3xl sm:text-5xl font-black tracking-tight text-[#F8FAFC] uppercase">
@@ -66,30 +69,32 @@ export function FAQSection() {
           <p className="mt-4 text-base sm:text-lg text-[#9CA3AF]">
             Everything you need to know about getting started at Fit Me.
           </p>
-        </div>
+        </FadeIn>
 
-        {/* Accordion Component */}
-        <div className="mt-12 sm:mt-16">
+        {/* Accordion Component with FadeIn */}
+        <FadeIn direction="up" distance={20} delay={0.15} className="mt-12 sm:mt-16">
           <Accordion items={FAQ_ITEMS} defaultOpenIndex={0} />
-        </div>
+        </FadeIn>
 
         {/* Still have questions prompt */}
-        <div className="mt-12 rounded-xl border border-[#2D3339] bg-[#121517] p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <h4 className="text-base font-bold text-[#F8FAFC]">
-              Have a specific question not listed here?
-            </h4>
-            <p className="text-sm text-[#9CA3AF] mt-0.5">
-              Talk directly with our coaching staff in Pitigala.
-            </p>
+        <FadeIn direction="up" distance={16} delay={0.25} className="mt-12">
+          <div className="rounded-xl border border-[#2D3339] bg-[#121517] p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 card-hover-border">
+            <div>
+              <h4 className="text-base font-bold text-[#F8FAFC]">
+                Have a specific question not listed here?
+              </h4>
+              <p className="text-sm text-[#9CA3AF] mt-0.5">
+                Talk directly with our coaching staff in Pitigala.
+              </p>
+            </div>
+            <a
+              href="tel:0707627878"
+              className="inline-flex items-center gap-2 rounded-lg border border-[#76C043]/40 bg-[#76C043]/10 px-5 py-2.5 text-xs font-mono font-bold uppercase text-[#76C043] hover:bg-[#76C043] hover:text-[#0B0D0E] hover:shadow-[0_0_18px_rgba(118,192,67,0.4)] transition-all"
+            >
+              <span>Call 070 762 7878</span>
+            </a>
           </div>
-          <a
-            href="tel:0707627878"
-            className="inline-flex items-center gap-2 rounded-lg border border-[#76C043]/40 bg-[#76C043]/10 px-4 py-2 text-xs font-mono font-bold uppercase text-[#76C043] hover:bg-[#76C043] hover:text-[#0B0D0E] transition-colors"
-          >
-            <span>Call 070 762 7878</span>
-          </a>
-        </div>
+        </FadeIn>
       </div>
     </section>
   );

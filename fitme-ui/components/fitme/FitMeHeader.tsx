@@ -46,7 +46,7 @@ export function FitMeHeader() {
             : "bg-gradient-to-b from-[#0B0D0E]/90 via-[#0B0D0E]/40 to-transparent py-5"
         }`}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+        <div className="max-w-[1750px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 flex items-center justify-between">
           {/* Brand Logo & Tagline */}
           <Link
             href="#hero"

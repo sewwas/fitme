@@ -1,6 +1,9 @@
+"use client";
+
 import React from "react";
 import { SectionLabel } from "../ui/SectionLabel";
 import { ProgramCard, ProgramItem } from "../ui/ProgramCard";
+import { FadeIn, StaggerContainer, StaggerItem } from "../ui/MotionWrapper";
 
 const FITME_PROGRAMS: ProgramItem[] = [
   {
@@ -71,9 +74,9 @@ export function ProgramsSection() {
       id="programs"
       className="relative w-full bg-[#0E1012] py-24 sm:py-32 border-t border-[#2D3339]/50"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1750px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20">
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 max-w-7xl">
+        <FadeIn direction="up" distance={20} className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div className="flex flex-col items-start max-w-2xl">
             <SectionLabel label="STRUCTURED TRAINING PATHS" />
 
@@ -90,18 +93,23 @@ export function ProgramsSection() {
           </div>
 
           <div className="flex items-center gap-3">
-            <span className="font-mono text-xs text-[#9CA3AF]">
-              5 Tailored Pathways
+            <span className="font-mono text-xs text-[#76C043] bg-[#0B0D0E] border border-[#2D3339] px-3 py-1.5 rounded-full">
+              5 Calibrated Pathways
             </span>
           </div>
-        </div>
+        </FadeIn>
 
-        {/* 5 Program Cards Grid */}
-        <div className="mt-14 sm:mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+        {/* 5 Program Cards with Scroll Stagger */}
+        <StaggerContainer
+          staggerDelay={0.09}
+          className="mt-14 sm:mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
+        >
           {FITME_PROGRAMS.map((program) => (
-            <ProgramCard key={program.id} program={program} />
+            <StaggerItem key={program.id}>
+              <ProgramCard program={program} />
+            </StaggerItem>
           ))}
-        </div>
+        </StaggerContainer>
       </div>
     </section>
   );

@@ -8,7 +8,7 @@ export function FitMeFooter() {
 
   return (
     <footer className="w-full bg-[#08090A] border-t border-[#2D3339] text-[#9CA3AF]">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20">
+      <div className="max-w-[1750px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 py-16 sm:py-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-10 lg:gap-8">
           {/* Brand Col (2 cols on lg) */}
           <div className="lg:col-span-2">
