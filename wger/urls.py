@@ -365,6 +365,10 @@ urlpatterns += [
         path('api/users/<int:user_id>/reset-password/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_reset_user_password_api']).admin_reset_user_password_api, name='api-admin-user-reset-password'),
     ], 'fitme'))),
 
+    # ── Fit Me Point of Sale (POS) for Gym Drinks & Supplements ──
+    path('pos/', include('wger.pos.urls', namespace='pos')),
+    path('dashboard/pos/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/pos/', permanent=False)),
+
     # ── Fit Me Public Website Contact API ──
     path('api/public/contact/', __import__('wger.core.views.fitme_dashboards', fromlist=['public_contact_api']).public_contact_api, name='public-contact-api'),
 

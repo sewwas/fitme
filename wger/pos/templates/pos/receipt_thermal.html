@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Receipt #{{ sale.receipt_number }} — Fit Me Gym Bar POS</title>
+  <style>
+    @page {
+      margin: 0;
+      size: 80mm auto;
+    }
+    body {
+      font-family: 'Courier New', Courier, monospace, monospace;
+      font-size: 13px;
+      line-height: 1.35;
+      color: #000;
+      background: #f4f4f4;
+      margin: 0;
+      padding: 20px 0;
+      display: flex;
+      justify-content: center;
+    }
+    .receipt-box {
+      width: 76mm;
+      background: #fff;
+      padding: 15px 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+      border-radius: 4px;
+    }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .text-left { text-align: left; }
+    .bold { font-weight: bold; }
+    .header-logo {
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+    }
+    .tagline {
+      font-size: 11px;
+      font-style: italic;
+      margin-bottom: 6px;
+    }
+    .info-line {
+      font-size: 11px;
+      margin: 2px 0;
+    }
+    .divider {
+      border-top: 1px dashed #000;
+      margin: 8px 0;
+    }
+    .double-divider {
+      border-top: 2px dashed #000;
+      margin: 8px 0;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+    th {
+      border-bottom: 1px dashed #000;
+      padding: 4px 0;
+      text-align: left;
+    }
+    td {
+      padding: 4px 0;
+      vertical-align: top;
+    }
+    .total-row {
+      font-size: 14px;
+      font-weight: bold;
+    }
+    .footer-note {
+      font-size: 11px;
+      text-align: center;
+      margin-top: 12px;
+    }
+    .no-print-bar {
+      position: fixed;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      padding: 10px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      display: flex;
+      gap: 15px;
+      z-index: 999;
+    }
+    .btn {
+      padding: 8px 16px;
+      font-family: sans-serif;
+      font-size: 13px;
+      font-weight: bold;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    .btn-print { background: #CCFF00; color: #000; }
+    .btn-close { background: #333; color: #fff; text-decoration: none; display: inline-flex; align-items: center; }
+
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+      .no-print-bar { display: none !important; }
+      .receipt-box {
+        width: 100%;
+        box-shadow: none;
+        padding: 4mm 2mm;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="no-print-bar">
+  <button class="btn btn-print" onclick="window.print()">🖨️ Print Receipt (80mm)</button>
+  <a href="/pos/" class="btn btn-close">← Back to POS Register</a>
+</div>
+
+<div class="receipt-box">
+  <div class="text-center">
+    <div class="header-logo">FIT ME</div>
+    <div class="tagline">{{ club_info.tagline }}</div>
+    <div class="info-line">{{ club_info.address }}</div>
+    <div class="info-line">Hotline: {{ club_info.phone }}</div>
+    <div class="info-line bold" style="margin-top:4px;">GYM DRINKS &amp; SUPPLEMENTS POS</div>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="info-line"><strong>Receipt #:</strong> {{ sale.receipt_number }}</div>
+  <div class="info-line"><strong>Date/Time:</strong> {{ sale.created_at|date:"Y-m-d H:i:s" }}</div>
+  <div class="info-line"><strong>Cashier:</strong> {{ sale.cashier.get_full_name|default:sale.cashier.username }}</div>
+  <div class="info-line"><strong>Customer:</strong> {{ sale.customer_name }}{% if sale.customer_member %} (PIN #{{ sale.customer_member.biometric_pin }}){% endif %}</div>
+
+  <div class="divider"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width:55%;">Item</th>
+        <th class="text-center" style="width:15%;">Qty</th>
+        <th class="text-right" style="width:30%;">Total (LKR)</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for item in sale.items.all %}
+        <tr>
+          <td>
+            <div class="bold">{{ item.product_name }}</div>
+            <div style="font-size:10px;color:#555;">@ {{ item.unit_price|floatformat:2 }}</div>
+          </td>
+          <td class="text-center">{{ item.quantity }}</td>
+          <td class="text-right">{{ item.total_price|floatformat:2 }}</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <div class="divider"></div>
+
+  <table>
+    <tr>
+      <td class="bold">Subtotal:</td>
+      <td class="text-right">Rs. {{ sale.subtotal|floatformat:2 }}</td>
+    </tr>
+    {% if sale.discount > 0 %}
+      <tr>
+        <td>Discount:</td>
+        <td class="text-right">- Rs. {{ sale.discount|floatformat:2 }}</td>
+      </tr>
+    {% endif %}
+    {% if sale.tax > 0 %}
+      <tr>
+        <td>Tax:</td>
+        <td class="text-right">Rs. {{ sale.tax|floatformat:2 }}</td>
+      </tr>
+    {% endif %}
+    <tr class="total-row">
+      <td style="padding-top:4px;">NET TOTAL:</td>
+      <td class="text-right" style="padding-top:4px;">Rs. {{ sale.total_amount|floatformat:2 }}</td>
+    </tr>
+  </table>
+
+  <div class="double-divider"></div>
+
+  <table>
+    <tr>
+      <td>Payment Method:</td>
+      <td class="text-right bold">{{ sale.get_payment_method_display }}</td>
+    </tr>
+    {% if sale.payment_method == 'CASH' %}
+      <tr>
+        <td>Cash Received:</td>
+        <td class="text-right">Rs. {{ sale.amount_received|floatformat:2 }}</td>
+      </tr>
+      <tr>
+        <td class="bold">Change Returned:</td>
+        <td class="text-right bold">Rs. {{ sale.change_returned|floatformat:2 }}</td>
+      </tr>
+    {% endif %}
+  </table>
+
+  <div class="divider"></div>
+
+  <div class="footer-note">
+    <div>*** THANK YOU FOR TRAINING WITH FIT ME! ***</div>
+    <div style="margin-top:4px;">No returns or exchanges on opened drinks or supplements.</div>
+    <div style="margin-top:6px;font-size:10px;">Fit Me Gym OS &bull; Live Attendance &amp; Turnstile Integrated</div>
+  </div>
+</div>
+
+<script>
+  // Auto open print dialog if opened in popup
+  if (window.location.search.includes('autoprint=1')) {
+    window.addEventListener('load', function() {
+      setTimeout(function() { window.print(); }, 400);
+    });
+  }
+</script>
+</body>
+</html>

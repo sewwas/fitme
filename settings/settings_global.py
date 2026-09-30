@@ -94,6 +94,7 @@ INSTALLED_APPS = [
     'wger.habit',
     'wger.zkbio_integration',
     'wger.gym_operations_payroll',
+    'wger.pos',
 
     # reCaptcha support, see https://github.com/praekelt/django-recaptcha
     'django_recaptcha',

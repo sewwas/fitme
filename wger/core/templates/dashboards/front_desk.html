@@ -186,6 +186,7 @@
     <a href="#section-biometrics"><i class="fa fa-fingerprint"></i> Biometrics &amp; Members</a>
     <a href="#section-receipts"><i class="fa fa-receipt"></i> Receipts</a>
     <div class="sidebar-section" style="margin-top:1rem;">Quick Actions</div>
+    <a href="/pos/" target="_blank" style="color:var(--neon-lime);font-weight:700;"><i class="fa fa-cash-register"></i> POS Bar Register</a>
     <a href="#" onclick="openPaymentModal(); return false;"><i class="fa fa-credit-card"></i> Record Payment</a>
     <a href="#" onclick="openIntakeModal(); return false;"><i class="fa fa-user-plus"></i> Walk-in Intake</a>
     <div class="sidebar-section" style="margin-top:1rem;">System Links</div>
@@ -200,10 +201,16 @@
         <h1 class="page-title">Front Desk Operations</h1>
         <p class="subtitle" style="margin-bottom:0;">Biometric enrollment (Face ID &amp; Fingerprint), live turnstile monitor, and payments.</p>
       </div>
-      <button class="btn-buzz-pulse" id="btnFrontBuzzer" onclick="buzzTurnstile()">
-        <i class="fa fa-door-open"></i>
-        <span>BUZZ DOOR OPEN (5s)</span>
-      </button>
+      <div style="display:flex;align-items:center;gap:0.75rem;">
+        <a href="/pos/" target="_blank" class="btn-action btn-approve" style="text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;font-size:0.85rem;padding:0.75rem 1.1rem;font-weight:800;border-radius:8px;">
+          <i class="fa fa-cash-register"></i>
+          <span>POS BAR REGISTER</span>
+        </a>
+        <button class="btn-buzz-pulse" id="btnFrontBuzzer" onclick="buzzTurnstile()">
+          <i class="fa fa-door-open"></i>
+          <span>BUZZ DOOR OPEN (5s)</span>
+        </button>
+      </div>
     </div>
 
     <!-- Live Turnstile Biometrics Monitor -->
