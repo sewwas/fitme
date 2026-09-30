@@ -12,6 +12,16 @@ from wger.membership.models import MemberProfile
 from .models import POSCategory, POSProduct, POSSale, POSSaleItem
 
 
+def is_admin_user(user):
+    """Check if the user is a superuser or belongs to the admin/super_admin role."""
+    if not user or not user.is_authenticated:
+        return False
+    if user.is_superuser:
+        return True
+    user_groups = set(user.groups.values_list('name', flat=True))
+    return bool(user_groups.intersection({'super_admin', 'admin'}))
+
+
 @login_required
 def pos_register_view(request):
     """
@@ -39,6 +49,7 @@ def pos_register_view(request):
         'categories': categories,
         'products': products,
         'members': members,
+        'is_admin': is_admin_user(request.user),
         'today_revenue': today_revenue,
         'today_count': today_count,
         'low_stock_count': low_stock_products.count(),
@@ -201,8 +212,14 @@ def pos_checkout_api(request):
 @require_POST
 def pos_add_product_api(request):
     """
-    Allow Admin or Front Desk to add a new product directly from the POS interface.
+    Allow ONLY Admin / Superuser to add a new product directly from the POS interface.
     """
+    if not is_admin_user(request.user):
+        return JsonResponse({
+            'success': False,
+            'error': 'Permission denied: Only Gym Administrators have permission to add new products to inventory.'
+        }, status=403)
+
     try:
         data = json.loads(request.body)
     except Exception as e:

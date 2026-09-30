@@ -820,9 +820,11 @@
   </div>
 
   <div style="display:flex;align-items:center;gap:0.5rem;">
-    <button class="btn-top btn-lime" onclick="openAddProductModal()">
-      <i class="fa fa-plus-circle"></i> Add Product
-    </button>
+    {% if is_admin %}
+      <button class="btn-top btn-lime" onclick="openAddProductModal()">
+        <i class="fa fa-plus-circle"></i> Add Product
+      </button>
+    {% endif %}
     <a href="/dashboard/front-desk/" class="btn-top">
       <i class="fa fa-concierge-bell"></i> Front Desk
     </a>
@@ -905,10 +907,14 @@
           <div style="grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--text-muted);">
             <i class="fa fa-boxes" style="font-size:3.5rem;opacity:0.3;margin-bottom:1rem;display:block;"></i>
             <h3 style="color:#fff;margin-bottom:0.5rem;">No Products in POS Inventory</h3>
-            <p style="font-size:0.85rem;margin-bottom:1.25rem;">Start by adding your first gym drinks, protein scoops, or workout gear.</p>
-            <button class="btn-top btn-lime" onclick="openAddProductModal()">
-              <i class="fa fa-plus-circle"></i> Add First Product
-            </button>
+            {% if is_admin %}
+              <p style="font-size:0.85rem;margin-bottom:1.25rem;">Start by adding your first gym drinks, protein scoops, or workout gear.</p>
+              <button class="btn-top btn-lime" onclick="openAddProductModal()">
+                <i class="fa fa-plus-circle"></i> Add First Product
+              </button>
+            {% else %}
+              <p style="font-size:0.85rem;margin-bottom:1.25rem;">Please contact a Gym Administrator to add drinks or supplements to inventory.</p>
+            {% endif %}
           </div>
         {% endfor %}
       </div>
@@ -1010,11 +1016,12 @@
   </div>
 </div>
 
-<!-- MODAL: ADD PRODUCT -->
+{% if is_admin %}
+<!-- MODAL: ADD PRODUCT (ADMIN ONLY) -->
 <div class="modal-backdrop" id="addProductModal">
   <div class="modal-card">
     <div class="modal-header">
-      <div class="modal-title"><i class="fa fa-plus-circle" style="color:var(--neon-lime);"></i> Add New Product to POS</div>
+      <div class="modal-title"><i class="fa fa-plus-circle" style="color:var(--neon-lime);"></i> Add New Product to POS (Admin)</div>
       <button type="button" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;" onclick="closeAddProductModal()">&times;</button>
     </div>
     <div class="modal-body">
@@ -1078,6 +1085,7 @@
     </div>
   </div>
 </div>
+{% endif %}
 
 <!-- MODAL: QUICK RESTOCK -->
 <div class="modal-backdrop" id="restockModal">
@@ -1477,17 +1485,23 @@
     document.getElementById('receiptModal').classList.remove('open');
   }
 
-  // ── Add Product Modal ──
+  {% if is_admin %}
+  // ── Add Product Modal (Admin Only) ──
   function openAddProductModal() {
-    document.getElementById('addProductModal').classList.add('open');
+    const m = document.getElementById('addProductModal');
+    if (m) m.classList.add('open');
   }
   function closeAddProductModal() {
-    document.getElementById('addProductModal').classList.remove('open');
+    const m = document.getElementById('addProductModal');
+    if (m) m.classList.remove('open');
   }
 
-  document.getElementById('newProdCategory').addEventListener('change', function() {
-    document.getElementById('newCatGroup').style.display = this.value === 'new' ? 'block' : 'none';
-  });
+  const catSelect = document.getElementById('newProdCategory');
+  if (catSelect) {
+    catSelect.addEventListener('change', function() {
+      document.getElementById('newCatGroup').style.display = this.value === 'new' ? 'block' : 'none';
+    });
+  }
 
   async function submitAddProduct() {
     const name = document.getElementById('newProdName').value.trim();
@@ -1540,6 +1554,7 @@
       alert("Network Error: " + err);
     }
   }
+  {% endif %}
 
   // ── Quick Restock Modal ──
   function openRestockModal() {
