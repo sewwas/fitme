@@ -181,11 +181,16 @@
 <div class="layout">
   <aside class="sidebar">
     <div class="sidebar-section">Front Desk Ops</div>
-    <a href="/dashboard/front-desk/" class="active"><i class="fa fa-inbox"></i> Intake &amp; Biometrics</a>
+    <a href="#section-monitor" class="active"><i class="fa fa-tachometer-alt"></i> Turnstile Monitor</a>
+    <a href="#section-intake"><i class="fa fa-inbox"></i> Intake Queue</a>
+    <a href="#section-biometrics"><i class="fa fa-fingerprint"></i> Biometrics &amp; Members</a>
+    <a href="#section-receipts"><i class="fa fa-receipt"></i> Receipts</a>
+    <div class="sidebar-section" style="margin-top:1rem;">Quick Actions</div>
     <a href="#" onclick="openPaymentModal(); return false;"><i class="fa fa-credit-card"></i> Record Payment</a>
-    <a href="/dashboard/member/"><i class="fa fa-id-badge"></i> Member Portal View</a>
+    <a href="#" onclick="openIntakeModal(); return false;"><i class="fa fa-user-plus"></i> Walk-in Intake</a>
     <div class="sidebar-section" style="margin-top:1rem;">System Links</div>
     <a href="/dashboard/admin/"><i class="fa fa-chart-line"></i> Super Admin</a>
+    <a href="/dashboard/member/"><i class="fa fa-id-badge"></i> Member Portal View</a>
     <a href="/admin/"><i class="fa fa-cog"></i> Django Backend</a>
   </aside>
 
@@ -202,7 +207,7 @@
     </div>
 
     <!-- Live Turnstile Biometrics Monitor -->
-    <div class="monitor-card">
+    <div class="monitor-card" id="section-monitor">
       <div class="monitor-header">
         <div style="display:flex;align-items:center;gap:0.75rem;">
           <span class="pulse-dot"></span>
@@ -289,7 +294,7 @@
 
     <div class="grid-2">
       <!-- Pending Applications Intake Queue -->
-      <div class="fitme-card">
+      <div class="fitme-card" id="section-intake">
         <div class="card-header">
           <div class="card-title">
             <i class="fa fa-inbox" style="color:var(--neon-lime);"></i>
@@ -357,7 +362,7 @@
       </div>
 
       <!-- Active Subscriptions & Biometrics Enrollment Center -->
-      <div class="fitme-card">
+      <div class="fitme-card" id="section-biometrics">
         <div class="card-header">
           <div class="card-title">
             <i class="fa fa-fingerprint" style="color:var(--neon-lime);"></i>
@@ -426,7 +431,7 @@
     </div>
 
     <!-- Recent Payment Receipts -->
-    <div class="fitme-card">
+    <div class="fitme-card" id="section-receipts">
       <div class="card-header">
         <div class="card-title">
           <i class="fa fa-print" style="color:var(--neon-lime);"></i>

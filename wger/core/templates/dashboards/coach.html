@@ -234,14 +234,12 @@
                     <div style="font-size:0.75rem;color:var(--text-muted);">{{ mp.phone|default:"070 762 7878" }}</div>
                   </td>
                   <td>{{ mp.get_primary_goal_display|default:"General Fitness" }}</td>
-                  <td style="font-family:monospace;font-weight:800;color:var(--neon-lime);">{{ mp.biometric_pin|default:"#1001" }}</td>
                   <td>
-                    {% for ar in at_risk_members %}
-                      {% if ar.member.id == mp.user.id %}
-                        <span style="background:rgba(230,57,70,0.15);color:var(--danger);border:1px solid var(--danger);padding:0.15rem 0.5rem;border-radius:4px;font-size:0.7rem;font-weight:800;">2d+ Inactive</span>
-                      {% endif %}
-                    {% endfor %}
-                    <span style="color:var(--neon-lime);font-size:0.75rem;font-weight:700;"><i class="fa fa-check-circle"></i> Active</span>
+                    {% if mp.user_id in at_risk_ids %}
+                      <span style="background:rgba(230,57,70,0.15);color:var(--danger);border:1px solid var(--danger);padding:0.2rem 0.55rem;border-radius:4px;font-size:0.7rem;font-weight:800;display:inline-flex;align-items:center;gap:0.3rem;"><i class="fa fa-exclamation-triangle"></i> 2d+ Inactive</span>
+                    {% else %}
+                      <span style="color:var(--neon-lime);font-size:0.75rem;font-weight:700;display:inline-flex;align-items:center;gap:0.3rem;"><i class="fa fa-check-circle"></i> Active</span>
+                    {% endif %}
                   </td>
                   <td>
                     <button class="btn-action btn-cyan" onclick="sendNudge({{ mp.user.id }}, '{{ mp.user.first_name|default:mp.user.username }}')">

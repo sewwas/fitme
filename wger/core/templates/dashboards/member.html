@@ -271,8 +271,8 @@
     overflow: hidden; border: 1px solid var(--border-color); background: #000; user-select: none;
   }
   .morph-img-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-size: cover; background-position: center; }
-  .morph-img-before { background-color: #171B1E; display: flex; align-items: center; justify-content: center; }
-  .morph-img-after { background-color: #0E1317; display: flex; align-items: center; justify-content: center; clip-path: inset(0 0 0 50%); }
+  .morph-img-before { background-color: #171B1E; display: flex; align-items: center; justify-content: flex-start; }
+  .morph-img-after { background-color: #0E1317; display: flex; align-items: center; justify-content: flex-end; clip-path: inset(0 0 0 50%); }
   .morph-divider-line { position: absolute; top: 0; bottom: 0; left: 50%; width: 3px; background: var(--neon-lime); box-shadow: 0 0 12px var(--neon-glow-high); cursor: ew-resize; z-index: 10; }
   .morph-handle {
     position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
@@ -537,7 +537,7 @@
                 <div class="morph-img-layer morph-img-before" id="beforeLayer"
                      style="{% if before_checkin and before_checkin.photo_front %}background-image:url('{{ before_checkin.photo_front.url }}');{% else %}background:linear-gradient(135deg,#1E2428 0%,#111417 100%);{% endif %}">
                   {% if not before_checkin or not before_checkin.photo_front %}
-                    <div style="text-align:center;color:var(--text-muted);">
+                    <div style="width:50%;text-align:center;color:var(--text-muted);padding:1rem;">
                       <i class="fa fa-camera" style="font-size:2.8rem;margin-bottom:0.75rem;opacity:0.4;"></i>
                       <div style="font-weight:700;font-size:0.9rem;">Initial Baseline Photo</div>
                       <div style="font-size:0.75rem;opacity:0.7;">Check-in month 1</div>
@@ -548,7 +548,7 @@
                 <div class="morph-img-layer morph-img-after" id="afterLayer"
                      style="{% if after_checkin and after_checkin.photo_front %}background-image:url('{{ after_checkin.photo_front.url }}');{% else %}background:linear-gradient(135deg,#142312 0%,#0B130A 100%);{% endif %}">
                   {% if not after_checkin or not after_checkin.photo_front %}
-                    <div style="text-align:center;color:var(--neon-lime);">
+                    <div style="width:50%;text-align:center;color:var(--neon-lime);padding:1rem;">
                       <i class="fa fa-trophy" style="font-size:2.8rem;margin-bottom:0.75rem;filter:drop-shadow(0 0 10px var(--neon-glow));"></i>
                       <div style="font-weight:800;font-size:0.95rem;">Current Lean Physique</div>
                       <div style="font-size:0.75rem;color:var(--text-muted);">Latest check-in</div>

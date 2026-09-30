@@ -258,9 +258,9 @@
     <div class="live-floor-counter">
       <span class="live-beacon"></span>
       <span>On Floor:</span>
-      <span style="color:var(--neon-lime);"><span id="adminMembersCount">{{ stats.members_on_floor|default:"14" }}</span> members</span>
+      <span style="color:var(--neon-lime);"><span id="adminMembersCount">{{ stats.members_on_floor|default_if_none:0 }}</span> members</span>
       <span style="color:var(--text-muted);">|</span>
-      <span style="color:var(--cyan);"><span id="adminStaffCount">{{ stats.staff_on_floor|default:"3" }}</span> staff</span>
+      <span style="color:var(--cyan);"><span id="adminStaffCount">{{ stats.staff_on_floor|default_if_none:0 }}</span> staff</span>
     </div>
     <button type="button" class="btn-buzzer" onclick="triggerBuzzer()">
       <i class="fa fa-door-open"></i> REMOTE BUZZER
@@ -411,7 +411,7 @@
                         #{{ u.pin }}
                       </span>
                       <button type="button" class="btn-action btn-danger" style="padding:0.25rem 0.55rem;font-size:0.68rem;" onclick="toggleAccess({{ u.id }})">
-                        <span id="access-badge-{{ u.id }}">
+                        <span id="access-badge-{{ u.id }}" class="user-access-badge-{{ u.id }}">
                           {% if u.has_gate_access %}
                             <i class="fa fa-check-circle" style="color:var(--neon-lime);"></i> GATE OK
                           {% else %}
@@ -487,8 +487,12 @@
                     {{ m.biometric_pin|default:"#1001" }}
                   </td>
                   <td>
-                    <span id="access-badge-{{ m.user.id }}" style="color:var(--neon-lime);font-weight:700;font-size:0.78rem;">
-                      <i class="fa fa-check-circle"></i> ACTIVE
+                    <span id="member-access-badge-{{ m.user.id }}" class="user-access-badge-{{ m.user.id }}" style="font-weight:700;font-size:0.78rem;">
+                      {% if m.user.is_active %}
+                        <span style="color:var(--neon-lime);"><i class="fa fa-check-circle"></i> ACTIVE</span>
+                      {% else %}
+                        <span style="color:var(--danger);"><i class="fa fa-ban"></i> REVOKED</span>
+                      {% endif %}
                     </span>
                   </td>
                   <td>
@@ -759,8 +763,28 @@
                 <tr>
                   <td>{{ p.punch_time|date:"H:i:s (d M)" }}</td>
                   <td style="font-weight:700;color:#fff;">{% if p.user %}{{ p.user.get_full_name|default:p.user.username }}{% else %}PIN #{{ p.zk_pin }}{% endif %}</td>
-                  <td><span style="font-weight:800;color:var(--neon-lime);">{{ p.event_type }}</span></td>
-                  <td><span style="color:var(--neon-lime);"><i class="fa fa-check-circle"></i> GRANTED</span></td>
+                  <td>
+                    {% if p.event_type == 'ENTRY' %}
+                      <span style="font-weight:800;color:var(--neon-lime);"><i class="fa fa-arrow-right"></i> ENTRY</span>
+                    {% elif p.event_type == 'EXIT' %}
+                      <span style="font-weight:800;color:var(--cyan);"><i class="fa fa-arrow-left"></i> EXIT</span>
+                    {% elif p.event_type == 'DENIED' %}
+                      <span style="font-weight:800;color:var(--danger);"><i class="fa fa-ban"></i> DENIED</span>
+                    {% elif p.event_type == 'ANTI_PASSBACK' %}
+                      <span style="font-weight:800;color:#f59e0b;"><i class="fa fa-shield-alt"></i> PASSBACK</span>
+                    {% else %}
+                      <span style="font-weight:800;color:var(--text-muted);">{{ p.event_type }}</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if p.event_type == 'DENIED' %}
+                      <span style="color:var(--danger);font-weight:700;"><i class="fa fa-times-circle"></i> REJECTED</span>
+                    {% elif p.event_type == 'ANTI_PASSBACK' %}
+                      <span style="color:#f59e0b;font-weight:700;"><i class="fa fa-exclamation-triangle"></i> COOLDOWN</span>
+                    {% else %}
+                      <span style="color:var(--neon-lime);font-weight:700;"><i class="fa fa-check-circle"></i> GRANTED</span>
+                    {% endif %}
+                  </td>
                 </tr>
               {% empty %}
                 <tr><td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted);">No door punches recorded yet.</td></tr>
@@ -1235,10 +1259,10 @@
       const data = await res.json();
       if (data.success) {
         showToast(data.message);
-        const badge = document.getElementById(`access-badge-${memberId}`);
-        if (badge) {
-          badge.innerHTML = data.disabled ? '<span style="color:var(--danger);"><i class="fa fa-ban"></i> REVOKED</span>' : '<span style="color:var(--neon-lime);"><i class="fa fa-check-circle"></i> ACTIVE</span>';
-        }
+        const badges = document.querySelectorAll(`.user-access-badge-${memberId}, #access-badge-${memberId}, #member-access-badge-${memberId}`);
+        badges.forEach(b => {
+          b.innerHTML = data.disabled ? '<span style="color:var(--danger);"><i class="fa fa-ban"></i> REVOKED</span>' : '<span style="color:var(--neon-lime);"><i class="fa fa-check-circle"></i> ACTIVE</span>';
+        });
       }
     } catch(err) {
       alert("Error: " + err);

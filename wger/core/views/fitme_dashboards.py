@@ -326,6 +326,7 @@ def coach_dashboard(request):
     recent_checkins = BodyCheckIn.objects.filter(member__in=member_ids).select_related('member').order_by('-checkin_date')[:20]
     recent_workouts = MemberWorkoutLog.objects.filter(member__in=member_ids).select_related('member').order_by('-logged_at')[:25]
     nutrition_targets = DailyFuelTarget.objects.filter(member__in=member_ids).select_related('member')
+    at_risk_ids = [s.member_id for s in at_risk]
 
     context = {
         'role': 'coach',
@@ -339,6 +340,7 @@ def coach_dashboard(request):
         'assigned_members': assigned_members,
         'unreviewed_meals': unreviewed_meals,
         'at_risk_members': at_risk,
+        'at_risk_ids': at_risk_ids,
         'programs': programs,
         'recent_checkins': recent_checkins,
         'recent_workouts': recent_workouts,
