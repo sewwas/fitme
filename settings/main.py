@@ -135,6 +135,14 @@ RECAPTCHA_PUBLIC_KEY = env.str('RECAPTCHA_PUBLIC_KEY', '')
 RECAPTCHA_PRIVATE_KEY = env.str('RECAPTCHA_PRIVATE_KEY', '')
 RECAPTCHA_REQUIRED_SCORE = env.float('RECAPTCHA_REQUIRED_SCORE', 0.75)
 
+# Fit Me — ZKBio Turnstile Hardware Bridge Security Token
+# Set FITME_BRIDGE_TOKEN in your .env file. Never hardcode this value.
+ZKBIO_BRIDGE_TOKEN = env.str('FITME_BRIDGE_TOKEN', env.str('LIVEU_BRANCH_API_KEY', ''))
+
+# Fit Me — LiveU Cloud-Managed Access Control & Attendance API
+LIVEU_API_URL = env.str('LIVEU_API_URL', 'https://attapi.liveucloud.com/api/v1')
+LIVEU_BRANCH_API_KEY = env.str('LIVEU_BRANCH_API_KEY', '')
+
 # The site's URL (e.g. http://www.my-local-gym.com or http://localhost:8000)
 # This is needed for uploaded files and images (exercise images, etc.) to be
 # properly served.
@@ -149,7 +157,7 @@ STATIC_ROOT = env.str('DJANGO_STATIC_ROOT', '/home/wger/static')
 MEDIA_URL = env.str('MEDIA_URL', '/media/')
 STATIC_URL = env.str('STATIC_URL', '/static/')
 
-LOGIN_REDIRECT_URL = env.str('LOGIN_REDIRECT_URL', '/fitme/dashboard/')
+LOGIN_REDIRECT_URL = env.str('LOGIN_REDIRECT_URL', '/dashboard/')
 
 # Allow all hosts to access the application. Change if used in production.
 ALLOWED_HOSTS = [

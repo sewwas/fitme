@@ -30,3 +30,35 @@ app.config_from_object('django.conf:settings', namespace='CELERY')
 
 # discover and load tasks.py from all registered Django apps
 app.autodiscover_tasks()
+
+# ─────────────────────────────────────────────
+# Fit Me — Celery Beat Scheduled Tasks
+# ─────────────────────────────────────────────
+from celery.schedules import crontab  # noqa: E402
+
+app.conf.beat_schedule = {
+    # Sudden staff absence detection: runs every 5 minutes during gym hours
+    'inspect-staff-punch-continuity': {
+        'task': 'gym_operations_payroll.tasks.inspect_staff_punch_continuity',
+        'schedule': 300.0,  # every 5 minutes (300 seconds)
+    },
+
+    # Monthly payroll consolidation: runs at 00:05 on the 1st of every month
+    'calculate-monthly-payroll': {
+        'task': 'gym_operations_payroll.tasks.calculate_monthly_payroll',
+        'schedule': crontab(hour=0, minute=5, day_of_month=1),
+    },
+
+    # Auto-expire subscriptions: runs daily at 01:00
+    'expire-subscriptions-daily': {
+        'task': 'wger.core.tasks.expire_subscriptions',
+        'schedule': crontab(hour=1, minute=0),
+    },
+    # LiveU Cloud attendance sync: runs every 60 seconds to fetch turnstile punches
+    'sync-liveu-cloud-attendance': {
+        'task': 'wger.core.tasks.sync_liveu_attendance',
+        'schedule': 60.0,
+    },
+}
+app.conf.timezone = 'Asia/Colombo'
+

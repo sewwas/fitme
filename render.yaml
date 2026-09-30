@@ -1,0 +1,38 @@
+services:
+  - type: web
+    name: fitme-backend
+    runtime: python
+    plan: free
+    region: singapore
+    buildCommand: "pip install -r requirements.txt && python manage.py migrate --noinput && python manage.py collectstatic --noinput"
+    startCommand: "gunicorn wger.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 120"
+    healthCheckPath: /dashboard/
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: DJANGO_SETTINGS_MODULE
+        value: settings.main
+      - key: DJANGO_DEBUG
+        value: "False"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ALLOWED_HOSTS
+        value: ".onrender.com,fitmefitness.lk,localhost,127.0.0.1"
+      - key: DJANGO_DB_ENGINE
+        value: django.db.backends.postgresql
+      - key: DJANGO_DB_DATABASE
+        value: postgres
+      - key: DJANGO_DB_USER
+        value: postgres
+      - key: DJANGO_DB_PORT
+        value: "5432"
+      - key: DJANGO_DB_HOST
+        sync: false
+      - key: DJANGO_DB_PASSWORD
+        sync: false
+      - key: FITME_BRIDGE_TOKEN
+        sync: false
+      - key: LIVEU_API_URL
+        value: https://attapi.liveucloud.com/api/v1
+      - key: LIVEU_BRANCH_API_KEY
+        sync: false

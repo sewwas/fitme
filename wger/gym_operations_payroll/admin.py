@@ -1,12 +1,6 @@
 from django.contrib import admin
-from wger.gym_operations_payroll.models import MembershipPlan, StaffShift, SuddenAbsenceAlert, PayrollLedger
-
-
-@admin.register(MembershipPlan)
-class MembershipPlanAdmin(admin.ModelAdmin):
-    list_display = ('name', 'plan_type', 'price_monthly', 'max_members', 'allowed_entry_start', 'allowed_entry_end', 'is_active')
-    list_filter = ('plan_type', 'is_active')
-    search_fields = ('name', 'primary_member__username', 'secondary_member__username')
+from wger.gym_operations_payroll.models import StaffShift, SuddenAbsenceAlert, PayrollLedger
+# MembershipPlan admin is registered in wger/membership/admin.py \u2014 do not duplicate here.
 
 
 @admin.register(StaffShift)

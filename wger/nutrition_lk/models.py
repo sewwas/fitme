@@ -133,6 +133,7 @@ class DailyFuelTarget(models.Model):
     target_protein_g = models.IntegerField(default=150)
     target_carbs_g = models.IntegerField(default=200)
     target_fat_g = models.IntegerField(default=65)
+    target_water_ml = models.IntegerField(default=3000, help_text="Daily water hydration target in ml")
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
@@ -151,16 +152,41 @@ class DailyFuelTarget(models.Model):
             'carbs_g': sum(float(l.total_carbs_g) for l in logs),
             'fat_g': sum(float(l.total_fat_g) for l in logs),
         }
+        water_logs = WaterLog.objects.filter(
+            member=self.member,
+            logged_at__date=target_date
+        )
+        water_consumed = sum(w.amount_ml for w in water_logs)
         return {
             'consumed': consumed,
+            'water_consumed_ml': water_consumed,
             'targets': {
                 'calories': self.target_calories,
                 'protein_g': self.target_protein_g,
                 'carbs_g': self.target_carbs_g,
                 'fat_g': self.target_fat_g,
+                'water_ml': self.target_water_ml,
             },
-            'pct_calories': min(100, round(consumed['calories'] / self.target_calories * 100)),
-            'pct_protein': min(100, round(consumed['protein_g'] / self.target_protein_g * 100)),
-            'pct_carbs': min(100, round(consumed['carbs_g'] / self.target_carbs_g * 100)),
-            'pct_fat': min(100, round(consumed['fat_g'] / self.target_fat_g * 100)),
+            'pct_calories': min(100, round(consumed['calories'] / max(1, self.target_calories) * 100)),
+            'pct_protein': min(100, round(consumed['protein_g'] / max(1, self.target_protein_g) * 100)),
+            'pct_carbs': min(100, round(consumed['carbs_g'] / max(1, self.target_carbs_g) * 100)),
+            'pct_fat': min(100, round(consumed['fat_g'] / max(1, self.target_fat_g) * 100)),
+            'pct_water': min(100, round(water_consumed / max(1, self.target_water_ml) * 100)),
         }
+
+
+class WaterLog(models.Model):
+    """Hydration log tracking daily water intake in millilitres."""
+    member = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='water_logs'
+    )
+    logged_at = models.DateTimeField(default=timezone.now)
+    amount_ml = models.IntegerField(default=250, help_text="Amount in millilitres (e.g. 250, 500)")
+
+    class Meta:
+        ordering = ['-logged_at']
+
+    def __str__(self):
+        return f"{self.member.username} — {self.amount_ml}ml at {self.logged_at:%Y-%m-%d %H:%M}"

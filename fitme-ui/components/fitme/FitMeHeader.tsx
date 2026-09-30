@@ -4,6 +4,7 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { PrimaryButton } from "../ui/PrimaryButton";
+import { SecondaryButton } from "../ui/SecondaryButton";
 import { MobileMenu } from "./MobileMenu";
 
 import { NAV_ITEMS } from "./navigation";
@@ -96,6 +97,13 @@ export function FitMeHeader() {
 
           {/* Desktop CTA Button */}
           <div className="hidden sm:flex items-center gap-4">
+            <SecondaryButton
+              href="http://localhost:8000/login/"
+              size="sm"
+              className="text-xs font-bold border-[#2D3339] text-[#9CA3AF] hover:text-[#F8FAFC]"
+            >
+              Member Login
+            </SecondaryButton>
             <PrimaryButton
               href="#membership"
               size="sm"

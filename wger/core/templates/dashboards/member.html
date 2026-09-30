@@ -204,6 +204,13 @@
     position: relative;
     margin-bottom: 1.5rem;
   }
+  .id-pass-card.inactive {
+    border-color: var(--danger);
+    box-shadow: 0 10px 40px rgba(230, 57, 70, 0.28);
+  }
+  .id-pass-card.inactive .id-photo-frame {
+    border-color: var(--danger);
+  }
   .id-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
   .id-photo-frame {
     width: 68px; height: 68px; border-radius: 14px;
@@ -357,7 +364,7 @@
       <div class="dashboard-grid">
         <!-- Left: Digital ID Pass & Streak -->
         <div>
-          <div class="id-pass-card">
+          <div class="id-pass-card {% if not door_access_active %}inactive{% endif %}">
             <div class="id-card-top">
               <div class="id-photo-frame">
                 {% if profile and profile.profile_photo %}
@@ -370,27 +377,32 @@
                 {% if door_access_active %}
                   <div class="biometric-status-badge">
                     <span class="pulse-dot"></span>
-                    DOOR ACCESS ACTIVE
+                    DOOR &amp; FACE ACCESS ACTIVE
                   </div>
                 {% else %}
                   <div class="biometric-status-badge inactive">
                     <span class="pulse-dot"></span>
-                    ACCESS REVOKED
+                    ACCESS REVOKED • EXPIRED
                   </div>
                 {% endif %}
               </div>
             </div>
 
             <div class="id-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
-            <div class="id-user-plan">
-              {% if subscription %}{{ subscription.plan.name }}{% else %}Active Pitigala Member{% endif %}
+            <div class="id-user-plan" style="{% if not door_access_active %}color:var(--danger);{% endif %}">
+              {% if subscription %}
+                {{ subscription.plan.name }} {% if not door_access_active %}(EXPIRED){% endif %}
+              {% else %}
+                No Active Plan
+              {% endif %}
             </div>
 
             <div class="id-meta-grid">
               <div>
                 <div class="id-meta-label">Hardware PIN</div>
-                <div class="id-meta-val" style="color:var(--neon-lime);font-size:1.15rem;">
+                <div class="id-meta-val" style="color:{% if door_access_active %}var(--neon-lime){% else %}var(--danger){% endif %};font-size:1.15rem;">
                   {% if bio_profile %}{{ bio_profile.zk_pin }}{% elif profile and profile.biometric_pin %}{{ profile.biometric_pin }}{% else %}#1001{% endif %}
+                  {% if not door_access_active %}<span style="font-size:0.65rem;text-transform:uppercase;color:var(--danger);display:block;">[Access Locked]</span>{% endif %}
                 </div>
               </div>
               <div>
@@ -403,11 +415,35 @@
               </div>
               <div>
                 <div class="id-meta-label">Days Left</div>
-                <div class="id-meta-val" style="color:var(--neon-lime);">
-                  {% if subscription %}{{ subscription.days_remaining }} days{% else %}Active Pass{% endif %}
+                <div class="id-meta-val" style="color:{% if door_access_active %}var(--neon-lime){% else %}var(--danger){% endif %};">
+                  {% if door_access_active and subscription %}
+                    {{ subscription.days_remaining }} days
+                  {% elif subscription and subscription.end_date %}
+                    0 days (Ended {{ subscription.end_date|date:"d M Y" }})
+                  {% else %}
+                    0 days
+                  {% endif %}
                 </div>
               </div>
             </div>
+
+            {% if not door_access_active %}
+              <div style="margin-top:1.25rem;padding:1rem;background:rgba(230,57,70,0.12);border:1px solid rgba(230,57,70,0.3);border-radius:12px;display:flex;flex-direction:column;gap:0.4rem;">
+                <div style="color:var(--danger);font-weight:800;font-size:0.85rem;display:flex;align-items:center;gap:0.5rem;">
+                  <i class="fa fa-lock"></i> Gate &amp; Face ID Access Locked
+                </div>
+                <p style="font-size:0.75rem;color:var(--text-muted);margin:0;line-height:1.4;">
+                  {% if access_summary and access_summary.reason %}
+                    {{ access_summary.reason }}
+                  {% else %}
+                    Your monthly subscription has ended. Automated turnstile gate unlock, Face ID recognition, fingerprint scanning, and PIN entry are deactivated.
+                  {% endif %}
+                </p>
+                <a href="tel:0707627878" style="display:inline-flex;align-items:center;gap:0.4rem;color:#fff;background:var(--danger);padding:0.4rem 0.8rem;border-radius:8px;font-size:0.75rem;font-weight:700;text-decoration:none;margin-top:0.35rem;width:fit-content;">
+                  <i class="fa fa-phone"></i> Renew at Front Desk (070 762 7878)
+                </a>
+              </div>
+            {% endif %}
           </div>
 
           <!-- Streak Card -->
@@ -466,10 +502,14 @@
                       <div class="legend-nums" style="color:var(--neon-lime);">{{ rings.protein_consumed|default:"110" }}g / {{ rings.protein_target|default:"150" }}g</div>
                     </div>
                   </div>
-                  <div class="legend-item water">
+                  <div class="legend-item water" style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
                       <div class="legend-title">Hydration Intake</div>
-                      <div class="legend-nums" style="color:var(--cyan);">{{ rings.water_consumed|default:"2.4" }}L / {{ rings.water_target|default:"3.0" }}L</div>
+                      <div class="legend-nums" id="waterLegendNums" style="color:var(--cyan);">{{ rings.water_consumed|default:"0.0" }}L / {{ rings.water_target|default:"3.0" }}L</div>
+                    </div>
+                    <div style="display:flex; gap:6px;">
+                      <button type="button" onclick="logWater(250)" class="btn-micro" style="background:rgba(6,182,212,0.15); border:1px solid rgba(6,182,212,0.35); color:var(--cyan); border-radius:6px; font-size:11px; font-weight:700; padding:3px 8px; cursor:pointer;" title="Log 1 Glass (250ml)">+250ml</button>
+                      <button type="button" onclick="logWater(500)" class="btn-micro" style="background:rgba(6,182,212,0.15); border:1px solid rgba(6,182,212,0.35); color:var(--cyan); border-radius:6px; font-size:11px; font-weight:700; padding:3px 8px; cursor:pointer;" title="Log 1 Bottle (500ml)">+500ml</button>
                     </div>
                   </div>
                   <div class="legend-item calories">
@@ -896,8 +936,12 @@
 
       <div class="fitme-card">
         <div class="card-header">
-          <div class="card-title"><i class="fa fa-id-card" style="color:var(--neon-lime);"></i> Current Subscription Status</div>
-          <span class="biometric-status-badge">ACTIVE</span>
+          <div class="card-title"><i class="fa fa-id-card" style="color:{% if door_access_active %}var(--neon-lime){% else %}var(--danger){% endif %};"></i> Current Subscription Status</div>
+          {% if door_access_active %}
+            <span class="biometric-status-badge"><span class="pulse-dot"></span> ACTIVE • ACCESS GRANTED</span>
+          {% else %}
+            <span class="biometric-status-badge inactive"><span class="pulse-dot"></span> EXPIRED • DOOR ACCESS REVOKED</span>
+          {% endif %}
         </div>
         <div class="card-body">
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:1.25rem;margin-bottom:2rem;">
@@ -917,9 +961,31 @@
               <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Facility Location</div>
               <div style="font-weight:800;font-size:1.05rem;color:#fff;margin-top:0.25rem;">Pitigala (80420)</div>
             </div>
+            <div style="background:var(--card-surface);padding:1.25rem;border-radius:12px;">
+              <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Plan Expiration</div>
+              <div style="font-family:'Montserrat';font-weight:800;font-size:1.05rem;color:{% if door_access_active %}var(--neon-lime){% else %}var(--danger){% endif %};margin-top:0.25rem;">
+                {% if subscription and subscription.end_date %}{{ subscription.end_date|date:"d M Y" }}{% else %}—{% endif %}
+              </div>
+            </div>
           </div>
 
-          <h3 style="font-family:'Montserrat';font-weight:800;font-size:1.05rem;margin-bottom:1rem;">Official 80mm POS Thermal Receipts</h3>
+          {% if not door_access_active %}
+            <div style="margin-bottom:2rem;padding:1.25rem;background:rgba(230,57,70,0.1);border:1px solid rgba(230,57,70,0.3);border-radius:12px;display:flex;align-items:center;justify-content:space-between;gap:1.5rem;flex-wrap:wrap;">
+              <div>
+                <div style="color:var(--danger);font-weight:800;font-size:0.95rem;display:flex;align-items:center;gap:0.5rem;margin-bottom:0.25rem;">
+                  <i class="fa fa-exclamation-triangle"></i> Turnstile Gate, Face ID &amp; PIN Access Suspended
+                </div>
+                <div style="font-size:0.8rem;color:var(--text-muted);">
+                  {% if access_summary and access_summary.reason %}{{ access_summary.reason }}{% else %}Your monthly membership is past due. To restore automated turnstile and biometric entry, please renew your plan at the front desk.{% endif %}
+                </div>
+              </div>
+              <a href="tel:0707627878" class="btn-fitme" style="background:var(--danger);border-color:var(--danger);color:#fff;font-size:0.8rem;padding:0.6rem 1.25rem;text-decoration:none;">
+                <i class="fa fa-phone"></i> Renew at Front Desk (070 762 7878)
+              </a>
+            </div>
+          {% endif %}
+
+          <h3 style="font-family:'Montserrat';font-weight:800;font-size:1.05rem;margin-bottom:1rem;">Official Payment Receipts &amp; Invoices</h3>
           <table class="table-custom">
             <thead>
               <tr><th>Receipt #</th><th>Date</th><th>Amount (LKR)</th><th>Payment Method</th><th>Actions</th></tr>
@@ -933,7 +999,7 @@
                   <td>{{ r.get_payment_method_display }}</td>
                   <td>
                     <a href="/receipt/{{ r.id }}/" target="_blank" class="btn-fitme" style="padding:0.3rem 0.8rem;font-size:0.75rem;">
-                      <i class="fa fa-print"></i> 80mm Print
+                      <i class="fa fa-print"></i> Print Receipt
                     </a>
                   </td>
                 </tr>
@@ -1103,6 +1169,54 @@
       btn.disabled = false;
     }
   }
+
+  // Submit Quick Water
+  async function logWater(amountMl) {
+    try {
+      const res = await fetch('/dashboard/api/log-water/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ amount_ml: amountMl })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message);
+        const wNums = document.getElementById('waterLegendNums');
+        if (wNums) {
+          wNums.textContent = `${data.water_consumed}L / ${data.water_target}L`;
+        }
+        const wRing = document.getElementById('waterRing');
+        if (wRing) {
+          const wPct = data.water_pct / 100;
+          wRing.style.strokeDashoffset = 389.5 * (1 - Math.min(1, wPct));
+        }
+      }
+    } catch(err) {
+      alert("Error logging water: " + err);
+    }
+  }
+
+  // Set initial SVG ring dashoffsets based on real data
+  document.addEventListener('DOMContentLoaded', () => {
+    const pRing = document.getElementById('proteinRing');
+    const wRing = document.getElementById('waterRing');
+    const cRing = document.getElementById('calorieRing');
+    if (pRing) {
+      const pPct = Number("{{ rings.protein_pct|default:'0' }}") / 100;
+      pRing.style.strokeDashoffset = 502.6 * (1 - Math.min(1, pPct));
+    }
+    if (wRing) {
+      const wPct = Number("{{ rings.water_pct|default:'0' }}") / 100;
+      wRing.style.strokeDashoffset = 389.5 * (1 - Math.min(1, wPct));
+    }
+    if (cRing) {
+      const cPct = Number("{{ rings.calories_pct|default:'0' }}") / 100;
+      cRing.style.strokeDashoffset = 276.4 * (1 - Math.min(1, cPct));
+    }
+  });
 
   // Morph Slider Interaction
   document.addEventListener('DOMContentLoaded', () => {

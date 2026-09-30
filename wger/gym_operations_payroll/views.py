@@ -4,7 +4,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.db.models import Sum
 
-from wger.gym_operations_payroll.models import StaffShift, SuddenAbsenceAlert, PayrollLedger, MembershipPlan
+from wger.gym_operations_payroll.models import StaffShift, SuddenAbsenceAlert, PayrollLedger
 
 
 @staff_member_required

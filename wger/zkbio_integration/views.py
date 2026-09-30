@@ -13,16 +13,22 @@ from django.core.files.base import ContentFile
 
 from wger.zkbio_integration.models import BiometricProfile, DoorAccessLog, BiometricCommand
 from wger.membership.models import Subscription, MemberProfile
+from wger.membership.services import check_and_expire_subscriptions
 
 logger = logging.getLogger('wger')
 User = get_user_model()
 
 # Shared token for daemon-to-cloud authentication over Cloudflare Tunnel / HTTPS
-BRIDGE_API_TOKEN = getattr(settings, 'ZKBIO_BRIDGE_TOKEN', 'fitme-zkbio-secret-bridge-token-2026')
+# Token is loaded from ZKBIO_BRIDGE_TOKEN in Django settings (set via FITME_BRIDGE_TOKEN env var).
+# No hardcoded fallback tokens — all authentication must go through env config.
+BRIDGE_API_TOKEN = getattr(settings, 'ZKBIO_BRIDGE_TOKEN', '')
 
 
 def verify_bridge_token(request):
-    """Verifies Bearer token in HTTP_AUTHORIZATION header."""
+    """Verifies Bearer token in HTTP_AUTHORIZATION header against ZKBIO_BRIDGE_TOKEN setting."""
+    if not BRIDGE_API_TOKEN:
+        logger.error('[ZKBio Auth] ZKBIO_BRIDGE_TOKEN is not configured in settings!')
+        return False
     auth_header = request.META.get('HTTP_AUTHORIZATION', '')
     if auth_header.startswith('Bearer '):
         token = auth_header.split(' ', 1)[1].strip()
@@ -93,8 +99,19 @@ def punches_ingest(request):
             user = mp.user
             bio_profile, _ = BiometricProfile.objects.get_or_create(user=user, defaults={'zk_pin': pin})
 
+    # Ensure any past-due subscriptions are expired before evaluating punch
+    check_and_expire_subscriptions()
+
     # If bio_profile is disabled or revoked
     if bio_profile and bio_profile.disabled:
+        denied_reason = 'Door, Face ID, and biometric access revoked: Membership expired or profile disabled'
+        if user and not user.is_staff:
+            last_sub = Subscription.objects.filter(member=user).order_by('-end_date').first()
+            if last_sub:
+                denied_reason = f"Monthly subscription ended on {last_sub.end_date:%d %b %Y}. Turnstile gate, Face ID, and PIN access are disabled."
+            else:
+                denied_reason = "No active membership subscription on file. Door access revoked."
+
         log = DoorAccessLog.objects.create(
             user=user,
             zk_pin=pin,
@@ -103,11 +120,11 @@ def punches_ingest(request):
             verify_mode=verify_mode,
             device_ip=device_ip,
             terminal_name=terminal_name,
-            raw_payload={**raw_payload, 'reason': 'Biometric profile revoked or disabled'},
+            raw_payload={**raw_payload, 'reason': denied_reason},
         )
         return JsonResponse({
             'status': 'denied',
-            'reason': 'Hardware door permission revoked',
+            'reason': denied_reason,
             'allowed': False,
             'log_id': log.id
         })
@@ -126,9 +143,9 @@ def punches_ingest(request):
             # Check latest expired subscription to give informative reason
             last_sub = Subscription.objects.filter(member=user).order_by('-end_date').first()
             if last_sub:
-                reason = f"Subscription expired on {last_sub.end_date:%d %b %Y}"
+                reason = f"Monthly subscription ended on {last_sub.end_date:%d %b %Y}. Turnstile gate, Face ID, and PIN access are disabled."
             else:
-                reason = "No active membership subscription on file"
+                reason = "No active membership subscription on file. Door access revoked."
 
             # Automatically flag profile disabled to sync revocation to hardware
             if bio_profile and not bio_profile.disabled:
@@ -213,6 +230,15 @@ def punches_ingest(request):
         except Exception as ex:
             logger.error(f"Error linking staff punch to shift: {ex}")
 
+    # Update workout streak on every valid gym ENTRY
+    if user and expected_event == 'ENTRY':
+        try:
+            from wger.habit.models import WorkoutStreak
+            streak, _ = WorkoutStreak.objects.get_or_create(member=user)
+            streak.record_checkin()
+        except Exception as ex:
+            logger.error(f"Error updating workout streak for {pin}: {ex}")
+
     return JsonResponse({
         'status': 'success',
         'allowed': True,
@@ -233,6 +259,9 @@ def pending_sync_queue(request):
     if not verify_bridge_token(request):
         if not (request.user.is_authenticated and request.user.is_staff):
             return HttpResponseForbidden('Unauthorized daemon token')
+
+    # Automatically audit and expire past-due subscriptions so bridge immediately receives action='delete'
+    check_and_expire_subscriptions()
 
     pending_profiles = BiometricProfile.objects.filter(
         sync_status='PENDING'

@@ -182,8 +182,58 @@
   .fitme-toast {
     position: fixed; bottom: 25px; right: 25px; background: #14181B; border: 2px solid var(--neon-lime);
     padding: 1rem 1.5rem; border-radius: 12px; box-shadow: 0 10px 40px var(--neon-glow);
-    display: none; align-items: center; gap: 0.75rem; z-index: 2000; font-weight: 700;
+    display: none; align-items: center; gap: 0.75rem; z-index: 2500; font-weight: 700;
   }
+
+  /* Role Badges & Permissions */
+  .badge-role {
+    display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.25rem 0.65rem;
+    border-radius: 6px; font-size: 0.72rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .badge-super-admin { background: rgba(118, 192, 67, 0.15); color: var(--neon-lime); border: 1px solid var(--neon-lime); }
+  .badge-front-desk { background: rgba(6, 182, 212, 0.15); color: var(--cyan); border: 1px solid var(--cyan); }
+  .badge-coach { background: rgba(245, 158, 11, 0.15); color: #F59E0B; border: 1px solid #F59E0B; }
+  .badge-member { background: rgba(168, 85, 247, 0.15); color: #C084FC; border: 1px solid #A855F7; }
+
+  /* User avatar circle */
+  .user-avatar-circle {
+    width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 0.85rem; background: #181E22; border: 1.5px solid var(--border-color); color: #fff;
+    flex-shrink: 0; box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+
+  /* Filter pills */
+  .filter-pill {
+    background: var(--card-surface); border: 1px solid var(--border-color); color: var(--text-muted);
+    padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.74rem; font-weight: 700; cursor: pointer;
+    transition: all 0.2s;
+  }
+  .filter-pill:hover, .filter-pill.active {
+    background: rgba(118, 192, 67, 0.15); border-color: var(--neon-lime); color: var(--neon-lime);
+  }
+
+  .role-switcher-select {
+    background: #0E1113; color: #fff; border: 1px solid var(--border-color); border-radius: 6px;
+    padding: 0.35rem 0.65rem; font-size: 0.78rem; font-weight: 700; outline: none; cursor: pointer;
+  }
+  .role-switcher-select:focus { border-color: var(--neon-lime); }
+
+  /* Role Selection Radio Cards */
+  .role-radio-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.65rem; margin-bottom: 1.25rem;
+  }
+  @media(max-width: 600px) { .role-radio-grid { grid-template-columns: 1fr 1fr; } }
+  .role-radio-card {
+    border: 1px solid var(--border-color); border-radius: 10px; padding: 0.75rem 0.5rem; text-align: center;
+    cursor: pointer; background: #0E1113; transition: all 0.2s; user-select: none;
+  }
+  .role-radio-card:hover { border-color: var(--text-muted); background: #161A1D; }
+  .role-radio-card.selected {
+    border-color: var(--neon-lime); background: rgba(118, 192, 67, 0.12); box-shadow: 0 0 15px var(--neon-glow);
+  }
+  .role-radio-card input { display: none; }
+  .role-card-title { font-weight: 800; font-size: 0.82rem; margin-top: 0.35rem; }
+  .role-card-desc { font-size: 0.68rem; color: var(--text-muted); margin-top: 0.2rem; }
 </style>
 </head>
 <body>
@@ -218,6 +268,7 @@
   </div>
 
   <div class="topbar-right">
+    <a href="/dashboard/admin/users/" style="color:var(--neon-lime);font-weight:700;"><i class="fa fa-user-shield"></i> Staff &amp; Roles</a>
     <a href="/dashboard/front-desk/"><i class="fa fa-concierge-bell"></i> Front Desk</a>
     <a href="/dashboard/coach/"><i class="fa fa-dumbbell"></i> Coach</a>
     <a href="/dashboard/member/"><i class="fa fa-id-card"></i> Member</a>
@@ -228,26 +279,188 @@
 </header>
 
 <div class="layout-container">
-  <!-- Sidebar Navigation with All 8 Modules -->
+  <!-- Sidebar Navigation -->
   <aside class="sidebar">
-    <div class="sidebar-section">Admin Console</div>
-    <button class="nav-tab-btn active" onclick="switchTab('tab-admin-members', this)"><i class="fa fa-users"></i> 1. Members</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-admin-coaches', this)"><i class="fa fa-user-ninja"></i> 2. Coaches &amp; Staff</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-admin-programs', this)"><i class="fa fa-dumbbell"></i> 3. Programs</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-admin-memberships', this)"><i class="fa fa-layer-group"></i> 4. Memberships</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-admin-payments', this)"><i class="fa fa-cash-register"></i> 5. Payments &amp; POS</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-admin-content', this)"><i class="fa fa-bullhorn"></i> 6. Content</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-admin-testimonials', this)"><i class="fa fa-star"></i> 7. Testimonials</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-admin-analytics', this)"><i class="fa fa-chart-pie"></i> 8. Analytics &amp; Radar</button>
+    <div class="sidebar-section">Access &amp; Personnel</div>
+    <button class="nav-tab-btn" id="nav-tab-admin-users" onclick="switchTab('tab-admin-users', this)"><i class="fa fa-user-shield"></i> 1. Staff &amp; Roles</button>
+    <button class="nav-tab-btn active" id="nav-tab-admin-members" onclick="switchTab('tab-admin-members', this)"><i class="fa fa-users"></i> 2. Members</button>
+    <button class="nav-tab-btn" id="nav-tab-admin-coaches" onclick="switchTab('tab-admin-coaches', this)"><i class="fa fa-user-ninja"></i> 3. Coaches &amp; Roster</button>
+    <div class="sidebar-section" style="margin-top:0.75rem;">Operations &amp; Plans</div>
+    <button class="nav-tab-btn" id="nav-tab-admin-programs" onclick="switchTab('tab-admin-programs', this)"><i class="fa fa-dumbbell"></i> 4. Programs</button>
+    <button class="nav-tab-btn" id="nav-tab-admin-memberships" onclick="switchTab('tab-admin-memberships', this)"><i class="fa fa-layer-group"></i> 5. Memberships</button>
+    <button class="nav-tab-btn" id="nav-tab-admin-payments" onclick="switchTab('tab-admin-payments', this)"><i class="fa fa-cash-register"></i> 6. Payments &amp; POS</button>
+    <div class="sidebar-section" style="margin-top:0.75rem;">Marketing &amp; Data</div>
+    <button class="nav-tab-btn" id="nav-tab-admin-content" onclick="switchTab('tab-admin-content', this)"><i class="fa fa-bullhorn"></i> 7. Content</button>
+    <button class="nav-tab-btn" id="nav-tab-admin-testimonials" onclick="switchTab('tab-admin-testimonials', this)"><i class="fa fa-star"></i> 8. Testimonials</button>
+    <button class="nav-tab-btn" id="nav-tab-admin-analytics" onclick="switchTab('tab-admin-analytics', this)"><i class="fa fa-chart-pie"></i> 9. Analytics &amp; Radar</button>
   </aside>
 
   <!-- Main Content Area -->
   <main class="main-content">
 
-    <!-- 1. MEMBERS TAB -->
+    <!-- 1. STAFF & ROLES MANAGEMENT TAB -->
+    <div id="tab-admin-users" class="tab-pane">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h1 class="page-title"><i class="fa fa-user-shield" style="color:var(--neon-lime);margin-right:0.5rem;"></i>Staff &amp; Role Management</h1>
+          <p class="page-sub">Provision new staff accounts, manage RBAC security roles (Super Admin, Front Desk, Coach, Member), configure biometric turnstile PINs, and control platform access.</p>
+        </div>
+        <button class="btn-action btn-lime" style="padding:0.7rem 1.4rem;font-size:0.9rem;" onclick="openCreateUserModal()">
+          <i class="fa fa-user-plus"></i> + Create Staff / User
+        </button>
+      </div>
+
+      <!-- Stats Grid for Users & Roles -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-value" id="stat-total-users" style="color:#fff;">{{ user_stats.total }}</div>
+          <div class="stat-label">Total System Users</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid var(--neon-lime);">
+          <div class="stat-value" style="color:var(--neon-lime);">{{ user_stats.super_admin }}</div>
+          <div class="stat-label">Super Admins</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid var(--cyan);">
+          <div class="stat-value" style="color:var(--cyan);">{{ user_stats.front_desk }}</div>
+          <div class="stat-label">Front Desk Staff</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid #F59E0B;">
+          <div class="stat-value" style="color:#F59E0B;">{{ user_stats.coach }}</div>
+          <div class="stat-label">Certified Coaches</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid #A855F7;">
+          <div class="stat-value" style="color:#C084FC;">{{ user_stats.member }}</div>
+          <div class="stat-label">Registered Members</div>
+        </div>
+      </div>
+
+      <!-- User Directory Card -->
+      <div class="fitme-card">
+        <div class="card-header" style="flex-wrap:wrap;gap:1rem;">
+          <div class="card-title">
+            <i class="fa fa-id-badge" style="color:var(--neon-lime);"></i> System Staff &amp; User Directory
+          </div>
+
+          <!-- Search & Filter Controls -->
+          <div style="display:flex;align-items:center;gap:0.75rem;flex-wrap:wrap;">
+            <div style="position:relative;width:240px;">
+              <i class="fa fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.8rem;"></i>
+              <input type="text" id="userSearchInput" class="form-control" placeholder="Search name, role, email..." style="padding-left:2rem;font-size:0.8rem;height:34px;" onkeyup="filterUserTable()">
+            </div>
+
+            <div style="display:flex;gap:0.35rem;" id="roleFilterButtons">
+              <button class="filter-pill active" onclick="setRoleFilter('all', this)">All</button>
+              <button class="filter-pill" onclick="setRoleFilter('super_admin', this)">Admins</button>
+              <button class="filter-pill" onclick="setRoleFilter('front_desk', this)">Front Desk</button>
+              <button class="filter-pill" onclick="setRoleFilter('coach', this)">Coaches</button>
+              <button class="filter-pill" onclick="setRoleFilter('member', this)">Members</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="card-body" style="padding:0;overflow-x:auto;">
+          <table class="table-custom" id="systemUsersTable">
+            <thead>
+              <tr>
+                <th>User Account</th>
+                <th>Assigned Role &amp; Permission</th>
+                <th>Contact &amp; NIC</th>
+                <th>Biometric Speed Gate</th>
+                <th>Account Status</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for u in all_system_users %}
+                <tr class="user-row" data-role="{{ u.primary_role }}" data-active="{{ u.is_active|yesno:'active,disabled' }}" data-search="{{ u.full_name }} {{ u.username }} {{ u.email }} {{ u.phone }} {{ u.nic_passport }} {{ u.primary_role }}">
+                  <td>
+                    <div style="display:flex;align-items:center;gap:0.75rem;">
+                      <div class="user-avatar-circle" style="border-color:{{ u.role_color }};">
+                        {{ u.full_name|slice:":2"|upper }}
+                      </div>
+                      <div>
+                        <div style="font-weight:700;color:#fff;">{{ u.full_name }}</div>
+                        <div style="font-size:0.75rem;color:var(--text-muted);font-family:monospace;">@{{ u.username }} &bull; {{ u.email }}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                      <span class="badge-role {{ u.role_badge_class }}" id="user-role-badge-{{ u.id }}">
+                        {% if u.primary_role == 'super_admin' %}<i class="fa fa-shield-alt"></i>
+                        {% elif u.primary_role == 'front_desk' %}<i class="fa fa-concierge-bell"></i>
+                        {% elif u.primary_role == 'coach' %}<i class="fa fa-dumbbell"></i>
+                        {% else %}<i class="fa fa-user"></i>{% endif %}
+                        {{ u.role_label }}
+                      </span>
+                      <select class="role-switcher-select" onchange="changeUserRole({{ u.id }}, this.value)" title="Change Role">
+                        <option value="super_admin" {% if u.primary_role == 'super_admin' %}selected{% endif %}>Super Admin</option>
+                        <option value="front_desk" {% if u.primary_role == 'front_desk' %}selected{% endif %}>Front Desk</option>
+                        <option value="coach" {% if u.primary_role == 'coach' %}selected{% endif %}>Coach</option>
+                        <option value="member" {% if u.primary_role == 'member' %}selected{% endif %}>Member</option>
+                      </select>
+                    </div>
+                  </td>
+                  <td>
+                    <div style="color:#fff;font-size:0.82rem;"><i class="fa fa-phone" style="font-size:0.7rem;color:var(--text-muted);margin-right:0.25rem;"></i> {{ u.phone }}</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">NIC: {{ u.nic_passport }}</div>
+                  </td>
+                  <td>
+                    <div style="display:flex;align-items:center;gap:0.5rem;">
+                      <span style="font-family:monospace;font-weight:900;color:var(--neon-lime);font-size:1.05rem;">
+                        #{{ u.pin }}
+                      </span>
+                      <button type="button" class="btn-action btn-danger" style="padding:0.25rem 0.55rem;font-size:0.68rem;" onclick="toggleAccess({{ u.id }})">
+                        <span id="access-badge-{{ u.id }}">
+                          {% if u.has_gate_access %}
+                            <i class="fa fa-check-circle" style="color:var(--neon-lime);"></i> GATE OK
+                          {% else %}
+                            <i class="fa fa-ban" style="color:var(--danger);"></i> BLOCKED
+                          {% endif %}
+                        </span>
+                      </button>
+                    </div>
+                  </td>
+                  <td>
+                    <span id="user-status-badge-{{ u.id }}">
+                      {% if u.is_active %}
+                        <span style="color:var(--neon-lime);font-weight:700;font-size:0.75rem;"><i class="fa fa-circle" style="font-size:0.55rem;"></i> Active</span>
+                      {% else %}
+                        <span style="color:var(--danger);font-weight:700;font-size:0.75rem;"><i class="fa fa-circle" style="font-size:0.55rem;"></i> Suspended</span>
+                      {% endif %}
+                    </span>
+                  </td>
+                  <td style="text-align:right;">
+                    <div style="display:inline-flex;gap:0.4rem;">
+                      <button class="btn-action" style="background:#2A3138;color:#fff;" onclick="openResetPasswordModal({{ u.id }}, '{{ u.username }}')" title="Reset Password">
+                        <i class="fa fa-key"></i> Pass
+                      </button>
+                      <button class="btn-action" style="background:#1F2428;color:var(--text-muted);" onclick="toggleUserActive({{ u.id }})" title="Suspend or Activate">
+                        <i class="fa fa-power-off"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="6" style="text-align:center;padding:2.5rem;color:var(--text-muted);">No system users found.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. MEMBERS TAB -->
     <div id="tab-admin-members" class="tab-pane active">
-      <h1 class="page-title">Member Directory &amp; Hardware PINs</h1>
-      <p class="page-sub">Manage membership status, provision biometric speed gate PINs, or revoke turnstile access.</p>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h1 class="page-title">Member Directory &amp; Hardware PINs</h1>
+          <p class="page-sub">Manage membership status, provision biometric speed gate PINs, or revoke turnstile access.</p>
+        </div>
+        <button class="btn-action btn-lime" onclick="openCreateUserModal('member')">
+          <i class="fa fa-user-plus"></i> + Add Member
+        </button>
+      </div>
 
       <div class="fitme-card">
         <div class="card-header">
@@ -293,10 +506,17 @@
       </div>
     </div>
 
-    <!-- 2. COACHES & STAFF TAB -->
+    <!-- 3. COACHES & STAFF TAB -->
     <div id="tab-admin-coaches" class="tab-pane">
-      <h1 class="page-title">Coaches &amp; Shift Management</h1>
-      <p class="page-sub">Floor roster, shift schedules, and mid-shift departure alerts.</p>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h1 class="page-title">Coaches &amp; Shift Management</h1>
+          <p class="page-sub">Floor roster, shift schedules, and mid-shift departure alerts.</p>
+        </div>
+        <button class="btn-action btn-lime" onclick="openCreateUserModal('coach')">
+          <i class="fa fa-user-plus"></i> + Add Coach / Staff
+        </button>
+      </div>
 
       {% if active_absence_alerts %}
         {% for alert in active_absence_alerts %}
@@ -402,8 +622,8 @@
 
     <!-- 5. PAYMENTS & POS TAB -->
     <div id="tab-admin-payments" class="tab-pane">
-      <h1 class="page-title">Payments Ledger &amp; 80mm POS Receipts</h1>
-      <p class="page-sub">Audit cashier transactions and reprint thermal receipts with autocut formatting.</p>
+      <h1 class="page-title">Payments &amp; Billing Ledger</h1>
+      <p class="page-sub">Audit cashier transactions, review billing history, and reprint official payment receipts.</p>
 
       <div class="fitme-card">
         <div class="card-body" style="padding:0;">
@@ -421,7 +641,7 @@
                   <td style="font-weight:800;color:#fff;">LKR {{ pr.total_paid }}</td>
                   <td>
                     <a href="/receipt/{{ pr.id }}/" target="_blank" class="btn-action btn-lime" style="padding:0.3rem 0.8rem;font-size:0.75rem;">
-                      <i class="fa fa-print"></i> 80mm Print
+                      <i class="fa fa-print"></i> Print Receipt
                     </a>
                   </td>
                 </tr>
@@ -590,6 +810,197 @@
   </div>
 </div>
 
+<!-- Modal: Create Staff / User -->
+<div id="createUserModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;overflow-y:auto;padding:1.5rem;">
+  <div style="background:#13171A;border:2px solid var(--neon-lime);border-radius:18px;padding:2rem;max-width:620px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);margin:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;font-size:1.2rem;display:flex;align-items:center;gap:0.5rem;">
+        <i class="fa fa-user-plus" style="color:var(--neon-lime);"></i> Create Staff / User Account
+      </h3>
+      <button type="button" onclick="closeCreateUserModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+
+    <form id="createUserForm" onsubmit="submitCreateUser(event)">
+      <!-- 1. Select Role -->
+      <label style="display:block;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.45rem;">
+        Select System Role *
+      </label>
+      <div class="role-radio-grid">
+        <div class="role-radio-card" id="card-role-super_admin" onclick="selectRoleInModal('super_admin')">
+          <input type="radio" name="modal_role" value="super_admin">
+          <i class="fa fa-shield-alt" style="color:var(--neon-lime);font-size:1.1rem;"></i>
+          <div class="role-card-title" style="color:var(--neon-lime);">Super Admin</div>
+          <div class="role-card-desc">Full System Admin</div>
+        </div>
+        <div class="role-radio-card" id="card-role-front_desk" onclick="selectRoleInModal('front_desk')">
+          <input type="radio" name="modal_role" value="front_desk">
+          <i class="fa fa-concierge-bell" style="color:var(--cyan);font-size:1.1rem;"></i>
+          <div class="role-card-title" style="color:var(--cyan);">Front Desk</div>
+          <div class="role-card-desc">Check-in &amp; POS</div>
+        </div>
+        <div class="role-radio-card" id="card-role-coach" onclick="selectRoleInModal('coach')">
+          <input type="radio" name="modal_role" value="coach">
+          <i class="fa fa-dumbbell" style="color:#F59E0B;font-size:1.1rem;"></i>
+          <div class="role-card-title" style="color:#F59E0B;">Coach</div>
+          <div class="role-card-desc">Trainer &amp; Rehab</div>
+        </div>
+        <div class="role-radio-card selected" id="card-role-member" onclick="selectRoleInModal('member')">
+          <input type="radio" name="modal_role" value="member" checked>
+          <i class="fa fa-user" style="color:#C084FC;font-size:1.1rem;"></i>
+          <div class="role-card-title" style="color:#C084FC;">Member</div>
+          <div class="role-card-desc">Gym Athlete</div>
+        </div>
+      </div>
+
+      <!-- 2. Account Credentials -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.85rem;">
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Username *</label>
+          <input type="text" id="newUsername" required class="form-control" placeholder="e.g. kasun_trainer">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Email Address *</label>
+          <input type="email" id="newEmail" required class="form-control" placeholder="e.g. kasun@fitme.lk">
+        </div>
+      </div>
+
+      <!-- Password with generator -->
+      <div style="margin-bottom:0.85rem;">
+        <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Password * (min 6 characters)</label>
+        <div style="display:flex;gap:0.5rem;">
+          <input type="text" id="newPassword" required minlength="6" class="form-control" placeholder="Enter secure password">
+          <button type="button" class="btn-action" style="background:#242A2F;color:var(--neon-lime);white-space:nowrap;" onclick="generateRandomPassword('newPassword')">
+            <i class="fa fa-dice"></i> Generate
+          </button>
+        </div>
+      </div>
+
+      <!-- Name & Contact -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.85rem;">
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">First Name</label>
+          <input type="text" id="newFirstName" class="form-control" placeholder="First Name">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Last Name</label>
+          <input type="text" id="newLastName" class="form-control" placeholder="Last Name">
+        </div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.85rem;">
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Phone Number</label>
+          <input type="text" id="newPhone" class="form-control" placeholder="070 762 7878">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">NIC / Passport No</label>
+          <input type="text" id="newNic" class="form-control" placeholder="e.g. 199512345678">
+        </div>
+      </div>
+
+      <!-- Conditional Coach Details -->
+      <div id="coachExtraFields" style="display:none;background:#1A2024;border:1px solid #333C43;border-radius:10px;padding:0.85rem;margin-bottom:0.85rem;">
+        <div style="font-weight:700;font-size:0.78rem;color:#F59E0B;margin-bottom:0.5rem;"><i class="fa fa-dumbbell"></i> Coach Profile Details</div>
+        <div style="display:grid;grid-template-columns:2fr 1fr;gap:0.75rem;margin-bottom:0.65rem;">
+          <div>
+            <label style="display:block;font-size:0.7rem;color:var(--text-muted);margin-bottom:0.2rem;">Coach Title</label>
+            <input type="text" id="newCoachTitle" class="form-control" value="Certified Fitness &amp; Biomechanics Coach">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.7rem;color:var(--text-muted);margin-bottom:0.2rem;">Years Exp.</label>
+            <input type="number" id="newCoachYears" class="form-control" value="3">
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.7rem;color:var(--text-muted);margin-bottom:0.2rem;">Specialties</label>
+          <input type="text" id="newCoachSpecialties" class="form-control" placeholder="Hypertrophy, Powerlifting, Sri Lankan Nutrition">
+        </div>
+      </div>
+
+      <!-- Conditional Member Details -->
+      <div id="memberExtraFields" style="background:#1A2024;border:1px solid #333C43;border-radius:10px;padding:0.85rem;margin-bottom:0.85rem;">
+        <div style="font-weight:700;font-size:0.78rem;color:#C084FC;margin-bottom:0.5rem;"><i class="fa fa-id-card"></i> Member Details</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+          <div>
+            <label style="display:block;font-size:0.7rem;color:var(--text-muted);margin-bottom:0.2rem;">Primary Goal</label>
+            <select id="newMemberGoal" class="form-control">
+              <option value="general_fitness">General Fitness</option>
+              <option value="weight_loss">Weight Loss</option>
+              <option value="muscle_gain">Muscle Gain</option>
+              <option value="endurance">Endurance &amp; Cardio</option>
+              <option value="rehabilitation">Rehabilitation</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.7rem;color:var(--text-muted);margin-bottom:0.2rem;">Starting Weight (kg)</label>
+            <input type="number" step="0.1" id="newMemberWeight" class="form-control" placeholder="70.0">
+          </div>
+        </div>
+      </div>
+
+      <!-- Hardware Biometric Turnstile PIN & Access -->
+      <div style="background:#161B1E;border:1px solid var(--border-color);border-radius:10px;padding:0.85rem;margin-bottom:1.25rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+          <span style="font-weight:700;font-size:0.78rem;color:var(--neon-lime);"><i class="fa fa-microchip"></i> Hardware Biometric Turnstile</span>
+          <span style="font-size:0.7rem;color:var(--text-muted);">Pitigala Arena Speed Gate</span>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;align-items:center;">
+          <div>
+            <label style="display:block;font-size:0.7rem;color:var(--text-muted);margin-bottom:0.2rem;">Biometric PIN (blank for auto)</label>
+            <input type="text" id="newBiometricPin" class="form-control" placeholder="e.g. 1005" maxlength="10">
+          </div>
+          <div style="padding-top:1.1rem;">
+            <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.78rem;color:#fff;cursor:pointer;">
+              <input type="checkbox" id="newGateAccess" checked style="accent-color:var(--neon-lime);width:16px;height:16px;">
+              <span>Grant Gate Access Now</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
+        <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeCreateUserModal()">Cancel</button>
+        <button type="submit" id="btnSubmitUser" class="btn-action btn-lime" style="padding:0.6rem 1.4rem;">
+          <i class="fa fa-check"></i> Create Account &amp; Assign Role
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Reset Password -->
+<div id="resetPasswordModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;padding:1.5rem;">
+  <div style="background:#13171A;border:2px solid var(--neon-lime);border-radius:16px;padding:2rem;max-width:440px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;font-size:1.1rem;">
+        <i class="fa fa-key" style="color:var(--neon-lime);"></i> Reset Password
+      </h3>
+      <button type="button" onclick="closeResetPasswordModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+    <form id="resetPasswordForm" onsubmit="submitResetPassword(event)">
+      <input type="hidden" id="resetTargetUserId">
+      <div style="margin-bottom:1rem;">
+        <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Target User:</div>
+        <div style="font-size:1rem;font-weight:700;color:var(--neon-lime);" id="resetTargetUsername">username</div>
+      </div>
+      <div style="margin-bottom:1.25rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">New Password *</label>
+        <div style="display:flex;gap:0.5rem;">
+          <input type="text" id="resetNewPassword" required minlength="6" class="form-control" placeholder="Enter new password">
+          <button type="button" class="btn-action" style="background:#242A2F;color:var(--neon-lime);white-space:nowrap;" onclick="generateRandomPassword('resetNewPassword')">
+            <i class="fa fa-dice"></i> Generate
+          </button>
+        </div>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
+        <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeResetPasswordModal()">Cancel</button>
+        <button type="submit" class="btn-action btn-lime">Update Password</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
   function showToast(msg) {
     const t = document.getElementById('adminToast');
@@ -601,8 +1012,217 @@
   function switchTab(tabId, btn) {
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
+    const targetPane = document.getElementById(tabId);
+    if (targetPane) targetPane.classList.add('active');
+    if (btn) {
+      btn.classList.add('active');
+    } else {
+      const matchingBtn = document.getElementById('nav-' + tabId);
+      if (matchingBtn) matchingBtn.classList.add('active');
+    }
+  }
+
+  // Auto-switch to active tab on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const initialTab = '{{ active_tab|default:"tab-admin-members" }}';
+    switchTab(initialTab);
+  });
+
+  // Password Generator
+  function generateRandomPassword(inputId) {
+    const chars = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$%";
+    let pwd = "";
+    for (let i = 0; i < 12; i++) {
+      pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    const input = document.getElementById(inputId);
+    if (input) input.value = pwd;
+  }
+
+  // Create User Modal functions
+  let currentSelectedRole = 'member';
+
+  function openCreateUserModal(defaultRole) {
+    const role = defaultRole || 'member';
+    selectRoleInModal(role);
+    generateRandomPassword('newPassword');
+    document.getElementById('createUserModal').style.display = 'flex';
+  }
+
+  function closeCreateUserModal() {
+    document.getElementById('createUserModal').style.display = 'none';
+  }
+
+  function selectRoleInModal(role) {
+    currentSelectedRole = role;
+    document.querySelectorAll('.role-radio-card').forEach(card => card.classList.remove('selected'));
+    const targetCard = document.getElementById(`card-role-${role}`);
+    if (targetCard) {
+      targetCard.classList.add('selected');
+      const radio = targetCard.querySelector('input[type="radio"]');
+      if (radio) radio.checked = true;
+    }
+
+    // Toggle conditional fields
+    const coachFields = document.getElementById('coachExtraFields');
+    const memberFields = document.getElementById('memberExtraFields');
+    if (coachFields) coachFields.style.display = (role === 'coach') ? 'block' : 'none';
+    if (memberFields) memberFields.style.display = (role === 'member') ? 'block' : 'none';
+  }
+
+  async function submitCreateUser(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitUser');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Creating...';
+
+    const payload = {
+      role: currentSelectedRole,
+      username: document.getElementById('newUsername').value.trim(),
+      email: document.getElementById('newEmail').value.trim(),
+      password: document.getElementById('newPassword').value.trim(),
+      first_name: document.getElementById('newFirstName').value.trim(),
+      last_name: document.getElementById('newLastName').value.trim(),
+      phone: document.getElementById('newPhone').value.trim(),
+      nic_passport: document.getElementById('newNic').value.trim(),
+      biometric_pin: document.getElementById('newBiometricPin').value.trim(),
+      enable_gate_access: document.getElementById('newGateAccess').checked,
+      coach_title: document.getElementById('newCoachTitle') ? document.getElementById('newCoachTitle').value.trim() : '',
+      specialties: document.getElementById('newCoachSpecialties') ? document.getElementById('newCoachSpecialties').value.trim() : '',
+      years_experience: document.getElementById('newCoachYears') ? document.getElementById('newCoachYears').value : 3,
+      primary_goal: document.getElementById('newMemberGoal') ? document.getElementById('newMemberGoal').value : 'general_fitness',
+      starting_weight_kg: document.getElementById('newMemberWeight') ? document.getElementById('newMemberWeight').value : '',
+    };
+
+    try {
+      const res = await fetch('/dashboard/api/users/create/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeCreateUserModal();
+        showToast(data.message);
+        setTimeout(() => location.reload(), 800);
+      } else {
+        alert(data.error || "Failed to create user.");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-check"></i> Create Account & Assign Role';
+      }
+    } catch(err) {
+      alert("Error: " + err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check"></i> Create Account & Assign Role';
+    }
+  }
+
+  // Change Role via Dropdown
+  async function changeUserRole(userId, newRole) {
+    if (!confirm(`Are you sure you want to change this user's role to ${newRole.toUpperCase().replace('_', ' ')}?`)) {
+      location.reload();
+      return;
+    }
+    try {
+      const res = await fetch(`/dashboard/api/users/${userId}/role/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message);
+        setTimeout(() => location.reload(), 700);
+      } else {
+        alert(data.error || "Failed to change role.");
+        location.reload();
+      }
+    } catch(err) {
+      alert("Error: " + err);
+      location.reload();
+    }
+  }
+
+  // Toggle User Active Status
+  async function toggleUserActive(userId) {
+    if (!confirm("Are you sure you want to change this account's active/suspended status?")) return;
+    try {
+      const res = await fetch(`/dashboard/api/users/${userId}/toggle-active/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message);
+        const badge = document.getElementById(`user-status-badge-${userId}`);
+        if (badge) {
+          badge.innerHTML = data.is_active
+            ? '<span style="color:var(--neon-lime);font-weight:700;font-size:0.75rem;"><i class="fa fa-circle" style="font-size:0.55rem;"></i> Active</span>'
+            : '<span style="color:var(--danger);font-weight:700;font-size:0.75rem;"><i class="fa fa-circle" style="font-size:0.55rem;"></i> Suspended</span>';
+        }
+      } else {
+        alert(data.error || "Failed to update status.");
+      }
+    } catch(err) {
+      alert("Error: " + err);
+    }
+  }
+
+  // Reset Password Modal
+  function openResetPasswordModal(userId, username) {
+    document.getElementById('resetTargetUserId').value = userId;
+    document.getElementById('resetTargetUsername').textContent = '@' + username;
+    generateRandomPassword('resetNewPassword');
+    document.getElementById('resetPasswordModal').style.display = 'flex';
+  }
+
+  function closeResetPasswordModal() {
+    document.getElementById('resetPasswordModal').style.display = 'none';
+  }
+
+  async function submitResetPassword(e) {
+    e.preventDefault();
+    const userId = document.getElementById('resetTargetUserId').value;
+    const newPassword = document.getElementById('resetNewPassword').value.trim();
+
+    try {
+      const res = await fetch(`/dashboard/api/users/${userId}/reset-password/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ new_password: newPassword })
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeResetPasswordModal();
+        showToast(data.message);
+      } else {
+        alert(data.error || "Failed to reset password.");
+      }
+    } catch(err) {
+      alert("Error: " + err);
+    }
+  }
+
+  // Filter & Search
+  let activeRoleFilter = 'all';
+
+  function setRoleFilter(role, btn) {
+    activeRoleFilter = role;
+    document.querySelectorAll('#roleFilterButtons .filter-pill').forEach(b => b.classList.remove('active'));
     if (btn) btn.classList.add('active');
+    filterUserTable();
+  }
+
+  function filterUserTable() {
+    const q = (document.getElementById('userSearchInput').value || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('.user-row');
+    rows.forEach(row => {
+      const role = row.getAttribute('data-role');
+      const searchText = (row.getAttribute('data-search') || '').toLowerCase();
+      const roleMatches = (activeRoleFilter === 'all') || (role === activeRoleFilter);
+      const textMatches = !q || searchText.includes(q);
+      row.style.display = (roleMatches && textMatches) ? '' : 'none';
+    });
   }
 
   // Toggle Gate Access

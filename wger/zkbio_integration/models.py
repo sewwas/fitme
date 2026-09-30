@@ -54,6 +54,13 @@ class BiometricProfile(models.Model):
         default=False,
         help_text="Hardware door permission revoked if subscription expires or user suspended"
     )
+    liveu_id = models.CharField(
+        max_length=64,
+        blank=True,
+        null=True,
+        db_index=True,
+        help_text="LiveU Cloud MongoDB _id for cloud-managed hardware sync"
+    )
     last_sync_time = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -107,6 +114,14 @@ class DoorAccessLog(models.Model):
     )
     device_ip = models.GenericIPAddressField(default='192.168.1.23')
     terminal_name = models.CharField(max_length=100, default='MAIN_TURNSTILE')
+    liveu_attendance_id = models.CharField(
+        max_length=64,
+        blank=True,
+        null=True,
+        unique=True,
+        db_index=True,
+        help_text="LiveU attendance record _id"
+    )
     raw_payload = models.JSONField(default=dict, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 

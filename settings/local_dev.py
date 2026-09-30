@@ -5,6 +5,12 @@
 
 # wger
 from .settings_global import *
+import environ
+
+# Load environment variables from .env if present
+env_file = BASE_DIR.parent / '.env'
+if env_file.exists():
+    environ.Env.read_env(env_file)
 
 DEBUG = True
 
@@ -26,7 +32,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 WGER_SETTINGS['ALLOW_UPLOAD_VIDEOS'] = False
 WGER_SETTINGS['ALLOW_GUEST_USERS'] = False
 WGER_SETTINGS['ALLOW_REGISTRATION'] = False
-WGER_SETTINGS['DOWNLOAD_INGREDIENTS_FROM'] = None
+WGER_SETTINGS['DOWNLOAD_INGREDIENTS_FROM'] = 'WGER'
 WGER_SETTINGS['EMAIL_FROM'] = 'wger Workout Manager <wger@example.com>'
 WGER_SETTINGS['EXERCISE_CACHE_TTL'] = 500
 WGER_SETTINGS['INGREDIENT_CACHE_TTL'] = 500
@@ -123,3 +129,11 @@ try:
     from .local_dev_extra import *
 except ImportError:
     pass
+
+# Fit Me — ZKBio Turnstile Hardware Bridge Security Token
+ZKBIO_BRIDGE_TOKEN = os.environ.get('FITME_BRIDGE_TOKEN') or os.environ.get('LIVEU_BRANCH_API_KEY', '')
+
+# Fit Me — LiveU Cloud-Managed Access Control & Attendance API
+LIVEU_API_URL = os.environ.get('LIVEU_API_URL', 'https://attapi.liveucloud.com/api/v1')
+LIVEU_BRANCH_API_KEY = os.environ.get('LIVEU_BRANCH_API_KEY', '')
+

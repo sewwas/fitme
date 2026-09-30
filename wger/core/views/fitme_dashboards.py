@@ -2,6 +2,8 @@
 Fit Me — Role-based Dashboard Views
 Each role gets its own dashboard routed here.
 """
+import functools
+
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.utils.decorators import method_decorator
@@ -17,6 +19,7 @@ from wger.core.views.user import get_role_dashboard
 def role_required(*roles):
     """Decorator that checks user has one of the required group names."""
     def decorator(view_func):
+        @functools.wraps(view_func)
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
                 return redirect(f'/user/login?next={request.path}')
@@ -49,12 +52,8 @@ def get_public_home_context():
 
     today = timezone.now().date()
     active_members_count = Subscription.objects.filter(status='active', end_date__gte=today).count()
-    if active_members_count == 0:
-        active_members_count = 148
     today_punches = DoorAccessLog.objects.filter(punch_time__date=today).count()
-    if today_punches == 0:
-        today_punches = 42
-    total_kg_lost = sum(float(t.weight_loss_kg) for t in testimonials) + 380.0
+    total_kg_lost = sum(float(t.weight_loss_kg) for t in testimonials if t.weight_loss_kg)
 
     return {
         'programs': programs,
@@ -83,9 +82,13 @@ def get_public_home_context():
 
 @login_required
 @role_required('super_admin')
-def super_admin_dashboard(request):
-    """Super Admin — 8 modules: Members, Coaches, Programs, Memberships, Payments, Content, Testimonials, Analytics."""
+def super_admin_dashboard(request, active_tab=None):
+    """Super Admin — Comprehensive operations console: Users & Staff, Members, Coaches, Programs, Memberships, Payments, Content, Testimonials, Analytics."""
+    from wger.membership.services import check_and_expire_subscriptions
+    check_and_expire_subscriptions()
+
     today = timezone.now().date()
+    current_tab = active_tab or request.GET.get('tab', 'tab-admin-members')
 
     # Stats
     active_subs = Subscription.objects.filter(status='active', end_date__gte=today)
@@ -125,6 +128,89 @@ def super_admin_dashboard(request):
     from wger.membership.models import (
         MemberProfile, CoachProfile, GymProgram, Announcement, Testimonial
     )
+    from django.contrib.auth import get_user_model
+    from wger.zkbio_integration.models import BiometricProfile
+
+    User = get_user_model()
+
+    # Fetch all system users & staff with their roles & hardware statuses
+    users_qs = User.objects.prefetch_related('groups').select_related(
+        'member_profile', 'coach_profile', 'biometric_profile'
+    ).order_by('-id')
+
+    all_system_users = []
+    user_stats = {
+        'total': 0,
+        'super_admin': 0,
+        'front_desk': 0,
+        'coach': 0,
+        'member': 0,
+        'active': 0,
+        'disabled': 0,
+    }
+
+    for u in users_qs:
+        groups = set(u.groups.values_list('name', flat=True))
+        if u.is_superuser or 'super_admin' in groups:
+            primary_role = 'super_admin'
+            role_label = 'Super Admin'
+            role_color = 'var(--neon-lime)'
+            role_badge_class = 'badge-super-admin'
+        elif 'front_desk' in groups:
+            primary_role = 'front_desk'
+            role_label = 'Front Desk'
+            role_color = 'var(--cyan)'
+            role_badge_class = 'badge-front-desk'
+        elif 'coach' in groups:
+            primary_role = 'coach'
+            role_label = 'Coach'
+            role_color = '#F59E0B'
+            role_badge_class = 'badge-coach'
+        else:
+            primary_role = 'member'
+            role_label = 'Member'
+            role_color = '#A855F7'
+            role_badge_class = 'badge-member'
+
+        user_stats['total'] += 1
+        user_stats[primary_role] = user_stats.get(primary_role, 0) + 1
+        if u.is_active:
+            user_stats['active'] += 1
+        else:
+            user_stats['disabled'] += 1
+
+        phone = ''
+        nic_passport = ''
+        pin = ''
+        has_gate_access = False
+
+        if hasattr(u, 'member_profile') and u.member_profile:
+            phone = u.member_profile.phone or phone
+            nic_passport = u.member_profile.nic_passport or nic_passport
+            pin = u.member_profile.biometric_pin or pin
+        if hasattr(u, 'coach_profile') and u.coach_profile:
+            phone = u.coach_profile.phone or phone
+        if hasattr(u, 'biometric_profile') and u.biometric_profile:
+            pin = u.biometric_profile.zk_pin or pin
+            has_gate_access = not u.biometric_profile.disabled
+
+        all_system_users.append({
+            'user': u,
+            'id': u.id,
+            'username': u.username,
+            'full_name': u.get_full_name() or u.username,
+            'email': u.email,
+            'primary_role': primary_role,
+            'role_label': role_label,
+            'role_color': role_color,
+            'role_badge_class': role_badge_class,
+            'phone': phone or '—',
+            'nic_passport': nic_passport or '—',
+            'pin': pin or '—',
+            'has_gate_access': has_gate_access,
+            'date_joined': u.date_joined,
+            'is_active': u.is_active,
+        })
 
     all_members = MemberProfile.objects.select_related('user').order_by('-id')[:60]
     coaches = CoachProfile.objects.select_related('user').all()
@@ -135,6 +221,7 @@ def super_admin_dashboard(request):
     context = {
         'role': 'super_admin',
         'page_title': 'Super Admin Dashboard',
+        'active_tab': current_tab,
         'club_info': {
             'name': 'Fit Me',
             'tagline': 'Train with Purpose & Move with Confidence',
@@ -160,16 +247,28 @@ def super_admin_dashboard(request):
         'announcements': announcements,
         'testimonials': testimonials,
         'payment_receipts': payment_receipts,
+        'all_system_users': all_system_users,
+        'user_stats': user_stats,
     }
     return render(request, 'dashboards/super_admin.html', context)
+
+
+@login_required
+@role_required('super_admin')
+def admin_users_view(request):
+    """Direct view for /dashboard/admin/users/ — loads the super admin console on Staff & Roles tab."""
+    return super_admin_dashboard(request, active_tab='tab-admin-users')
 
 
 @login_required
 @role_required('front_desk', 'super_admin')
 def front_desk_dashboard(request):
     """Front Desk — member queue, biometric enrollment, live turnstile monitor, payments, and 80mm thermal receipts."""
+    from wger.membership.services import check_and_expire_subscriptions
     from wger.gym_operations_payroll.models import PaymentReceipt
     from wger.zkbio_integration.models import DoorAccessLog
+
+    check_and_expire_subscriptions()
     pending_apps = MemberApplication.objects.filter(status='pending').order_by('-applied_at')
     active_subs = Subscription.objects.filter(
         status='active',
@@ -271,13 +370,14 @@ def member_dashboard(request):
             defaults={'zk_pin': profile.biometric_pin}
         )
 
-    # Active subscription
-    today = timezone.now().date()
-    subscription = Subscription.objects.filter(
-        member=user, status='active', end_date__gte=today
-    ).first()
+    # Run auto-expiry audit and fetch comprehensive access status
+    from wger.membership.services import check_and_expire_subscriptions, get_member_access_summary
+    check_and_expire_subscriptions()
 
-    door_access_active = bool(subscription and subscription.is_active and not (bio_profile and bio_profile.disabled))
+    access_summary = get_member_access_summary(user)
+    subscription = access_summary['subscription']
+    door_access_active = access_summary['door_access_active']
+    today = timezone.now().date()
 
     # Streak
     streak, _ = WorkoutStreak.objects.get_or_create(member=user)
@@ -299,9 +399,13 @@ def member_dashboard(request):
     protein_target = fuel_progress['targets']['protein_g'] if fuel_progress else 150
     protein_pct = min(100, int((protein_consumed / max(1, protein_target)) * 100))
 
-    water_consumed = 2400
-    water_target = 3000
-    water_pct = min(100, int((water_consumed / max(1, water_target)) * 100))
+    from wger.nutrition_lk.models import WaterLog
+    today_water_logs = WaterLog.objects.filter(member=user, logged_at__date=today)
+    water_consumed_ml = sum(w.amount_ml for w in today_water_logs)
+    water_target_ml = fuel_progress['targets'].get('water_ml', 3000) if fuel_progress else 3000
+    water_consumed = round(water_consumed_ml / 1000, 1)
+    water_target = round(water_target_ml / 1000, 1)
+    water_pct = min(100, int((water_consumed_ml / max(1, water_target_ml)) * 100))
 
     # Body check-ins for morph slider & timeline
     checkins = list(BodyCheckIn.objects.filter(member=user).order_by('checkin_date'))
@@ -329,6 +433,7 @@ def member_dashboard(request):
         'profile': profile,
         'bio_profile': bio_profile,
         'subscription': subscription,
+        'access_summary': access_summary,
         'door_access_active': door_access_active,
         'streak': streak,
         'fuel_progress': fuel_progress,
@@ -536,8 +641,14 @@ def approve_application_api(request, app_id):
         }
     )
     if created:
-        user.set_password('fitme123!')
+        import secrets
+        import string
+        alphabet = string.ascii_letters + string.digits + '!@#$'
+        temp_password = ''.join(secrets.choice(alphabet) for _ in range(14))
+        user.set_password(temp_password)
         user.save()
+    else:
+        temp_password = None  # Existing user, password unchanged
 
     # Assign Member Group
     member_group, _ = Group.objects.get_or_create(name='member')
@@ -564,7 +675,7 @@ def approve_application_api(request, app_id):
     profile.personal_trainer_needed = app.personal_trainer_needed
     profile.save()
 
-    # BiometricProfile for ZKBio Turnstile hardware
+    # BiometricProfile for ZKBio Turnstile hardware / LiveU Cloud
     bio_profile, _ = BiometricProfile.objects.get_or_create(
         user=user,
         defaults={
@@ -575,6 +686,25 @@ def approve_application_api(request, app_id):
     )
     bio_profile.disabled = False
     bio_profile.sync_status = 'PENDING'
+
+    # Auto-provision to LiveU Cloud hardware if configured
+    try:
+        from wger.zkbio_integration.liveu_client import LiveUClient
+        liveu = LiveUClient()
+        if liveu.is_configured:
+            cloud_res = liveu.create_member(
+                member_id=profile.biometric_pin,
+                name=app.full_name,
+                uid=app.nic_passport or profile.phone,
+                status="Active"
+            )
+            if cloud_res and cloud_res.get('_id'):
+                bio_profile.liveu_id = cloud_res['_id']
+                bio_profile.sync_status = 'SYNCED'
+    except Exception as ex:
+        import logging
+        logging.getLogger('wger').error(f"[LiveU Cloud] Failed to register member on LiveU: {ex}")
+
     bio_profile.save()
 
     # Create active subscription with fees
@@ -622,12 +752,13 @@ def approve_application_api(request, app_id):
         'success': True,
         'message': f"Application approved for {app.full_name}!",
         'username': user.username,
+        'temp_password': temp_password,  # Show once to front desk staff — member must change on first login
         'pin': profile.biometric_pin,
         'plan': plan.name if plan else 'Standard',
         'sub_id': sub.id,
         'receipt_id': receipt.id,
         'receipt_number': receipt.receipt_number,
-        'receipt_url': f"/receipt/{receipt.id}/?autoprint=1"
+        'receipt_url': request.build_absolute_uri(f"/receipt/{receipt.id}/?autoprint=1")
     })
 
 
@@ -1060,8 +1191,8 @@ def assign_program_api(request, member_id):
         return JsonResponse({'error': 'Program not found'}, status=404)
 
     profile, _ = MemberProfile.objects.get_or_create(user=member)
-    profile.notes = f"Active Routine: {program.title} (Assigned by Coach {request.user.username} on {timezone.now():%d %b})"
-    profile.save(update_fields=['notes'])
+    profile.assigned_program = program
+    profile.save(update_fields=['assigned_program'])
 
     return JsonResponse({
         'success': True,
@@ -1096,30 +1227,70 @@ def set_nutrition_target_api(request, member_id):
     if not member:
         return JsonResponse({'error': 'Member not found'}, status=404)
 
+    water_ml = int(data.get('water_ml', 3000))
+
     target, _ = DailyFuelTarget.objects.get_or_create(
         member=member,
         defaults={
             'target_calories': calories,
             'target_protein_g': protein,
             'target_carbs_g': carbs,
-            'target_fat_g': fat
+            'target_fat_g': fat,
+            'target_water_ml': water_ml,
         }
     )
     target.target_calories = calories
     target.target_protein_g = protein
     target.target_carbs_g = carbs
     target.target_fat_g = fat
+    target.target_water_ml = water_ml
     target.save()
 
     return JsonResponse({
         'success': True,
-        'message': f"Updated nutrition targets for {member.get_full_name() or member.username}: {calories} kcal, {protein}g protein!",
+        'message': f"Updated nutrition targets for {member.get_full_name() or member.username}: {calories} kcal, {protein}g protein, {water_ml}ml water!",
         'targets': {
             'calories': calories,
             'protein_g': protein,
             'carbs_g': carbs,
-            'fat_g': fat
+            'fat_g': fat,
+            'water_ml': water_ml
         }
+    })
+
+
+@login_required
+def log_water_api(request):
+    """Member logs water consumption (+250ml, +500ml, etc.)."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+    try:
+        amount_ml = int(data.get('amount_ml', 250))
+    except (ValueError, TypeError):
+        amount_ml = 250
+
+    from wger.nutrition_lk.models import WaterLog, DailyFuelTarget
+    WaterLog.objects.create(member=request.user, amount_ml=amount_ml)
+
+    today = timezone.now().date()
+    water_logs = WaterLog.objects.filter(member=request.user, logged_at__date=today)
+    today_water_ml = sum(w.amount_ml for w in water_logs)
+    target_obj = DailyFuelTarget.objects.filter(member=request.user).first()
+    target_water_ml = target_obj.target_water_ml if (target_obj and hasattr(target_obj, 'target_water_ml')) else 3000
+    water_pct = min(100, int((today_water_ml / max(1, target_water_ml)) * 100))
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Logged +{amount_ml}ml water! Today's total: {round(today_water_ml / 1000, 1)}L",
+        'water_consumed': round(today_water_ml / 1000, 1),
+        'water_target': round(target_water_ml / 1000, 1),
+        'water_pct': water_pct,
+        'today_water_ml': today_water_ml
     })
 
 
@@ -1240,5 +1411,318 @@ def admin_toggle_testimonial_api(request, testimonial_id):
         'approved': t.is_approved,
         'message': f"Testimonial for {t.member_name} is now {'approved' if t.is_approved else 'hidden'}."
     })
+
+
+# ─────────────────────────────────────────────────────────────
+# ── User & Staff Management APIs (Super Admin) ──────────────
+# ─────────────────────────────────────────────────────────────
+
+@login_required
+@role_required('super_admin')
+def admin_create_user_api(request):
+    """
+    Super Admin creates a new User & Staff member with assigned Role (Super Admin, Front Desk, Coach, Member),
+    provisions credentials, profiles, and hardware biometric gate access.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    username = data.get('username', '').strip()
+    email = data.get('email', '').strip().lower()
+    password = data.get('password', '').strip()
+    first_name = data.get('first_name', '').strip()
+    last_name = data.get('last_name', '').strip()
+    role = data.get('role', 'member').strip()
+    phone = data.get('phone', '').strip()
+    nic_passport = data.get('nic_passport', '').strip()
+    enable_gate = bool(data.get('enable_gate_access', True))
+
+    if not username:
+        return JsonResponse({'error': 'Username is required.'}, status=400)
+    if not email:
+        return JsonResponse({'error': 'Email address is required.'}, status=400)
+    if not password or len(password) < 6:
+        return JsonResponse({'error': 'Password must be at least 6 characters long.'}, status=400)
+    if role not in ['super_admin', 'front_desk', 'coach', 'member']:
+        return JsonResponse({'error': f'Invalid role: {role}'}, status=400)
+
+    from django.contrib.auth import get_user_model
+    from django.contrib.auth.models import Group
+    from wger.core.models import UserProfile
+    from wger.membership.models import MemberProfile, CoachProfile
+    from wger.zkbio_integration.models import BiometricProfile
+
+    User = get_user_model()
+    if User.objects.filter(username=username).exists():
+        return JsonResponse({'error': f"Username '{username}' is already taken."}, status=400)
+    if User.objects.filter(email=email).exists():
+        return JsonResponse({'error': f"A user with email '{email}' already exists."}, status=400)
+
+    # Create the User
+    is_staff = role in ['super_admin', 'front_desk', 'coach']
+    is_superuser = (role == 'super_admin')
+    user = User.objects.create_user(
+        username=username,
+        email=email,
+        password=password,
+        first_name=first_name,
+        last_name=last_name,
+        is_staff=is_staff,
+        is_superuser=is_superuser,
+        is_active=True,
+    )
+
+    # Assign Django Group
+    group, _ = Group.objects.get_or_create(name=role)
+    user.groups.add(group)
+
+    # Required wger UserProfile
+    UserProfile.objects.get_or_create(user=user)
+
+    # Biometric PIN generation
+    custom_pin = data.get('biometric_pin', '').strip()
+    if custom_pin:
+        pin = custom_pin
+    else:
+        last_member = MemberProfile.objects.exclude(biometric_pin__isnull=True).order_by('-biometric_pin').first()
+        if last_member and last_member.biometric_pin and last_member.biometric_pin.isdigit():
+            pin = str(int(last_member.biometric_pin) + 1)
+        else:
+            pin = f"10{user.id:02d}"
+
+    # If Coach role, create CoachProfile
+    if role == 'coach':
+        coach_title = data.get('coach_title', 'Certified Strength & Conditioning Coach').strip()
+        specialties = data.get('specialties', 'General Fitness, Biomechanics').strip()
+        try:
+            years_exp = int(data.get('years_experience', 3))
+        except (ValueError, TypeError):
+            years_exp = 3
+        bio = data.get('bio', '').strip()
+
+        CoachProfile.objects.create(
+            user=user,
+            title=coach_title,
+            specialties=specialties,
+            years_experience=years_exp,
+            bio=bio,
+            phone=phone
+        )
+
+    # Create MemberProfile
+    starting_weight = None
+    if data.get('starting_weight_kg'):
+        try:
+            from decimal import Decimal
+            starting_weight = Decimal(data.get('starting_weight_kg'))
+        except Exception:
+            starting_weight = None
+
+    # Create MemberProfile only if role is 'member'
+    if role == 'member':
+        MemberProfile.objects.create(
+            user=user,
+            phone=phone,
+            nic_passport=nic_passport,
+            biometric_pin=pin,
+            primary_goal=data.get('primary_goal', 'general_fitness'),
+            starting_weight_kg=starting_weight,
+            emergency_contact_name=data.get('emergency_name', ''),
+            emergency_contact_phone=data.get('emergency_phone', ''),
+        )
+
+    # BiometricProfile for turnstile hardware / LiveU Cloud
+    bio = BiometricProfile.objects.create(
+        user=user,
+        zk_pin=pin,
+        disabled=not enable_gate,
+        sync_status='PENDING'
+    )
+    try:
+        from wger.zkbio_integration.liveu_client import LiveUClient
+        liveu = LiveUClient()
+        if liveu.is_configured:
+            cloud_res = liveu.create_member(
+                member_id=pin,
+                name=user.get_full_name() or user.username,
+                uid=nic_passport or phone,
+                status="Active" if enable_gate else "Inactive"
+            )
+            if cloud_res and cloud_res.get('_id'):
+                bio.liveu_id = cloud_res['_id']
+                bio.sync_status = 'SYNCED'
+                bio.save(update_fields=['liveu_id', 'sync_status'])
+    except Exception as ex:
+        import logging
+        logging.getLogger('wger').error(f"[LiveU Cloud] Error registering {user.username}: {ex}")
+
+    role_labels = {
+        'super_admin': 'Super Admin',
+        'front_desk': 'Front Desk',
+        'coach': 'Coach',
+        'member': 'Member'
+    }
+
+    return JsonResponse({
+        'success': True,
+        'message': f"User '{username}' successfully created with role '{role_labels[role]}'.",
+        'user': {
+            'id': user.id,
+            'username': user.username,
+            'full_name': user.get_full_name() or user.username,
+            'email': user.email,
+            'role': role,
+            'role_label': role_labels[role],
+            'phone': phone,
+            'nic_passport': nic_passport,
+            'pin': pin,
+            'is_active': user.is_active,
+            'has_gate_access': enable_gate
+        }
+    })
+
+
+@login_required
+@role_required('super_admin')
+def admin_update_user_role_api(request, user_id):
+    """Change a user's role and permission group dynamically."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    new_role = data.get('role', '').strip()
+    if new_role not in ['super_admin', 'front_desk', 'coach', 'member']:
+        return JsonResponse({'error': f'Invalid role: {new_role}'}, status=400)
+
+    from django.contrib.auth import get_user_model
+    from django.contrib.auth.models import Group
+    from wger.membership.models import CoachProfile
+
+    User = get_user_model()
+    target_user = User.objects.filter(id=user_id).first()
+    if not target_user:
+        return JsonResponse({'error': 'User not found'}, status=404)
+
+    # Prevent demoting the requesting user from super_admin accidentally
+    if target_user == request.user and new_role != 'super_admin':
+        return JsonResponse({'error': 'You cannot remove Super Admin role from your own current session.'}, status=400)
+
+    # Clear previous role groups
+    for r in ['super_admin', 'front_desk', 'coach', 'member']:
+        g = Group.objects.filter(name=r).first()
+        if g:
+            target_user.groups.remove(g)
+
+    # Add new role group
+    new_group, _ = Group.objects.get_or_create(name=new_role)
+    target_user.groups.add(new_group)
+
+    # Update Django staff and superuser flags
+    target_user.is_staff = new_role in ['super_admin', 'front_desk', 'coach']
+    target_user.is_superuser = (new_role == 'super_admin')
+    target_user.save(update_fields=['is_staff', 'is_superuser'])
+
+    # Ensure coach profile if promoted to coach
+    if new_role == 'coach' and not CoachProfile.objects.filter(user=target_user).exists():
+        CoachProfile.objects.create(
+            user=target_user,
+            title='Certified Fitness Coach',
+            specialties='Strength Training, Biomechanics',
+            years_experience=3
+        )
+
+    role_labels = {
+        'super_admin': 'Super Admin',
+        'front_desk': 'Front Desk',
+        'coach': 'Coach',
+        'member': 'Member'
+    }
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Role for {target_user.username} updated to {role_labels[new_role]}.",
+        'role': new_role,
+        'role_label': role_labels[new_role]
+    })
+
+
+@login_required
+@role_required('super_admin')
+def admin_toggle_user_active_api(request, user_id):
+    """Toggle user active status (suspend/activate account) and turnstile gate."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    from django.contrib.auth import get_user_model
+    from wger.zkbio_integration.models import BiometricProfile
+
+    User = get_user_model()
+    target_user = User.objects.filter(id=user_id).first()
+    if not target_user:
+        return JsonResponse({'error': 'User not found'}, status=404)
+
+    if target_user == request.user:
+        return JsonResponse({'error': 'You cannot disable your own active account.'}, status=400)
+
+    target_user.is_active = not target_user.is_active
+    target_user.save(update_fields=['is_active'])
+
+    # Sync biometric gate access
+    bio = BiometricProfile.objects.filter(user=target_user).first()
+    if bio:
+        bio.disabled = not target_user.is_active
+        bio.sync_status = 'PENDING'
+        bio.save(update_fields=['disabled', 'sync_status'])
+
+    action_word = "activated" if target_user.is_active else "suspended / deactivated"
+    return JsonResponse({
+        'success': True,
+        'is_active': target_user.is_active,
+        'message': f"User account '{target_user.username}' has been {action_word}."
+    })
+
+
+@login_required
+@role_required('super_admin')
+def admin_reset_user_password_api(request, user_id):
+    """Super Admin resets a user's password."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    new_password = data.get('new_password', '').strip()
+    if not new_password or len(new_password) < 6:
+        return JsonResponse({'error': 'New password must be at least 6 characters long.'}, status=400)
+
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    target_user = User.objects.filter(id=user_id).first()
+    if not target_user:
+        return JsonResponse({'error': 'User not found'}, status=404)
+
+    target_user.set_password(new_password)
+    target_user.save()
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Password for '{target_user.username}' was successfully reset."
+    })
+
 
 

@@ -37,10 +37,15 @@ fitme-portal/
 
 | Role | Dashboard URL | Access |
 |------|--------------|--------|
-| `super_admin` | `/fitme/dashboard/admin/` | Full system |
-| `front_desk` | `/fitme/dashboard/front-desk/` | Member queue + payments |
-| `coach` | `/fitme/dashboard/coach/` | Assigned members + nutrition |
-| `member` | `/fitme/dashboard/member/` | Personal stats + digital ID |
+| `super_admin` | `/dashboard/admin/` | Full system operations, users & analytics |
+| `front_desk` | `/dashboard/front-desk/` | Member queue, registrations & 80mm receipts |
+| `coach` | `/dashboard/coach/` | Assigned members, workout plans & nutrition |
+| `member` | `/dashboard/member/` | Personal stats, hydration, streaks & logs |
+
+## Deployment
+
+For a 100% free production deployment using **Vercel + Render + Supabase**, see:
+👉 **[Production Deployment Guide ($0 / Free Tier)](DEPLOYMENT_GUIDE.md)**
 
 ## Getting Started
 
@@ -54,14 +59,11 @@ uv run --env-file .env python manage.py migrate
 # Seed initial data
 uv run --env-file .env python manage.py seed_fitme
 
-# Create superuser & add to super_admin group
-uv run --env-file .env python manage.py createsuperuser
-
 # Start development server
 uv run --env-file .env python manage.py runserver
 ```
 
-Visit `http://127.0.0.1:8000/en/user/login` — login redirects to your role dashboard.
+Visit `http://localhost:8000/login/` — login automatically routes to your role dashboard.
 
 ## Membership Plans (LKR)
 

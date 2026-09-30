@@ -119,3 +119,37 @@ def setup_periodic_tasks(sender, **kwargs):
         flush_expired_oidc_tokens_task.s(),
         name='Flush expired OIDC tokens',
     )
+
+
+# ─────────────────────────────────────────────────────────────────────
+# Fit Me — Subscription Lifecycle Task
+# ─────────────────────────────────────────────────────────────────────
+
+@app.task(name='wger.core.tasks.expire_subscriptions')
+def expire_subscriptions():
+    """
+    Fit Me: Daily task to mark expired subscriptions and revoke biometric access.
+    Subscription.post_save signal auto-disables BiometricProfile when status → 'expired'.
+    Scheduled via Celery Beat at 01:00 Asia/Colombo time.
+    """
+    from wger.membership.services import check_and_expire_subscriptions
+    summary = check_and_expire_subscriptions(force=True)
+    count = summary.get('expired_subscriptions', 0)
+    logger.info(f"[FitMe Expiry] Task completed: {summary}")
+    return f"Expired {count} subscriptions. Summary: {summary}"
+
+
+@app.task(name='wger.core.tasks.sync_liveu_attendance')
+def sync_liveu_attendance():
+    """
+    Fit Me: Polls LiveU Cloud REST API for new turnstile attendance records.
+    Persists new records into DoorAccessLog and updates member streaks / staff shifts.
+    """
+    from wger.zkbio_integration.liveu_client import LiveUClient
+    client = LiveUClient()
+    if not client.is_configured:
+        return "LiveU not configured (skipping)"
+    result = client.sync_cloud_attendances()
+    logger.info(f"[LiveU Cloud Task] Sync completed: {result}")
+    return result
+

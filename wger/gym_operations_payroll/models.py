@@ -4,67 +4,9 @@ from django.conf import settings
 from django.utils import timezone
 
 
-class MembershipPlan(models.Model):
-    """
-    Tiered Gym Membership Plans:
-    - Single: Standard 1-member plan.
-    - Couples / Buddy: Links 2 users to 1 billing entity.
-    - Student: Discounted rate.
-    - Off-Peak: Allowed entry restricted by time window (e.g., 10:00 - 16:00).
-    """
-    PLAN_CHOICES = [
-        ('SINGLE', 'Single Member'),
-        ('COUPLES', 'Couples / Buddy (2 Users, 1 Billing Entity)'),
-        ('STUDENT', 'Student'),
-        ('OFF_PEAK', 'Off-Peak Window Restricted'),
-    ]
-
-    name = models.CharField(max_length=80)
-    plan_type = models.CharField(max_length=20, choices=PLAN_CHOICES, default='SINGLE')
-    price_monthly = models.DecimalField(max_digits=10, decimal_places=2)
-    duration_days = models.IntegerField(default=30)
-    max_members = models.IntegerField(default=1, help_text="Set to 2 for Couples/Buddy plan")
-
-    # For Couples/Buddy plans: links 2 users to 1 primary billing entity
-    primary_member = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='primary_billed_plans',
-        help_text="Primary billing entity"
-    )
-    secondary_member = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='buddy_plans',
-        help_text="Buddy member linked to primary billing entity"
-    )
-
-    # Allowed entry time window (00:00:00 - 23:59:59 for full access; restricted for off-peak)
-    allowed_entry_start = models.TimeField(default='00:00:00', help_text="Allowed entry window start")
-    allowed_entry_end = models.TimeField(default='23:59:59', help_text="Allowed entry window end")
-
-    description = models.TextField(blank=True)
-    is_active = models.BooleanField(default=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        verbose_name = 'Membership Plan'
-        verbose_name_plural = 'Membership Plans'
-        ordering = ['price_monthly']
-
-    def __str__(self):
-        return f"{self.name} ({self.get_plan_type_display()}) — LKR {self.price_monthly}"
-
-    def is_entry_allowed_at(self, current_time):
-        """Validates if entry is allowed given the current time."""
-        if self.plan_type != 'OFF_PEAK':
-            return True
-        return self.allowed_entry_start <= current_time <= self.allowed_entry_end
+# MembershipPlan is defined in wger.membership.models (single canonical model).
+# Import it here for use in admin registrations and references within this app.
+from wger.membership.models import MembershipPlan  # noqa: F401
 
 
 class StaffShift(models.Model):

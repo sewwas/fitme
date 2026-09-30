@@ -24,6 +24,15 @@ class MembershipPlan(models.Model):
     max_members = models.IntegerField(default=1, help_text="2 for Couples plan")
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
+    # Entry time window (e.g. Off-Peak: 09:00–17:00 only)
+    allowed_entry_start = models.TimeField(
+        null=True, blank=True,
+        help_text="Earliest allowed entry time (leave blank for unrestricted)"
+    )
+    allowed_entry_end = models.TimeField(
+        null=True, blank=True,
+        help_text="Latest allowed entry time (leave blank for unrestricted)"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -78,6 +87,13 @@ class MemberProfile(models.Model):
     under_medication = models.TextField(blank=True)
     personal_trainer_needed = models.BooleanField(default=False)
     notes = models.TextField(blank=True, help_text="Staff internal notes")
+    assigned_program = models.ForeignKey(
+        'GymProgram',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='assigned_members',
+        help_text="Currently active gym training program assigned by coach"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

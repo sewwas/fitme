@@ -71,7 +71,7 @@ INSTALLED_APPS = [
     'storages',
 
     # Uncomment the next line to enable the admin:
-    # 'django.contrib.admin',
+    'django.contrib.admin',
 
     # Apps from wger proper
     'wger.config',
@@ -206,6 +206,9 @@ AUTHENTICATION_BACKENDS = (
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            os.path.join(BASE_DIR, 'core', 'templates'),
+        ],
         'OPTIONS': {
             'context_processors': [
                 'wger.utils.context_processor.processor',
@@ -372,9 +375,13 @@ def jwk_b64_to_pem(b64_jwk_str: str):
 # Login
 #
 LOGIN_URL = '/user/login'
-# Fit Me: route to role-based dashboard after login
-LOGIN_REDIRECT_URL = '/fitme/dashboard/'
+# Fit Me: route to role-based dashboard after login (WgerLoginView overrides with RBAC logic)
+LOGIN_REDIRECT_URL = '/dashboard/'
 ACCOUNT_LOGOUT_REDIRECT_URL = LOGIN_URL
+
+# Fit Me — LiveU Cloud-Managed Access Control & Attendance API
+LIVEU_API_URL = 'https://attapi.liveucloud.com/api/v1'
+LIVEU_BRANCH_API_KEY = ''
 
 #
 # Internationalization
@@ -642,7 +649,7 @@ WGER_SETTINGS = {
     'MASTODON': False,
     'USE_CELERY': True,
     'USE_RECAPTCHA': False,
-    'WGER_INSTANCE': 'https://fitme.lk',
+    'WGER_INSTANCE': 'https://fitmefitness.lk',
 
     # Trophy system settings
     'TROPHIES_ENABLED': True,

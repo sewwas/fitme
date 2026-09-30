@@ -425,12 +425,12 @@
       </div>
     </div>
 
-    <!-- Recent 80mm Thermal Receipts (Auto-Cut Ready) -->
+    <!-- Recent Payment Receipts -->
     <div class="fitme-card">
       <div class="card-header">
         <div class="card-title">
           <i class="fa fa-print" style="color:var(--neon-lime);"></i>
-          Recent 80mm POS Receipts (Auto-Cut Ready)
+          Recent Payment Receipts
         </div>
         <span class="badge badge-green" id="receiptCount">{{ recent_receipts|length }} ISSUED</span>
       </div>
@@ -463,13 +463,13 @@
                 <td style="font-size:0.75rem;color:var(--text-muted);">{{ r.issued_at|date:"d M Y H:i" }}</td>
                 <td style="text-align:right;">
                   <button class="btn-action btn-approve" onclick="printReceipt({{ r.id }})" style="font-size:0.72rem;padding:0.35rem 0.65rem;">
-                    <i class="fa fa-print"></i> 80mm Print
+                    <i class="fa fa-print"></i> Print Receipt
                   </button>
                 </td>
               </tr>
             {% empty %}
               <tr id="noReceiptsRow">
-                <td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">No 80mm thermal receipts recorded yet.</td>
+                <td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">No payment receipts recorded yet.</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -983,7 +983,7 @@
         }
         if (data.receipt_id) {
           setTimeout(() => {
-            if (confirm(`Do you want to print the 80mm thermal receipt (${data.receipt_number}) now?`)) {
+            if (confirm(`Do you want to print the payment receipt (${data.receipt_number}) now?`)) {
               printReceipt(data.receipt_id);
             }
           }, 350);
@@ -1138,7 +1138,7 @@
       </div>
 
       <div style="background:#161A1D;border:1px solid var(--border-color);padding:1rem;border-radius:10px;">
-        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;">Section 7: Payment Details & 80mm Bill</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;">Section 7: Payment Details &amp; Receipt</div>
         <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:0.85rem;">
           <span>Admission: LKR ${admFee} | Monthly: LKR ${monFee} | Discount: LKR ${disc}</span>
           <strong style="color:var(--neon-lime);font-size:1rem;">Total: LKR ${total} (${payMethod.toUpperCase()})</strong>

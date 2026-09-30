@@ -25,6 +25,7 @@ from django.contrib.sitemaps.views import (
     sitemap,
 )
 import os
+from django.contrib import admin
 from django.urls import path, re_path
 
 # Third Party
@@ -300,15 +301,41 @@ urlpatterns = i18n_patterns(
 # URLs without language prefix
 #
 urlpatterns += [
+    # ── Django Admin Panel (/admin/) ──
+    path('admin/', admin.site.urls),
+
     # ── Login Redirects ──
     path('login/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/user/login', permanent=False)),
     path('en/user/login', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/user/login', permanent=False)),
     path('en/user/login/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/user/login', permanent=False)),
 
+    # ── Password Reset URLs (Root Aliases for Django auth & email links) ──
+    path(
+        'user/password/reset/check/<uidb64>/<token>/',
+        __import__('wger.core.views.user', fromlist=['WgerPasswordResetConfirmView']).WgerPasswordResetConfirmView.as_view(),
+        name='password_reset_confirm',
+    ),
+    path(
+        'reset/<uidb64>/<token>/',
+        __import__('wger.core.views.user', fromlist=['WgerPasswordResetConfirmView']).WgerPasswordResetConfirmView.as_view(),
+        name='password_reset_confirm_short',
+    ),
+    path(
+        'user/password/reset/done/',
+        __import__('django.contrib.auth.views', fromlist=['PasswordResetDoneView']).PasswordResetDoneView.as_view(),
+        name='password_reset_done',
+    ),
+    path(
+        'user/password/reset/complete/',
+        __import__('django.contrib.auth.views', fromlist=['PasswordResetCompleteView']).PasswordResetCompleteView.as_view(),
+        name='password_reset_complete',
+    ),
+
     # ── Fit Me Role Dashboards (Clean URLs) ──
     path('dashboard/', include(([
         path('', __import__('wger.core.views.fitme_dashboards', fromlist=['dashboard_redirect']).dashboard_redirect, name='fitme-dashboard'),
         path('admin/', __import__('wger.core.views.fitme_dashboards', fromlist=['super_admin_dashboard']).super_admin_dashboard, name='fitme-admin'),
+        path('admin/users/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_users_view']).admin_users_view, name='fitme-admin-users'),
         path('front-desk/', __import__('wger.core.views.fitme_dashboards', fromlist=['front_desk_dashboard']).front_desk_dashboard, name='fitme-front-desk'),
         path('coach/', __import__('wger.core.views.fitme_dashboards', fromlist=['coach_dashboard']).coach_dashboard, name='fitme-coach'),
         path('member/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_dashboard']).member_dashboard, name='fitme-member'),
@@ -320,6 +347,7 @@ urlpatterns += [
         path('api/meals/<int:meal_id>/review/', __import__('wger.core.views.fitme_dashboards', fromlist=['review_meal_api']).review_meal_api, name='api-meal-review'),
         path('api/members/<int:member_id>/ping/', __import__('wger.core.views.fitme_dashboards', fromlist=['ping_member_api']).ping_member_api, name='api-member-ping'),
         path('api/quick-meal/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_quick_meal_api']).log_quick_meal_api, name='api-quick-meal'),
+        path('api/log-water/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_water_api']).log_water_api, name='api-log-water'),
         path('api/alerts/<int:alert_id>/resolve/', __import__('wger.core.views.fitme_dashboards', fromlist=['resolve_absence_alert_api']).resolve_absence_alert_api, name='api-alert-resolve'),
         # New 31-Module Dynamic APIs
         path('api/log-workout/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_workout_api']).log_workout_api, name='api-log-workout'),
@@ -330,6 +358,11 @@ urlpatterns += [
         path('api/programs/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_program_api']).admin_create_program_api, name='api-admin-create-program'),
         path('api/announcements/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_announcement_api']).admin_create_announcement_api, name='api-admin-create-announcement'),
         path('api/testimonials/<int:testimonial_id>/toggle/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_testimonial_api']).admin_toggle_testimonial_api, name='api-admin-toggle-testimonial'),
+        # Staff, User Creation & Role Management APIs
+        path('api/users/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_user_api']).admin_create_user_api, name='api-admin-create-user'),
+        path('api/users/<int:user_id>/role/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_update_user_role_api']).admin_update_user_role_api, name='api-admin-user-role'),
+        path('api/users/<int:user_id>/toggle-active/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_user_active_api']).admin_toggle_user_active_api, name='api-admin-user-toggle-active'),
+        path('api/users/<int:user_id>/reset-password/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_reset_user_password_api']).admin_reset_user_password_api, name='api-admin-user-reset-password'),
     ], 'fitme'))),
 
     # ── Fit Me Public Website Contact API ──
@@ -354,6 +387,8 @@ urlpatterns += [
     # ── Fit Me Hardware & Operations Integrations ──
     path('api/zkbio/', include(('wger.zkbio_integration.urls', 'zkbio_integration'), namespace='zkbio_integration')),
     path('operations/', include(('wger.gym_operations_payroll.urls', 'gym_operations_payroll'), namespace='gym_operations_payroll')),
+    path('api/nutrition-lk/', include(('wger.nutrition_lk.urls', 'nutrition_lk'), namespace='nutrition_lk')),
+    path('api/habit/', include(('wger.habit.urls', 'habit'), namespace='habit')),
 
     # ── Next.js Homepage Static Assets ──
     re_path(r'^_next/(?P<path>.*)$', __import__('django.views.static', fromlist=['serve']).serve, {
