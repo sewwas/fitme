@@ -363,6 +363,9 @@ urlpatterns += [
         path('api/users/<int:user_id>/role/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_update_user_role_api']).admin_update_user_role_api, name='api-admin-user-role'),
         path('api/users/<int:user_id>/toggle-active/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_user_active_api']).admin_toggle_user_active_api, name='api-admin-user-toggle-active'),
         path('api/users/<int:user_id>/reset-password/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_reset_user_password_api']).admin_reset_user_password_api, name='api-admin-user-reset-password'),
+        # Financial Reports & Ledger Export
+        path('admin/reports/export-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_financial_csv']).admin_export_financial_csv, name='admin-reports-export-csv'),
+        path('admin/reports/daily-eod/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_daily_eod_report']).admin_daily_eod_report, name='admin-reports-daily-eod'),
     ], 'fitme'))),
 
     # ── Fit Me Point of Sale (POS) for Gym Drinks & Supplements ──

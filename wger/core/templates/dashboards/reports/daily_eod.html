@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Daily EOD Sales &amp; Drawer Report — {{ report_date|date:"Y-m-d" }} — Fit Me</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
+  <style>
+    @page { size: A4 portrait; margin: 15mm 15mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #f8fafc;
+      color: #0f172a;
+      padding: 30px;
+      display: flex;
+      justify-content: center;
+    }
+    .report-sheet {
+      width: 100%;
+      max-width: 800px;
+      background: #ffffff;
+      padding: 40px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+      border-radius: 8px;
+    }
+    .top-actions-bar {
+      position: fixed;
+      top: 15px;
+      right: 25px;
+      display: flex;
+      gap: 10px;
+      z-index: 1000;
+    }
+    .btn-act {
+      padding: 8px 18px;
+      font-size: 13px;
+      font-weight: 700;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn-print { background: #0f172a; color: #fff; }
+    .btn-back { background: #e2e8f0; color: #334155; }
+
+    .header-box {
+      border-bottom: 2px solid #0f172a;
+      padding-bottom: 15px;
+      margin-bottom: 25px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+    .gym-name {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+    }
+    .report-title {
+      font-size: 14px;
+      font-weight: 800;
+      color: #475569;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-top: 4px;
+    }
+
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 25px;
+      font-size: 12px;
+    }
+    .meta-item strong { display: block; color: #64748b; font-size: 11px; text-transform: uppercase; margin-bottom: 3px; }
+
+    .kpi-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 15px;
+      margin-bottom: 30px;
+    }
+    .kpi-card {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 15px;
+      text-align: center;
+    }
+    .kpi-label { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 6px; }
+    .kpi-val { font-family: 'JetBrains Mono', monospace; font-size: 18px; font-weight: 800; color: #0f172a; }
+
+    .section-title {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 1px solid #e2e8f0;
+      padding-bottom: 6px;
+      margin: 25px 0 12px 0;
+      color: #0f172a;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+      margin-bottom: 15px;
+    }
+    th {
+      background: #f1f5f9;
+      border-bottom: 1px solid #cbd5e1;
+      padding: 8px 10px;
+      text-align: left;
+      font-weight: 700;
+      color: #475569;
+    }
+    td {
+      padding: 8px 10px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+    .text-right { text-align: right; }
+    .text-center { text-align: center; }
+    .font-mono { font-family: 'JetBrains Mono', monospace; font-weight: 700; }
+
+    .drawer-box {
+      background: #f8fafc;
+      border: 2px dashed #cbd5e1;
+      border-radius: 8px;
+      padding: 18px 25px;
+      margin-bottom: 30px;
+    }
+    .drawer-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      padding: 4px 0;
+    }
+    .drawer-line.highlight {
+      font-size: 16px;
+      font-weight: 800;
+      border-top: 2px solid #0f172a;
+      margin-top: 8px;
+      padding-top: 8px;
+    }
+
+    .sign-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      margin-top: 50px;
+      padding-top: 30px;
+    }
+    .sign-block {
+      border-top: 1px solid #0f172a;
+      padding-top: 8px;
+      text-align: center;
+      font-size: 12px;
+      color: #475569;
+    }
+
+    @media print {
+      body { background: #fff; padding: 0; }
+      .top-actions-bar { display: none !important; }
+      .report-sheet { box-shadow: none; padding: 0; max-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-actions-bar">
+  <button class="btn-act btn-print" onclick="window.print()">🖨️ Print EOD Report</button>
+  <a href="/dashboard/admin/" class="btn-act btn-back">← Admin Console</a>
+</div>
+
+<div class="report-sheet">
+  <div class="header-box">
+    <div>
+      <div class="gym-name">{{ club_info.name }}</div>
+      <div style="font-size:11px;color:#64748b;">{{ club_info.address }} &bull; Hotline: {{ club_info.phone }}</div>
+      <div class="report-title">Daily End of Day (EOD) Cash Drawer Reconciliation</div>
+    </div>
+    <div style="text-align:right;">
+      <div style="font-size:12px;color:#64748b;">Statement Date:</div>
+      <div style="font-family:'Montserrat',sans-serif;font-size:18px;font-weight:900;">{{ report_date|date:"l, d F Y" }}</div>
+    </div>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta-item">
+      <strong>Generated By</strong>
+      {{ request.user.get_full_name|default:request.user.username }}
+    </div>
+    <div class="meta-item">
+      <strong>Closing Timestamp</strong>
+      {% now "Y-m-d H:i:s" %}
+    </div>
+    <div class="meta-item">
+      <strong>Membership Slips</strong>
+      {{ membership_receipts.count }} Issued
+    </div>
+    <div class="meta-item">
+      <strong>POS Bar Sales</strong>
+      {{ pos_sales.count }} Orders
+    </div>
+  </div>
+
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Gross Revenue</div>
+      <div class="kpi-val" style="color:#0f172a;">Rs. {{ gross_total|floatformat:2 }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Cash Collected</div>
+      <div class="kpi-val" style="color:#16a34a;">Rs. {{ cash_total|floatformat:2 }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Card POS Terminals</div>
+      <div class="kpi-val" style="color:#0284c7;">Rs. {{ card_total|floatformat:2 }}</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Digital (Koko &amp; Bank)</div>
+      <div class="kpi-val" style="color:#9333ea;">Rs. {{ bank_total|add:koko_pos|floatformat:2 }}</div>
+    </div>
+  </div>
+
+  <!-- Cash Drawer Balancing -->
+  <div class="section-title">Cash Drawer &amp; Till Balancing</div>
+  <div class="drawer-box">
+    <div class="drawer-line">
+      <span>Opening Cash Float (Petty Cash in Till):</span>
+      <span class="font-mono">Rs. {{ opening_float|floatformat:2 }}</span>
+    </div>
+    <div class="drawer-line">
+      <span>(+) Membership Cash Payments:</span>
+      <span class="font-mono">Rs. {{ cash_total|floatformat:2 }}</span>
+    </div>
+    <div class="drawer-line">
+      <span>(+) POS Bar &amp; Supplements Cash Sales:</span>
+      <span class="font-mono">Rs. {{ pos_total|floatformat:2 }}</span>
+    </div>
+    <div class="drawer-line highlight">
+      <span>EXPECTED PHYSICAL CASH IN DRAWER:</span>
+      <span class="font-mono" style="color:#16a34a;">Rs. {{ expected_drawer_cash|floatformat:2 }}</span>
+    </div>
+  </div>
+
+  <!-- POS Product Breakdown -->
+  {% if pos_items_summary %}
+    <div class="section-title">POS Drinks &amp; Supplements Sold Today</div>
+    <table>
+      <thead>
+        <tr>
+          <th>Item Description</th>
+          <th class="text-center" style="width:20%;">Units Sold</th>
+          <th class="text-right" style="width:30%;">Total Sales (LKR)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in pos_items_summary %}
+          <tr>
+            <td style="font-weight:600;">{{ item.product_name }}</td>
+            <td class="text-center font-mono">{{ item.qty }}</td>
+            <td class="text-right font-mono">Rs. {{ item.revenue|floatformat:2 }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+
+  <!-- Signatures -->
+  <div class="sign-row">
+    <div class="sign-block">
+      <strong>Front Desk Cashier / Shift Operator</strong>
+      <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Signature &amp; Date</div>
+    </div>
+    <div class="sign-block">
+      <strong>Gym Managing Director / Head Auditor</strong>
+      <div style="font-size:11px;color:#94a3b8;margin-top:2px;">Signature &amp; Verification Stamp</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

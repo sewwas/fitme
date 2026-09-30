@@ -289,7 +289,7 @@
     <div class="sidebar-section" style="margin-top:0.75rem;">Operations &amp; Plans</div>
     <button class="nav-tab-btn" id="nav-tab-admin-programs" onclick="switchTab('tab-admin-programs', this)"><i class="fa fa-dumbbell"></i> 4. Programs</button>
     <button class="nav-tab-btn" id="nav-tab-admin-memberships" onclick="switchTab('tab-admin-memberships', this)"><i class="fa fa-layer-group"></i> 5. Memberships</button>
-    <button class="nav-tab-btn" id="nav-tab-admin-payments" onclick="switchTab('tab-admin-payments', this)"><i class="fa fa-cash-register"></i> 6. Payments &amp; POS</button>
+    <button class="nav-tab-btn" id="nav-tab-admin-payments" onclick="switchTab('tab-admin-payments', this)"><i class="fa fa-chart-line"></i> 6. Financial Reports &amp; Ledger</button>
     <div class="sidebar-section" style="margin-top:0.75rem;">Marketing &amp; Data</div>
     <button class="nav-tab-btn" id="nav-tab-admin-content" onclick="switchTab('tab-admin-content', this)"><i class="fa fa-bullhorn"></i> 7. Content</button>
     <button class="nav-tab-btn" id="nav-tab-admin-testimonials" onclick="switchTab('tab-admin-testimonials', this)"><i class="fa fa-star"></i> 8. Testimonials</button>
@@ -625,33 +625,170 @@
       </div>
     </div>
 
-    <!-- 5. PAYMENTS & POS TAB -->
+    <!-- 6. FINANCIAL REPORTS & SALES LEDGER TAB -->
     <div id="tab-admin-payments" class="tab-pane">
-      <h1 class="page-title">Payments &amp; Billing Ledger</h1>
-      <p class="page-sub">Audit cashier transactions, review billing history, and reprint official payment receipts.</p>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h1 class="page-title">Financial Reports &amp; Sales Ledger</h1>
+          <p class="page-sub" style="margin-bottom:0;">Live revenue telemetry, POS supplement sales, cash drawer balancing, and accounting ledger.</p>
+        </div>
+        <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+          <a href="/dashboard/admin/reports/export-csv/" class="btn-action" style="background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:0.4rem;text-decoration:none;">
+            <i class="fa fa-file-excel" style="color:#10B981;"></i> Export to Excel (CSV)
+          </a>
+          <a href="/dashboard/admin/reports/daily-eod/" target="_blank" class="btn-action" style="background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:0.4rem;text-decoration:none;">
+            <i class="fa fa-print" style="color:var(--cyan);"></i> Print Daily EOD Report
+          </a>
+          <a href="/pos/" target="_blank" class="btn-action btn-lime" style="text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;">
+            <i class="fa fa-cash-register"></i> Open POS Bar Register
+          </a>
+        </div>
+      </div>
 
+      <!-- Financial KPI Metrics -->
+      <div class="stats-grid" style="margin-bottom:1.5rem;">
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--neon-lime);">Rs. {{ finance.total_gross_rev|floatformat:2 }}</div>
+          <div class="stat-label">Total All-Time Gross Revenue</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;">
+            Mem: Rs. {{ finance.total_membership_rev|floatformat:0 }} &bull; POS: Rs. {{ finance.total_pos_rev|floatformat:0 }}
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:#fff;">Rs. {{ finance.today_gross_rev|floatformat:2 }}</div>
+          <div class="stat-label">Today's Total Collections</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;">
+            Mem: Rs. {{ finance.today_membership_rev|floatformat:0 }} &bull; POS: Rs. {{ finance.today_pos_rev|floatformat:0 }}
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:#10B981;">Rs. {{ finance.today_cash_total|floatformat:2 }}</div>
+          <div class="stat-label">Today's Physical Cash in Till</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;">
+            Drawer Float + Cash Collected
+          </div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value" style="color:var(--cyan);">Rs. {{ finance.today_digital_total|floatformat:2 }}</div>
+          <div class="stat-label">Today's Digital &amp; Card Sales</div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;">
+            Card: Rs. {{ finance.today_card_total|floatformat:0 }} &bull; Koko/Bank: Rs. {{ finance.today_bank_total|add:finance.today_koko_pos|floatformat:0 }}
+          </div>
+        </div>
+      </div>
+
+      <!-- Two Column Summary: Payment Split & Top POS Products -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+        <!-- Payment Methods Split -->
+        <div class="fitme-card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa fa-wallet" style="color:var(--neon-lime);"></i> Today's Payment Method Split</div>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;flex-direction:column;gap:1rem;">
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.25rem;">
+                  <span><i class="fa fa-money-bill-wave" style="color:#10B981;margin-right:0.4rem;"></i> Cash Payments</span>
+                  <span style="font-family:monospace;font-weight:700;">Rs. {{ finance.today_cash_total|floatformat:2 }}</span>
+                </div>
+                <div style="background:#1E2428;border-radius:4px;height:8px;overflow:hidden;">
+                  <div style="background:#10B981;height:100%;width:{% if finance.today_gross_rev > 0 %}{% widthratio finance.today_cash_total finance.today_gross_rev 100 %}{% else %}0{% endif %}%;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.25rem;">
+                  <span><i class="fa fa-credit-card" style="color:var(--cyan);margin-right:0.4rem;"></i> Card Terminals</span>
+                  <span style="font-family:monospace;font-weight:700;">Rs. {{ finance.today_card_total|floatformat:2 }}</span>
+                </div>
+                <div style="background:#1E2428;border-radius:4px;height:8px;overflow:hidden;">
+                  <div style="background:var(--cyan);height:100%;width:{% if finance.today_gross_rev > 0 %}{% widthratio finance.today_card_total finance.today_gross_rev 100 %}{% else %}0{% endif %}%;"></div>
+                </div>
+              </div>
+              <div>
+                <div style="display:flex;justify-content:space-between;font-size:0.85rem;margin-bottom:0.25rem;">
+                  <span><i class="fa fa-qrcode" style="color:#A855F7;margin-right:0.4rem;"></i> Bank &amp; Koko Pay</span>
+                  <span style="font-family:monospace;font-weight:700;">Rs. {{ finance.today_bank_total|add:finance.today_koko_pos|floatformat:2 }}</span>
+                </div>
+                <div style="background:#1E2428;border-radius:4px;height:8px;overflow:hidden;">
+                  <div style="background:#A855F7;height:100%;width:{% if finance.today_gross_rev > 0 %}{% widthratio finance.today_bank_total|add:finance.today_koko_pos finance.today_gross_rev 100 %}{% else %}0{% endif %}%;"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Selling POS Supplements -->
+        <div class="fitme-card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa fa-trophy" style="color:var(--neon-lime);"></i> Top Selling Gym Drinks &amp; Supplements</div>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <table class="table-custom">
+              <thead>
+                <tr><th>Product</th><th style="text-align:center;">Units Sold</th><th style="text-align:right;">Revenue</th></tr>
+              </thead>
+              <tbody>
+                {% for item in finance.top_pos_products %}
+                  <tr>
+                    <td style="font-weight:700;color:#fff;">{{ item.product_name }}</td>
+                    <td style="text-align:center;font-family:monospace;font-weight:800;color:var(--neon-lime);">{{ item.units_sold }}</td>
+                    <td style="text-align:right;font-family:monospace;font-weight:800;">Rs. {{ item.revenue|floatformat:2 }}</td>
+                  </tr>
+                {% empty %}
+                  <tr><td colspan="3" style="text-align:center;padding:1.5rem;color:var(--text-muted);">No POS sales recorded yet.</td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Master Unified Accounting Ledger -->
       <div class="fitme-card">
+        <div class="card-header">
+          <div class="card-title"><i class="fa fa-book" style="color:var(--neon-lime);"></i> Unified Master Sales &amp; Collections Ledger</div>
+          <span style="font-size:0.78rem;color:var(--text-muted);">Showing recent transactions across Memberships &amp; POS</span>
+        </div>
         <div class="card-body" style="padding:0;">
           <table class="table-custom">
             <thead>
-              <tr><th>Receipt #</th><th>Member</th><th>Date &amp; Time</th><th>Cashier</th><th>Amount (LKR)</th><th>Action</th></tr>
+              <tr>
+                <th>Receipt #</th>
+                <th>Channel</th>
+                <th>Customer</th>
+                <th>Cashier</th>
+                <th>Method</th>
+                <th>Date &amp; Time</th>
+                <th style="text-align:right;">Amount (LKR)</th>
+                <th style="text-align:center;">Receipt</th>
+              </tr>
             </thead>
             <tbody>
-              {% for pr in payment_receipts %}
+              {% for row in finance.combined_ledger %}
                 <tr>
-                  <td style="font-family:monospace;font-weight:800;color:var(--neon-lime);">{{ pr.receipt_number }}</td>
-                  <td style="font-weight:700;color:#fff;">{{ pr.member.get_full_name|default:pr.member.username }}</td>
-                  <td>{{ pr.issued_at|date:"d M Y H:i" }}</td>
-                  <td>{{ pr.cashier.username }}</td>
-                  <td style="font-weight:800;color:#fff;">LKR {{ pr.total_paid }}</td>
+                  <td style="font-family:monospace;font-weight:800;color:var(--neon-lime);">{{ row.receipt_number }}</td>
                   <td>
-                    <a href="/receipt/{{ pr.id }}/" target="_blank" class="btn-action btn-lime" style="padding:0.3rem 0.8rem;font-size:0.75rem;">
-                      <i class="fa fa-print"></i> Print Receipt
+                    {% if row.type == 'Membership' %}
+                      <span style="background:rgba(204,255,0,0.12);color:var(--neon-lime);border:1px solid rgba(204,255,0,0.3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.7rem;font-weight:800;">MEMBERSHIP</span>
+                    {% else %}
+                      <span style="background:rgba(0,240,255,0.12);color:var(--cyan);border:1px solid rgba(0,240,255,0.3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.7rem;font-weight:800;">POS STORE</span>
+                    {% endif %}
+                  </td>
+                  <td style="font-weight:700;color:#fff;">{{ row.customer }}</td>
+                  <td style="color:var(--text-muted);font-size:0.82rem;">{{ row.cashier }}</td>
+                  <td><span style="font-size:0.75rem;font-weight:700;color:#fff;">{{ row.method }}</span></td>
+                  <td style="font-size:0.8rem;color:var(--text-muted);">{{ row.timestamp|date:"d M Y H:i" }}</td>
+                  <td style="text-align:right;font-family:monospace;font-weight:900;color:#fff;font-size:0.95rem;">
+                    Rs. {{ row.amount|floatformat:2 }}
+                  </td>
+                  <td style="text-align:center;">
+                    <a href="{{ row.url }}" target="_blank" class="btn-action btn-lime" style="padding:0.25rem 0.65rem;font-size:0.72rem;">
+                      <i class="fa fa-print"></i>
                     </a>
                   </td>
                 </tr>
               {% empty %}
-                <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No payment receipts on file.</td></tr>
+                <tr><td colspan="8" style="text-align:center;padding:2.5rem;color:var(--text-muted);">No sales or payments recorded yet.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -744,8 +881,8 @@
           <div class="stat-label">Pending Intake Queue</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" style="color:#A855F7;">98.4%</div>
-          <div class="stat-label">Member Retention</div>
+          <div class="stat-value" style="color:#A855F7;">Rs. {{ finance.month_gross_rev|floatformat:0 }}</div>
+          <div class="stat-label">This Month's Revenue</div>
         </div>
       </div>
 

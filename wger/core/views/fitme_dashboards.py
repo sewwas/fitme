@@ -218,6 +218,100 @@ def super_admin_dashboard(request, active_tab=None):
     announcements = Announcement.objects.all().order_by('-created_at')
     testimonials = Testimonial.objects.all().order_by('-created_at')
 
+    # ── Financial & Sales Reports Aggregation ──
+    from decimal import Decimal
+    from django.db.models import Sum
+    from wger.pos.models import POSSale, POSSaleItem
+
+    today = timezone.now().date()
+    month_start = today.replace(day=1)
+
+    # 1. Membership Revenue
+    total_membership_rev = PaymentReceipt.objects.aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    today_membership_rev = PaymentReceipt.objects.filter(issued_at__date=today).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    month_membership_rev = PaymentReceipt.objects.filter(issued_at__date__gte=month_start).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+
+    # 2. POS Store & Bar Revenue
+    total_pos_rev = POSSale.objects.filter(status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    today_pos_rev = POSSale.objects.filter(created_at__date=today, status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    month_pos_rev = POSSale.objects.filter(created_at__date__gte=month_start, status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+
+    # 3. Combined Gross Totals
+    total_gross_rev = total_membership_rev + total_pos_rev
+    today_gross_rev = today_membership_rev + today_pos_rev
+    month_gross_rev = month_membership_rev + month_pos_rev
+
+    # 4. Payment Method Breakdown (Today)
+    today_cash_mem = PaymentReceipt.objects.filter(issued_at__date=today, payment_method__iexact='cash').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    today_cash_pos = POSSale.objects.filter(created_at__date=today, status='COMPLETED', payment_method='CASH').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    today_cash_total = today_cash_mem + today_cash_pos
+
+    today_card_mem = PaymentReceipt.objects.filter(issued_at__date=today, payment_method__iexact='card').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    today_card_pos = POSSale.objects.filter(created_at__date=today, status='COMPLETED', payment_method='CARD').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    today_card_total = today_card_mem + today_card_pos
+
+    today_koko_pos = POSSale.objects.filter(created_at__date=today, status='COMPLETED', payment_method='KOKO').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    today_bank_mem = PaymentReceipt.objects.filter(issued_at__date=today, payment_method__icontains='bank').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    today_bank_pos = POSSale.objects.filter(created_at__date=today, status='COMPLETED', payment_method='BANK_TRANSFER').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    today_bank_total = today_bank_mem + today_bank_pos
+    today_digital_total = today_card_total + today_koko_pos + today_bank_total
+
+    # 5. Top-Selling POS Products
+    top_pos_products = list(
+        POSSaleItem.objects.filter(sale__status='COMPLETED')
+        .values('product_name', 'sku')
+        .annotate(units_sold=Sum('quantity'), revenue=Sum('total_price'))
+        .order_by('-revenue')[:10]
+    )
+
+    # 6. Unified Ledger Transactions (Combined Membership Receipts + POS Sales)
+    combined_ledger = []
+    for pr in PaymentReceipt.objects.select_related('member', 'cashier').order_by('-issued_at')[:30]:
+        combined_ledger.append({
+            'receipt_number': pr.receipt_number,
+            'type': 'Membership',
+            'type_badge': 'badge-lime',
+            'customer': pr.member.get_full_name() or pr.member.username,
+            'cashier': pr.cashier.username if pr.cashier else 'System',
+            'method': pr.payment_method.upper(),
+            'amount': pr.amount_paid,
+            'timestamp': pr.issued_at,
+            'url': f'/receipt/{pr.id}/',
+        })
+
+    for ps in POSSale.objects.filter(status='COMPLETED').select_related('cashier', 'customer_member').order_by('-created_at')[:30]:
+        combined_ledger.append({
+            'receipt_number': ps.receipt_number,
+            'type': 'POS Store',
+            'type_badge': 'badge-cyan',
+            'customer': ps.customer_name,
+            'cashier': ps.cashier.username if ps.cashier else 'Staff',
+            'method': ps.payment_method,
+            'amount': ps.total_amount,
+            'timestamp': ps.created_at,
+            'url': f'/pos/receipt/{ps.receipt_number}/',
+        })
+
+    combined_ledger.sort(key=lambda x: x['timestamp'], reverse=True)
+    combined_ledger = combined_ledger[:50]
+
+    finance = {
+        'total_gross_rev': total_gross_rev,
+        'total_membership_rev': total_membership_rev,
+        'total_pos_rev': total_pos_rev,
+        'today_gross_rev': today_gross_rev,
+        'today_membership_rev': today_membership_rev,
+        'today_pos_rev': today_pos_rev,
+        'month_gross_rev': month_gross_rev,
+        'today_cash_total': today_cash_total,
+        'today_card_total': today_card_total,
+        'today_koko_pos': today_koko_pos,
+        'today_bank_total': today_bank_total,
+        'today_digital_total': today_digital_total,
+        'top_pos_products': top_pos_products,
+        'combined_ledger': combined_ledger,
+    }
+
     context = {
         'role': 'super_admin',
         'page_title': 'Super Admin Dashboard',
@@ -237,6 +331,7 @@ def super_admin_dashboard(request, active_tab=None):
             'members_on_floor': members_on_floor,
             'staff_on_floor': staff_on_floor,
         },
+        'finance': finance,
         'active_absence_alerts': active_absence_alerts,
         'recent_applications': MemberApplication.objects.filter(status='pending')[:10],
         'membership_plans': MembershipPlan.objects.all(),
@@ -1725,6 +1820,128 @@ def admin_reset_user_password_api(request, user_id):
         'success': True,
         'message': f"Password for '{target_user.username}' was successfully reset."
     })
+
+
+@login_required
+@role_required('super_admin')
+def admin_export_financial_csv(request):
+    """Export unified financial & sales ledger to CSV for bookkeeping / Excel."""
+    import csv
+    from django.http import HttpResponse
+    from wger.gym_operations_payroll.models import PaymentReceipt
+    from wger.pos.models import POSSale
+
+    response = HttpResponse(content_type='text/csv')
+    today_str = timezone.now().strftime('%Y%m%d_%H%M')
+    response['Content-Disposition'] = f'attachment; filename="fitme_ledger_{today_str}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Timestamp', 'Receipt #', 'Category', 'Customer', 'Cashier', 'Payment Method', 'Amount (LKR)'])
+
+    rows = []
+    for pr in PaymentReceipt.objects.select_related('member', 'cashier').all():
+        rows.append((
+            pr.issued_at,
+            pr.receipt_number,
+            'Membership Fee',
+            pr.member.get_full_name() or pr.member.username,
+            pr.cashier.username if pr.cashier else 'System',
+            pr.payment_method.upper(),
+            float(pr.amount_paid)
+        ))
+
+    for ps in POSSale.objects.filter(status='COMPLETED').select_related('cashier').all():
+        rows.append((
+            ps.created_at,
+            ps.receipt_number,
+            'POS Bar & Supplements',
+            ps.customer_name,
+            ps.cashier.username if ps.cashier else 'Staff',
+            ps.payment_method,
+            float(ps.total_amount)
+        ))
+
+    rows.sort(key=lambda r: r[0], reverse=True)
+    for r in rows:
+        writer.writerow([r[0].strftime('%Y-%m-%d %H:%M:%S'), r[1], r[2], r[3], r[4], r[5], f"{r[6]:.2f}"])
+
+    return response
+
+
+@login_required
+@role_required('super_admin', 'front_desk')
+def admin_daily_eod_report(request):
+    """
+    Renders printable Daily End of Day (EOD) Cash Drawer Reconciliation & Sales Report.
+    """
+    from decimal import Decimal
+    from django.db.models import Sum
+    from wger.gym_operations_payroll.models import PaymentReceipt
+    from wger.pos.models import POSSale, POSSaleItem
+
+    date_str = request.GET.get('date')
+    if date_str:
+        try:
+            report_date = timezone.datetime.strptime(date_str, '%Y-%m-%d').date()
+        except ValueError:
+            report_date = timezone.now().date()
+    else:
+        report_date = timezone.now().date()
+
+    # Receipts for date
+    membership_receipts = PaymentReceipt.objects.filter(issued_at__date=report_date).select_related('member', 'cashier')
+    pos_sales = POSSale.objects.filter(created_at__date=report_date, status='COMPLETED').select_related('cashier')
+
+    mem_total = membership_receipts.aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    pos_total = pos_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    gross_total = mem_total + pos_total
+
+    # Cash drawer totals
+    cash_mem = membership_receipts.filter(payment_method__iexact='cash').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    cash_pos = pos_sales.filter(payment_method='CASH').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    cash_total = cash_mem + cash_pos
+
+    # Card & digital
+    card_mem = membership_receipts.filter(payment_method__iexact='card').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    card_pos = pos_sales.filter(payment_method='CARD').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    card_total = card_mem + card_pos
+
+    koko_pos = pos_sales.filter(payment_method='KOKO').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    bank_mem = membership_receipts.filter(payment_method__icontains='bank').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    bank_pos = pos_sales.filter(payment_method='BANK_TRANSFER').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    bank_total = bank_mem + bank_pos
+
+    # POS Items sold on that day
+    pos_items_summary = list(
+        POSSaleItem.objects.filter(sale__created_at__date=report_date, sale__status='COMPLETED')
+        .values('product_name')
+        .annotate(qty=Sum('quantity'), revenue=Sum('total_price'))
+        .order_by('-revenue')
+    )
+
+    context = {
+        'report_date': report_date,
+        'gross_total': gross_total,
+        'mem_total': mem_total,
+        'pos_total': pos_total,
+        'cash_total': cash_total,
+        'card_total': card_total,
+        'koko_pos': koko_pos,
+        'bank_total': bank_total,
+        'opening_float': Decimal('10000.00'),
+        'expected_drawer_cash': Decimal('10000.00') + cash_total,
+        'membership_receipts': membership_receipts,
+        'pos_sales': pos_sales,
+        'pos_items_summary': pos_items_summary,
+        'club_info': {
+            'name': 'Fit Me Fitness Club',
+            'tagline': 'Train with Purpose & Move with Confidence',
+            'address': 'New Town, Elpitiya Road, Pitigala, 80420',
+            'phone': '070 762 7878',
+        }
+    }
+    return render(request, 'dashboards/reports/daily_eod.html', context)
+
 
 
 
