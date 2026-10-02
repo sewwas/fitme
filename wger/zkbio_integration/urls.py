@@ -9,6 +9,7 @@ urlpatterns = [
     path('pending-sync/', views.pending_sync_queue, name='pending_sync'),
     path('sync-status/', views.sync_status_callback, name='sync_status'),
     path('upload-face/', views.upload_face_api, name='upload_face'),
+    path('face-unlock/', views.face_unlock_api, name='face_unlock'),
     path('enroll-fingerprint/', views.enroll_fingerprint_api, name='enroll_fingerprint'),
     path('command-status/<int:command_id>/', views.check_command_status_api, name='command_status'),
     path('pending-commands/', views.pending_commands_api, name='pending_commands'),

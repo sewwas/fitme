@@ -790,6 +790,8 @@ def get_role_dashboard(user):
     group_names = set(user.groups.values_list('name', flat=True))
     if 'super_admin' in group_names or user.is_superuser:
         return '/dashboard/admin/'
+    elif 'admin' in group_names:
+        return '/dashboard/admin/'
     elif 'front_desk' in group_names:
         return '/dashboard/front-desk/'
     elif 'coach' in group_names:

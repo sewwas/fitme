@@ -24,7 +24,7 @@ from .models import (
 
 @admin.register(MembershipPlan)
 class MembershipPlanAdmin(admin.ModelAdmin):
-    list_display = ('name', 'plan_type', 'price_monthly', 'duration_days', 'allowed_entry_start', 'allowed_entry_end', 'is_active')
+    list_display = ('name', 'plan_type', 'price_monthly', 'original_price', 'discount', 'registration_fee', 'duration_days', 'max_members', 'is_active')
     list_filter = ('plan_type', 'is_active')
     search_fields = ('name',)
     ordering = ('price_monthly',)

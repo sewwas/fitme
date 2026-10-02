@@ -423,9 +423,18 @@
             <label>Membership Tier</label>
             <select class="form-control" name="plan_id" id="planSelect" onchange="updatePlanPrice()">
               {% for plan in plans %}
-                <option value="{{ plan.id }}" data-price="{{ plan.price_monthly }}">{{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }}</option>
+                <option value="{{ plan.id }}" 
+                        data-price="{{ plan.price_monthly }}" 
+                        data-original="{{ plan.original_price|default:plan.price_monthly }}"
+                        data-discount="{{ plan.discount|default:0 }}"
+                        data-regfee="{{ plan.registration_fee }}"
+                        data-duration="{{ plan.duration_days }}"
+                        data-type="{{ plan.plan_type }}"
+                        {% if forloop.first %}selected{% endif %}>
+                  {{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }}{% if plan.discount and plan.discount > 0 %} (Save LKR {{ plan.discount|floatformat:0 }}){% endif %}
+                </option>
               {% empty %}
-                <option value="1" data-price="4500">Individual — LKR 4,500</option>
+                <option value="1" data-price="4000" data-regfee="1000" data-duration="30" data-type="individual">Monthly Package — LKR 4,000</option>
               {% endfor %}
             </select>
           </div>
@@ -558,14 +567,24 @@
           <span class="section-num">7</span>
           Payment Details
         </div>
+
+        <!-- Official Pricing Flyer Notice -->
+        <div style="background:rgba(123,201,0,0.08);border:1px solid rgba(123,201,0,0.3);border-radius:10px;padding:0.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;">
+          <i class="fa fa-clock" style="color:var(--neon-lime);font-size:1.25rem;"></i>
+          <div style="font-size:0.83rem;color:#e6edf3;">
+            <strong style="color:var(--neon-lime);">LIMITED TIME OFFER:</strong> Packages valid for a limited time only. 
+            Registration fee of <strong>Rs. 1,000</strong> applies for all new members (Students: <strong>No Registration Fee</strong>). Effective from 27th April 2026.
+          </div>
+        </div>
+
         <div class="grid-4">
           <div class="form-group">
-            <label>Admission Fee (LKR)</label>
-            <input type="number" class="form-control" name="admission_fee" id="admissionFee" value="1500" oninput="calculateTotal()">
+            <label>Admission / Reg Fee (LKR)</label>
+            <input type="number" class="form-control" name="admission_fee" id="admissionFee" value="1000" oninput="calculateTotal()">
           </div>
           <div class="form-group">
-            <label>Monthly Fee (LKR)</label>
-            <input type="number" class="form-control" name="monthly_fee" id="monthlyFee" value="4500" oninput="calculateTotal()">
+            <label>Package / Monthly Fee (LKR)</label>
+            <input type="number" class="form-control" name="monthly_fee" id="monthlyFee" value="4000" oninput="calculateTotal()">
           </div>
           <div class="form-group">
             <label>Discount (LKR)</label>
@@ -573,7 +592,7 @@
           </div>
           <div class="form-group">
             <label>Total Due (LKR)</label>
-            <input type="number" class="form-control" name="total_paid" id="totalPaid" value="6000" readonly style="color:var(--neon-lime);font-weight:800;font-size:1.1rem;">
+            <input type="number" class="form-control" name="total_paid" id="totalPaid" value="5000" readonly style="color:var(--neon-lime);font-weight:800;font-size:1.1rem;">
           </div>
         </div>
 
@@ -676,7 +695,28 @@
     function updatePlanPrice() {
       const select = document.getElementById('planSelect');
       const opt = select.options[select.selectedIndex];
-      const price = parseFloat(opt.getAttribute('data-price') || 4500);
+      if (!opt) return;
+      const price = parseFloat(opt.getAttribute('data-price') || 4000);
+      const regFee = parseFloat(opt.getAttribute('data-regfee') !== null ? opt.getAttribute('data-regfee') : 1000);
+      const durationDays = parseInt(opt.getAttribute('data-duration') || '30');
+
+      // Auto-sync duration radio
+      if (durationDays === 90) {
+        const r = document.querySelector('input[name="plan_duration"][value="3_months"]');
+        if (r) r.checked = true;
+      } else if (durationDays === 180) {
+        const r = document.querySelector('input[name="plan_duration"][value="6_months"]');
+        if (r) r.checked = true;
+      } else if (durationDays === 365) {
+        const r = document.querySelector('input[name="plan_duration"][value="annual"]');
+        if (r) r.checked = true;
+      } else {
+        const r = document.querySelector('input[name="plan_duration"][value="monthly"]');
+        if (r) r.checked = true;
+      }
+      updatePlanDates();
+
+      document.getElementById('admissionFee').value = regFee;
       document.getElementById('monthlyFee').value = price;
       calculateTotal();
     }

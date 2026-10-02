@@ -1,0 +1,12 @@
+User ID,Full Name,Username,Email,Phone,Hardware PIN,Active Plan,Days Left,Turnstile Gate Status,Face ID Enrolled
+1,admin,admin,sewwasofficial@gmail.com,0715828422,2000,No Active Plan,0,ACTIVE,NO
+6,Kasun Jayawardena,member_kasun,kasun.member@fitme.lk,0778899001,1001,Off-Peak,16,ACTIVE,YES
+7,Nuwan Bandara,member_nuwan,nuwan@gmail.com,0714455667,1002,No Active Plan,0,LOCKED,NO
+8,Anusha Fernando,anusha_f,anusha.f@yahoo.com,0755554433,1003,Monthly Package,16,ACTIVE,NO
+9,Dilshan Silva,dilshan_silva,dilshan.silva@gmail.com,0719876543,1004,Student Package,16,ACTIVE,NO
+10,Ruwan Perera,ruwan_p,ruwan.p@outlook.com,0771234567,1005,Monthly Package,16,ACTIVE,NO
+11,Amal Perera,amal_perera,amal.perera@gmail.com,0779998888,1006,Off-Peak,16,ACTIVE,NO
+12,Niroshan Wickramasinghe,niroshan_wick,niroshan.wick@gmail.com,0773334455,1007,Off-Peak,16,ACTIVE,NO
+17,Saman Member,saman_fit,saman@fitme.lk,0771234567,1017,Off-Peak,28,ACTIVE,NO
+18,test_user_qa,test_user_qa,testqa@fitme.lk,N/A,2001,No Active Plan,0,LOCKED,NO
+20,Sandaru Gangabada,fficial,fficial@gmail.com,0715828422,2002,Student Package,30,ACTIVE,NO

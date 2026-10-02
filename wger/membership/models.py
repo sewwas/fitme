@@ -11,17 +11,23 @@ from decimal import Decimal
 class MembershipPlan(models.Model):
     """Configurable gym membership plans (editable by Super Admin)."""
     PLAN_TYPES = [
-        ('individual', 'Individual'),
-        ('couples', 'Couples / Buddy'),
-        ('student', 'Student'),
-        ('off_peak', 'Off-Peak'),
+        ('individual', 'Monthly Package'),
+        ('three_months', '3 Months Package'),
+        ('six_months', '6 Months Package'),
+        ('couples', 'Couple Monthly Package'),
+        ('family_3', '3 Persons Family Monthly Package'),
+        ('student', 'Student Package'),
+        ('off_peak', 'Off-Peak Package'),
     ]
 
     name = models.CharField(max_length=80)
     plan_type = models.CharField(max_length=20, choices=PLAN_TYPES, unique=True)
-    price_monthly = models.DecimalField(max_digits=8, decimal_places=2)
+    price_monthly = models.DecimalField(max_digits=8, decimal_places=2, help_text="Effective / payable price")
+    original_price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True, help_text="Original price before discount")
+    discount = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal('0.00'), help_text="Promotional discount amount")
+    registration_fee = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal('1000.00'), help_text="Registration fee for new members (Rs. 0 for students)")
     duration_days = models.IntegerField(default=30)
-    max_members = models.IntegerField(default=1, help_text="2 for Couples plan")
+    max_members = models.IntegerField(default=1, help_text="2 for Couples, 3 for Family plan")
     description = models.TextField(blank=True)
     is_active = models.BooleanField(default=True)
     # Entry time window (e.g. Off-Peak: 09:00–17:00 only)
@@ -164,6 +170,27 @@ class Subscription(models.Model):
         if self.is_active:
             return (self.end_date - timezone.now().date()).days
         return 0
+
+    @property
+    def linked_partners(self):
+        """Returns linked secondary/partner members for multi-user subscriptions."""
+        if hasattr(self, 'buddy_links'):
+            return self.buddy_links.select_related('partner_member').all()
+        return []
+
+    @property
+    def can_add_partner(self):
+        """True if plan allows multiple users and slots are still open."""
+        if self.plan.max_members <= 1:
+            return False
+        return self.linked_partners.count() < (self.plan.max_members - 1)
+
+    @property
+    def open_slots_count(self):
+        """Number of open secondary member slots left to assign."""
+        if self.plan.max_members <= 1:
+            return 0
+        return max(0, (self.plan.max_members - 1) - self.linked_partners.count())
 
 
 class MemberApplication(models.Model):

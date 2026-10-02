@@ -338,11 +338,11 @@ def sync_status_callback(request):
 def upload_face_api(request):
     """
     Endpoint: /api/zkbio/upload-face/
-    Allows front desk or member to upload/capture a portrait photo for Face ID hardware enrollment.
+    Allows front desk, admin, or member to upload/capture a portrait photo for Face ID hardware enrollment.
     Accepts: user_id or pin, and photo file OR photo_base64.
     """
-    if not (request.user.is_authenticated and (request.user.is_staff or verify_bridge_token(request))):
-        return HttpResponseForbidden('Staff credentials or valid bridge token required')
+    if not request.user.is_authenticated and not verify_bridge_token(request):
+        return HttpResponseForbidden('Authentication or valid bridge token required')
 
     user_id = request.POST.get('user_id')
     pin = request.POST.get('pin')
@@ -360,12 +360,18 @@ def upload_face_api(request):
             pass
 
     target_user = None
-    if user_id:
+    # Staff / Superuser or bridge token can specify any user; regular member can only register own face
+    is_staff = request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)
+    is_bridge = verify_bridge_token(request)
+
+    if (is_staff or is_bridge) and user_id:
         target_user = User.objects.filter(id=user_id).first()
-    elif pin:
+    elif (is_staff or is_bridge) and pin:
         bio = BiometricProfile.objects.filter(zk_pin=pin).first()
         if bio:
             target_user = bio.user
+    elif request.user.is_authenticated:
+        target_user = request.user
 
     if not target_user:
         return JsonResponse({'error': 'Target user not found'}, status=404)
@@ -398,7 +404,7 @@ def upload_face_api(request):
     bio_profile.sync_status = 'PENDING'
     bio_profile.save(update_fields=['face_enrolled', 'sync_status'])
 
-    # Queue hardware command
+    # Queue hardware command for turnstile terminal
     BiometricCommand.objects.create(
         command_type='UPLOAD_FACE',
         zk_pin=bio_profile.zk_pin,
@@ -409,10 +415,72 @@ def upload_face_api(request):
 
     return JsonResponse({
         'success': True,
-        'message': f"Face photo enrolled for {target_user.get_full_name() or target_user.username}!",
+        'message': f"Face ID successfully registered for {target_user.get_full_name() or target_user.username}!",
         'photo_url': mp.profile_photo.url,
-        'pin': bio_profile.zk_pin
+        'pin': bio_profile.zk_pin,
+        'face_enrolled': True
     })
+
+
+@csrf_exempt
+def face_unlock_api(request):
+    """
+    Endpoint: /api/zkbio/face-unlock/
+    Face ID Verification & Turnstile Door Unlock:
+    Simulates / triggers optical Face ID turnstile unlock for member.
+    """
+    if not request.user.is_authenticated:
+        return JsonResponse({'error': 'Authentication required'}, status=401)
+
+    user = request.user
+    from wger.membership.services import check_and_expire_subscriptions, get_member_access_summary
+    check_and_expire_subscriptions()
+    summary = get_member_access_summary(user)
+    bio = BiometricProfile.objects.filter(user=user).first()
+    pin = bio.zk_pin if bio else (getattr(user, 'member_profile', None).biometric_pin if hasattr(user, 'member_profile') else f"#{1000 + user.id}")
+
+    if not bio or not bio.face_enrolled:
+        return JsonResponse({
+            'success': False,
+            'unlocked': False,
+            'error': 'Face ID is not registered yet. Please scan or upload your face photo first.'
+        }, status=400)
+
+    if summary['door_access_active']:
+        log = DoorAccessLog.objects.create(
+            user=user,
+            zk_pin=pin,
+            event_type='ENTRY',
+            verify_mode='FACE_ID',
+            device_ip='192.168.1.23',
+            terminal_name='MAIN_TURNSTILE_FACE_CAM',
+            raw_payload={'face_verified': True, 'method': 'face_recognition'}
+        )
+        return JsonResponse({
+            'success': True,
+            'unlocked': True,
+            'message': f"Face Verified! Turnstile Speed Gate Unlocked. Welcome, {user.get_full_name() or user.username}!",
+            'pin': pin,
+            'punch_id': log.id,
+            'timestamp': log.punch_time.strftime('%H:%M:%S')
+        })
+    else:
+        log = DoorAccessLog.objects.create(
+            user=user,
+            zk_pin=pin,
+            event_type='DENIED',
+            verify_mode='FACE_ID',
+            device_ip='192.168.1.23',
+            terminal_name='MAIN_TURNSTILE_FACE_CAM',
+            raw_payload={'face_verified': True, 'reason': 'Membership expired'}
+        )
+        return JsonResponse({
+            'success': False,
+            'unlocked': False,
+            'error': 'Access Denied: Membership Expired. Turnstile remained locked. Please renew your plan to restore door access.',
+            'expired': True
+        }, status=403)
+
 
 
 @csrf_exempt

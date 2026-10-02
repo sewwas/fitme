@@ -35,12 +35,13 @@ fitme-portal/
 
 ## RBAC Roles
 
-| Role | Dashboard URL | Access |
-|------|--------------|--------|
-| `super_admin` | `/dashboard/admin/` | Full system operations, users & analytics |
-| `front_desk` | `/dashboard/front-desk/` | Member queue, registrations & 80mm receipts |
-| `coach` | `/dashboard/coach/` | Assigned members, workout plans & nutrition |
-| `member` | `/dashboard/member/` | Personal stats, hydration, streaks & logs |
+| Role | Dashboard URL | Permissions & Capabilities | Demo Credentials |
+|------|--------------|----------------------------|------------------|
+| `super_admin` | `/dashboard/admin/` | **Master Owner**: Full system authority, **Plan Builder** (+ Make New Plans), **Data Overrides** (manual date, expiry, and amount overrides; user role promotions). | `admin` / `fitme123!` |
+| `admin` | `/dashboard/admin/` | **Club Admin (Operations)**: Daily floor management, turnstile punches, attendance, financial reports, POS sales, and member rosters. *(Plan creation and data overrides locked to Super Admin)*. | `admin_ops` / `fitme123!` |
+| `front_desk` | `/dashboard/front-desk/` | Member queue, walk-in applications, biometric PIN enrollment & POS receipt printing. | `frontdesk` / `fitme123!` |
+| `coach` | `/dashboard/coach/` | Assigned athlete rosters, biomechanics workout routines, and nutritional logs. | `coach_kamal` / `fitme123!` |
+| `member` | `/dashboard/member/` | Athlete portal: Daily Sri Lankan fuel rings, water logging, attendance streaks, and active gym passes. | `member_kasun` / `fitme123!` |
 
 ## Deployment
 
@@ -65,14 +66,20 @@ uv run --env-file .env python manage.py runserver
 
 Visit `http://localhost:8000/login/` — login automatically routes to your role dashboard.
 
-## Membership Plans (LKR)
+## Membership Plans (LKR) — Official Limited Time Packages
 
-| Plan | Price/Month | Members |
-|------|-------------|---------|
-| Individual | LKR 4,500 | 1 |
-| Couples / Buddy | LKR 7,500 | 2 |
-| Student | LKR 3,000 | 1 |
-| Off-Peak | LKR 2,500 | 1 |
+| Package | Original Price | Discount | Total Payable | Duration | Members | Registration Fee |
+|---------|---------------|----------|---------------|----------|---------|------------------|
+| **Monthly Package** | Rs. 4,000 | — | **LKR 4,000** | 30 Days | 1 Member | LKR 1,000 |
+| **3 Months Package** | Rs. 12,000 | Rs. 1,000 | **LKR 11,000** | 90 Days | 1 Member | LKR 1,000 |
+| **6 Months Package** | Rs. 24,000 | Rs. 2,500 | **LKR 21,500** | 180 Days | 1 Member | LKR 1,000 |
+| **Couple Monthly Package** | Rs. 8,000 | Rs. 500 | **LKR 7,500** | 30 Days | 2 Members | LKR 1,000 |
+| **3 Persons Family Monthly** | Rs. 12,000 | Rs. 1,000 | **LKR 11,000** | 30 Days | 3 Members | LKR 1,000 |
+| **Students** | Rs. 3,500 | — | **LKR 3,500** | 30 Days | 1 Member | **FREE (No Reg Fee)** |
+
+> **Registration Details:** Registration fee of Rs. 1,000 applies for all new members (except Students). Effective from 27th April 2026.
+> **Terms & Conditions:** Non-transferable, Non-refundable. Management reserves the right to make changes.
+> **Contact:** `hellofitme@outlook.com` | `070 762 7878` | Pitigala, Sri Lanka
 
 ## ZKBio Bridge Daemon
 

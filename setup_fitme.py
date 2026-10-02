@@ -71,45 +71,79 @@ from wger.membership.models import MembershipPlan
 
 plans_data = [
     {
-        'name': 'Individual Membership',
+        'name': 'Monthly Package',
         'plan_type': 'individual',
-        'price_monthly': Decimal('4500.00'),
+        'price_monthly': Decimal('4000.00'),
+        'original_price': Decimal('4000.00'),
+        'discount': Decimal('0.00'),
+        'registration_fee': Decimal('1000.00'),
         'duration_days': 30,
         'max_members': 1,
-        'description': 'Full gym access for a single member. Biometric turnstile entry included.',
+        'description': 'Standard single member gym access. Total: Rs. 4,000 / month.',
     },
     {
-        'name': 'Couples / Buddy Membership',
+        'name': '3 Months Package',
+        'plan_type': 'three_months',
+        'price_monthly': Decimal('11000.00'),
+        'original_price': Decimal('12000.00'),
+        'discount': Decimal('1000.00'),
+        'registration_fee': Decimal('1000.00'),
+        'duration_days': 90,
+        'max_members': 1,
+        'description': '3 Months package. Original Price: Rs. 12,000, Discount: Rs. 1,000. Total: Rs. 11,000.',
+    },
+    {
+        'name': '6 Months Package',
+        'plan_type': 'six_months',
+        'price_monthly': Decimal('21500.00'),
+        'original_price': Decimal('24000.00'),
+        'discount': Decimal('2500.00'),
+        'registration_fee': Decimal('1000.00'),
+        'duration_days': 180,
+        'max_members': 1,
+        'description': '6 Months package. Original Price: Rs. 24,000, Discount: Rs. 2,500. Total: Rs. 21,500.',
+    },
+    {
+        'name': 'Couple Monthly Package',
         'plan_type': 'couples',
         'price_monthly': Decimal('7500.00'),
+        'original_price': Decimal('8000.00'),
+        'discount': Decimal('500.00'),
+        'registration_fee': Decimal('1000.00'),
         'duration_days': 30,
         'max_members': 2,
-        'description': 'Two members under one subscription with individual biometric PINs.',
+        'description': 'Two members sharing one monthly plan. Original Price: Rs. 8,000, Discount: Rs. 500. Total: Rs. 7,500 / month.',
     },
     {
-        'name': 'Student Membership',
+        'name': '3 Persons Family Monthly Package',
+        'plan_type': 'family_3',
+        'price_monthly': Decimal('11000.00'),
+        'original_price': Decimal('12000.00'),
+        'discount': Decimal('1000.00'),
+        'registration_fee': Decimal('1000.00'),
+        'duration_days': 30,
+        'max_members': 3,
+        'description': '3 Persons from same family monthly package. Original Price: Rs. 12,000, Discount: Rs. 1,000. Total: Rs. 11,000 / month.',
+    },
+    {
+        'name': 'Student Package',
         'plan_type': 'student',
-        'price_monthly': Decimal('3200.00'),
+        'price_monthly': Decimal('3500.00'),
+        'original_price': Decimal('3500.00'),
+        'discount': Decimal('0.00'),
+        'registration_fee': Decimal('0.00'),
         'duration_days': 30,
         'max_members': 1,
-        'description': 'Discounted plan for full-time students. Valid student ID required.',
-    },
-    {
-        'name': 'Off-Peak Membership',
-        'plan_type': 'off_peak',
-        'price_monthly': Decimal('2800.00'),
-        'duration_days': 30,
-        'max_members': 1,
-        'description': 'Entry restricted to 10:00 AM - 04:00 PM only.',
+        'description': 'Discounted plan for students with valid ID. No Registration Fee! Total: Rs. 3,500 / month.',
     },
 ]
 
 for plan_data in plans_data:
-    plan, created = MembershipPlan.objects.get_or_create(
+    plan, created = MembershipPlan.objects.update_or_create(
         plan_type=plan_data['plan_type'],
         defaults=plan_data
     )
-    status = 'created' if created else 'already exists'
+    status = 'created' if created else 'updated'
     print(f"  -> Plan '{plan.name}' (LKR {plan.price_monthly}/mo): {status}")
 print("[OK] Membership plans seeded.")
 
@@ -239,45 +273,79 @@ from wger.membership.models import MembershipPlan
 
 plans_data = [
     {
-        'name': 'Individual Membership',
+        'name': 'Monthly Package',
         'plan_type': 'individual',
-        'price_monthly': Decimal('4500.00'),
+        'price_monthly': Decimal('4000.00'),
+        'original_price': Decimal('4000.00'),
+        'discount': Decimal('0.00'),
+        'registration_fee': Decimal('1000.00'),
         'duration_days': 30,
         'max_members': 1,
-        'description': 'Full gym access for a single member. Biometric turnstile entry included.',
+        'description': 'Standard single member gym access. Total: Rs. 4,000 / month.',
     },
     {
-        'name': 'Couples / Buddy Membership',
+        'name': '3 Months Package',
+        'plan_type': 'three_months',
+        'price_monthly': Decimal('11000.00'),
+        'original_price': Decimal('12000.00'),
+        'discount': Decimal('1000.00'),
+        'registration_fee': Decimal('1000.00'),
+        'duration_days': 90,
+        'max_members': 1,
+        'description': '3 Months package. Original Price: Rs. 12,000, Discount: Rs. 1,000. Total: Rs. 11,000.',
+    },
+    {
+        'name': '6 Months Package',
+        'plan_type': 'six_months',
+        'price_monthly': Decimal('21500.00'),
+        'original_price': Decimal('24000.00'),
+        'discount': Decimal('2500.00'),
+        'registration_fee': Decimal('1000.00'),
+        'duration_days': 180,
+        'max_members': 1,
+        'description': '6 Months package. Original Price: Rs. 24,000, Discount: Rs. 2,500. Total: Rs. 21,500.',
+    },
+    {
+        'name': 'Couple Monthly Package',
         'plan_type': 'couples',
         'price_monthly': Decimal('7500.00'),
+        'original_price': Decimal('8000.00'),
+        'discount': Decimal('500.00'),
+        'registration_fee': Decimal('1000.00'),
         'duration_days': 30,
         'max_members': 2,
-        'description': 'Two members under one subscription with individual biometric PINs.',
+        'description': 'Two members sharing one monthly plan. Original Price: Rs. 8,000, Discount: Rs. 500. Total: Rs. 7,500 / month.',
     },
     {
-        'name': 'Student Membership',
+        'name': '3 Persons Family Monthly Package',
+        'plan_type': 'family_3',
+        'price_monthly': Decimal('11000.00'),
+        'original_price': Decimal('12000.00'),
+        'discount': Decimal('1000.00'),
+        'registration_fee': Decimal('1000.00'),
+        'duration_days': 30,
+        'max_members': 3,
+        'description': '3 Persons from same family monthly package. Original Price: Rs. 12,000, Discount: Rs. 1,000. Total: Rs. 11,000 / month.',
+    },
+    {
+        'name': 'Student Package',
         'plan_type': 'student',
-        'price_monthly': Decimal('3200.00'),
+        'price_monthly': Decimal('3500.00'),
+        'original_price': Decimal('3500.00'),
+        'discount': Decimal('0.00'),
+        'registration_fee': Decimal('0.00'),
         'duration_days': 30,
         'max_members': 1,
-        'description': 'Discounted plan for full-time students. Valid student ID required.',
-    },
-    {
-        'name': 'Off-Peak Membership',
-        'plan_type': 'off_peak',
-        'price_monthly': Decimal('2800.00'),
-        'duration_days': 30,
-        'max_members': 1,
-        'description': 'Entry restricted to 10:00 AM – 04:00 PM only.',
+        'description': 'Discounted plan for students with valid ID. No Registration Fee! Total: Rs. 3,500 / month.',
     },
 ]
 
 for plan_data in plans_data:
-    plan, created = MembershipPlan.objects.get_or_create(
+    plan, created = MembershipPlan.objects.update_or_create(
         plan_type=plan_data['plan_type'],
         defaults=plan_data
     )
-    status = 'created' if created else 'already exists'
+    status = 'created' if created else 'updated'
     print(f"  → Plan '{plan.name}' (LKR {plan.price_monthly}/mo): {status}")
 print("✅ Membership plans seeded.")
 

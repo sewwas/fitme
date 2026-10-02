@@ -73,15 +73,26 @@ def check_and_expire_subscriptions(force=False):
             user__is_superuser=False
         ).select_related('user')
 
+        from wger.gym_operations_payroll.models import BuddyMembership
+
         for bio in member_bios:
             user = bio.user
-            # Check if this user currently has at least one valid active subscription
+            # Check if this user currently has at least one valid active subscription directly
             has_active_sub = Subscription.objects.filter(
                 member=user,
                 status='active',
                 start_date__lte=today,
                 end_date__gte=today
             ).exists()
+
+            # OR as a linked partner on an active Buddy / Family membership
+            if not has_active_sub:
+                has_active_sub = BuddyMembership.objects.filter(
+                    partner_member=user,
+                    subscription__status='active',
+                    subscription__start_date__lte=today,
+                    subscription__end_date__gte=today
+                ).exists()
 
             # Member is active on user table as well
             should_have_access = bool(has_active_sub and user.is_active)
@@ -138,9 +149,11 @@ def get_member_access_summary(user):
     """
     Returns full subscription and hardware gate access status for a given user.
     Used by member dashboard, front desk lookup, and hardware validation.
+    Supports both direct individual subscriptions and 2-User (Couple) / 3-User (Family) linked memberships.
     """
     from wger.membership.models import Subscription
     from wger.zkbio_integration.models import BiometricProfile
+    from wger.gym_operations_payroll.models import BuddyMembership
 
     today = timezone.now().date()
     bio_profile = BiometricProfile.objects.filter(user=user).first()
@@ -168,30 +181,57 @@ def get_member_access_summary(user):
         end_date__gte=today
     ).select_related('plan').first()
 
+    is_partner = False
+    primary_member = None
+
+    if not active_sub:
+        buddy_link = BuddyMembership.objects.filter(
+            partner_member=user,
+            subscription__status='active',
+            subscription__start_date__lte=today,
+            subscription__end_date__gte=today
+        ).select_related('subscription__plan', 'subscription__member').first()
+        if buddy_link:
+            active_sub = buddy_link.subscription
+            is_partner = True
+            primary_member = buddy_link.primary_member
+
     # Latest subscription (even if expired or cancelled)
-    latest_sub = Subscription.objects.filter(member=user).order_by('-end_date').select_related('plan').first()
+    latest_sub = active_sub or Subscription.objects.filter(member=user).order_by('-end_date').select_related('plan').first()
+    if not latest_sub:
+        latest_buddy = BuddyMembership.objects.filter(
+            partner_member=user
+        ).order_by('-subscription__end_date').select_related('subscription__plan', 'subscription__member').first()
+        if latest_buddy:
+            latest_sub = latest_buddy.subscription
+            is_partner = True
+            primary_member = latest_buddy.primary_member
 
     has_active_sub = bool(active_sub)
     is_disabled = bool(bio_profile and bio_profile.disabled)
     door_access_active = bool(has_active_sub and not is_disabled and user.is_active)
 
-    status = 'active'
-    status_label = 'Active Member'
-    reason = None
-
-    if not has_active_sub:
-        if latest_sub:
-            status = 'expired'
-            status_label = f"Expired ({latest_sub.end_date.strftime('%d %b %Y')})"
-            reason = f"Monthly subscription ended on {latest_sub.end_date.strftime('%d %b %Y')}. Gate & Face ID access disabled."
+    if has_active_sub:
+        status = 'active'
+        if is_partner and primary_member:
+            primary_name = primary_member.get_full_name() or primary_member.username
+            status_label = f"Active ({active_sub.plan.name} — Linked to {primary_name})"
         else:
-            status = 'no_subscription'
-            status_label = 'No Active Plan'
-            reason = "No active subscription on file. Door access revoked."
+            status_label = f"Active ({active_sub.plan.name})"
+        reason = None
     elif is_disabled:
         status = 'revoked'
         status_label = 'Hardware Access Revoked'
         reason = "Biometric door profile has been disabled by management."
+    else:
+        if latest_sub:
+            status = 'expired'
+            status_label = f"Expired ({latest_sub.end_date.strftime('%d %b %Y')})"
+            reason = f"Membership subscription ended on {latest_sub.end_date.strftime('%d %b %Y')}. Gate & Face ID access disabled."
+        else:
+            status = 'no_subscription'
+            status_label = 'No Active Plan'
+            reason = "No active subscription on file. Door access revoked."
 
     days_remaining = active_sub.days_remaining if active_sub else 0
 
@@ -201,6 +241,8 @@ def get_member_access_summary(user):
         'subscription': active_sub or latest_sub,
         'active_subscription': active_sub,
         'latest_subscription': latest_sub,
+        'is_partner': is_partner,
+        'primary_member': primary_member,
         'status': status,
         'status_label': status_label,
         'is_expired': not has_active_sub,

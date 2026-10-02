@@ -229,18 +229,41 @@ AUTH_PROXY_USER_EMAIL_HEADER = env.str('AUTH_PROXY_USER_EMAIL_HEADER', '')
 AUTH_PROXY_USER_NAME_HEADER = env.str('AUTH_PROXY_USER_NAME_HEADER', '')
 
 # Cache
+# Always define a baseline CACHES so AXES_CACHE has a valid named backend.
+# In dev (no DJANGO_CACHE_BACKEND set), use in-process LocMemCache.
+# In production with Redis, the redis block below overrides 'default'.
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'fitme-default',
+    },
+    # Dedicated cache for django-axes brute-force login tracking.
+    # Using a separate entry prevents axes from evicting app-cache entries.
+    'axes': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'fitme-axes',
+    },
+}
+
 if os.environ.get('DJANGO_CACHE_BACKEND'):
-    CACHES = {
-        'default': {
-            'BACKEND': env.str('DJANGO_CACHE_BACKEND'),
-            'LOCATION': env.str('DJANGO_CACHE_LOCATION', ''),
-            'TIMEOUT': env.int('DJANGO_CACHE_TIMEOUT', 300),
-            'OPTIONS': {'CLIENT_CLASS': env.str('DJANGO_CACHE_CLIENT_CLASS', '')},
-        }
+    CACHES['default'] = {
+        'BACKEND': env.str('DJANGO_CACHE_BACKEND'),
+        'LOCATION': env.str('DJANGO_CACHE_LOCATION', ''),
+        'TIMEOUT': env.int('DJANGO_CACHE_TIMEOUT', 300),
+        'OPTIONS': {'CLIENT_CLASS': env.str('DJANGO_CACHE_CLIENT_CLASS', '')},
+    }
+    # Mirror the 'axes' entry to the same Redis backend
+    CACHES['axes'] = {
+        'BACKEND': env.str('DJANGO_CACHE_BACKEND'),
+        'LOCATION': env.str('DJANGO_CACHE_LOCATION', ''),
+        'TIMEOUT': env.int('DJANGO_CACHE_TIMEOUT', 300),
+        'KEY_PREFIX': 'axes',
+        'OPTIONS': {'CLIENT_CLASS': env.str('DJANGO_CACHE_CLIENT_CLASS', '')},
     }
 
     if os.environ.get('DJANGO_CACHE_CLIENT_PASSWORD'):
         CACHES['default']['OPTIONS']['PASSWORD'] = env.str('DJANGO_CACHE_CLIENT_PASSWORD')
+        CACHES['axes']['OPTIONS']['PASSWORD'] = env.str('DJANGO_CACHE_CLIENT_PASSWORD')
 
     CONNECTION_POOL_KWARGS = dict()
     if 'DJANGO_CACHE_CLIENT_SSL_KEYFILE' in os.environ:
@@ -259,6 +282,7 @@ if os.environ.get('DJANGO_CACHE_BACKEND'):
 
     if CONNECTION_POOL_KWARGS:
         CACHES['default']['OPTIONS']['CONNECTION_POOL_KWARGS'] = CONNECTION_POOL_KWARGS
+        CACHES['axes']['OPTIONS']['CONNECTION_POOL_KWARGS'] = CONNECTION_POOL_KWARGS
 
 
 #
@@ -279,7 +303,13 @@ AXES_ENABLED = env.bool('AXES_ENABLED', True)
 AXES_LOCKOUT_PARAMETERS = env.list('AXES_LOCKOUT_PARAMETERS', default=['ip_address'])
 AXES_FAILURE_LIMIT = env.int('AXES_FAILURE_LIMIT', 10)
 AXES_COOLOFF_TIME = timedelta(minutes=env.float('AXES_COOLOFF_TIME', 30))
-AXES_HANDLER = env.str('AXES_HANDLER', 'axes.handlers.cache.AxesCacheHandler')
+# Default to the database handler which works in all environments (dev + prod).
+# For production deployments with Redis, set AXES_HANDLER=axes.handlers.cache.AxesCacheHandler
+# in your environment and ensure AXES_CACHE points to a Redis-backed CACHES entry.
+AXES_HANDLER = env.str('AXES_HANDLER', 'axes.handlers.database.AxesDatabaseHandler')
+if AXES_HANDLER == 'axes.handlers.cache.AxesCacheHandler':
+    # Only define AXES_CACHE when the cache handler is explicitly selected
+    AXES_CACHE = env.str('AXES_CACHE', 'default')
 AXES_IPWARE_PROXY_COUNT = env.int('AXES_IPWARE_PROXY_COUNT', 0)
 AXES_IPWARE_META_PRECEDENCE_ORDER = env.list(
     'AXES_IPWARE_META_PRECEDENCE_ORDER', default=['REMOTE_ADDR']

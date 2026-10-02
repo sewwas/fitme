@@ -97,21 +97,17 @@
   .topbar-right a:hover { color: var(--neon-lime); }
 
   /* ── Layout & Sidebar (8 Sub-modules) ── */
+  /* ── Layout & Sidebar (8 Sub-modules) ── */
   .layout-container { display: flex; flex: 1; min-height: calc(100vh - 65px); }
   .sidebar {
     width: 230px; background: #0E1113; border-right: 1px solid var(--border-color);
     padding: 1.5rem 0; flex-shrink: 0;
-  }
-  @media(max-width: 900px) {
-    .layout-container { flex-direction: column; }
-    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border-color); display: flex; overflow-x: auto; padding: 0.5rem; }
   }
 
   .sidebar-section {
     padding: 0.5rem 1.25rem 0.25rem; font-size: 0.65rem; color: var(--text-muted);
     text-transform: uppercase; letter-spacing: 1px; font-weight: 800;
   }
-  @media(max-width: 900px) { .sidebar-section { display: none; } }
 
   .nav-tab-btn {
     width: 100%; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem;
@@ -126,7 +122,6 @@
 
   /* ── Main Content Area ── */
   .main-content { flex: 1; padding: 2.2rem 2rem; overflow-y: auto; }
-  @media(max-width: 768px) { .main-content { padding: 1.5rem 1rem; } }
 
   .tab-pane { display: none; }
   .tab-pane.active { display: block; }
@@ -157,7 +152,57 @@
     display: flex; align-items: center; justify-content: space-between; background: rgba(31, 36, 40, 0.35);
   }
   .card-title { font-family: 'Montserrat', sans-serif; font-weight: 800; font-size: 0.95rem; display: flex; align-items: center; gap: 0.55rem; }
-  .card-body { padding: 1.25rem 1.5rem; }
+  .card-body { padding: 1.25rem 1.5rem; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* ── Responsive Grids & Modals ── */
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem; }
+  .modal-card-box {
+    background: #13171A; border: 2px solid var(--neon-lime); border-radius: 18px;
+    padding: 2rem; max-width: 620px; width: 100%; box-shadow: 0 10px 50px rgba(0,0,0,0.8); margin: auto;
+  }
+
+  @media(max-width: 900px) {
+    .topbar { padding: 0.6rem 0.85rem; flex-wrap: wrap; gap: 0.5rem; }
+    .topbar-center { order: 3; width: 100%; justify-content: space-between; padding-top: 0.4rem; border-top: 1px solid rgba(255,255,255,0.06); }
+    .layout-container { flex-direction: column; min-height: unset; }
+    .sidebar {
+      width: 100%; border-right: none; border-bottom: 1px solid var(--border-color);
+      display: flex; overflow-x: auto; padding: 0.4rem 0.5rem; gap: 0.25rem;
+      position: sticky; top: 54px; z-index: 80; background: #0E1113; -webkit-overflow-scrolling: touch;
+    }
+    .sidebar-section { display: none; }
+    .nav-tab-btn {
+      width: auto; padding: 0.5rem 0.85rem; font-size: 0.8rem;
+      border-left: none !important; border-bottom: 3px solid transparent; border-radius: 6px 6px 0 0;
+      flex-shrink: 0; white-space: nowrap;
+    }
+    .nav-tab-btn:hover, .nav-tab-btn.active {
+      border-bottom-color: var(--neon-lime); border-left-color: transparent !important;
+    }
+    .main-content { padding: 1.25rem 0.85rem; width: 100%; overflow-x: hidden; }
+    .form-grid-2 { grid-template-columns: 1fr !important; }
+  }
+
+  @media(max-width: 640px) {
+    .brand-name { font-size: 1.05rem; }
+    .brand img { height: 32px; width: 32px; }
+    .role-badge { font-size: 0.6rem; padding: 0.15rem 0.4rem; margin-left: 0.35rem; }
+    .live-floor-counter { padding: 0.25rem 0.55rem; font-size: 0.7rem; }
+    .btn-buzzer { padding: 0.3rem 0.65rem; font-size: 0.7rem; }
+    .topbar-right { gap: 0.65rem; font-size: 0.78rem; }
+    .page-title { font-size: 1.35rem; }
+    .page-sub { font-size: 0.8rem; margin-bottom: 1.25rem; }
+    .stats-grid { grid-template-columns: 1fr 1fr; gap: 0.65rem; margin-bottom: 1.25rem; }
+    .stat-card { padding: 0.85rem 0.75rem; }
+    .stat-value { font-size: 1.35rem; }
+    .stat-label { font-size: 0.65rem; }
+    .card-header { padding: 0.85rem 1rem; flex-direction: column; align-items: flex-start; gap: 0.5rem; }
+    .card-body { padding: 0.85rem 0.65rem; }
+    .modal-card-box { padding: 1.25rem 1rem !important; border-radius: 14px !important; }
+    .form-grid-3, .form-grid-2 { grid-template-columns: 1fr !important; }
+    .absence-alert-banner { flex-direction: column; gap: 0.85rem; align-items: flex-start; }
+  }
 
   .table-custom { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
   .table-custom th { text-align: left; padding: 0.75rem; color: var(--text-muted); border-bottom: 1px solid var(--border-color); font-weight: 700; text-transform: uppercase; font-size: 0.72rem; }
@@ -220,7 +265,7 @@
 
   /* Role Selection Radio Cards */
   .role-radio-grid {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.65rem; margin-bottom: 1.25rem;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.65rem; margin-bottom: 1.25rem;
   }
   @media(max-width: 600px) { .role-radio-grid { grid-template-columns: 1fr 1fr; } }
   .role-radio-card {
@@ -251,7 +296,11 @@
       <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me">
       <span class="brand-name">FIT <span>ME</span></span>
     </a>
-    <span class="role-badge">Super Admin • Pitigala</span>
+    {% if is_super_admin %}
+      <span class="role-badge" style="background:var(--neon-lime);color:#000;"><i class="fa fa-crown"></i> Super Admin (Master)</span>
+    {% else %}
+      <span class="role-badge" style="background:#00F0FF;color:#000;"><i class="fa fa-shield-alt"></i> Club Admin</span>
+    {% endif %}
   </div>
 
   <div class="topbar-center">
@@ -368,7 +417,7 @@
                 <th>Contact &amp; NIC</th>
                 <th>Biometric Speed Gate</th>
                 <th>Account Status</th>
-                <th style="text-align:right;">Actions</th>
+                {% if is_super_admin %}<th style="text-align:right;">Actions</th>{% endif %}
               </tr>
             </thead>
             <tbody>
@@ -388,18 +437,22 @@
                   <td>
                     <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
                       <span class="badge-role {{ u.role_badge_class }}" id="user-role-badge-{{ u.id }}">
-                        {% if u.primary_role == 'super_admin' %}<i class="fa fa-shield-alt"></i>
+                        {% if u.primary_role == 'super_admin' %}<i class="fa fa-crown"></i>
+                        {% elif u.primary_role == 'admin' %}<i class="fa fa-shield-alt"></i>
                         {% elif u.primary_role == 'front_desk' %}<i class="fa fa-concierge-bell"></i>
                         {% elif u.primary_role == 'coach' %}<i class="fa fa-dumbbell"></i>
                         {% else %}<i class="fa fa-user"></i>{% endif %}
                         {{ u.role_label }}
                       </span>
-                      <select class="role-switcher-select" onchange="changeUserRole({{ u.id }}, this.value)" title="Change Role">
-                        <option value="super_admin" {% if u.primary_role == 'super_admin' %}selected{% endif %}>Super Admin</option>
-                        <option value="front_desk" {% if u.primary_role == 'front_desk' %}selected{% endif %}>Front Desk</option>
-                        <option value="coach" {% if u.primary_role == 'coach' %}selected{% endif %}>Coach</option>
-                        <option value="member" {% if u.primary_role == 'member' %}selected{% endif %}>Member</option>
-                      </select>
+                      {% if is_super_admin %}
+                        <select class="role-switcher-select" onchange="changeUserRole({{ u.id }}, this.value)" title="Super Admin Override: Change Role">
+                          <option value="super_admin" {% if u.primary_role == 'super_admin' %}selected{% endif %}>Super Admin</option>
+                          <option value="admin" {% if u.primary_role == 'admin' %}selected{% endif %}>Club Admin</option>
+                          <option value="front_desk" {% if u.primary_role == 'front_desk' %}selected{% endif %}>Front Desk</option>
+                          <option value="coach" {% if u.primary_role == 'coach' %}selected{% endif %}>Coach</option>
+                          <option value="member" {% if u.primary_role == 'member' %}selected{% endif %}>Member</option>
+                        </select>
+                      {% endif %}
                     </div>
                   </td>
                   <td>
@@ -431,6 +484,7 @@
                       {% endif %}
                     </span>
                   </td>
+                  {% if is_super_admin %}
                   <td style="text-align:right;">
                     <div style="display:inline-flex;gap:0.4rem;">
                       <button class="btn-action" style="background:#2A3138;color:#fff;" onclick="openResetPasswordModal({{ u.id }}, '{{ u.username }}')" title="Reset Password">
@@ -441,9 +495,10 @@
                       </button>
                     </div>
                   </td>
+                  {% endif %}
                 </tr>
               {% empty %}
-                <tr><td colspan="6" style="text-align:center;padding:2.5rem;color:var(--text-muted);">No system users found.</td></tr>
+                <tr><td colspan="{% if is_super_admin %}6{% else %}5{% endif %}" style="text-align:center;padding:2.5rem;color:var(--text-muted);">No system users found.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -458,9 +513,14 @@
           <h1 class="page-title">Member Directory &amp; Hardware PINs</h1>
           <p class="page-sub">Manage membership status, provision biometric speed gate PINs, or revoke turnstile access.</p>
         </div>
-        <button class="btn-action btn-lime" onclick="openCreateUserModal('member')">
-          <i class="fa fa-user-plus"></i> + Add Member
-        </button>
+        <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+          <a href="/dashboard/admin/reports/export-members-csv/" class="btn-action" style="background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:0.4rem;text-decoration:none;">
+            <i class="fa fa-file-excel" style="color:#10B981;"></i> Export Members Roster (CSV)
+          </a>
+          <button class="btn-action btn-lime" onclick="openCreateUserModal('member')">
+            <i class="fa fa-user-plus"></i> + Add Member
+          </button>
+        </div>
       </div>
 
       <div class="fitme-card">
@@ -471,7 +531,14 @@
         <div class="card-body" style="padding:0;">
           <table class="table-custom">
             <thead>
-              <tr><th>Member</th><th>NIC / Phone</th><th>Biometric PIN</th><th>Door Access</th><th>Actions</th></tr>
+              <tr>
+                <th>Member</th>
+                <th>NIC / Phone</th>
+                <th>Biometric PIN</th>
+                <th>Subscription Plan &amp; Expiry</th>
+                <th>Door Access</th>
+                <th style="text-align:right;">{% if is_super_admin %}Actions &amp; Overrides{% else %}Gate Control{% endif %}</th>
+              </tr>
             </thead>
             <tbody>
               {% for m in all_members %}
@@ -488,6 +555,37 @@
                     {{ m.biometric_pin|default:"#1001" }}
                   </td>
                   <td>
+                    {% if m.latest_sub %}
+                      <div style="font-weight:700;color:#fff;font-size:0.85rem;">{{ m.latest_sub.plan.name }}</div>
+                      <div style="font-size:0.75rem;color:var(--text-muted);">
+                        Expires: <strong style="color:{% if m.latest_sub.is_active %}var(--neon-lime){% else %}var(--danger){% endif %};">{{ m.latest_sub.end_date|default:"--" }}</strong>
+                        &bull; LKR {{ m.latest_sub.amount_paid|floatformat:0 }}
+                      </div>
+                      {% if m.latest_sub.plan.max_members > 1 %}
+                        <div style="margin-top:0.35rem;font-size:0.73rem;">
+                          <span style="color:var(--cyan);font-weight:700;"><i class="fa fa-users"></i> {{ m.latest_sub.plan.max_members }} Users Plan:</span>
+                          {% for bl in m.latest_sub.linked_partners %}
+                            <span style="display:inline-flex;align-items:center;gap:0.25rem;background:#192025;padding:0.15rem 0.45rem;border-radius:4px;color:#fff;border:1px solid rgba(255,255,255,0.15);margin:0.1rem 0.2rem 0.1rem 0;">
+                              <i class="fa fa-user-check" style="color:var(--neon-lime);"></i> {{ bl.partner_member.get_full_name|default:bl.partner_member.username }}
+                              {% if is_super_admin %}
+                              <button type="button" onclick="unlinkPartner({{ bl.id }})" style="background:none;border:none;color:var(--danger);cursor:pointer;padding:0 0.15rem;font-size:0.85rem;" title="Unlink partner">&times;</button>
+                              {% endif %}
+                            </span>
+                          {% empty %}
+                            <span style="color:var(--text-muted);">No partner linked yet.</span>
+                          {% endfor %}
+                          {% if is_super_admin and m.latest_sub.can_add_partner %}
+                            <button type="button" class="btn-action" style="background:rgba(0,240,255,0.12);color:var(--cyan);border:1px solid rgba(0,240,255,0.3);padding:0.15rem 0.45rem;font-size:0.68rem;margin-top:0.15rem;" onclick="openLinkPartnerModal({{ m.latest_sub.id }}, '{{ m.user.get_full_name|default:m.user.username|escapejs }}', '{{ m.latest_sub.plan.name|escapejs }}', {{ m.latest_sub.open_slots_count }})">
+                              <i class="fa fa-user-plus"></i> + Link Partner
+                            </button>
+                          {% endif %}
+                        </div>
+                      {% endif %}
+                    {% else %}
+                      <span style="color:var(--text-muted);font-size:0.78rem;">No active subscription</span>
+                    {% endif %}
+                  </td>
+                  <td>
                     <span id="member-access-badge-{{ m.user.id }}" class="user-access-badge-{{ m.user.id }}" style="font-weight:700;font-size:0.78rem;">
                       {% if m.user.is_active %}
                         <span style="color:var(--neon-lime);"><i class="fa fa-check-circle"></i> ACTIVE</span>
@@ -496,10 +594,19 @@
                       {% endif %}
                     </span>
                   </td>
-                  <td>
-                    <button class="btn-action btn-danger" onclick="toggleAccess({{ m.user.id }})">
-                      <i class="fa fa-ban"></i> Toggle Gate Access
-                    </button>
+                  <td style="text-align:right;">
+                    <div style="display:inline-flex;gap:0.4rem;align-items:center;">
+                      <button class="btn-action btn-danger" onclick="toggleAccess({{ m.user.id }})" title="Toggle Gate Access">
+                        <i class="fa fa-ban"></i> Gate
+                      </button>
+                      {% if is_super_admin and m.latest_sub %}
+                        <button class="btn-action" style="background:rgba(123,201,0,0.14);color:var(--neon-lime);border:1px solid rgba(123,201,0,0.4);" 
+                                onclick="openOverrideSubModal({{ m.latest_sub.id }}, '{{ m.user.get_full_name|default:m.user.username|escapejs }}', '{{ m.latest_sub.plan.id }}', '{{ m.latest_sub.start_date|date:'Y-m-d' }}', '{{ m.latest_sub.end_date|date:'Y-m-d' }}', '{{ m.latest_sub.amount_paid|floatformat:0 }}', '{{ m.latest_sub.status }}')"
+                                title="Super Admin Data Override">
+                          <i class="fa fa-sliders-h"></i> Data Override
+                        </button>
+                      {% endif %}
+                    </div>
                   </td>
                 </tr>
               {% empty %}
@@ -569,27 +676,57 @@
           <h1 class="page-title">Gym Programs Manager</h1>
           <p class="page-sub">Configure training programs displayed on the public catalog and coach presets.</p>
         </div>
+        {% if is_super_admin %}
         <button class="btn-action btn-lime" onclick="openCreateProgramModal()"><i class="fa fa-plus"></i> Create Program</button>
+        {% endif %}
       </div>
 
       <div class="fitme-card">
         <div class="card-body" style="padding:0;">
           <table class="table-custom">
             <thead>
-              <tr><th>Program Title</th><th>Category</th><th>Duration</th><th>Sessions/Wk</th><th>Difficulty</th><th>Status</th></tr>
+              <tr>
+                <th>Program Title</th>
+                <th>Category</th>
+                <th>Duration</th>
+                <th>Sessions/Wk</th>
+                <th>Difficulty</th>
+                <th>Status</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
             </thead>
             <tbody>
               {% for p in programs %}
-                <tr>
+                <tr {% if not p.is_active %}style="opacity:0.5;"{% endif %}>
                   <td style="font-weight:700;color:#fff;">{{ p.title }}</td>
                   <td><span style="color:var(--neon-lime);font-size:0.75rem;font-weight:800;text-transform:uppercase;">{{ p.get_category_display }}</span></td>
                   <td>{{ p.duration_weeks }} Weeks</td>
                   <td>{{ p.sessions_per_week }} / Wk</td>
                   <td>{{ p.get_difficulty_display }}</td>
-                  <td><span style="color:var(--neon-lime);font-weight:700;">Active</span></td>
+                  <td>
+                    {% if p.is_active %}
+                      <span style="color:var(--neon-lime);font-weight:700;"><i class="fa fa-check-circle"></i> Active</span>
+                    {% else %}
+                      <span style="color:var(--text-muted);font-weight:600;"><i class="fa fa-pause-circle"></i> Inactive</span>
+                    {% endif %}
+                  </td>
+                  <td style="text-align:right;">
+                    {% if is_super_admin %}
+                    <div style="display:inline-flex;gap:0.4rem;">
+                      <button class="btn-action" style="background:#2A3138;color:#fff;" onclick="openEditProgramModal({{ p.id }}, '{{ p.title|escapejs }}', '{{ p.category }}', '{{ p.difficulty }}', {{ p.duration_weeks }}, {{ p.sessions_per_week }}, '{{ p.description|escapejs }}', '{{ p.key_features|escapejs }}', {{ p.is_active|yesno:'true,false' }})" title="Edit Program">
+                        <i class="fa fa-edit"></i> Edit
+                      </button>
+                      <button class="btn-action" style="background:rgba(230,57,70,0.15);color:var(--danger);border:1px solid rgba(230,57,70,0.3);" onclick="deleteProgram({{ p.id }}, '{{ p.title|escapejs }}')" title="Delete Program">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                    </div>
+                    {% else %}
+                      <span style="color:var(--text-muted);font-size:0.75rem;">View Only</span>
+                    {% endif %}
+                  </td>
                 </tr>
               {% empty %}
-                <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No programs created yet.</td></tr>
+                <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);">No programs created yet.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -599,24 +736,68 @@
 
     <!-- 4. MEMBERSHIPS TAB -->
     <div id="tab-admin-memberships" class="tab-pane">
-      <h1 class="page-title">Membership Plans Configurator</h1>
-      <p class="page-sub">Tiered membership packages with pricing, durations, and entry window restrictions.</p>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h1 class="page-title">Membership Plans Configurator</h1>
+          <p class="page-sub">Tiered membership packages with pricing, durations, and entry window restrictions.</p>
+        </div>
+        {% if is_super_admin %}
+          <button class="btn-action btn-lime" onclick="openCreatePlanModal()">
+            <i class="fa fa-plus-circle"></i> + Make New Plan
+          </button>
+        {% endif %}
+      </div>
 
       <div class="fitme-card">
-        <div class="card-body" style="padding:0;">
+        <div class="card-body" style="padding:0;overflow-x:auto;">
           <table class="table-custom">
             <thead>
-              <tr><th>Plan Name</th><th>Type</th><th>Monthly Fee</th><th>Validity</th><th>Max Members</th><th>Gate Status</th></tr>
+              <tr>
+                <th>Plan Name</th>
+                <th>Type Code</th>
+                <th>Payable Total</th>
+                <th>Original Price</th>
+                <th>Discount</th>
+                <th>Reg Fee</th>
+                <th>Validity</th>
+                <th>Capacity</th>
+                <th>Status</th>
+                {% if is_super_admin %}<th style="text-align:right;">Actions / Overrides</th>{% endif %}
+              </tr>
             </thead>
             <tbody>
               {% for pl in membership_plans %}
-                <tr>
+                <tr {% if not pl.is_active %}style="opacity:0.5;"{% endif %}>
                   <td style="font-weight:800;color:#fff;">{{ pl.name }}</td>
-                  <td style="color:var(--neon-lime);font-weight:700;">{{ pl.get_plan_type_display|default:pl.plan_type }}</td>
-                  <td style="font-family:'Montserrat';font-weight:900;color:#fff;">LKR {{ pl.price_monthly|floatformat:0 }}</td>
+                  <td style="color:var(--cyan);font-family:monospace;font-size:0.8rem;">{{ pl.plan_type }}</td>
+                  <td style="font-family:'Montserrat';font-weight:900;color:var(--neon-lime);">LKR {{ pl.price_monthly|floatformat:0 }}</td>
+                  <td style="color:var(--text-muted);">{% if pl.original_price %}LKR {{ pl.original_price|floatformat:0 }}{% else %}—{% endif %}</td>
+                  <td>{% if pl.discount and pl.discount > 0 %}<span style="color:#00F0FF;font-weight:700;">- LKR {{ pl.discount|floatformat:0 }}</span>{% else %}—{% endif %}</td>
+                  <td>{% if pl.registration_fee == 0 %}<span style="color:#00F0FF;font-weight:700;">FREE (Rs. 0)</span>{% else %}LKR {{ pl.registration_fee|floatformat:0 }}{% endif %}</td>
                   <td>{{ pl.duration_days }} Days</td>
                   <td>{{ pl.max_members }} User(s)</td>
-                  <td><span style="color:var(--neon-lime);font-weight:700;"><i class="fa fa-door-open"></i> 24/7 Gate Access</span></td>
+                  <td>
+                    {% if pl.is_active %}
+                      <span style="color:var(--neon-lime);font-weight:700;"><i class="fa fa-check-circle"></i> Active</span>
+                    {% else %}
+                      <span style="color:var(--text-muted);font-weight:600;"><i class="fa fa-pause-circle"></i> Inactive</span>
+                    {% endif %}
+                  </td>
+                  {% if is_super_admin %}
+                  <td style="text-align:right;">
+                    <div style="display:inline-flex;gap:0.4rem;">
+                      <button class="btn-action" style="background:#2A3138;color:#fff;" onclick="openEditPlanModal({{ pl.id }}, '{{ pl.name|escapejs }}', '{{ pl.price_monthly|floatformat:0 }}', '{{ pl.original_price|default:pl.price_monthly|floatformat:0 }}', '{{ pl.discount|floatformat:0 }}', '{{ pl.registration_fee|floatformat:0 }}', {{ pl.duration_days }}, {{ pl.max_members }}, '{{ pl.description|escapejs }}', {{ pl.is_active|yesno:'true,false' }})" title="Override Plan Parameters">
+                        <i class="fa fa-edit"></i> Override
+                      </button>
+                      <button class="btn-action" style="background:#1F2428;color:var(--text-muted);" onclick="togglePlanActive({{ pl.id }})" title="Toggle Active Status">
+                        <i class="fa fa-power-off"></i>
+                      </button>
+                      <button class="btn-action" style="background:rgba(230,57,70,0.15);color:var(--danger);border:1px solid rgba(230,57,70,0.3);" onclick="deletePlan({{ pl.id }}, '{{ pl.name|escapejs }}')" title="Delete / Archive Plan">
+                        <i class="fa fa-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                  {% endif %}
                 </tr>
               {% endfor %}
             </tbody>
@@ -625,60 +806,248 @@
       </div>
     </div>
 
-    <!-- 6. FINANCIAL REPORTS & SALES LEDGER TAB -->
+    <!-- 6. FINANCIAL REPORTS, EXPENSES & SALES LEDGER TAB -->
     <div id="tab-admin-payments" class="tab-pane">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
         <div>
-          <h1 class="page-title">Financial Reports &amp; Sales Ledger</h1>
-          <p class="page-sub" style="margin-bottom:0;">Live revenue telemetry, POS supplement sales, cash drawer balancing, and accounting ledger.</p>
+          <h1 class="page-title"><i class="fa fa-chart-line" style="color:var(--neon-lime);margin-right:0.5rem;"></i>Financial Ledger, OPEX &amp; Billing Analytics</h1>
+          <p class="page-sub" style="margin-bottom:0;">Live revenue telemetry, club operating expenses (OPEX), billing package performance, cash drawer balancing, and net profit calculations.</p>
         </div>
         <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
+          {% if is_super_admin %}
+          <button type="button" class="btn-action btn-lime" onclick="openCreateExpenseModal()" style="display:inline-flex;align-items:center;gap:0.4rem;">
+            <i class="fa fa-plus-circle"></i> + Record Operating Expense
+          </button>
+          {% endif %}
           <a href="/dashboard/admin/reports/export-csv/" class="btn-action" style="background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:0.4rem;text-decoration:none;">
-            <i class="fa fa-file-excel" style="color:#10B981;"></i> Export to Excel (CSV)
+            <i class="fa fa-file-excel" style="color:#10B981;"></i> Export Inflow (CSV)
+          </a>
+          <a href="/dashboard/admin/reports/export-expenses-csv/" class="btn-action" style="background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:0.4rem;text-decoration:none;">
+            <i class="fa fa-file-invoice-dollar" style="color:#EF4444;"></i> Export Expenses (CSV)
           </a>
           <a href="/dashboard/admin/reports/daily-eod/" target="_blank" class="btn-action" style="background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:0.4rem;text-decoration:none;">
             <i class="fa fa-print" style="color:var(--cyan);"></i> Print Daily EOD Report
           </a>
-          <a href="/pos/" target="_blank" class="btn-action btn-lime" style="text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;">
-            <i class="fa fa-cash-register"></i> Open POS Bar Register
+          <a href="/pos/" target="_blank" class="btn-action" style="background:#2A3138;color:#fff;text-decoration:none;display:inline-flex;align-items:center;gap:0.4rem;">
+            <i class="fa fa-cash-register" style="color:var(--cyan);"></i> POS Register
           </a>
         </div>
       </div>
 
-      <!-- Financial KPI Metrics -->
-      <div class="stats-grid" style="margin-bottom:1.5rem;">
-        <div class="stat-card">
-          <div class="stat-value" style="color:var(--neon-lime);">Rs. {{ finance.total_gross_rev|floatformat:2 }}</div>
-          <div class="stat-label">Total All-Time Gross Revenue</div>
-          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;">
-            Mem: Rs. {{ finance.total_membership_rev|floatformat:0 }} &bull; POS: Rs. {{ finance.total_pos_rev|floatformat:0 }}
+      <!-- Timeframe Switcher Tabs: Daily / Weekly / Monthly / All-Time -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:1rem;background:#13171A;padding:0.6rem 1rem;border-radius:12px;border:1px solid rgba(255,255,255,0.06);">
+        <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+          <span style="font-size:0.8rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;"><i class="fa fa-calendar-alt" style="color:var(--cyan);margin-right:0.3rem;"></i>Accounting Window:</span>
+          <div class="filter-pills" id="financePeriodButtons" style="display:flex;gap:0.4rem;">
+            <button type="button" class="filter-pill active" onclick="switchFinancePeriod('today', this)">Today (Daily)</button>
+            <button type="button" class="filter-pill" onclick="switchFinancePeriod('week', this)">This Week</button>
+            <button type="button" class="filter-pill" onclick="switchFinancePeriod('month', this)">This Month</button>
+            <button type="button" class="filter-pill" onclick="switchFinancePeriod('total', this)">All-Time</button>
           </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value" style="color:#fff;">Rs. {{ finance.today_gross_rev|floatformat:2 }}</div>
-          <div class="stat-label">Today's Total Collections</div>
-          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;">
+        <div style="font-size:0.78rem;color:var(--text-muted);" id="financePeriodLabel">
+          Showing metrics for: <span style="color:var(--neon-lime);font-weight:700;">Today's Operations</span>
+        </div>
+      </div>
+
+      <!-- Dynamic Financial KPI Metrics -->
+      <div class="stats-grid" style="margin-bottom:1.5rem;">
+        <div class="stat-card" style="border-left:3px solid var(--neon-lime);">
+          <div class="stat-value" id="kpiGrossRev" style="color:var(--neon-lime);">Rs. {{ finance.today_gross_rev|floatformat:2 }}</div>
+          <div class="stat-label" id="kpiGrossLabel">Gross Inflow (Today)</div>
+          <div id="kpiGrossSub" style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;">
             Mem: Rs. {{ finance.today_membership_rev|floatformat:0 }} &bull; POS: Rs. {{ finance.today_pos_rev|floatformat:0 }}
           </div>
         </div>
-        <div class="stat-card">
+
+        <div class="stat-card" style="border-left:3px solid #EF4444;">
+          <div class="stat-value" id="kpiExpenses" style="color:#EF4444;">Rs. {{ finance.today_expenses|floatformat:2 }}</div>
+          <div class="stat-label" id="kpiExpensesLabel">Operating Expenses (OPEX)</div>
+          <div id="kpiExpensesSub" style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;">
+            Rent, CEB, Water, Staff &amp; Maintenance
+          </div>
+        </div>
+
+        <div class="stat-card" style="border-left:3px solid {% if finance.today_net_profit >= 0 %}var(--cyan){% else %}#EF4444{% endif %};">
+          <div class="stat-value" id="kpiNetProfit" style="color:{% if finance.today_net_profit >= 0 %}var(--cyan){% else %}#EF4444{% endif %};">Rs. {{ finance.today_net_profit|floatformat:2 }}</div>
+          <div class="stat-label" id="kpiNetLabel">Net Operating Profit</div>
+          <div id="kpiNetSub" style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;">
+            Gross Inflow minus OPEX
+          </div>
+        </div>
+
+        <div class="stat-card" style="border-left:3px solid #10B981;">
           <div class="stat-value" style="color:#10B981;">Rs. {{ finance.today_cash_total|floatformat:2 }}</div>
-          <div class="stat-label">Today's Physical Cash in Till</div>
+          <div class="stat-label">Physical Cash in Till (Today)</div>
           <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;">
             Drawer Float + Cash Collected
           </div>
         </div>
-        <div class="stat-card">
-          <div class="stat-value" style="color:var(--cyan);">Rs. {{ finance.today_digital_total|floatformat:2 }}</div>
-          <div class="stat-label">Today's Digital &amp; Card Sales</div>
-          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;">
-            Card: Rs. {{ finance.today_card_total|floatformat:0 }} &bull; Koko/Bank: Rs. {{ finance.today_bank_total|add:finance.today_koko_pos|floatformat:0 }}
+      </div>
+
+      <!-- Billing Package Revenue Breakdown -->
+      <div class="fitme-card" style="margin-bottom:1.5rem;">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+          <div>
+            <div class="card-title"><i class="fa fa-layer-group" style="color:var(--neon-lime);"></i> Billing Package Performance &amp; Revenue Breakdown</div>
+            <span style="font-size:0.78rem;color:var(--text-muted);">Active subscribers, all-time subscription counts, package revenue, and contribution share</span>
           </div>
+          {% if is_super_admin %}
+          <button class="btn-action" style="background:#192025;color:var(--neon-lime);border:1px solid rgba(118,192,67,0.3);font-size:0.78rem;" onclick="switchTab('tab-admin-memberships')">
+            <i class="fa fa-sliders-h"></i> Manage Package Pricing
+          </button>
+          {% endif %}
+        </div>
+        <div class="card-body" style="padding:0;">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Membership Plan</th>
+                <th>Category</th>
+                <th style="text-align:right;">Plan Rate</th>
+                <th style="text-align:center;">Active Subscribers</th>
+                <th style="text-align:center;">Total Enrolled</th>
+                <th style="text-align:right;">Total Revenue</th>
+                <th style="width:180px;">Share of Membership Dues</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for p in finance.plan_performance %}
+                <tr>
+                  <td>
+                    <div style="font-weight:800;color:#fff;">{{ p.plan.name }}</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">{{ p.plan.duration_days }} Days &bull; Up to {{ p.plan.max_members }} Member(s)</div>
+                  </td>
+                  <td>
+                    <span style="font-family:monospace;font-size:0.75rem;color:var(--cyan);background:rgba(0,240,255,0.08);padding:0.2rem 0.5rem;border-radius:4px;border:1px solid rgba(0,240,255,0.2);">
+                      {{ p.plan.plan_type }}
+                    </span>
+                  </td>
+                  <td style="text-align:right;font-family:'Montserrat';font-weight:800;color:var(--neon-lime);">
+                    Rs. {{ p.plan.price_monthly|floatformat:0 }}
+                  </td>
+                  <td style="text-align:center;">
+                    <span style="background:rgba(118,192,67,0.15);color:var(--neon-lime);font-weight:800;padding:0.2rem 0.6rem;border-radius:12px;font-size:0.8rem;">
+                      {{ p.active_subscribers }}
+                    </span>
+                  </td>
+                  <td style="text-align:center;font-weight:700;color:#fff;">
+                    {{ p.total_subscribers }}
+                  </td>
+                  <td style="text-align:right;font-family:monospace;font-weight:900;color:#fff;font-size:0.95rem;">
+                    Rs. {{ p.revenue|floatformat:2 }}
+                  </td>
+                  <td>
+                    <div style="display:flex;justify-content:space-between;font-size:0.72rem;margin-bottom:0.25rem;">
+                      <span style="color:var(--text-muted);">Contribution</span>
+                      <span style="font-weight:800;color:var(--neon-lime);">{{ p.revenue_share_pct }}%</span>
+                    </div>
+                    <div style="background:#1E2428;border-radius:4px;height:6px;overflow:hidden;">
+                      <div style="background:var(--neon-lime);height:100%;width:{{ p.revenue_share_pct }}%;"></div>
+                    </div>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="7" style="text-align:center;padding:1.5rem;color:var(--text-muted);">No membership plans registered.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Club Operating Expenses (OPEX Ledger) -->
+      <div class="fitme-card" style="margin-bottom:1.5rem;">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
+          <div>
+            <div class="card-title"><i class="fa fa-file-invoice-dollar" style="color:#EF4444;"></i> Club Operating Expenses (OPEX Ledger)</div>
+            <span style="font-size:0.78rem;color:var(--text-muted);">Monthly facility lease, CEB power, staff payroll, sanitization, and equipment maintenance</span>
+          </div>
+          <div style="display:flex;gap:0.5rem;">
+            {% if is_super_admin %}
+            <button type="button" class="btn-action btn-lime" onclick="openCreateExpenseModal()" style="font-size:0.78rem;padding:0.35rem 0.8rem;">
+              <i class="fa fa-plus"></i> Record Expense
+            </button>
+            {% endif %}
+            <a href="/dashboard/admin/reports/export-expenses-csv/" class="btn-action" style="background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.2);font-size:0.78rem;padding:0.35rem 0.8rem;text-decoration:none;">
+              <i class="fa fa-download"></i> CSV
+            </a>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Expense Description</th>
+                <th>Category</th>
+                <th>Payment Method</th>
+                <th>Recorded By</th>
+                <th>Receipt / Invoice #</th>
+                <th style="text-align:center;">Proof / Bill</th>
+                <th style="text-align:right;">Amount (LKR)</th>
+                {% if is_super_admin %}<th style="text-align:center;">Action</th>{% endif %}
+              </tr>
+            </thead>
+            <tbody id="expensesTableBody">
+              {% for exp in finance.recent_expenses %}
+                <tr id="expense-row-{{ exp.id }}">
+                  <td style="font-size:0.8rem;color:var(--text-muted);white-space:nowrap;">{{ exp.expense_date|date:"d M Y" }}</td>
+                  <td>
+                    <div style="font-weight:700;color:#fff;">{{ exp.title }}</div>
+                    {% if exp.notes %}<div style="font-size:0.72rem;color:var(--text-muted);">{{ exp.notes }}</div>{% endif %}
+                  </td>
+                  <td>
+                    {% if exp.category == 'electricity' %}
+                      <span style="background:rgba(245,158,11,0.15);color:#F59E0B;border:1px solid rgba(245,158,11,0.3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.72rem;font-weight:700;">⚡ Electricity</span>
+                    {% elif exp.category == 'water' %}
+                      <span style="background:rgba(59,130,246,0.15);color:#3B82F6;border:1px solid rgba(59,130,246,0.3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.72rem;font-weight:700;">💧 Water</span>
+                    {% elif exp.category == 'rent' %}
+                      <span style="background:rgba(139,92,246,0.15);color:#8B5CF6;border:1px solid rgba(139,92,246,0.3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.72rem;font-weight:700;">🏢 Rent</span>
+                    {% elif exp.category == 'staff_salary' %}
+                      <span style="background:rgba(16,185,129,0.15);color:#10B981;border:1px solid rgba(16,185,129,0.3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.72rem;font-weight:700;">👥 Payroll</span>
+                    {% elif exp.category == 'maintenance' %}
+                      <span style="background:rgba(249,115,22,0.15);color:#F97316;border:1px solid rgba(249,115,22,0.3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.72rem;font-weight:700;">🔧 Maintenance</span>
+                    {% elif exp.category == 'supplements_stock' %}
+                      <span style="background:rgba(6,182,212,0.15);color:#06B6D4;border:1px solid rgba(6,182,212,0.3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.72rem;font-weight:700;">🥤 Stock</span>
+                    {% elif exp.category == 'cleaning' %}
+                      <span style="background:rgba(20,184,166,0.15);color:#14B8A6;border:1px solid rgba(20,184,166,0.3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.72rem;font-weight:700;">🧹 Cleaning</span>
+                    {% else %}
+                      <span style="background:rgba(107,114,128,0.15);color:#9CA3AF;border:1px solid rgba(107,114,128,0.3);padding:0.2rem 0.5rem;border-radius:4px;font-size:0.72rem;font-weight:700;">📦 {{ exp.get_category_display }}</span>
+                    {% endif %}
+                  </td>
+                  <td style="font-size:0.78rem;color:#ccc;">{{ exp.get_payment_method_display }}</td>
+                  <td style="font-size:0.78rem;color:var(--text-muted);">{{ exp.recorded_by.username|default:"System" }}</td>
+                  <td style="font-family:monospace;font-size:0.75rem;color:var(--cyan);">{{ exp.receipt_ref|default:"—" }}</td>
+                  <td style="text-align:center;">
+                    {% if exp.receipt_image %}
+                      <a href="{{ exp.receipt_image.url }}" target="_blank" class="btn-action" style="background:rgba(0,240,255,0.12);color:var(--cyan);border:1px solid rgba(0,240,255,0.3);padding:0.25rem 0.6rem;font-size:0.72rem;display:inline-flex;align-items:center;gap:0.3rem;text-decoration:none;" title="View Attached Bill Photo / PDF">
+                        <i class="fa fa-image"></i> View Bill
+                      </a>
+                    {% else %}
+                      <span style="color:var(--text-muted);font-size:0.75rem;">—</span>
+                    {% endif %}
+                  </td>
+                  <td style="text-align:right;font-family:monospace;font-weight:900;color:#EF4444;font-size:0.95rem;">
+                    - Rs. {{ exp.amount|floatformat:2 }}
+                  </td>
+                  {% if is_super_admin %}
+                  <td style="text-align:center;">
+                    <button type="button" class="btn-action" style="background:rgba(230,57,70,0.15);color:var(--danger);border:1px solid rgba(230,57,70,0.3);padding:0.25rem 0.6rem;font-size:0.72rem;" onclick="deleteExpense({{ exp.id }}, '{{ exp.title|escapejs }}')" title="Delete Expense">
+                      <i class="fa fa-trash"></i>
+                    </button>
+                  </td>
+                  {% endif %}
+                </tr>
+              {% empty %}
+                <tr id="noExpensesRow"><td colspan="{% if is_super_admin %}9{% else %}8{% endif %}" style="text-align:center;padding:2rem;color:var(--text-muted);">No club expenses recorded yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
         </div>
       </div>
 
       <!-- Two Column Summary: Payment Split & Top POS Products -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+      <div class="form-grid-2" style="margin-bottom:1.5rem;">
         <!-- Payment Methods Split -->
         <div class="fitme-card">
           <div class="card-header">
@@ -937,15 +1306,15 @@
 </div>
 
 <!-- Modal: Create Program -->
-<div id="createProgramModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:2000;align-items:center;justify-content:center;">
-  <div style="background:#14181B;border:2px solid var(--neon-lime);border-radius:16px;padding:2rem;max-width:480px;width:90%;">
+<div id="createProgramModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:2000;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;">
+  <div class="modal-card-box" style="max-width:480px;">
     <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;margin-bottom:1rem;">Create Gym Program</h3>
     <form id="createProgramForm" onsubmit="submitCreateProgram(event)">
       <div style="margin-bottom:1rem;">
         <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Program Title *</label>
         <input type="text" id="progTitle" required class="form-control" placeholder="e.g. Pitigala Power Hypertrophy">
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+      <div class="form-grid-2" style="margin-bottom:1rem;">
         <div>
           <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Category</label>
           <select id="progCategory" class="form-control">
@@ -972,9 +1341,76 @@
   </div>
 </div>
 
+<!-- Modal: Edit Program -->
+<div id="editProgramModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:2000;align-items:center;justify-content:center;padding:1rem;overflow-y:auto;">
+  <div class="modal-card-box" style="max-width:500px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;margin:0;display:flex;align-items:center;gap:0.5rem;">
+        <i class="fa fa-edit" style="color:var(--neon-lime);"></i> Edit Gym Program
+      </h3>
+      <button type="button" onclick="closeEditProgramModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+    <form id="editProgramForm" onsubmit="submitEditProgram(event)">
+      <input type="hidden" id="editProgId">
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Program Title *</label>
+        <input type="text" id="editProgTitle" required class="form-control">
+      </div>
+      <div class="form-grid-2" style="margin-bottom:1rem;">
+        <div>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Category</label>
+          <select id="editProgCategory" class="form-control">
+            <option value="hypertrophy">Hypertrophy &amp; Muscle Build</option>
+            <option value="fat_loss">Fat Loss &amp; Shred</option>
+            <option value="strength">Power &amp; Strength</option>
+            <option value="hiit">HIIT &amp; Conditioning</option>
+            <option value="calisthenics">Bodyweight &amp; Calisthenics</option>
+            <option value="personal_training">1-on-1 Personal Training</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Difficulty</label>
+          <select id="editProgDifficulty" class="form-control">
+            <option value="beginner">Beginner</option>
+            <option value="intermediate">Intermediate</option>
+            <option value="advanced">Advanced / Athlete</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-grid-2" style="margin-bottom:1rem;">
+        <div>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Duration (Weeks)</label>
+          <input type="number" id="editProgDuration" required class="form-control">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Sessions / Week</label>
+          <input type="number" id="editProgSessions" required class="form-control" value="4">
+        </div>
+      </div>
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Description *</label>
+        <textarea id="editProgDesc" required rows="3" class="form-control"></textarea>
+      </div>
+      <div style="margin-bottom:1.25rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Key Features (One per line or comma-separated)</label>
+        <textarea id="editProgFeatures" rows="2" class="form-control"></textarea>
+      </div>
+      <div style="margin-bottom:1.25rem;">
+        <label style="display:inline-flex;align-items:center;gap:0.5rem;font-size:0.85rem;color:#fff;cursor:pointer;">
+          <input type="checkbox" id="editProgActive"> Active &amp; Visible in Public/Member Catalog
+        </label>
+      </div>
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
+        <button type="button" class="btn-action" style="background:#333;color:#fff;" onclick="closeEditProgramModal()">Cancel</button>
+        <button type="submit" class="btn-action btn-lime" id="btnSaveProgram">Save Program Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: Create Staff / User -->
-<div id="createUserModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;overflow-y:auto;padding:1.5rem;">
-  <div style="background:#13171A;border:2px solid var(--neon-lime);border-radius:18px;padding:2rem;max-width:620px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);margin:auto;">
+<div id="createUserModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;overflow-y:auto;padding:1rem;">
+  <div class="modal-card-box">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
       <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;font-size:1.2rem;display:flex;align-items:center;gap:0.5rem;">
         <i class="fa fa-user-plus" style="color:var(--neon-lime);"></i> Create Staff / User Account
@@ -988,16 +1424,24 @@
         Select System Role *
       </label>
       <div class="role-radio-grid">
+        {% if is_super_admin %}
         <div class="role-radio-card" id="card-role-super_admin" onclick="selectRoleInModal('super_admin')">
           <input type="radio" name="modal_role" value="super_admin">
-          <i class="fa fa-shield-alt" style="color:var(--neon-lime);font-size:1.1rem;"></i>
+          <i class="fa fa-crown" style="color:var(--neon-lime);font-size:1.1rem;"></i>
           <div class="role-card-title" style="color:var(--neon-lime);">Super Admin</div>
-          <div class="role-card-desc">Full System Admin</div>
+          <div class="role-card-desc">Master Owner</div>
         </div>
+        <div class="role-radio-card" id="card-role-admin" onclick="selectRoleInModal('admin')">
+          <input type="radio" name="modal_role" value="admin">
+          <i class="fa fa-shield-alt" style="color:var(--cyan);font-size:1.1rem;"></i>
+          <div class="role-card-title" style="color:var(--cyan);">Club Admin</div>
+          <div class="role-card-desc">Operations</div>
+        </div>
+        {% endif %}
         <div class="role-radio-card" id="card-role-front_desk" onclick="selectRoleInModal('front_desk')">
           <input type="radio" name="modal_role" value="front_desk">
-          <i class="fa fa-concierge-bell" style="color:var(--cyan);font-size:1.1rem;"></i>
-          <div class="role-card-title" style="color:var(--cyan);">Front Desk</div>
+          <i class="fa fa-concierge-bell" style="color:#38BDF8;font-size:1.1rem;"></i>
+          <div class="role-card-title" style="color:#38BDF8;">Front Desk</div>
           <div class="role-card-desc">Check-in &amp; POS</div>
         </div>
         <div class="role-radio-card" id="card-role-coach" onclick="selectRoleInModal('coach')">
@@ -1015,7 +1459,7 @@
       </div>
 
       <!-- 2. Account Credentials -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.85rem;">
+      <div class="form-grid-2" style="margin-bottom:0.85rem;">
         <div>
           <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Username *</label>
           <input type="text" id="newUsername" required class="form-control" placeholder="e.g. kasun_trainer">
@@ -1162,6 +1606,338 @@
     </form>
   </div>
 </div>
+
+{% if is_super_admin %}
+<!-- Modal: Make New Membership Package (Super Admin Only) -->
+<div id="createPlanModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;overflow-y:auto;padding:1rem;">
+  <div class="modal-card-box" style="border:2px solid var(--neon-lime);max-width:620px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);margin:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;font-size:1.2rem;display:flex;align-items:center;gap:0.5rem;">
+        <i class="fa fa-plus-circle" style="color:var(--neon-lime);"></i> Make New Membership Package
+      </h3>
+      <button type="button" onclick="closeCreatePlanModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+
+    <form id="createPlanForm" onsubmit="submitCreatePlan(event)">
+      <div class="form-grid-2" style="margin-bottom:0.85rem;">
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Package / Plan Name *</label>
+          <input type="text" id="newPlanName" required class="form-control" placeholder="e.g. 1 Year VIP Gold Athlete">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Type Code (unique) *</label>
+          <input type="text" id="newPlanType" required class="form-control" placeholder="e.g. annual_vip" style="font-family:monospace;">
+        </div>
+      </div>
+
+      <div class="form-grid-3" style="margin-bottom:0.85rem;">
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Payable Price (LKR) *</label>
+          <input type="number" step="0.01" id="newPlanPrice" required class="form-control" placeholder="e.g. 45000">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Original Price (LKR)</label>
+          <input type="number" step="0.01" id="newPlanOrigPrice" class="form-control" placeholder="e.g. 55000">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Discount (LKR)</label>
+          <input type="number" step="0.01" id="newPlanDiscount" class="form-control" value="0">
+        </div>
+      </div>
+
+      <div class="form-grid-3" style="margin-bottom:0.85rem;">
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Registration Fee (LKR)</label>
+          <input type="number" step="0.01" id="newPlanRegFee" class="form-control" value="1000">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Validity (Days) *</label>
+          <input type="number" id="newPlanDuration" required class="form-control" value="30">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Max Members *</label>
+          <input type="number" id="newPlanMaxMembers" required class="form-control" value="1">
+        </div>
+      </div>
+
+      <div style="margin-bottom:1.25rem;">
+        <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Description &amp; Perks</label>
+        <textarea id="newPlanDescription" rows="3" class="form-control" placeholder="e.g. Full access to gym floor, locker facility, free 1-on-1 PT consultation"></textarea>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;flex-wrap:wrap;">
+        <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeCreatePlanModal()">Cancel</button>
+        <button type="submit" id="btnSubmitCreatePlan" class="btn-action btn-lime" style="padding:0.6rem 1.4rem;">
+          <i class="fa fa-plus-circle"></i> Create &amp; Publish Package
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Edit Plan & Override Pricing (Super Admin Only) -->
+<div id="editPlanModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;overflow-y:auto;padding:1rem;">
+  <div class="modal-card-box" style="border:2px solid var(--neon-lime);max-width:620px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);margin:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;font-size:1.2rem;display:flex;align-items:center;gap:0.5rem;">
+        <i class="fa fa-edit" style="color:var(--neon-lime);"></i> Super Admin: Override Plan Pricing
+      </h3>
+      <button type="button" onclick="closeEditPlanModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+
+    <form id="editPlanForm" onsubmit="submitEditPlan(event)">
+      <input type="hidden" id="editPlanId">
+      
+      <div style="margin-bottom:0.85rem;">
+        <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Package / Plan Name *</label>
+        <input type="text" id="editPlanName" required class="form-control">
+      </div>
+
+      <div class="form-grid-3" style="margin-bottom:0.85rem;">
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Payable Price (LKR) *</label>
+          <input type="number" step="0.01" id="editPlanPrice" required class="form-control">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Original Price (LKR)</label>
+          <input type="number" step="0.01" id="editPlanOrigPrice" class="form-control">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Discount (LKR)</label>
+          <input type="number" step="0.01" id="editPlanDiscount" class="form-control">
+        </div>
+      </div>
+
+      <div class="form-grid-3" style="margin-bottom:0.85rem;">
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Registration Fee (LKR)</label>
+          <input type="number" step="0.01" id="editPlanRegFee" class="form-control">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Validity (Days) *</label>
+          <input type="number" id="editPlanDuration" required class="form-control">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Max Members *</label>
+          <input type="number" id="editPlanMaxMembers" required class="form-control">
+        </div>
+      </div>
+
+      <div style="margin-bottom:0.85rem;">
+        <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Description &amp; Perks</label>
+        <textarea id="editPlanDescription" rows="2" class="form-control"></textarea>
+      </div>
+
+      <div style="margin-bottom:1.25rem;">
+        <label style="display:flex;align-items:center;gap:0.5rem;font-size:0.82rem;color:#fff;cursor:pointer;">
+          <input type="checkbox" id="editPlanIsActive" style="accent-color:var(--neon-lime);width:16px;height:16px;">
+          <span>Plan is Active and Open for Signups</span>
+        </label>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;flex-wrap:wrap;">
+        <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeEditPlanModal()">Cancel</button>
+        <button type="submit" id="btnSubmitEditPlan" class="btn-action btn-lime" style="padding:0.6rem 1.4rem;">
+          <i class="fa fa-save"></i> Save Plan Overrides
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Subscription Data Override (Super Admin Only) -->
+<div id="overrideSubModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;overflow-y:auto;padding:1rem;">
+  <div class="modal-card-box" style="border:2px solid var(--neon-lime);max-width:540px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);margin:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;font-size:1.2rem;display:flex;align-items:center;gap:0.5rem;">
+        <i class="fa fa-sliders-h" style="color:var(--neon-lime);"></i> Master Data Override: Subscription
+      </h3>
+      <button type="button" onclick="closeOverrideSubModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+
+    <form id="overrideSubForm" onsubmit="submitOverrideSub(event)">
+      <input type="hidden" id="overrideSubId">
+      <div style="background:#1A2024;border-left:3px solid var(--neon-lime);padding:0.75rem 1rem;border-radius:6px;margin-bottom:1rem;">
+        <div style="font-size:0.75rem;color:var(--text-muted);">Target Member:</div>
+        <div style="font-size:1.05rem;font-weight:800;color:#fff;" id="overrideMemberName">Member Name</div>
+      </div>
+
+      <div class="form-grid-2" style="margin-bottom:0.85rem;">
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Membership Plan</label>
+          <select id="overridePlanId" class="form-control">
+            {% for pl in membership_plans %}
+              <option value="{{ pl.id }}">{{ pl.name }} (LKR {{ pl.price_monthly|floatformat:0 }})</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Status</label>
+          <select id="overrideStatus" class="form-control">
+            <option value="active">Active</option>
+            <option value="expired">Expired</option>
+            <option value="frozen">Frozen / Suspended</option>
+            <option value="cancelled">Cancelled</option>
+            <option value="pending_payment">Pending Payment</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-grid-2" style="margin-bottom:0.85rem;">
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Start Date</label>
+          <input type="date" id="overrideStartDate" class="form-control">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">End / Expiration Date *</label>
+          <input type="date" id="overrideEndDate" required class="form-control">
+        </div>
+      </div>
+
+      <div style="margin-bottom:0.85rem;">
+        <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Amount Paid (LKR)</label>
+        <input type="number" step="0.01" id="overrideAmountPaid" class="form-control" placeholder="Override recorded amount">
+      </div>
+
+      <div style="margin-bottom:1.25rem;">
+        <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Admin Override Reason / Audit Note</label>
+        <textarea id="overrideNotes" rows="2" class="form-control" placeholder="e.g. Free 1-month grace period granted by Super Admin for medical hiatus"></textarea>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;flex-wrap:wrap;">
+        <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeOverrideSubModal()">Cancel</button>
+        <button type="submit" id="btnSubmitOverrideSub" class="btn-action btn-lime" style="padding:0.6rem 1.4rem;">
+          <i class="fa fa-check"></i> Apply Data Override
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Record New Club Operating Expense (OPEX) -->
+<div id="createExpenseModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;overflow-y:auto;padding:1rem;">
+  <div class="modal-card-box" style="border:2px solid var(--neon-lime);max-width:560px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);margin:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;">
+        <i class="fa fa-receipt" style="color:var(--neon-lime);"></i> Record Club Operating Expense (OPEX)
+      </h3>
+      <button type="button" onclick="closeCreateExpenseModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+
+    <form id="createExpenseForm" onsubmit="submitCreateExpense(event)">
+      <div style="margin-bottom:0.85rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Expense Title / Description *</label>
+        <input type="text" id="expTitle" required class="form-control" placeholder="e.g. CEB Electricity Bill - October 2026">
+      </div>
+
+      <div class="form-grid-2" style="margin-bottom:0.85rem;">
+        <div>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Expense Category *</label>
+          <select id="expCategory" required class="form-control">
+            <option value="electricity">⚡ CEB Electricity</option>
+            <option value="water">💧 Water Supply</option>
+            <option value="rent">🏢 Facility Rent / Lease</option>
+            <option value="maintenance">🔧 Equipment Repairs &amp; Maintenance</option>
+            <option value="staff_salary">👥 Staff Salary &amp; Commissions</option>
+            <option value="supplements_stock">🥤 Supplement &amp; Bar Stock Purchase</option>
+            <option value="cleaning">🧹 Cleaning &amp; Sanitization Supplies</option>
+            <option value="internet">🌐 Internet &amp; Software Utilities</option>
+            <option value="marketing">📣 Marketing &amp; Signboards</option>
+            <option value="other">📦 Other Operations</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Amount (LKR) *</label>
+          <input type="number" step="0.01" id="expAmount" required class="form-control" placeholder="e.g. 18500.00">
+        </div>
+      </div>
+
+      <div class="form-grid-2" style="margin-bottom:0.85rem;">
+        <div>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Expense Date *</label>
+          <input type="date" id="expDate" required class="form-control">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Payment Method *</label>
+          <select id="expMethod" required class="form-control">
+            <option value="cash">💵 Petty Cash / Drawer</option>
+            <option value="bank_transfer">🏦 Bank Direct Transfer</option>
+            <option value="card">💳 Company Debit/Credit Card</option>
+            <option value="cheque">📝 Company Cheque</option>
+            <option value="other">🔄 Other Method</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom:0.85rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Invoice / Bill / Receipt Reference</label>
+        <input type="text" id="expReceiptRef" class="form-control" placeholder="e.g. CEB-BILL-987261 or INV-2026-004">
+      </div>
+
+      <div style="margin-bottom:0.85rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">
+          <i class="fa fa-camera" style="color:var(--cyan);margin-right:0.3rem;"></i> Bill / Invoice Image or Proof Attachment (optional)
+        </label>
+        <input type="file" id="expReceiptFile" accept="image/*,.pdf" class="form-control" style="padding:0.4rem;font-size:0.8rem;background:#192025;border:1px dashed rgba(255,255,255,0.25);">
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem;">Upload photo of physical bill, receipt slip, bank deposit slip, or PDF invoice.</div>
+      </div>
+
+      <div style="margin-bottom:1.25rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Accounting Notes / Vendor Details</label>
+        <textarea id="expNotes" rows="2" class="form-control" placeholder="Optional audit trail note..."></textarea>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
+        <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeCreateExpenseModal()">Cancel</button>
+        <button type="submit" id="btnSubmitExpense" class="btn-action btn-lime" style="padding:0.6rem 1.4rem;">
+          <i class="fa fa-save"></i> Save Operating Expense
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal: Link Partner / Secondary User to 2-User or 3-User Plan -->
+<div id="linkPartnerModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;padding:1.5rem;">
+  <div style="background:#13171A;border:2px solid var(--cyan);border-radius:16px;padding:2rem;max-width:480px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;">
+        <i class="fa fa-user-friends" style="color:var(--cyan);"></i> Link Partner to Subscription
+      </h3>
+      <button type="button" onclick="closeLinkPartnerModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+
+    <form id="linkPartnerForm" onsubmit="submitLinkPartner(event)">
+      <input type="hidden" id="linkSubId">
+      <div style="margin-bottom:1rem;background:#192025;padding:0.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.08);">
+        <div style="font-size:0.75rem;color:var(--text-muted);">Primary Member:</div>
+        <div style="font-size:0.95rem;font-weight:700;color:#fff;" id="linkPrimaryName">Member Name</div>
+        <div style="font-size:0.75rem;color:var(--cyan);margin-top:0.25rem;" id="linkPlanName">Couple Monthly Package</div>
+      </div>
+
+      <div style="margin-bottom:1.25rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Select Registered Member to Link as Partner *</label>
+        <select id="linkPartnerSelect" required class="form-control">
+          <option value="">-- Choose Member --</option>
+          {% for u in all_system_users %}
+            <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }} (@{{ u.username }})</option>
+          {% endfor %}
+        </select>
+        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;">
+          The partner will immediately receive their own Face ID &amp; PIN access to the turnstile under this subscription without paying an extra fee.
+        </div>
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
+        <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeLinkPartnerModal()">Cancel</button>
+        <button type="submit" id="btnSubmitLinkPartner" class="btn-action" style="background:var(--cyan);color:#000;font-weight:700;padding:0.6rem 1.4rem;">
+          <i class="fa fa-link"></i> Link Partner &amp; Grant Access
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+{% endif %}
 
 <script>
   function showToast(msg) {
@@ -1467,6 +2243,103 @@
     }
   }
 
+  // Program Edit & Delete Functions
+  function openEditProgramModal(id, title, category, difficulty, durationWeeks, sessionsPerWeek, description, keyFeatures, isActive) {
+    document.getElementById('editProgId').value = id;
+    document.getElementById('editProgTitle').value = title;
+    if (category) document.getElementById('editProgCategory').value = category;
+    if (difficulty) document.getElementById('editProgDifficulty').value = difficulty;
+    document.getElementById('editProgDuration').value = durationWeeks || 8;
+    document.getElementById('editProgSessions').value = sessionsPerWeek || 4;
+    document.getElementById('editProgDesc').value = description || '';
+    document.getElementById('editProgFeatures').value = keyFeatures || '';
+    document.getElementById('editProgActive').checked = (isActive !== false);
+    document.getElementById('editProgramModal').style.display = 'flex';
+  }
+
+  function closeEditProgramModal() {
+    document.getElementById('editProgramModal').style.display = 'none';
+  }
+
+  async function submitEditProgram(e) {
+    e.preventDefault();
+    const id = document.getElementById('editProgId').value;
+    const btn = document.getElementById('btnSaveProgram');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
+
+    const payload = {
+      title: document.getElementById('editProgTitle').value.trim(),
+      category: document.getElementById('editProgCategory').value,
+      difficulty: document.getElementById('editProgDifficulty').value,
+      duration_weeks: parseInt(document.getElementById('editProgDuration').value, 10),
+      sessions_per_week: parseInt(document.getElementById('editProgSessions').value, 10),
+      description: document.getElementById('editProgDesc').value.trim(),
+      key_features: document.getElementById('editProgFeatures').value.trim(),
+      is_active: document.getElementById('editProgActive').checked
+    };
+
+    try {
+      const res = await fetch(`/dashboard/api/programs/${id}/edit/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        closeEditProgramModal();
+        setTimeout(() => location.reload(), 700);
+      } else {
+        alert(data.error || "Failed to update program.");
+        btn.disabled = false;
+        btn.innerHTML = 'Save Program Changes';
+      }
+    } catch(err) {
+      alert("Error: " + err);
+      btn.disabled = false;
+      btn.innerHTML = 'Save Program Changes';
+    }
+  }
+
+  async function deleteProgram(id, title) {
+    if (!confirm(`Are you sure you want to delete program '${title}' from the gym catalog?`)) return;
+    try {
+      const res = await fetch(`/dashboard/api/programs/${id}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        setTimeout(() => location.reload(), 700);
+      } else {
+        alert(data.error || "Failed to delete program.");
+      }
+    } catch(err) {
+      alert("Error: " + err);
+    }
+  }
+
+  async function deletePlan(planId, planName) {
+    if (!confirm(`Are you sure you want to delete / archive plan '${planName}'? If members are subscribed, it will be safely deactivated and archived.`)) return;
+    try {
+      const res = await fetch(`/dashboard/api/plans/${planId}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        setTimeout(() => location.reload(), 800);
+      } else {
+        alert(data.error || "Failed to delete plan.");
+      }
+    } catch(err) {
+      alert("Error: " + err);
+    }
+  }
+
   // Toggle Testimonial
   async function toggleTestimonial(tId) {
     try {
@@ -1481,6 +2354,406 @@
       }
     } catch(err) {
       alert("Error: " + err);
+    }
+  }
+
+  // --- SUPER ADMIN: PLAN BUILDER & DATA OVERRIDES ---
+  // Create Plan (Super Admin)
+  function openCreatePlanModal() {
+    const m = document.getElementById('createPlanModal');
+    if (m) m.style.display = 'flex';
+  }
+  function closeCreatePlanModal() {
+    const m = document.getElementById('createPlanModal');
+    if (m) m.style.display = 'none';
+  }
+  async function submitCreatePlan(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitCreatePlan');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Creating...';
+
+    const payload = {
+      name: document.getElementById('newPlanName').value.trim(),
+      plan_type: document.getElementById('newPlanType').value.trim(),
+      price_monthly: document.getElementById('newPlanPrice').value.trim(),
+      original_price: document.getElementById('newPlanOrigPrice').value.trim() || null,
+      discount: document.getElementById('newPlanDiscount').value.trim() || 0,
+      registration_fee: document.getElementById('newPlanRegFee').value.trim() || 1000,
+      duration_days: parseInt(document.getElementById('newPlanDuration').value) || 30,
+      max_members: parseInt(document.getElementById('newPlanMaxMembers').value) || 1,
+      description: document.getElementById('newPlanDescription').value.trim(),
+    };
+
+    try {
+      const res = await fetch('/api/plans/create/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        closeCreatePlanModal();
+        setTimeout(() => location.reload(), 800);
+      } else {
+        alert(data.error || 'Failed to create plan.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-plus-circle"></i> Create &amp; Publish Package';
+      }
+    } catch(err) {
+      alert('Error: ' + err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-plus-circle"></i> Create &amp; Publish Package';
+    }
+  }
+
+  // Edit Plan / Override (Super Admin)
+  function openEditPlanModal(id, name, price, origPrice, discount, regFee, duration, maxMembers, description, isActive) {
+    const m = document.getElementById('editPlanModal');
+    if (!m) return;
+    document.getElementById('editPlanId').value = id;
+    document.getElementById('editPlanName').value = name;
+    document.getElementById('editPlanPrice').value = price;
+    document.getElementById('editPlanOrigPrice').value = origPrice || price;
+    document.getElementById('editPlanDiscount').value = discount || 0;
+    document.getElementById('editPlanRegFee').value = regFee || 1000;
+    document.getElementById('editPlanDuration').value = duration || 30;
+    document.getElementById('editPlanMaxMembers').value = maxMembers || 1;
+    document.getElementById('editPlanDescription').value = description || '';
+    document.getElementById('editPlanIsActive').checked = (isActive === true || isActive === 'true');
+    m.style.display = 'flex';
+  }
+  function closeEditPlanModal() {
+    const m = document.getElementById('editPlanModal');
+    if (m) m.style.display = 'none';
+  }
+  async function submitEditPlan(e) {
+    e.preventDefault();
+    const planId = document.getElementById('editPlanId').value;
+    const btn = document.getElementById('btnSubmitEditPlan');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
+
+    const payload = {
+      name: document.getElementById('editPlanName').value.trim(),
+      price_monthly: document.getElementById('editPlanPrice').value.trim(),
+      original_price: document.getElementById('editPlanOrigPrice').value.trim() || null,
+      discount: document.getElementById('editPlanDiscount').value.trim() || 0,
+      registration_fee: document.getElementById('editPlanRegFee').value.trim() || 1000,
+      duration_days: parseInt(document.getElementById('editPlanDuration').value) || 30,
+      max_members: parseInt(document.getElementById('editPlanMaxMembers').value) || 1,
+      description: document.getElementById('editPlanDescription').value.trim(),
+      is_active: document.getElementById('editPlanIsActive').checked,
+    };
+
+    try {
+      const res = await fetch(`/api/plans/${planId}/edit/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        closeEditPlanModal();
+        setTimeout(() => location.reload(), 800);
+      } else {
+        alert(data.error || 'Failed to update plan.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-save"></i> Save Plan Overrides';
+      }
+    } catch(err) {
+      alert('Error: ' + err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-save"></i> Save Plan Overrides';
+    }
+  }
+
+  // Toggle Plan Status (Super Admin)
+  async function togglePlanActive(planId) {
+    if (!confirm('Are you sure you want to toggle the active status of this plan?')) return;
+    try {
+      const res = await fetch(`/api/plans/${planId}/toggle/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        setTimeout(() => location.reload(), 800);
+      } else {
+        alert(data.error || 'Failed to toggle plan status.');
+      }
+    } catch(err) {
+      alert('Error: ' + err);
+    }
+  }
+
+  // Subscription Data Override Modal & Submit (Super Admin)
+  function openOverrideSubModal(subId, memberName, planId, startDate, endDate, amountPaid, status) {
+    const m = document.getElementById('overrideSubModal');
+    if (!m) return;
+    document.getElementById('overrideSubId').value = subId;
+    document.getElementById('overrideMemberName').textContent = memberName;
+    if (planId) document.getElementById('overridePlanId').value = planId;
+    if (startDate) document.getElementById('overrideStartDate').value = startDate;
+    if (endDate) document.getElementById('overrideEndDate').value = endDate;
+    if (amountPaid) document.getElementById('overrideAmountPaid').value = amountPaid;
+    if (status) document.getElementById('overrideStatus').value = status;
+    document.getElementById('overrideNotes').value = '';
+    m.style.display = 'flex';
+  }
+  function closeOverrideSubModal() {
+    const m = document.getElementById('overrideSubModal');
+    if (m) m.style.display = 'none';
+  }
+  async function submitOverrideSub(e) {
+    e.preventDefault();
+    const subId = document.getElementById('overrideSubId').value;
+    const btn = document.getElementById('btnSubmitOverrideSub');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Overriding...';
+
+    const payload = {
+      plan_id: document.getElementById('overridePlanId').value,
+      status: document.getElementById('overrideStatus').value,
+      start_date: document.getElementById('overrideStartDate').value || null,
+      end_date: document.getElementById('overrideEndDate').value,
+      amount_paid: document.getElementById('overrideAmountPaid').value || null,
+      notes: document.getElementById('overrideNotes').value.trim()
+    };
+
+    try {
+      const res = await fetch(`/api/subscriptions/${subId}/override/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        closeOverrideSubModal();
+        setTimeout(() => location.reload(), 800);
+      } else {
+        alert(data.error || 'Failed to override subscription.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-check"></i> Apply Data Override';
+      }
+    } catch(err) {
+      alert('Error: ' + err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check"></i> Apply Data Override';
+    }
+  }
+
+  // ── Accounting & Financial Telemetry Timeframe Switcher ──
+  const financeTelemetryData = {
+    today: {
+      gross: "{{ finance.today_gross_rev|floatformat:2 }}",
+      mem: "{{ finance.today_membership_rev|floatformat:0 }}",
+      pos: "{{ finance.today_pos_rev|floatformat:0 }}",
+      exp: "{{ finance.today_expenses|floatformat:2 }}",
+      net: "{{ finance.today_net_profit|floatformat:2 }}",
+      netVal: {{ finance.today_net_profit|stringformat:".2f" }},
+      label: "Today's Operations"
+    },
+    week: {
+      gross: "{{ finance.week_gross_rev|floatformat:2 }}",
+      mem: "{{ finance.week_membership_rev|floatformat:0 }}",
+      pos: "{{ finance.week_pos_rev|floatformat:0 }}",
+      exp: "{{ finance.week_expenses|floatformat:2 }}",
+      net: "{{ finance.week_net_profit|floatformat:2 }}",
+      netVal: {{ finance.week_net_profit|stringformat:".2f" }},
+      label: "This Week's Operations"
+    },
+    month: {
+      gross: "{{ finance.month_gross_rev|floatformat:2 }}",
+      mem: "{{ finance.month_membership_rev|floatformat:0 }}",
+      pos: "{{ finance.month_pos_rev|floatformat:0 }}",
+      exp: "{{ finance.month_expenses|floatformat:2 }}",
+      net: "{{ finance.month_net_profit|floatformat:2 }}",
+      netVal: {{ finance.month_net_profit|stringformat:".2f" }},
+      label: "This Month's Operations"
+    },
+    total: {
+      gross: "{{ finance.total_gross_rev|floatformat:2 }}",
+      mem: "{{ finance.total_membership_rev|floatformat:0 }}",
+      pos: "{{ finance.total_pos_rev|floatformat:0 }}",
+      exp: "{{ finance.total_expenses|floatformat:2 }}",
+      net: "{{ finance.total_net_profit|floatformat:2 }}",
+      netVal: {{ finance.total_net_profit|stringformat:".2f" }},
+      label: "All-Time Lifetime Operations"
+    }
+  };
+
+  function switchFinancePeriod(period, btn) {
+    document.querySelectorAll('#financePeriodButtons .filter-pill').forEach(b => b.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+
+    const d = financeTelemetryData[period];
+    if (!d) return;
+
+    document.getElementById('financePeriodLabel').innerHTML = `Showing metrics for: <span style="color:var(--neon-lime);font-weight:700;">${d.label}</span>`;
+    document.getElementById('kpiGrossRev').textContent = `Rs. ${d.gross}`;
+    document.getElementById('kpiGrossLabel').textContent = `Gross Inflow (${period === 'today' ? 'Today' : period === 'week' ? 'This Week' : period === 'month' ? 'This Month' : 'All-Time'})`;
+    document.getElementById('kpiGrossSub').innerHTML = `Mem: Rs. ${d.mem} &bull; POS: Rs. ${d.pos}`;
+
+    document.getElementById('kpiExpenses').textContent = `Rs. ${d.exp}`;
+    document.getElementById('kpiExpensesLabel').textContent = `Operating Expenses (${period === 'today' ? 'Today' : period === 'week' ? 'This Week' : period === 'month' ? 'This Month' : 'All-Time'})`;
+
+    const netEl = document.getElementById('kpiNetProfit');
+    netEl.textContent = `Rs. ${d.net}`;
+    netEl.style.color = d.netVal >= 0 ? 'var(--cyan)' : '#EF4444';
+  }
+
+  // ── Club Expenses (OPEX) Modal & API Handlers ──
+  function openCreateExpenseModal() {
+    const m = document.getElementById('createExpenseModal');
+    if (!m) return;
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('expDate').value = today;
+    document.getElementById('expTitle').value = '';
+    document.getElementById('expAmount').value = '';
+    document.getElementById('expReceiptRef').value = '';
+    document.getElementById('expNotes').value = '';
+    const fileInput = document.getElementById('expReceiptFile');
+    if (fileInput) fileInput.value = '';
+    m.style.display = 'flex';
+  }
+
+  function closeCreateExpenseModal() {
+    const m = document.getElementById('createExpenseModal');
+    if (m) m.style.display = 'none';
+  }
+
+  async function submitCreateExpense(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitExpense');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
+
+    const formData = new FormData();
+    formData.append('title', document.getElementById('expTitle').value.trim());
+    formData.append('category', document.getElementById('expCategory').value);
+    formData.append('amount', document.getElementById('expAmount').value);
+    formData.append('expense_date', document.getElementById('expDate').value);
+    formData.append('payment_method', document.getElementById('expMethod').value);
+    formData.append('receipt_ref', document.getElementById('expReceiptRef').value.trim());
+    formData.append('notes', document.getElementById('expNotes').value.trim());
+
+    const fileInput = document.getElementById('expReceiptFile');
+    if (fileInput && fileInput.files.length > 0) {
+      formData.append('receipt_image', fileInput.files[0]);
+    }
+
+    try {
+      const res = await fetch('/api/expenses/create/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+        body: formData
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        closeCreateExpenseModal();
+        setTimeout(() => location.reload(), 700);
+      } else {
+        alert(data.error || 'Failed to save expense.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-save"></i> Save Operating Expense';
+      }
+    } catch(err) {
+      alert('Error: ' + err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-save"></i> Save Operating Expense';
+    }
+  }
+
+  async function deleteExpense(expId, title) {
+    if (!confirm(`Are you sure you want to delete expense "${title}"?`)) return;
+    try {
+      const res = await fetch(`/api/expenses/${expId}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        const row = document.getElementById(`expense-row-${expId}`);
+        if (row) row.remove();
+        setTimeout(() => location.reload(), 700);
+      } else {
+        alert(data.error || 'Failed to delete expense.');
+      }
+    } catch(err) {
+      alert('Error: ' + err);
+    }
+  }
+
+  // ── Multi-User (Couples & Family) Partner Linking Handlers ──
+  function openLinkPartnerModal(subId, primaryName, planName, slotsCount) {
+    const m = document.getElementById('linkPartnerModal');
+    if (!m) return;
+    document.getElementById('linkSubId').value = subId;
+    document.getElementById('linkPrimaryName').textContent = primaryName;
+    document.getElementById('linkPlanName').textContent = `${planName} (${slotsCount} partner slot(s) open)`;
+    document.getElementById('linkPartnerSelect').value = '';
+    m.style.display = 'flex';
+  }
+
+  function closeLinkPartnerModal() {
+    const m = document.getElementById('linkPartnerModal');
+    if (m) m.style.display = 'none';
+  }
+
+  async function submitLinkPartner(e) {
+    e.preventDefault();
+    const subId = document.getElementById('linkSubId').value;
+    const partnerId = document.getElementById('linkPartnerSelect').value;
+    const btn = document.getElementById('btnSubmitLinkPartner');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Linking...';
+
+    try {
+      const res = await fetch(`/api/subscriptions/${subId}/link-partner/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partner_id: partnerId })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        closeLinkPartnerModal();
+        setTimeout(() => location.reload(), 700);
+      } else {
+        alert(data.error || 'Failed to link partner.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-link"></i> Link Partner &amp; Grant Access';
+      }
+    } catch(err) {
+      alert('Error: ' + err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-link"></i> Link Partner &amp; Grant Access';
+    }
+  }
+
+  async function unlinkPartner(linkId) {
+    if (!confirm('Are you sure you want to unlink this partner? Their biometric turnstile access will be revoked.')) return;
+    try {
+      const res = await fetch(`/api/buddy-links/${linkId}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        setTimeout(() => location.reload(), 700);
+      } else {
+        alert(data.error || 'Failed to unlink partner.');
+      }
+    } catch(err) {
+      alert('Error: ' + err);
     }
   }
 </script>

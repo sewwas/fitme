@@ -19,7 +19,7 @@ class Command(BaseCommand):
 
     def _seed_groups(self):
         self.stdout.write('Creating RBAC groups...')
-        for name in ['super_admin', 'front_desk', 'coach', 'member']:
+        for name in ['super_admin', 'admin', 'front_desk', 'coach', 'member']:
             _, created = Group.objects.get_or_create(name=name)
             status = 'Created' if created else 'Exists'
             self.stdout.write(f'  {status}: {name}')
@@ -27,15 +27,80 @@ class Command(BaseCommand):
     def _seed_plans(self):
         self.stdout.write('\nSeeding membership plans...')
         plans = [
-            {'name': 'Individual', 'plan_type': 'individual', 'price_monthly': 4500.00, 'duration_days': 30, 'max_members': 1, 'description': 'Standard single member gym access.'},
-            {'name': 'Couples / Buddy', 'plan_type': 'couples', 'price_monthly': 7500.00, 'duration_days': 30, 'max_members': 2, 'description': 'Two members sharing one plan.'},
-            {'name': 'Student', 'plan_type': 'student', 'price_monthly': 3000.00, 'duration_days': 30, 'max_members': 1, 'description': 'Discounted plan for students with valid ID.'},
-            {'name': 'Off-Peak', 'plan_type': 'off_peak', 'price_monthly': 2500.00, 'duration_days': 30, 'max_members': 1, 'description': 'Access limited to 6am-12pm and 2pm-5pm weekdays.'},
+            {
+                'name': 'Monthly Package',
+                'plan_type': 'individual',
+                'price_monthly': 4000.00,
+                'original_price': 4000.00,
+                'discount': 0.00,
+                'registration_fee': 1000.00,
+                'duration_days': 30,
+                'max_members': 1,
+                'description': 'Standard single member gym access. Rs. 4,000 per month.'
+            },
+            {
+                'name': '3 Months Package',
+                'plan_type': 'three_months',
+                'price_monthly': 11000.00,
+                'original_price': 12000.00,
+                'discount': 1000.00,
+                'registration_fee': 1000.00,
+                'duration_days': 90,
+                'max_members': 1,
+                'description': '3 Months package. Original Price: Rs. 12,000, Discount: Rs. 1,000. Total: Rs. 11,000.'
+            },
+            {
+                'name': '6 Months Package',
+                'plan_type': 'six_months',
+                'price_monthly': 21500.00,
+                'original_price': 24000.00,
+                'discount': 2500.00,
+                'registration_fee': 1000.00,
+                'duration_days': 180,
+                'max_members': 1,
+                'description': '6 Months package. Original Price: Rs. 24,000, Discount: Rs. 2,500. Total: Rs. 21,500.'
+            },
+            {
+                'name': 'Couple Monthly Package',
+                'plan_type': 'couples',
+                'price_monthly': 7500.00,
+                'original_price': 8000.00,
+                'discount': 500.00,
+                'registration_fee': 1000.00,
+                'duration_days': 30,
+                'max_members': 2,
+                'description': 'Two members sharing one monthly plan. Original Price: Rs. 8,000, Discount: Rs. 500. Total: Rs. 7,500 / month.'
+            },
+            {
+                'name': '3 Persons Family Monthly Package',
+                'plan_type': 'family_3',
+                'price_monthly': 11000.00,
+                'original_price': 12000.00,
+                'discount': 1000.00,
+                'registration_fee': 1000.00,
+                'duration_days': 30,
+                'max_members': 3,
+                'description': '3 Persons from same family monthly package. Original Price: Rs. 12,000, Discount: Rs. 1,000. Total: Rs. 11,000 / month.'
+            },
+            {
+                'name': 'Student Package',
+                'plan_type': 'student',
+                'price_monthly': 3500.00,
+                'original_price': 3500.00,
+                'discount': 0.00,
+                'registration_fee': 0.00,
+                'duration_days': 30,
+                'max_members': 1,
+                'description': 'Discounted plan for students with valid ID. No Registration Fee! Total: Rs. 3,500 / month.'
+            },
         ]
         for p in plans:
-            obj, created = MembershipPlan.objects.get_or_create(plan_type=p['plan_type'], defaults=p)
-            status = 'Created' if created else 'Exists'
-            self.stdout.write(f'  {status}: {obj.name} — LKR {obj.price_monthly}/mo')
+            obj, created = MembershipPlan.objects.update_or_create(
+                plan_type=p['plan_type'],
+                defaults=p
+            )
+            status = 'Created' if created else 'Updated'
+            self.stdout.write(f'  {status}: {obj.name} — LKR {obj.price_monthly}')
 
     def _seed_foods(self):
         self.stdout.write('\nSeeding Sri Lankan food database...')
@@ -103,6 +168,17 @@ class Command(BaseCommand):
         admin_group, _ = Group.objects.get_or_create(name='super_admin')
         admin_user.groups.add(admin_group)
 
+        # 1.1 Club Admin (Operations - No Plan Override Authority)
+        admin_ops, _ = User.objects.get_or_create(
+            username='admin_ops',
+            defaults={'email': 'admin_ops@fitme.com', 'first_name': 'Club', 'last_name': 'Admin', 'is_staff': True}
+        )
+        admin_ops.set_password('fitme123!')
+        admin_ops.is_staff = True
+        admin_ops.save()
+        club_admin_group, _ = Group.objects.get_or_create(name='admin')
+        admin_ops.groups.add(club_admin_group)
+
         # 2. Front Desk
         fd_user, _ = User.objects.get_or_create(
             username='frontdesk',
@@ -150,18 +226,17 @@ class Command(BaseCommand):
             user=kasun,
             defaults={'zk_pin': '1001', 'sync_status': 'SYNCED', 'disabled': False}
         )
-        Subscription.objects.get_or_create(
-            member=kasun,
-            status='active',
-            defaults={
-                'plan': ind_plan,
-                'start_date': today - timezone.timedelta(days=10),
-                'end_date': today + timezone.timedelta(days=20),
-                'amount_paid': 4500.00,
-                'payment_method': 'card',
-                'approved_by': admin_user
-            }
-        )
+        if not Subscription.objects.filter(member=kasun).exists():
+            Subscription.objects.create(
+                member=kasun,
+                status='active',
+                plan=ind_plan,
+                start_date=today - timezone.timedelta(days=10),
+                end_date=today + timezone.timedelta(days=20),
+                amount_paid=4000.00,
+                payment_method='card',
+                approved_by=admin_user
+            )
         streak_kasun, _ = WorkoutStreak.objects.get_or_create(
             member=kasun,
             defaults={'current_streak': 5, 'longest_streak': 14, 'last_checkin_date': today, 'total_checkins': 32}
@@ -195,18 +270,17 @@ class Command(BaseCommand):
             user=nuwan,
             defaults={'zk_pin': '1002', 'sync_status': 'SYNCED', 'disabled': False}
         )
-        Subscription.objects.get_or_create(
-            member=nuwan,
-            status='active',
-            defaults={
-                'plan': ind_plan,
-                'start_date': today - timezone.timedelta(days=25),
-                'end_date': today + timezone.timedelta(days=5),
-                'amount_paid': 4500.00,
-                'payment_method': 'cash',
-                'approved_by': admin_user
-            }
-        )
+        if not Subscription.objects.filter(member=nuwan).exists():
+            Subscription.objects.create(
+                member=nuwan,
+                status='active',
+                plan=ind_plan,
+                start_date=today - timezone.timedelta(days=25),
+                end_date=today + timezone.timedelta(days=5),
+                amount_paid=4000.00,
+                payment_method='cash',
+                approved_by=admin_user
+            )
         WorkoutStreak.objects.get_or_create(
             member=nuwan,
             defaults={'current_streak': 1, 'longest_streak': 8, 'last_checkin_date': today - timezone.timedelta(days=3), 'total_checkins': 15}

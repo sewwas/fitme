@@ -356,6 +356,8 @@ urlpatterns += [
         path('api/members/<int:member_id>/set-nutrition/', __import__('wger.core.views.fitme_dashboards', fromlist=['set_nutrition_target_api']).set_nutrition_target_api, name='api-member-set-nutrition'),
         path('api/members/<int:member_id>/toggle-access/', __import__('wger.core.views.fitme_dashboards', fromlist=['toggle_member_access_api']).toggle_member_access_api, name='api-member-toggle-access'),
         path('api/programs/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_program_api']).admin_create_program_api, name='api-admin-create-program'),
+        path('api/programs/<int:prog_id>/edit/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_edit_program_api']).admin_edit_program_api, name='api-admin-edit-program'),
+        path('api/programs/<int:prog_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_delete_program_api']).admin_delete_program_api, name='api-admin-delete-program'),
         path('api/announcements/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_announcement_api']).admin_create_announcement_api, name='api-admin-create-announcement'),
         path('api/testimonials/<int:testimonial_id>/toggle/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_testimonial_api']).admin_toggle_testimonial_api, name='api-admin-toggle-testimonial'),
         # Staff, User Creation & Role Management APIs
@@ -363,10 +365,38 @@ urlpatterns += [
         path('api/users/<int:user_id>/role/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_update_user_role_api']).admin_update_user_role_api, name='api-admin-user-role'),
         path('api/users/<int:user_id>/toggle-active/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_user_active_api']).admin_toggle_user_active_api, name='api-admin-user-toggle-active'),
         path('api/users/<int:user_id>/reset-password/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_reset_user_password_api']).admin_reset_user_password_api, name='api-admin-user-reset-password'),
+        # Super Admin Dedicated: Plan Builder & Subscription Overrides
+        path('api/plans/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_plan_api']).admin_create_plan_api, name='api-admin-create-plan'),
+        path('api/plans/<int:plan_id>/edit/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_edit_plan_api']).admin_edit_plan_api, name='api-admin-edit-plan'),
+        path('api/plans/<int:plan_id>/toggle/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_plan_api']).admin_toggle_plan_api, name='api-admin-toggle-plan'),
+        path('api/plans/<int:plan_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_delete_plan_api']).admin_delete_plan_api, name='api-admin-delete-plan'),
+        path('api/subscriptions/<int:sub_id>/override/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_override_subscription_api']).admin_override_subscription_api, name='api-admin-sub-override'),
         # Financial Reports & Ledger Export
         path('admin/reports/export-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_financial_csv']).admin_export_financial_csv, name='admin-reports-export-csv'),
-        path('admin/reports/daily-eod/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_daily_eod_report']).admin_daily_eod_report, name='admin-reports-daily-eod'),
+        path('admin/reports/export-members-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_members_csv']).admin_export_members_csv, name='admin-reports-export-members-csv'),
+        path('admin/reports/export-expenses-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_expenses_csv']).admin_export_expenses_csv, name='admin-reports-export-expenses-csv'),
+        path('admin/reports/eod/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_daily_eod_report']).admin_daily_eod_report, name='admin-daily-eod-report'),
+        # Financial OPEX & Expenses APIs
+        path('api/expenses/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_expense_api']).admin_create_expense_api, name='api-admin-create-expense'),
+        path('api/expenses/<int:expense_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_delete_expense_api']).admin_delete_expense_api, name='api-admin-delete-expense'),
+        # Member Self-Service Instant Renewal & Door Unlock
+        path('api/member/self-renew/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_self_renew_api']).member_self_renew_api, name='api-member-self-renew'),
     ], 'fitme'))),
+
+    path('api/member/self-renew/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_self_renew_api']).member_self_renew_api, name='api-direct-member-self-renew'),
+
+    # ── Super Admin Dedicated: Plan Builder & Subscription Overrides (direct /api/ aliases) ──
+    path('api/plans/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_plan_api']).admin_create_plan_api, name='api-direct-admin-create-plan'),
+    path('api/plans/<int:plan_id>/edit/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_edit_plan_api']).admin_edit_plan_api, name='api-direct-admin-edit-plan'),
+    path('api/plans/<int:plan_id>/toggle/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_plan_api']).admin_toggle_plan_api, name='api-direct-admin-toggle-plan'),
+    path('api/subscriptions/<int:sub_id>/override/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_override_subscription_api']).admin_override_subscription_api, name='api-direct-admin-sub-override'),
+    # Multi-User (Couples & Family) Partner Linking APIs
+    path('api/subscriptions/<int:subscription_id>/link-partner/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_link_partner_api']).admin_link_partner_api, name='api-link-partner'),
+    path('api/buddy-links/<int:link_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_unlink_partner_api']).admin_unlink_partner_api, name='api-unlink-partner'),
+    # Direct expense API aliases
+    path('api/expenses/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_expense_api']).admin_create_expense_api, name='api-direct-admin-create-expense'),
+    path('api/expenses/<int:expense_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_delete_expense_api']).admin_delete_expense_api, name='api-direct-admin-delete-expense'),
+    path('dashboard/admin/reports/export-expenses-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_expenses_csv']).admin_export_expenses_csv, name='admin-direct-reports-export-expenses-csv'),
 
     # ── Fit Me Point of Sale (POS) for Gym Drinks & Supplements ──
     path('pos/', include('wger.pos.urls', namespace='pos')),
@@ -403,6 +433,9 @@ urlpatterns += [
     }),
     re_path(r'^images/(?P<path>.*)$', __import__('django.views.static', fromlist=['serve']).serve, {
         'document_root': str(__import__('pathlib').Path(__file__).resolve().parents[1] / 'fitme-ui' / 'out' / 'images')
+    }),
+    re_path(r'^media/(?P<path>.*)$', __import__('django.views.static', fromlist=['serve']).serve, {
+        'document_root': settings.MEDIA_ROOT
     }),
 
     path('i18n/', include('django.conf.urls.i18n')),

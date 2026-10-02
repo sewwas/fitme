@@ -222,3 +222,54 @@ class BuddyMembership(models.Model):
     def __str__(self):
         return f"Buddy: {self.primary_member.username} & {self.partner_member.username}"
 
+
+class ClubExpense(models.Model):
+    """
+    Operating Expenses (OPEX) for Pitigala Gym Facility.
+    Tracks utility bills (CEB, Water), building rent, equipment repairs, staff payroll, supplements stock, and cleaning.
+    """
+    CATEGORY_CHOICES = [
+        ('rent', 'Facility & Building Rent'),
+        ('electricity', 'Electricity (CEB)'),
+        ('water', 'Water Utility'),
+        ('maintenance', 'Equipment Maintenance & Repairs'),
+        ('staff_salary', 'Staff & Coach Payroll / Commissions'),
+        ('supplements_stock', 'POS Bar & Supplement Inventory'),
+        ('cleaning', 'Hygiene & Cleaning Supplies'),
+        ('internet', 'Internet & Security CCTV'),
+        ('marketing', 'Marketing, Social & Print Ads'),
+        ('other', 'Other Operational Expenses'),
+    ]
+
+    title = models.CharField(max_length=150)
+    category = models.CharField(max_length=30, choices=CATEGORY_CHOICES, default='other')
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    expense_date = models.DateField(default=timezone.now)
+    payment_method = models.CharField(max_length=30, default='cash', choices=[
+        ('cash', 'Cash from Till'),
+        ('bank_transfer', 'Bank Transfer / Cheque'),
+        ('card', 'Company Debit/Credit Card'),
+    ])
+    recorded_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='recorded_expenses'
+    )
+    receipt_ref = models.CharField(max_length=80, blank=True, help_text="Bill / Invoice / Receipt number")
+    receipt_image = models.FileField(
+        upload_to='expenses/receipts/%Y/%m/',
+        null=True, blank=True,
+        help_text="Uploaded photo or PDF scan of the physical bill/receipt"
+    )
+    notes = models.TextField(blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Club Expense'
+        verbose_name_plural = 'Club Expenses'
+        ordering = ['-expense_date', '-created_at']
+
+    def __str__(self):
+        return f"{self.title} — LKR {self.amount} ({self.get_category_display()})"
+

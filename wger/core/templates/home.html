@@ -926,20 +926,66 @@
       <p class="section-desc">Transparent pricing with automated 24/7 turnstile biometric access included in all plans.</p>
     </div>
 
+    <!-- Official Promotional Notice from Flyer -->
+    <div style="background:linear-gradient(135deg, rgba(123,201,0,0.12), rgba(0,240,255,0.06));border:1px solid rgba(123,201,0,0.35);border-radius:14px;padding:1rem 1.4rem;margin-bottom:2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem;">
+      <div style="display:flex;align-items:center;gap:0.9rem;">
+        <div style="width:42px;height:42px;border-radius:50%;background:rgba(123,201,0,0.2);display:flex;align-items:center;justify-content:center;color:var(--neon-lime);font-size:1.25rem;">
+          <i class="fa fa-tag"></i>
+        </div>
+        <div>
+          <div style="font-weight:800;font-size:0.95rem;color:#fff;text-transform:uppercase;letter-spacing:0.5px;">
+            <span style="color:var(--neon-lime);">Limited Time Offer!</span> Packages Valid For A Limited Time Only
+          </div>
+          <div style="color:var(--text-muted);font-size:0.84rem;margin-top:2px;">
+            A Registration Fee of <strong>Rs. 1,000</strong> applies for all new members • <strong style="color:var(--neon-lime);">Students: No Registration Fee</strong> • Effective from 27th April 2026.
+          </div>
+        </div>
+      </div>
+      <div style="font-size:0.8rem;color:var(--text-muted);border-left:1px solid rgba(255,255,255,0.1);padding-left:1rem;">
+        Conditions apply • Non-transferable &amp; Non-refundable
+      </div>
+    </div>
+
     <div class="plans-grid">
       {% for p in plans %}
-        <div class="plan-card {% if p.plan_type == 'couples' or forloop.counter == 2 %}featured{% endif %}">
-          {% if p.plan_type == 'couples' or forloop.counter == 2 %}
+        <div class="plan-card {% if p.plan_type == 'couples' or p.discount > 0 %}featured{% endif %}">
+          {% if p.discount and p.discount > 0 %}
+            <div class="plan-tag" style="background:var(--neon-lime);color:#000;font-weight:800;">SAVE LKR {{ p.discount|floatformat:0 }}</div>
+          {% elif p.plan_type == 'student' %}
+            <div class="plan-tag" style="background:#00F0FF;color:#000;font-weight:800;">NO REG FEE</div>
+          {% elif p.plan_type == 'couples' %}
             <div class="plan-tag">POPULAR</div>
           {% endif %}
           <div>
             <div class="plan-title">{{ p.name }}</div>
-            <div class="plan-price">LKR {{ p.price_monthly|floatformat:0 }}<span> / month</span></div>
-            <ul class="plan-features">
+            {% if p.original_price and p.original_price > p.price_monthly %}
+              <div style="margin-top:0.35rem;font-size:0.88rem;color:var(--text-muted);">
+                Original Price: <span style="text-decoration:line-through;color:#e6edf3;">LKR {{ p.original_price|floatformat:0 }}</span>
+              </div>
+            {% endif %}
+            <div class="plan-price" style="margin-top:0.35rem;">
+              LKR {{ p.price_monthly|floatformat:0 }}
+              <span>
+                {% if p.duration_days == 90 %} / 3 months
+                {% elif p.duration_days == 180 %} / 6 months
+                {% elif p.duration_days == 365 %} / year
+                {% else %} / month
+                {% endif %}
+              </span>
+            </div>
+            {% if p.max_members > 1 %}
+              <div style="font-size:0.82rem;color:var(--neon-lime);font-weight:700;margin-top:4px;">
+                <i class="fa fa-users"></i> Covers {{ p.max_members }} Member Accounts
+              </div>
+            {% endif %}
+            <ul class="plan-features" style="margin-top:1.2rem;">
               <li><i class="fa fa-check"></i> Automated Biometric Turnstile Access</li>
               <li><i class="fa fa-check"></i> Locker &amp; Hot Shower Facilities</li>
               <li><i class="fa fa-check"></i> Digital Pass &amp; Apple-Style Macro Rings</li>
               <li><i class="fa fa-check"></i> Personal Fitness Intake Assessment</li>
+              {% if p.plan_type == 'student' %}
+                <li style="color:var(--cyan);font-weight:700;"><i class="fa fa-graduation-cap"></i> Zero Registration Fee</li>
+              {% endif %}
             </ul>
           </div>
           <a href="/register/?plan={{ p.id }}" class="btn-plan">Apply for {{ p.name }}</a>
@@ -1050,7 +1096,7 @@
 
         <div style="margin-bottom:1rem;font-size:0.95rem;">
           <i class="fa fa-envelope" style="color:var(--neon-lime);width:22px;"></i>
-          <strong>Email:</strong> info@fitme.lk
+          <strong>Email:</strong> hellofitme@outlook.com
         </div>
 
         <div style="margin-bottom:1.5rem;font-size:0.95rem;">
@@ -1122,7 +1168,7 @@
         <div style="font-weight:800;color:#fff;margin-bottom:0.75rem;text-transform:uppercase;font-size:0.8rem;letter-spacing:1px;">Club Location</div>
         <p>Fit Me, New Town, Elpitiya Road<br>Pitigala, 80420, Sri Lanka</p>
         <p style="margin-top:0.5rem;"><i class="fa fa-phone" style="color:var(--neon-lime);"></i> 070 762 7878</p>
-        <p><i class="fa fa-envelope" style="color:var(--neon-lime);"></i> info@fitme.lk</p>
+        <p><i class="fa fa-envelope" style="color:var(--neon-lime);"></i> hellofitme@outlook.com</p>
       </div>
 
       <div>

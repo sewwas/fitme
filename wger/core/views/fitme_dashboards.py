@@ -22,10 +22,14 @@ def role_required(*roles):
         @functools.wraps(view_func)
         def wrapper(request, *args, **kwargs):
             if not request.user.is_authenticated:
+                if request.path.startswith('/api/') or '/api/' in request.path:
+                    return JsonResponse({'error': 'Authentication required'}, status=401)
                 return redirect(f'/user/login?next={request.path}')
             user_groups = set(request.user.groups.values_list('name', flat=True))
             if request.user.is_superuser or user_groups.intersection(roles):
                 return view_func(request, *args, **kwargs)
+            if request.path.startswith('/api/') or '/api/' in request.path or request.headers.get('x-requested-with') == 'XMLHttpRequest' or request.content_type == 'application/json':
+                return JsonResponse({'error': f"Forbidden: Insufficient privileges. Required role(s): {', '.join(roles)}"}, status=403)
             return redirect(get_role_dashboard(request.user))
         return wrapper
     return decorator
@@ -81,9 +85,9 @@ def get_public_home_context():
 
 
 @login_required
-@role_required('super_admin')
+@role_required('super_admin', 'admin')
 def super_admin_dashboard(request, active_tab=None):
-    """Super Admin — Comprehensive operations console: Users & Staff, Members, Coaches, Programs, Memberships, Payments, Content, Testimonials, Analytics."""
+    """Admin Console — Operations for Super Admin (full control + data overrides + plan builder) & Club Admin (operations & reporting)."""
     from wger.membership.services import check_and_expire_subscriptions
     check_and_expire_subscriptions()
 
@@ -142,6 +146,7 @@ def super_admin_dashboard(request, active_tab=None):
     user_stats = {
         'total': 0,
         'super_admin': 0,
+        'admin': 0,
         'front_desk': 0,
         'coach': 0,
         'member': 0,
@@ -156,6 +161,11 @@ def super_admin_dashboard(request, active_tab=None):
             role_label = 'Super Admin'
             role_color = 'var(--neon-lime)'
             role_badge_class = 'badge-super-admin'
+        elif 'admin' in groups:
+            primary_role = 'admin'
+            role_label = 'Club Admin'
+            role_color = '#00F0FF'
+            role_badge_class = 'badge-admin'
         elif 'front_desk' in groups:
             primary_role = 'front_desk'
             role_label = 'Front Desk'
@@ -212,7 +222,10 @@ def super_admin_dashboard(request, active_tab=None):
             'is_active': u.is_active,
         })
 
-    all_members = MemberProfile.objects.select_related('user').order_by('-id')[:60]
+    all_members = list(MemberProfile.objects.select_related('user').order_by('-id')[:60])
+    for m in all_members:
+        m.latest_sub = Subscription.objects.filter(member=m.user).select_related('plan').order_by('-created_at').first()
+
     coaches = CoachProfile.objects.select_related('user').all()
     programs = GymProgram.objects.all()
     announcements = Announcement.objects.all().order_by('-created_at')
@@ -223,30 +236,48 @@ def super_admin_dashboard(request, active_tab=None):
     from django.db.models import Sum
     from wger.pos.models import POSSale, POSSaleItem
 
-    today = timezone.now().date()
+    today = timezone.localdate()
+    week_start = today - timezone.timedelta(days=today.weekday())
     month_start = today.replace(day=1)
 
-    # 1. Membership Revenue
+    from wger.gym_operations_payroll.models import ClubExpense
+
+    # 1. Membership Revenue (All-time, Month, Week, Today)
     total_membership_rev = PaymentReceipt.objects.aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
     today_membership_rev = PaymentReceipt.objects.filter(issued_at__date=today).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    week_membership_rev = PaymentReceipt.objects.filter(issued_at__date__gte=week_start).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
     month_membership_rev = PaymentReceipt.objects.filter(issued_at__date__gte=month_start).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
 
-    # 2. POS Store & Bar Revenue
+    # 2. POS Store & Bar Revenue (All-time, Month, Week, Today)
     total_pos_rev = POSSale.objects.filter(status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
     today_pos_rev = POSSale.objects.filter(created_at__date=today, status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    week_pos_rev = POSSale.objects.filter(created_at__date__gte=week_start, status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
     month_pos_rev = POSSale.objects.filter(created_at__date__gte=month_start, status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
 
     # 3. Combined Gross Totals
     total_gross_rev = total_membership_rev + total_pos_rev
     today_gross_rev = today_membership_rev + today_pos_rev
+    week_gross_rev = week_membership_rev + week_pos_rev
     month_gross_rev = month_membership_rev + month_pos_rev
 
-    # 4. Payment Method Breakdown (Today)
-    today_cash_mem = PaymentReceipt.objects.filter(issued_at__date=today, payment_method__iexact='cash').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    # 4. Club Operating Expenses (OPEX)
+    total_expenses = ClubExpense.objects.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    today_expenses = ClubExpense.objects.filter(expense_date=today).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    week_expenses = ClubExpense.objects.filter(expense_date__gte=week_start).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    month_expenses = ClubExpense.objects.filter(expense_date__gte=month_start).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+    # 5. Net Profit (Gross Inflow - OPEX)
+    total_net_profit = total_gross_rev - total_expenses
+    today_net_profit = today_gross_rev - today_expenses
+    week_net_profit = week_gross_rev - week_expenses
+    month_net_profit = month_gross_rev - month_expenses
+
+    # 6. Payment Method Breakdown (Today)
+    today_cash_mem = PaymentReceipt.objects.filter(issued_at__date=today, payment_method__icontains='cash').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
     today_cash_pos = POSSale.objects.filter(created_at__date=today, status='COMPLETED', payment_method='CASH').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
     today_cash_total = today_cash_mem + today_cash_pos
 
-    today_card_mem = PaymentReceipt.objects.filter(issued_at__date=today, payment_method__iexact='card').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    today_card_mem = PaymentReceipt.objects.filter(issued_at__date=today, payment_method__icontains='card').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
     today_card_pos = POSSale.objects.filter(created_at__date=today, status='COMPLETED', payment_method='CARD').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
     today_card_total = today_card_mem + today_card_pos
 
@@ -256,7 +287,29 @@ def super_admin_dashboard(request, active_tab=None):
     today_bank_total = today_bank_mem + today_bank_pos
     today_digital_total = today_card_total + today_koko_pos + today_bank_total
 
-    # 5. Top-Selling POS Products
+    # 7. Plan Performance & Billing Package Breakdown
+    all_plans = MembershipPlan.objects.all()
+    plan_performance = []
+    for pl in all_plans:
+        active_cnt = Subscription.objects.filter(plan=pl, status='active', end_date__gte=today).count()
+        total_sub_cnt = Subscription.objects.filter(plan=pl).count()
+        plan_rev = PaymentReceipt.objects.filter(subscription__plan=pl).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+        if plan_rev == Decimal('0.00'):
+            plan_rev = Subscription.objects.filter(plan=pl).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+        rev_share = (float(plan_rev) / float(total_membership_rev) * 100) if total_membership_rev > 0 else 0
+        plan_performance.append({
+            'plan': pl,
+            'active_subscribers': active_cnt,
+            'total_subscribers': total_sub_cnt,
+            'revenue': plan_rev,
+            'revenue_share_pct': round(rev_share, 1)
+        })
+    plan_performance.sort(key=lambda x: x['revenue'], reverse=True)
+
+    # 8. Recent Club Expenses
+    recent_expenses = ClubExpense.objects.select_related('recorded_by').order_by('-expense_date', '-id')[:30]
+
+    # 9. Top-Selling POS Products
     top_pos_products = list(
         POSSaleItem.objects.filter(sale__status='COMPLETED')
         .values('product_name', 'sku')
@@ -264,7 +317,7 @@ def super_admin_dashboard(request, active_tab=None):
         .order_by('-revenue')[:10]
     )
 
-    # 6. Unified Ledger Transactions (Combined Membership Receipts + POS Sales)
+    # 10. Unified Ledger Transactions (Combined Membership Receipts + POS Sales)
     combined_ledger = []
     for pr in PaymentReceipt.objects.select_related('member', 'cashier').order_by('-issued_at')[:30]:
         combined_ledger.append({
@@ -302,19 +355,39 @@ def super_admin_dashboard(request, active_tab=None):
         'today_gross_rev': today_gross_rev,
         'today_membership_rev': today_membership_rev,
         'today_pos_rev': today_pos_rev,
+        'week_gross_rev': week_gross_rev,
+        'week_membership_rev': week_membership_rev,
+        'week_pos_rev': week_pos_rev,
         'month_gross_rev': month_gross_rev,
+        'month_membership_rev': month_membership_rev,
+        'month_pos_rev': month_pos_rev,
+        'total_expenses': total_expenses,
+        'today_expenses': today_expenses,
+        'week_expenses': week_expenses,
+        'month_expenses': month_expenses,
+        'total_net_profit': total_net_profit,
+        'today_net_profit': today_net_profit,
+        'week_net_profit': week_net_profit,
+        'month_net_profit': month_net_profit,
         'today_cash_total': today_cash_total,
         'today_card_total': today_card_total,
         'today_koko_pos': today_koko_pos,
         'today_bank_total': today_bank_total,
         'today_digital_total': today_digital_total,
+        'plan_performance': plan_performance,
+        'recent_expenses': recent_expenses,
         'top_pos_products': top_pos_products,
         'combined_ledger': combined_ledger,
     }
 
+    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
+    current_role = 'super_admin' if is_super_admin else 'admin'
+
     context = {
-        'role': 'super_admin',
-        'page_title': 'Super Admin Dashboard',
+        'is_super_admin': is_super_admin,
+        'role': current_role,
+        'user_role': current_role,
+        'page_title': 'Super Admin Master Console' if is_super_admin else 'Club Admin Operations Console',
         'active_tab': current_tab,
         'club_info': {
             'name': 'Fit Me',
@@ -349,9 +422,9 @@ def super_admin_dashboard(request, active_tab=None):
 
 
 @login_required
-@role_required('super_admin')
+@role_required('super_admin', 'admin')
 def admin_users_view(request):
-    """Direct view for /dashboard/admin/users/ — loads the super admin console on Staff & Roles tab."""
+    """Direct view for /dashboard/admin/users/ — loads the admin console on Staff & Roles tab."""
     return super_admin_dashboard(request, active_tab='tab-admin-users')
 
 
@@ -372,6 +445,10 @@ def front_desk_dashboard(request):
     recent_receipts = PaymentReceipt.objects.select_related('member', 'cashier').order_by('-issued_at')[:20]
     recent_punches = DoorAccessLog.objects.select_related('user', 'user__member_profile').order_by('-punch_time')[:10]
 
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    all_members = User.objects.filter(groups__name='member').select_related('member_profile', 'biometric_profile').order_by('first_name', 'username')
+
     context = {
         'role': 'front_desk',
         'page_title': 'Front Desk',
@@ -383,6 +460,7 @@ def front_desk_dashboard(request):
         },
         'pending_applications': pending_apps,
         'active_subscriptions': active_subs,
+        'all_members': all_members,
         'plans': MembershipPlan.objects.filter(is_active=True),
         'recent_receipts': recent_receipts,
         'recent_door_punches': recent_punches,
@@ -555,6 +633,7 @@ def member_dashboard(request):
         'local_foods': local_foods,
         'today_meals': today_meals,
         'recent_receipts': recent_receipts,
+        'membership_plans': MembershipPlan.objects.filter(is_active=True),
     }
     return render(request, 'dashboards/member.html', context)
 
@@ -595,10 +674,10 @@ def public_registration_view(request):
             except Exception:
                 return Decimal(default)
 
-        admission_fee = parse_dec(data.get('admission_fee', '1500.00'))
-        monthly_fee = parse_dec(data.get('monthly_fee', '4500.00'))
+        admission_fee = parse_dec(data.get('admission_fee', '1000.00'))
+        monthly_fee = parse_dec(data.get('monthly_fee', '4000.00'))
         discount = parse_dec(data.get('discount', '0.00'))
-        total_paid = parse_dec(data.get('total_paid', '6000.00'))
+        total_paid = parse_dec(data.get('total_paid', '5000.00'))
 
         # Dates & Age
         dob = data.get('date_of_birth') or None
@@ -807,7 +886,7 @@ def approve_application_api(request, app_id):
     # Create active subscription with fees
     today = timezone.now().date()
     plan = app.desired_plan or MembershipPlan.objects.first()
-    paid_amt = app.total_paid if app.total_paid and app.total_paid > 0 else getattr(plan, 'price_monthly', 4500)
+    paid_amt = app.total_paid if app.total_paid and app.total_paid > 0 else getattr(plan, 'price_monthly', 4000)
 
     sub = Subscription.objects.create(
         member=user,
@@ -908,7 +987,7 @@ def record_payment_api(request):
     member_id = data.get('member_id')
     plan_id = data.get('plan_id')
     method = data.get('payment_method', 'cash')
-    amount = data.get('amount_paid', 4500)
+    amount = data.get('amount_paid', 4000)
 
     member = User.objects.filter(id=member_id).first()
     if not member:
@@ -1461,6 +1540,77 @@ def admin_create_program_api(request):
 
 @login_required
 @role_required('super_admin')
+def admin_edit_program_api(request, prog_id):
+    """Super Admin edits an existing gym program."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    from wger.membership.models import GymProgram
+    prog = GymProgram.objects.filter(id=prog_id).first()
+    if not prog:
+        return JsonResponse({'error': 'Program not found.'}, status=404)
+
+    if 'title' in data and data['title'].strip():
+        prog.title = data['title'].strip()
+    if 'category' in data and data['category'].strip():
+        prog.category = data['category'].strip()
+    if 'difficulty' in data and data['difficulty'].strip():
+        prog.difficulty = data['difficulty'].strip()
+    if 'duration_weeks' in data and data['duration_weeks']:
+        prog.duration_weeks = int(data['duration_weeks'])
+    if 'sessions_per_week' in data and data['sessions_per_week']:
+        prog.sessions_per_week = int(data['sessions_per_week'])
+    if 'description' in data:
+        prog.description = data['description'].strip()
+    if 'key_features' in data:
+        prog.key_features = data['key_features'].strip()
+    if 'is_active' in data:
+        prog.is_active = bool(data['is_active'])
+
+    prog.save()
+    return JsonResponse({
+        'success': True,
+        'message': f"Program '{prog.title}' updated successfully!",
+        'program': {
+            'id': prog.id,
+            'title': prog.title,
+            'category': prog.get_category_display(),
+            'difficulty': prog.get_difficulty_display(),
+            'duration_weeks': prog.duration_weeks,
+            'sessions_per_week': prog.sessions_per_week,
+            'is_active': prog.is_active
+        }
+    })
+
+
+@login_required
+@role_required('super_admin')
+def admin_delete_program_api(request, prog_id):
+    """Super Admin deletes a gym program."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    from wger.membership.models import GymProgram
+    prog = GymProgram.objects.filter(id=prog_id).first()
+    if not prog:
+        return JsonResponse({'error': 'Program not found.'}, status=404)
+
+    title = prog.title
+    prog.delete()
+    return JsonResponse({
+        'success': True,
+        'message': f"Program '{title}' deleted from catalog."
+    })
+
+
+@login_required
+@role_required('super_admin')
 def admin_create_announcement_api(request):
     """Super Admin broadcasts a gym-wide announcement."""
     if request.method != 'POST':
@@ -1546,8 +1696,12 @@ def admin_create_user_api(request):
         return JsonResponse({'error': 'Email address is required.'}, status=400)
     if not password or len(password) < 6:
         return JsonResponse({'error': 'Password must be at least 6 characters long.'}, status=400)
-    if role not in ['super_admin', 'front_desk', 'coach', 'member']:
+    if role not in ['super_admin', 'admin', 'front_desk', 'coach', 'member']:
         return JsonResponse({'error': f'Invalid role: {role}'}, status=400)
+
+    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
+    if role in ['super_admin', 'admin'] and not is_super_admin:
+        return JsonResponse({'error': 'Unauthorized: Only Super Admin can provision Admin or Super Admin accounts.'}, status=403)
 
     from django.contrib.auth import get_user_model
     from django.contrib.auth.models import Group
@@ -1562,7 +1716,7 @@ def admin_create_user_api(request):
         return JsonResponse({'error': f"A user with email '{email}' already exists."}, status=400)
 
     # Create the User
-    is_staff = role in ['super_admin', 'front_desk', 'coach']
+    is_staff = role in ['super_admin', 'admin', 'front_desk', 'coach']
     is_superuser = (role == 'super_admin')
     user = User.objects.create_user(
         username=username,
@@ -1661,6 +1815,7 @@ def admin_create_user_api(request):
 
     role_labels = {
         'super_admin': 'Super Admin',
+        'admin': 'Club Admin',
         'front_desk': 'Front Desk',
         'coach': 'Coach',
         'member': 'Member'
@@ -1698,8 +1853,12 @@ def admin_update_user_role_api(request, user_id):
     except Exception:
         data = request.POST
 
+    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
+    if not is_super_admin:
+        return JsonResponse({'error': 'Unauthorized: Only Super Admin has permission to override user roles.'}, status=403)
+
     new_role = data.get('role', '').strip()
-    if new_role not in ['super_admin', 'front_desk', 'coach', 'member']:
+    if new_role not in ['super_admin', 'admin', 'front_desk', 'coach', 'member']:
         return JsonResponse({'error': f'Invalid role: {new_role}'}, status=400)
 
     from django.contrib.auth import get_user_model
@@ -1716,7 +1875,7 @@ def admin_update_user_role_api(request, user_id):
         return JsonResponse({'error': 'You cannot remove Super Admin role from your own current session.'}, status=400)
 
     # Clear previous role groups
-    for r in ['super_admin', 'front_desk', 'coach', 'member']:
+    for r in ['super_admin', 'admin', 'front_desk', 'coach', 'member']:
         g = Group.objects.filter(name=r).first()
         if g:
             target_user.groups.remove(g)
@@ -1726,7 +1885,7 @@ def admin_update_user_role_api(request, user_id):
     target_user.groups.add(new_group)
 
     # Update Django staff and superuser flags
-    target_user.is_staff = new_role in ['super_admin', 'front_desk', 'coach']
+    target_user.is_staff = new_role in ['super_admin', 'admin', 'front_desk', 'coach']
     target_user.is_superuser = (new_role == 'super_admin')
     target_user.save(update_fields=['is_staff', 'is_superuser'])
 
@@ -1741,6 +1900,7 @@ def admin_update_user_role_api(request, user_id):
 
     role_labels = {
         'super_admin': 'Super Admin',
+        'admin': 'Club Admin',
         'front_desk': 'Front Desk',
         'coach': 'Coach',
         'member': 'Member'
@@ -1822,8 +1982,303 @@ def admin_reset_user_password_api(request, user_id):
     })
 
 
+# ─────────────────────────────────────────────────────────────
+# ── Super Admin Dedicated: Plan Builder & Data Overrides ────
+# ─────────────────────────────────────────────────────────────
+
 @login_required
 @role_required('super_admin')
+def admin_create_plan_api(request):
+    """Super Admin creates a new MembershipPlan (Make Plan feature)."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
+    if not is_super_admin:
+        return JsonResponse({'error': 'Unauthorized: Only Super Admin has permission to make plans.'}, status=403)
+
+    import json
+    from decimal import Decimal
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    name = data.get('name', '').strip()
+    plan_type = data.get('plan_type', '').strip().lower().replace(' ', '_')
+    price_val = data.get('price_monthly')
+    orig_val = data.get('original_price') or price_val
+    disc_val = data.get('discount', 0)
+    reg_val = data.get('registration_fee', 1000)
+    duration_days = int(data.get('duration_days', 30))
+    max_members = int(data.get('max_members', 1))
+    description = data.get('description', '').strip()
+
+    if not name or not plan_type or price_val is None:
+        return JsonResponse({'error': 'Plan Name, Type Code, and Payable Price are required.'}, status=400)
+
+    from wger.membership.models import MembershipPlan
+    if MembershipPlan.objects.filter(plan_type=plan_type).exists():
+        return JsonResponse({'error': f"Plan type code '{plan_type}' already exists. Please choose a unique code."}, status=400)
+
+    try:
+        price_monthly = Decimal(str(price_val))
+        original_price = Decimal(str(orig_val)) if orig_val else price_monthly
+        discount = Decimal(str(disc_val))
+        registration_fee = Decimal(str(reg_val))
+    except Exception as ex:
+        return JsonResponse({'error': f"Invalid numeric value: {ex}"}, status=400)
+
+    plan = MembershipPlan.objects.create(
+        name=name,
+        plan_type=plan_type,
+        price_monthly=price_monthly,
+        original_price=original_price,
+        discount=discount,
+        registration_fee=registration_fee,
+        duration_days=duration_days,
+        max_members=max_members,
+        description=description,
+        is_active=True
+    )
+    return JsonResponse({
+        'success': True,
+        'message': f"Plan '{name}' successfully created by Super Admin!",
+        'plan': {
+            'id': plan.id,
+            'name': plan.name,
+            'plan_type': plan.plan_type,
+            'price_monthly': float(plan.price_monthly),
+            'original_price': float(plan.original_price or plan.price_monthly),
+            'discount': float(plan.discount),
+            'registration_fee': float(plan.registration_fee),
+            'duration_days': plan.duration_days,
+            'max_members': plan.max_members,
+        }
+    })
+
+
+@login_required
+@role_required('super_admin')
+def admin_edit_plan_api(request, plan_id):
+    """Super Admin edits plan and overrides pricing / discounts (Data Override)."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
+    if not is_super_admin:
+        return JsonResponse({'error': 'Unauthorized: Only Super Admin can override plan data.'}, status=403)
+
+    import json
+    from decimal import Decimal
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    from wger.membership.models import MembershipPlan
+    plan = MembershipPlan.objects.filter(id=plan_id).first()
+    if not plan:
+        return JsonResponse({'error': 'Plan not found.'}, status=404)
+
+    if 'name' in data and data['name'].strip():
+        plan.name = data['name'].strip()
+    if 'price_monthly' in data and data['price_monthly'] is not None:
+        plan.price_monthly = Decimal(str(data['price_monthly']))
+    if 'original_price' in data and data['original_price'] is not None:
+        plan.original_price = Decimal(str(data['original_price'])) if data['original_price'] != '' else None
+    if 'discount' in data and data['discount'] is not None:
+        plan.discount = Decimal(str(data['discount']))
+    if 'registration_fee' in data and data['registration_fee'] is not None:
+        plan.registration_fee = Decimal(str(data['registration_fee']))
+    if 'duration_days' in data and data['duration_days']:
+        plan.duration_days = int(data['duration_days'])
+    if 'max_members' in data and data['max_members']:
+        plan.max_members = int(data['max_members'])
+    if 'description' in data:
+        plan.description = str(data['description']).strip()
+    if 'is_active' in data:
+        plan.is_active = bool(data['is_active'])
+
+    plan.save()
+    return JsonResponse({
+        'success': True,
+        'message': f"Plan '{plan.name}' pricing and parameters updated by Super Admin!",
+        'plan': {
+            'id': plan.id,
+            'name': plan.name,
+            'price_monthly': float(plan.price_monthly),
+            'original_price': float(plan.original_price or plan.price_monthly),
+            'discount': float(plan.discount),
+            'registration_fee': float(plan.registration_fee),
+            'duration_days': plan.duration_days,
+            'max_members': plan.max_members,
+            'is_active': plan.is_active
+        }
+    })
+
+
+@login_required
+@role_required('super_admin')
+def admin_toggle_plan_api(request, plan_id):
+    """Super Admin toggles plan active status."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
+    if not is_super_admin:
+        return JsonResponse({'error': 'Unauthorized: Only Super Admin can toggle plan status.'}, status=403)
+
+    from wger.membership.models import MembershipPlan
+    plan = MembershipPlan.objects.filter(id=plan_id).first()
+    if not plan:
+        return JsonResponse({'error': 'Plan not found.'}, status=404)
+
+    plan.is_active = not plan.is_active
+    plan.save(update_fields=['is_active'])
+    status_str = "Active" if plan.is_active else "Inactive"
+    return JsonResponse({
+        'success': True,
+        'is_active': plan.is_active,
+        'message': f"Plan '{plan.name}' is now {status_str}."
+    })
+
+
+@login_required
+@role_required('super_admin')
+def admin_delete_plan_api(request, plan_id):
+    """
+    Super Admin deletes or archives a MembershipPlan.
+    If historical subscriptions exist, archives it (is_active=False) to protect financial records.
+    If no subscriptions exist, permanently deletes the record.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
+    if not is_super_admin:
+        return JsonResponse({'error': 'Unauthorized: Only Super Admin can delete plans.'}, status=403)
+
+    from wger.membership.models import MembershipPlan, Subscription
+    plan = MembershipPlan.objects.filter(id=plan_id).first()
+    if not plan:
+        return JsonResponse({'error': 'Plan not found.'}, status=404)
+
+    plan_name = plan.name
+    subs_count = Subscription.objects.filter(plan=plan).count()
+
+    if subs_count > 0:
+        plan.is_active = False
+        plan.save(update_fields=['is_active'])
+        return JsonResponse({
+            'success': True,
+            'archived': True,
+            'message': f"Plan '{plan_name}' has {subs_count} member subscription(s) attached. It has been deactivated & archived from public catalogs to protect historical invoices."
+        })
+    else:
+        plan.delete()
+        return JsonResponse({
+            'success': True,
+            'archived': False,
+            'message': f"Plan '{plan_name}' permanently deleted."
+        })
+
+
+@login_required
+@role_required('super_admin')
+def admin_override_subscription_api(request, sub_id):
+    """
+    Super Admin Master Data Override:
+    Manually override subscription expiry date, amount paid, status, or plan parameters.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
+    if not is_super_admin:
+        return JsonResponse({'error': 'Unauthorized: Only Super Admin can perform subscription data overrides.'}, status=403)
+
+    import json
+    from decimal import Decimal
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    from wger.membership.models import Subscription, MembershipPlan
+    sub = Subscription.objects.select_related('member', 'plan').filter(id=sub_id).first()
+    if not sub:
+        return JsonResponse({'error': 'Subscription not found.'}, status=404)
+
+    # Master date overrides
+    if 'end_date' in data and data['end_date']:
+        try:
+            sub.end_date = timezone.datetime.strptime(data['end_date'].strip(), '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({'error': 'Invalid end_date format (YYYY-MM-DD required).'}, status=400)
+
+    if 'start_date' in data and data['start_date']:
+        try:
+            sub.start_date = timezone.datetime.strptime(data['start_date'].strip(), '%Y-%m-%d').date()
+        except ValueError:
+            return JsonResponse({'error': 'Invalid start_date format (YYYY-MM-DD required).'}, status=400)
+
+    if 'amount_paid' in data and data['amount_paid'] is not None and str(data['amount_paid']).strip() != '':
+        sub.amount_paid = Decimal(str(data['amount_paid']))
+
+    if 'status' in data and data['status'] in ['active', 'expired', 'suspended', 'cancelled', 'pending_payment']:
+        sub.status = data['status']
+
+    if 'plan_id' in data and data['plan_id']:
+        p = MembershipPlan.objects.filter(id=data['plan_id']).first()
+        if p:
+            sub.plan = p
+
+    notes = data.get('notes', '').strip()
+    timestamp = timezone.now().strftime('%Y-%m-%d %H:%M')
+    override_note = f"\n[Super Admin Data Override by {request.user.username} at {timestamp}]: {notes}" if notes else f"\n[Super Admin Data Override by {request.user.username} at {timestamp}]"
+    sub.notes = (sub.notes or '') + override_note
+    sub.save()
+
+    # Synchronize linked PaymentReceipt to avoid financial ledger mismatches
+    from wger.gym_operations_payroll.models import PaymentReceipt
+    receipt = PaymentReceipt.objects.filter(subscription=sub).first()
+    if receipt:
+        receipt.validity_start = sub.start_date
+        receipt.validity_end = sub.end_date
+        receipt.amount_paid = sub.amount_paid
+        receipt.plan_name = sub.plan.name
+        receipt.save()
+    elif sub.amount_paid > Decimal('0.00'):
+        PaymentReceipt.objects.create(
+            receipt_number=PaymentReceipt.generate_next_receipt_number(),
+            subscription=sub,
+            member=sub.member,
+            plan_name=sub.plan.name,
+            duration_days=sub.plan.duration_days,
+            validity_start=sub.start_date,
+            validity_end=sub.end_date,
+            amount_paid=sub.amount_paid,
+            payment_method='cash',
+            cashier=request.user,
+            notes='Auto-reconciled on Super Admin override'
+        )
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Subscription #{sub.id} for {sub.member.username} was successfully overridden by Super Admin.",
+        'subscription': {
+            'id': sub.id,
+            'status': sub.status,
+            'end_date': str(sub.end_date),
+            'amount_paid': float(sub.amount_paid),
+            'plan_name': sub.plan.name
+        }
+    })
+
+
+@login_required
+@role_required('super_admin', 'admin')
 def admin_export_financial_csv(request):
     """Export unified financial & sales ledger to CSV for bookkeeping / Excel."""
     import csv
@@ -1864,6 +2319,168 @@ def admin_export_financial_csv(request):
     rows.sort(key=lambda r: r[0], reverse=True)
     for r in rows:
         writer.writerow([r[0].strftime('%Y-%m-%d %H:%M:%S'), r[1], r[2], r[3], r[4], r[5], f"{r[6]:.2f}"])
+
+    return response
+
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_export_members_csv(request):
+    """Export full members roster with subscription status & biometric PINs to CSV."""
+    import csv
+    from django.http import HttpResponse
+    from django.contrib.auth import get_user_model
+    from wger.membership.services import get_member_access_summary
+    User = get_user_model()
+
+    response = HttpResponse(content_type='text/csv')
+    today_str = timezone.now().strftime('%Y%m%d_%H%M')
+    response['Content-Disposition'] = f'attachment; filename="fitme_members_roster_{today_str}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['User ID', 'Full Name', 'Username', 'Email', 'Phone', 'Hardware PIN', 'Active Plan', 'Days Left', 'Turnstile Gate Status', 'Face ID Enrolled'])
+
+    members = User.objects.filter(groups__name='member').select_related('member_profile', 'biometric_profile').order_by('id')
+
+    for m in members:
+        prof = getattr(m, 'member_profile', None)
+        bio = getattr(m, 'biometric_profile', None)
+        summary = get_member_access_summary(m)
+        sub = summary.get('active_subscription')
+
+        writer.writerow([
+            m.id,
+            m.get_full_name() or m.username,
+            m.username,
+            m.email or 'N/A',
+            prof.phone if prof and prof.phone else 'N/A',
+            bio.zk_pin if bio else (prof.biometric_pin if prof else 'N/A'),
+            sub.plan.name if sub and sub.plan else 'No Active Plan',
+            sub.days_remaining if sub else 0,
+            'ACTIVE' if summary.get('door_access_active') else 'LOCKED',
+            'YES' if bio and bio.face_enrolled else 'NO'
+        ])
+
+    return response
+
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_create_expense_api(request):
+    """Record an operational expense for the club facility with optional bill/receipt attachment."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    from decimal import Decimal
+    if request.content_type and 'application/json' in request.content_type:
+        try:
+            data = json.loads(request.body.decode('utf-8'))
+        except Exception:
+            data = {}
+    else:
+        data = request.POST
+
+    title = data.get('title', '').strip()
+    category = data.get('category', 'other')
+    amount_val = data.get('amount')
+    expense_date_str = data.get('expense_date')
+    payment_method = data.get('payment_method', 'cash')
+    receipt_ref = data.get('receipt_ref', '').strip()
+    notes = data.get('notes', '').strip()
+
+    if not title or amount_val is None:
+        return JsonResponse({'error': 'Title and Amount are required.'}, status=400)
+
+    try:
+        amount = Decimal(str(amount_val))
+    except Exception:
+        return JsonResponse({'error': 'Invalid amount value.'}, status=400)
+
+    expense_date = timezone.now().date()
+    if expense_date_str:
+        try:
+            expense_date = timezone.datetime.strptime(expense_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass
+
+    receipt_file = request.FILES.get('receipt_image') or request.FILES.get('receipt_file')
+
+    from wger.gym_operations_payroll.models import ClubExpense
+    exp = ClubExpense.objects.create(
+        title=title,
+        category=category,
+        amount=amount,
+        expense_date=expense_date,
+        payment_method=payment_method,
+        recorded_by=request.user,
+        receipt_ref=receipt_ref,
+        notes=notes,
+        receipt_image=receipt_file
+    )
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Expense '{title}' (LKR {amount}) recorded successfully.",
+        'expense': {
+            'id': exp.id,
+            'title': exp.title,
+            'category': exp.get_category_display(),
+            'amount': float(exp.amount),
+            'expense_date': str(exp.expense_date),
+            'payment_method': exp.get_payment_method_display(),
+            'receipt_ref': exp.receipt_ref,
+            'receipt_image_url': exp.receipt_image.url if exp.receipt_image else None
+        }
+    })
+
+
+@login_required
+@role_required('super_admin')
+def admin_delete_expense_api(request, expense_id):
+    """Super Admin deletes an expense."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    from wger.gym_operations_payroll.models import ClubExpense
+    exp = ClubExpense.objects.filter(id=expense_id).first()
+    if not exp:
+        return JsonResponse({'error': 'Expense not found.'}, status=404)
+
+    title = exp.title
+    exp.delete()
+    return JsonResponse({
+        'success': True,
+        'message': f"Expense '{title}' deleted."
+    })
+
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_export_expenses_csv(request):
+    """Export operating expenses log to CSV."""
+    import csv
+    from django.http import HttpResponse
+    from wger.gym_operations_payroll.models import ClubExpense
+
+    response = HttpResponse(content_type='text/csv')
+    today_str = timezone.now().strftime('%Y%m%d_%H%M')
+    response['Content-Disposition'] = f'attachment; filename="fitme_expenses_{today_str}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Title', 'Category', 'Amount (LKR)', 'Payment Method', 'Recorded By', 'Receipt Ref', 'Notes'])
+
+    for e in ClubExpense.objects.select_related('recorded_by').all():
+        writer.writerow([
+            e.expense_date,
+            e.title,
+            e.get_category_display(),
+            f"{e.amount:.2f}",
+            e.get_payment_method_display(),
+            e.recorded_by.username if e.recorded_by else 'System',
+            e.receipt_ref,
+            e.notes
+        ])
 
     return response
 
@@ -1943,5 +2560,206 @@ def admin_daily_eod_report(request):
     return render(request, 'dashboards/reports/daily_eod.html', context)
 
 
+@login_required
+def member_self_renew_api(request):
+    """
+    Endpoint: /api/member/self-renew/
+    Allows member to self-renew subscription, automatically unlocking the turnstile
+    and generating an official payment receipt.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
 
+    import json
+    from datetime import timedelta
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    plan_id = data.get('plan_id')
+    payment_method = data.get('payment_method', 'online_card')
+    from wger.membership.models import MembershipPlan, Subscription
+    from wger.zkbio_integration.models import BiometricProfile
+    from wger.gym_operations_payroll.models import PaymentReceipt
+    from wger.membership.services import check_and_expire_subscriptions
+
+    plan = MembershipPlan.objects.filter(id=plan_id, is_active=True).first()
+    if not plan:
+        return JsonResponse({'error': 'Please select an active membership package.'}, status=400)
+
+    today = timezone.now().date()
+    current_sub = Subscription.objects.filter(
+        member=request.user,
+        status='active',
+        end_date__gte=today
+    ).order_by('-end_date').first()
+
+    if current_sub:
+        start_date = current_sub.end_date + timedelta(days=1)
+    else:
+        start_date = today
+
+    end_date = start_date + timedelta(days=plan.duration_days)
+
+    # Create new active subscription
+    new_sub = Subscription.objects.create(
+        member=request.user,
+        plan=plan,
+        start_date=start_date,
+        end_date=end_date,
+        status='active',
+        amount_paid=plan.price_monthly,
+        notes=f"Self-Service Renewal via Member Portal ({payment_method})"
+    )
+
+    # Immediate biometric restoration
+    bio, _ = BiometricProfile.objects.get_or_create(
+        user=request.user,
+        defaults={'zk_pin': str(1000 + request.user.id)}
+    )
+    bio.disabled = False
+    bio.sync_status = 'PENDING'
+    bio.save(update_fields=['disabled', 'sync_status'])
+
+    # Generate official receipt
+    receipt_num = PaymentReceipt.generate_next_receipt_number()
+    receipt = PaymentReceipt.objects.create(
+        receipt_number=receipt_num,
+        member=request.user,
+        subscription=new_sub,
+        plan_name=plan.name,
+        duration_days=plan.duration_days,
+        validity_start=new_sub.start_date,
+        validity_end=new_sub.end_date,
+        amount_paid=new_sub.amount_paid,
+        payment_method=payment_method,
+        member_pin=bio.zk_pin,
+        notes="Self-Service Member Portal Instant Renewal"
+    )
+
+    check_and_expire_subscriptions(force=True)
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Plan successfully renewed! Turnstile Face ID and PIN access unlocked until {new_sub.end_date.strftime('%d %b %Y')}.",
+        'receipt_id': receipt.id,
+        'receipt_number': receipt.receipt_number,
+        'end_date': str(new_sub.end_date),
+        'plan_name': plan.name
+    })
+
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_link_partner_api(request, subscription_id):
+    """
+    Links a secondary / partner member account to a multi-user subscription (Couples 2-User or Family 3-User).
+    Automatically provisions their independent ZKBio Face ID/PIN biometric turnstile profile.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    from django.contrib.auth import get_user_model
+    from wger.membership.models import Subscription, MemberProfile
+    from wger.gym_operations_payroll.models import BuddyMembership
+    from wger.zkbio_integration.models import BiometricProfile
+    from wger.membership.services import check_and_expire_subscriptions
+
+    User = get_user_model()
+    sub = Subscription.objects.filter(id=subscription_id).select_related('plan', 'member').first()
+    if not sub:
+        return JsonResponse({'error': 'Subscription not found.'}, status=404)
+
+    if sub.plan.max_members <= 1:
+        return JsonResponse({'error': f"Plan '{sub.plan.name}' is an individual package (1 User only). Cannot link additional members."}, status=400)
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    partner_id = data.get('partner_id')
+    partner_user = None
+    if partner_id:
+        partner_user = User.objects.filter(id=partner_id).first()
+    else:
+        partner_query = data.get('partner_username', '').strip()
+        if partner_query:
+            partner_user = User.objects.filter(username__iexact=partner_query).first() or User.objects.filter(email__iexact=partner_query).first()
+
+    if not partner_user:
+        return JsonResponse({'error': 'Please select a valid member to link.'}, status=400)
+
+    if partner_user.id == sub.member_id:
+        return JsonResponse({'error': 'Cannot link the primary account holder to themselves.'}, status=400)
+
+    if BuddyMembership.objects.filter(subscription=sub, partner_member=partner_user).exists():
+        return JsonResponse({'error': f"{partner_user.username} is already linked to this package."}, status=400)
+
+    current_partners_count = BuddyMembership.objects.filter(subscription=sub).count()
+    max_additional_members = sub.plan.max_members - 1
+    if current_partners_count >= max_additional_members:
+        return JsonResponse({'error': f"This {sub.plan.name} has reached its limit of {sub.plan.max_members} users ({max_additional_members} additional partner slots filled)."}, status=400)
+
+    # Create link
+    buddy_link = BuddyMembership.objects.create(
+        primary_member=sub.member,
+        partner_member=partner_user,
+        subscription=sub
+    )
+
+    # Ensure partner has BiometricProfile and PIN
+    bio, _ = BiometricProfile.objects.get_or_create(
+        user=partner_user,
+        defaults={'zk_pin': str(1000 + partner_user.id)}
+    )
+    if sub.is_active:
+        bio.disabled = False
+        bio.sync_status = 'PENDING'
+        bio.save(update_fields=['disabled', 'sync_status'])
+
+    check_and_expire_subscriptions(force=True)
+
+    partner_name = partner_user.get_full_name() or partner_user.username
+    return JsonResponse({
+        'success': True,
+        'message': f"Linked {partner_name} to {sub.member.username}'s {sub.plan.name}! Turnstile biometric access unlocked.",
+        'link_id': buddy_link.id,
+        'partner': {
+            'id': partner_user.id,
+            'username': partner_user.username,
+            'name': partner_name,
+            'pin': bio.zk_pin
+        }
+    })
+
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_unlink_partner_api(request, link_id):
+    """
+    Unlinks a secondary / partner member from a subscription and immediately revokes their turnstile access.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    from wger.gym_operations_payroll.models import BuddyMembership
+    from wger.membership.services import check_and_expire_subscriptions
+
+    link = BuddyMembership.objects.filter(id=link_id).select_related('partner_member', 'subscription__plan').first()
+    if not link:
+        return JsonResponse({'error': 'Buddy link not found.'}, status=404)
+
+    partner_name = link.partner_member.get_full_name() or link.partner_member.username
+    plan_name = link.subscription.plan.name
+    link.delete()
+
+    check_and_expire_subscriptions(force=True)
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Unlinked {partner_name} from {plan_name}. Hardware turnstile access has been revoked."
+    })
 
