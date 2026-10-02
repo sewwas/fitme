@@ -119,7 +119,32 @@ Free web services on Render spin down after 15 minutes of inactivity. To keep yo
 
 ---
 
-### Step 5: Initialize Seed Data in Production
+### Step 5: Configure Custom Domain Email & Verification (Free)
+
+To send password reset and registration verification emails from `hello@fitmefitness.lk`, we recommend a split setup using free tiers:
+
+1. **Create an Inbox (Zoho Mail):**
+   - Go to [Zoho Mail](https://www.zoho.com/mail/) and sign up for the **Forever Free Plan** (up to 5 users).
+   - Add your domain `fitmefitness.lk` and verify it by adding the provided TXT records to your DNS (Cloudflare/Vercel).
+   - Create your user `hello@fitmefitness.lk`. You can now log into Zoho to read replies from members.
+
+2. **Configure App Email Sending (Resend / Brevo):**
+   - Create a free account at [Resend](https://resend.com) (3,000 free emails/mo) or [Brevo](https://www.brevo.com) (300/day).
+   - Verify `fitmefitness.lk` in their dashboard.
+   - They will give you SMTP credentials. Add these to your **Render Environment Variables**:
+     ```ini
+     ENABLE_EMAIL=True
+     EMAIL_HOST=smtp.resend.com
+     EMAIL_PORT=587
+     EMAIL_USE_TLS=True
+     EMAIL_HOST_USER=resend
+     EMAIL_HOST_PASSWORD=[Your SMTP Password]
+     FROM_EMAIL=Fit Me <hello@fitmefitness.lk>
+     ```
+
+---
+
+### Step 6: Initialize Seed Data in Production
 
 Once Render finishes deploying, open the Render **Shell** tab or run locally pointing to the Supabase database:
 ```bash

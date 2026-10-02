@@ -181,7 +181,7 @@ if env.bool('ENABLE_EMAIL', False):
     EMAIL_TIMEOUT = 60
 
 # Sender address used for sent emails
-DEFAULT_FROM_EMAIL = env.str('FROM_EMAIL', 'wger Workout Manager <wger@example.com>')
+DEFAULT_FROM_EMAIL = env.str('FROM_EMAIL', 'Fit Me <hello@fitmefitness.lk>')
 WGER_SETTINGS['EMAIL_FROM'] = DEFAULT_FROM_EMAIL
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 EMAIL_FROM_ADDRESS = DEFAULT_FROM_EMAIL

@@ -277,6 +277,8 @@ EMAIL_DELIVERY_BACKEND = EMAIL_BACKEND
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 2
 ACCOUNT_ADAPTER = 'wger.core.account_adapter.WgerAccountAdapter'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 
 # Treat a user as having a single email address: changing it adds a pending
 # address that only replaces the current one (and updates User.email) once
@@ -628,7 +630,7 @@ WGER_SETTINGS = {
     'ALLOW_GUEST_USERS': False,
     'ALLOW_REGISTRATION': False,
     'ALLOW_UPLOAD_VIDEOS': False,
-    'EMAIL_FROM': 'Fit Me Admin <admin@fitme.com>',
+    'EMAIL_FROM': 'Fit Me Admin <hello@fitmefitness.lk>',
     'EXERCISE_CACHE_TTL': 4 * 604800,  # one month; entries are invalidated on write
     'DOWNLOAD_INGREDIENTS_FROM': 'None',
     'INGREDIENT_CACHE_TTL': 604800,  # one week
