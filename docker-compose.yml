@@ -56,7 +56,7 @@ services:
       ALLOW_REGISTRATION: "False"
       ALLOW_GUEST_USERS: "False"
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     volumes:
       - media_data:/wger/media
       - static_data:/wger/static
