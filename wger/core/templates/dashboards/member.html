@@ -3414,6 +3414,22 @@
         }
         const faceBtnText = document.getElementById('faceBtnText');
         if (faceBtnText) faceBtnText.textContent = 'Re-scan Face';
+        if (data.photo_url) {
+          const passPhoto = document.getElementById('memberPassPhoto');
+          if (passPhoto) {
+            passPhoto.src = data.photo_url;
+            passPhoto.style.display = 'block';
+            const fallback = document.getElementById('memberPassFallbackAvatar');
+            if (fallback) fallback.style.display = 'none';
+          }
+          const memPreview = document.getElementById('memPhotoPreview');
+          if (memPreview) {
+            memPreview.src = data.photo_url;
+            memPreview.style.display = 'block';
+            const placeholder = document.getElementById('memPhotoPlaceholder');
+            if (placeholder) placeholder.style.display = 'none';
+          }
+        }
       } else {
         alert("Face enrollment error: " + (data.error || "Failed to upload"));
       }

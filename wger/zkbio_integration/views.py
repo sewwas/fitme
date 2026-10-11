@@ -358,6 +358,43 @@ def sync_status_callback(request):
         return JsonResponse({'error': str(e)}, status=400)
 
 
+def get_or_create_biometric_profile(user):
+    """
+    Safely retrieves or creates a BiometricProfile for a user,
+    guaranteeing a unique, conflict-free zk_pin.
+    """
+    bio_profile = BiometricProfile.objects.filter(user=user).first()
+    mp, _ = MemberProfile.objects.get_or_create(user=user)
+
+    if not bio_profile:
+        target_pin = mp.biometric_pin
+        if not target_pin or BiometricProfile.objects.filter(zk_pin=target_pin).exists():
+            from wger.core.views.fitme_dashboards import generate_unique_biometric_pin
+            target_pin = generate_unique_biometric_pin()
+            mp.biometric_pin = target_pin
+            mp.save(update_fields=['biometric_pin'])
+        bio_profile = BiometricProfile.objects.create(
+            user=user,
+            zk_pin=target_pin,
+            sync_status='PENDING'
+        )
+    else:
+        if not bio_profile.zk_pin:
+            target_pin = mp.biometric_pin
+            if not target_pin or BiometricProfile.objects.filter(zk_pin=target_pin).exclude(user=user).exists():
+                from wger.core.views.fitme_dashboards import generate_unique_biometric_pin
+                target_pin = generate_unique_biometric_pin()
+            bio_profile.zk_pin = target_pin
+            bio_profile.save(update_fields=['zk_pin'])
+            mp.biometric_pin = target_pin
+            mp.save(update_fields=['biometric_pin'])
+        elif not mp.biometric_pin or mp.biometric_pin != bio_profile.zk_pin:
+            mp.biometric_pin = bio_profile.zk_pin
+            mp.save(update_fields=['biometric_pin'])
+
+    return bio_profile, mp
+
+
 @csrf_exempt
 def upload_face_api(request):
     """
@@ -404,7 +441,7 @@ def upload_face_api(request):
     if not target_user:
         return JsonResponse({'error': 'Target user not found'}, status=404)
 
-    mp, _ = MemberProfile.objects.get_or_create(user=target_user)
+    bio_profile, mp = get_or_create_biometric_profile(target_user)
 
     if photo_b64:
         # Strip header if present (e.g. data:image/jpeg;base64,)
@@ -422,12 +459,7 @@ def upload_face_api(request):
     else:
         return JsonResponse({'error': 'Photo file or photo_base64 is required'}, status=400)
 
-    # Update or create BiometricProfile
-    bio_pin = mp.biometric_pin or str(1000 + target_user.id)
-    bio_profile, _ = BiometricProfile.objects.get_or_create(
-        user=target_user,
-        defaults={'zk_pin': bio_pin}
-    )
+    # Mark face enrolled and pending sync
     bio_profile.face_enrolled = True
     bio_profile.sync_status = 'PENDING'
     bio_profile.save(update_fields=['face_enrolled', 'sync_status'])
@@ -539,11 +571,7 @@ def enroll_fingerprint_api(request):
     if not target_user:
         return JsonResponse({'error': 'Member not found'}, status=404)
 
-    bio_profile = BiometricProfile.objects.filter(user=target_user).first()
-    if not bio_profile:
-        mp = getattr(target_user, 'member_profile', None)
-        pin_val = mp.biometric_pin if mp and mp.biometric_pin else str(1000 + target_user.id)
-        bio_profile = BiometricProfile.objects.create(user=target_user, zk_pin=pin_val)
+    bio_profile, mp = get_or_create_biometric_profile(target_user)
 
     cmd = BiometricCommand.objects.create(
         command_type='ENROLL_FP',
