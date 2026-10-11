@@ -135,13 +135,10 @@ RECAPTCHA_PUBLIC_KEY = env.str('RECAPTCHA_PUBLIC_KEY', '')
 RECAPTCHA_PRIVATE_KEY = env.str('RECAPTCHA_PRIVATE_KEY', '')
 RECAPTCHA_REQUIRED_SCORE = env.float('RECAPTCHA_REQUIRED_SCORE', 0.75)
 
-# Fit Me — ZKBio Turnstile Hardware Bridge Security Token
-# Set FITME_BRIDGE_TOKEN in your .env file. Never hardcode this value.
-ZKBIO_BRIDGE_TOKEN = env.str('FITME_BRIDGE_TOKEN', env.str('LIVEU_BRANCH_API_KEY', ''))
-
-# Fit Me — LiveU Cloud-Managed Access Control & Attendance API
+# Fit Me — LiveU Cloud-Managed Access Control & Hardware Bridge API Key
 LIVEU_API_URL = env.str('LIVEU_API_URL', 'https://attapi.liveucloud.com/api/v1')
 LIVEU_BRANCH_API_KEY = env.str('LIVEU_BRANCH_API_KEY', '')
+ZKBIO_BRIDGE_TOKEN = LIVEU_BRANCH_API_KEY
 
 # The site's URL (e.g. http://www.my-local-gym.com or http://localhost:8000)
 # This is needed for uploaded files and images (exercise images, etc.) to be

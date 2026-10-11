@@ -51,8 +51,8 @@ services:
       DJANGO_DB_PORT: "5432"
       SECRET_KEY: ${SECRET_KEY:-fitme-production-secret-key-super-secure-2026}
       CELERY_BROKER_URL: "redis://redis:6379/1"
-      CELERY_RESULT_BACKEND: "redis://redis:6379/1"
-      ZKBIO_BRIDGE_TOKEN: ${FITME_BRIDGE_TOKEN:-fitme-zkbio-secret-bridge-token-2026}
+      LIVEU_BRANCH_API_KEY: ${LIVEU_BRANCH_API_KEY:-nYFHYHojN4Za9SbXJ7dTrRFY5Le0re8Y}
+      ZKBIO_BRIDGE_TOKEN: ${LIVEU_BRANCH_API_KEY:-nYFHYHojN4Za9SbXJ7dTrRFY5Le0re8Y}
       ALLOW_REGISTRATION: "False"
       ALLOW_GUEST_USERS: "False"
     ports:

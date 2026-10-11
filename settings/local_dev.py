@@ -130,10 +130,8 @@ try:
 except ImportError:
     pass
 
-# Fit Me — ZKBio Turnstile Hardware Bridge Security Token
-ZKBIO_BRIDGE_TOKEN = os.environ.get('FITME_BRIDGE_TOKEN') or os.environ.get('LIVEU_BRANCH_API_KEY', '')
-
-# Fit Me — LiveU Cloud-Managed Access Control & Attendance API
+# Fit Me — LiveU Cloud-Managed Access Control & Hardware Bridge API Key
 LIVEU_API_URL = os.environ.get('LIVEU_API_URL', 'https://attapi.liveucloud.com/api/v1')
 LIVEU_BRANCH_API_KEY = os.environ.get('LIVEU_BRANCH_API_KEY', '')
+ZKBIO_BRIDGE_TOKEN = LIVEU_BRANCH_API_KEY
 

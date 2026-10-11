@@ -30,8 +30,6 @@ services:
         value: aws-0-ap-southeast-1.pooler.supabase.com
       - key: DJANGO_DB_PASSWORD
         sync: false
-      - key: FITME_BRIDGE_TOKEN
-        sync: false
       - key: LIVEU_API_URL
         value: https://attapi.liveucloud.com/api/v1
       - key: LIVEU_BRANCH_API_KEY

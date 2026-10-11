@@ -83,9 +83,8 @@ This guide walks you through deploying the **Fit Me Fitness Club Portal** to pro
    | `DJANGO_DB_USER` | `postgres` |
    | `DJANGO_DB_PASSWORD` | `[Your Supabase Password]` |
    | `DJANGO_DB_PORT` | `5432` |
-   | `FITME_BRIDGE_TOKEN` | `[Your Bridge Secret Token]` |
    | `LIVEU_API_URL` | `https://attapi.liveucloud.com/api/v1` |
-   | `LIVEU_BRANCH_API_KEY` | `[Your LiveU API Key]` |
+   | `LIVEU_BRANCH_API_KEY` | `[Your LiveU API Key / Bridge Secret]` |
 6. Click **Create Web Service**. Render will build and deploy your portal.
 
 ---
@@ -184,4 +183,4 @@ If you prefer to run the server on a computer inside the gym (e.g. reception des
 - [x] Unique `SECRET_KEY` generated in production.
 - [x] Valid SSL certificates enforced via HTTPS (handled automatically by Vercel and Render).
 - [x] Database password stored safely in environment variables (never committed to git).
-- [x] Turnstile hardware secured with `FITME_BRIDGE_TOKEN` and LiveU API key.
+- [x] Turnstile hardware secured with `LIVEU_BRANCH_API_KEY`.

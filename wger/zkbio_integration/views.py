@@ -19,7 +19,7 @@ logger = logging.getLogger('wger')
 User = get_user_model()
 
 # Shared token for daemon-to-cloud authentication over Cloudflare Tunnel / HTTPS
-# Token is loaded from ZKBIO_BRIDGE_TOKEN in Django settings (set via FITME_BRIDGE_TOKEN env var).
+# Token is loaded from ZKBIO_BRIDGE_TOKEN in Django settings (set via LIVEU_BRANCH_API_KEY env var).
 # No hardcoded fallback tokens — all authentication must go through env config.
 BRIDGE_API_TOKEN = getattr(settings, 'ZKBIO_BRIDGE_TOKEN', '')
 
