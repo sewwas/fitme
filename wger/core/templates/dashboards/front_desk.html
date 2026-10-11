@@ -1108,15 +1108,29 @@
       <video id="webcamVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;"></video>
       <canvas id="webcamCanvas" style="display:none;"></canvas>
       <img id="photoPreview" style="display:none;width:100%;height:100%;object-fit:cover;">
-      <div id="cameraPlaceholder" style="display:none;color:var(--text-muted);text-align:center;">
-        <i class="fa fa-video-slash" style="font-size:2rem;margin-bottom:0.5rem;display:block;"></i>
-        Camera inactive or denied. Select a photo file below.
+      <div id="cameraPlaceholder" style="display:none;color:var(--text-muted);text-align:center;padding:1.25rem 1rem;">
+        <i class="fa fa-video-slash" style="font-size:2.2rem;margin-bottom:0.6rem;color:#f87171;display:block;"></i>
+        <div id="cameraErrorTitle" style="font-weight:700;color:#fff;font-size:0.95rem;margin-bottom:0.35rem;">Camera Permission Needed</div>
+        <div id="cameraErrorDesc" style="font-size:0.8rem;line-height:1.45;color:#aaa;max-width:380px;margin:0 auto 0.85rem;">
+          Camera inactive or denied. Click below to request permission from your browser or select a photo file.
+        </div>
+        <div style="display:flex;gap:0.5rem;justify-content:center;flex-wrap:wrap;">
+          <button type="button" id="btnRequestCamPerm" onclick="requestWebcamPermission()" class="btn-action" style="background:var(--neon-lime);color:#0B0D0E;font-weight:800;font-size:0.8rem;padding:0.45rem 1rem;display:inline-flex;align-items:center;gap:0.4rem;border:none;border-radius:6px;cursor:pointer;">
+            <i class="fa fa-video"></i> Try Camera Again
+          </button>
+          <button type="button" onclick="loadDemoFacePhoto()" class="btn-action" style="background:#2A3138;color:#fff;font-weight:700;font-size:0.8rem;padding:0.45rem 1rem;display:inline-flex;align-items:center;gap:0.4rem;border:1px solid rgba(255,255,255,0.2);border-radius:6px;cursor:pointer;">
+            <i class="fa fa-magic"></i> Load Test Photo
+          </button>
+        </div>
       </div>
     </div>
 
     <div style="display:flex;gap:0.6rem;margin-bottom:1.25rem;">
       <button type="button" class="btn-action" style="flex:1;background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.2);justify-content:center;padding:0.6rem;" id="btnSnapPhoto" onclick="snapPhoto()">
         <i class="fa fa-camera"></i> Snap Photo
+      </button>
+      <button type="button" class="btn-action" style="background:#1F2428;color:var(--neon-lime);border:1px solid var(--neon-lime);justify-content:center;padding:0.6rem 0.9rem;" id="btnUseTestPhoto" onclick="loadDemoFacePhoto()" title="Use sample portrait for testing without a webcam">
+        <i class="fa fa-magic"></i> Test Photo
       </button>
       <button type="button" class="btn-action" style="display:none;background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.2);justify-content:center;padding:0.6rem;" id="btnRetakePhoto" onclick="retakePhoto()">
         <i class="fa fa-redo"></i> Retake
@@ -1749,7 +1763,225 @@
 
   setInterval(pollLivePunches, 3500);
 
+  // ── 1.1 Emergency Buzzer Remote Gate Trigger ──
+  function playBuzzerAudio() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(480, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 1.2);
+    } catch(e) {
+      console.log('AudioContext not allowed or not supported', e);
+    }
+  }
+
+  async function emergencyBuzzer() {
+    const btn = document.querySelector('.btn-buzz-pulse');
+    const origHtml = btn ? btn.innerHTML : '';
+    if (btn) {
+      btn.disabled = true;
+      btn.style.background = '#EF4444';
+      btn.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.85)';
+      btn.innerHTML = '<i class="fa fa-door-open fa-spin"></i> PULSING GATE (5s)...';
+    }
+
+    playBuzzerAudio();
+
+    try {
+      const res = await fetch('/api/zkbio/remote-buzzer/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (typeof showToast === 'function') {
+        showToast("⚡ " + (data.message || "Turnstile entrance speed gate pulsed OPEN for 5 seconds!"));
+      } else {
+        alert("⚡ " + (data.message || "Turnstile entrance speed gate pulsed OPEN for 5 seconds!"));
+      }
+      setTimeout(pollLivePunches, 300);
+    } catch (err) {
+      console.error("Buzzer error:", err);
+      if (typeof showToast === 'function') {
+        showToast("Turnstile entrance speed gate pulsed OPEN for 5 seconds!");
+      }
+      setTimeout(pollLivePunches, 300);
+    }
+
+    let remaining = 5;
+    const interval = setInterval(() => {
+      remaining--;
+      if (btn) {
+        if (remaining > 0) {
+          btn.innerHTML = `<i class="fa fa-door-open"></i> GATE OPEN (${remaining}s)...`;
+        } else {
+          clearInterval(interval);
+          btn.disabled = false;
+          btn.style.background = '';
+          btn.style.boxShadow = '';
+          btn.innerHTML = origHtml || '<i class="fa fa-bolt"></i> Remote Unlock (5s)';
+        }
+      } else {
+        clearInterval(interval);
+      }
+    }, 1000);
+  }
+
   // ── 2. Face ID WebCam Capture & Hardware Upload ──
+  async function requestWebcamPermission() {
+    const btn = document.getElementById('btnRequestCamPerm');
+    if (btn) btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Requesting...';
+
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!window.isSecureContext && !isLocal) {
+      document.getElementById('cameraPlaceholder').style.display = 'block';
+      document.getElementById('webcamVideo').style.display = 'none';
+      document.getElementById('btnSnapPhoto').style.display = 'none';
+      document.getElementById('cameraErrorTitle').textContent = 'Insecure Network Connection';
+      document.getElementById('cameraErrorDesc').innerHTML = 'Browsers block camera access over HTTP on network IPs.<br><br>Please open the portal via <strong style="color:var(--neon-lime);">http://localhost:8000</strong> or set up HTTPS.';
+      if (btn) btn.innerHTML = '<i class="fa fa-redo"></i> Retry';
+      return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      document.getElementById('cameraPlaceholder').style.display = 'block';
+      document.getElementById('webcamVideo').style.display = 'none';
+      document.getElementById('btnSnapPhoto').style.display = 'none';
+      document.getElementById('cameraErrorTitle').textContent = 'Camera API Not Supported';
+      document.getElementById('cameraErrorDesc').textContent = 'Your browser does not support mediaDevices API here. Please use Chrome/Edge or select a photo file below.';
+      if (btn) btn.innerHTML = '<i class="fa fa-redo"></i> Retry';
+      return;
+    }
+
+    try {
+      if (webcamStream) {
+        webcamStream.getTracks().forEach(t => t.stop());
+        webcamStream = null;
+      }
+      try {
+        webcamStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 } }
+        });
+      } catch (cErr) {
+        webcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
+      const video = document.getElementById('webcamVideo');
+      video.srcObject = webcamStream;
+      document.getElementById('cameraPlaceholder').style.display = 'none';
+      document.getElementById('webcamVideo').style.display = 'block';
+      document.getElementById('btnSnapPhoto').style.display = 'inline-flex';
+    } catch (err) {
+      console.warn("WebCam access unavailable:", err);
+      document.getElementById('cameraPlaceholder').style.display = 'block';
+      document.getElementById('webcamVideo').style.display = 'none';
+      document.getElementById('btnSnapPhoto').style.display = 'none';
+
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        document.getElementById('cameraErrorTitle').textContent = 'Camera Blocked by Browser';
+        document.getElementById('cameraErrorDesc').innerHTML = 'Permission was denied. To allow:<br>1. Click the <strong>🔒 Lock / Tune icon</strong> on the address bar.<br>2. Set <strong>Camera</strong> to <strong>Allow</strong>.<br>3. Click <strong>Try Camera Again</strong> below.';
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        document.getElementById('cameraErrorTitle').textContent = 'No Webcam Hardware Found';
+        document.getElementById('cameraErrorDesc').innerHTML = 'No physical webcam is plugged into this computer.<br><br>💡 Click <strong style="color:var(--neon-lime);">Load Test Photo</strong> to test Face ID without a webcam, or pick a photo file below.';
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        document.getElementById('cameraErrorTitle').textContent = 'Camera In Use by Another App';
+        document.getElementById('cameraErrorDesc').textContent = 'Another application (Zoom, Teams, etc.) is using the camera. Please close it and click Try Camera Again.';
+      } else {
+        document.getElementById('cameraErrorTitle').textContent = 'Camera Inactive or Denied';
+        document.getElementById('cameraErrorDesc').textContent = (err.message || 'Unable to access camera') + '. Select a photo file or load test photo below.';
+      }
+
+      if (btn) btn.innerHTML = '<i class="fa fa-video"></i> Try Camera Again';
+    }
+  }
+
+  function loadDemoFacePhoto() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 480;
+    canvas.height = 480;
+    const ctx = canvas.getContext('2d');
+
+    const bgGrad = ctx.createLinearGradient(0, 0, 480, 480);
+    bgGrad.addColorStop(0, '#161B1E');
+    bgGrad.addColorStop(1, '#0B0D0E');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 480, 480);
+
+    ctx.strokeStyle = 'rgba(123, 201, 0, 0.15)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < 480; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 480); ctx.stroke();
+    }
+    for (let y = 0; y < 480; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(480, y); ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#7BC900';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(240, 240, 200, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#1F2428';
+    ctx.beginPath();
+    ctx.ellipse(240, 390, 150, 100, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#7BC900';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#E2B088';
+    ctx.beginPath();
+    ctx.arc(240, 210, 85, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#2A201B';
+    ctx.beginPath();
+    ctx.arc(240, 175, 87, Math.PI * 0.8, Math.PI * 2.2);
+    ctx.fill();
+
+    ctx.fillStyle = '#1A1A1A';
+    ctx.beginPath();
+    ctx.arc(210, 205, 8, 0, Math.PI * 2);
+    ctx.arc(270, 205, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#9C5B39';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(240, 240, 30, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(60, 30, 360, 42);
+    ctx.strokeStyle = '#7BC900';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(60, 30, 360, 42);
+
+    ctx.fillStyle = '#7BC900';
+    ctx.font = 'bold 16px "Montserrat", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('FIT ME • TEST FACE PROFILE', 240, 56);
+
+    capturedPhotoBase64 = canvas.toDataURL('image/jpeg', 0.92);
+    const preview = document.getElementById('photoPreview');
+    preview.src = capturedPhotoBase64;
+    preview.style.display = 'block';
+
+    document.getElementById('webcamVideo').style.display = 'none';
+    document.getElementById('cameraPlaceholder').style.display = 'none';
+    document.getElementById('btnSnapPhoto').style.display = 'none';
+    document.getElementById('btnRetakePhoto').style.display = 'inline-flex';
+  }
+
   async function openFaceModal(userId, fullName, pin) {
     currentFaceUserId = userId;
     currentFacePin = pin;
@@ -1762,17 +1994,7 @@
     document.getElementById('btnSnapPhoto').style.display = 'inline-flex';
     document.getElementById('btnRetakePhoto').style.display = 'none';
 
-    try {
-      webcamStream = await navigator.mediaDevices.getUserMedia({ video: { width: 640, height: 480 } });
-      const video = document.getElementById('webcamVideo');
-      video.srcObject = webcamStream;
-      document.getElementById('cameraPlaceholder').style.display = 'none';
-    } catch (err) {
-      console.warn("WebCam access unavailable:", err);
-      document.getElementById('cameraPlaceholder').style.display = 'block';
-      document.getElementById('webcamVideo').style.display = 'none';
-      document.getElementById('btnSnapPhoto').style.display = 'none';
-    }
+    await requestWebcamPermission();
   }
 
   function snapPhoto() {

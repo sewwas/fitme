@@ -2758,8 +2758,17 @@
       <canvas id="memberFaceCanvas" style="display:none;"></canvas>
       <img id="memberFacePreview" style="display:none;width:100%;height:100%;object-fit:cover;">
       <div id="memberCamPlaceholder" style="display:none;color:var(--text-muted);text-align:center;padding:1rem;">
-        <i class="fa fa-video-slash" style="font-size:2.2rem;color:var(--amber);margin-bottom:0.5rem;display:block;"></i>
-        <div style="font-size:0.8rem;">Camera blocked or not supported.<br>You can select a portrait photo below.</div>
+        <i class="fa fa-video-slash" style="font-size:2.2rem;color:#f87171;margin-bottom:0.5rem;display:block;"></i>
+        <div id="memCamErrTitle" style="font-weight:700;color:#fff;font-size:0.9rem;margin-bottom:0.3rem;">Camera Permission Needed</div>
+        <div id="memCamErrDesc" style="font-size:0.78rem;color:#aaa;line-height:1.4;margin-bottom:0.75rem;">Camera blocked or not supported. You can select a portrait photo below.</div>
+        <div style="display:flex;gap:0.4rem;justify-content:center;flex-wrap:wrap;">
+          <button type="button" id="btnMemRequestCamPerm" onclick="startMemberFaceCamera()" class="btn-fitme" style="background:var(--neon-lime);color:#0B0D0E;font-weight:800;font-size:0.78rem;padding:0.4rem 0.9rem;display:inline-flex;align-items:center;gap:0.4rem;border:none;border-radius:6px;cursor:pointer;">
+            <i class="fa fa-video"></i> Try Camera Again
+          </button>
+          <button type="button" onclick="loadDemoMemberFace()" class="btn-fitme" style="background:#2A3138;color:#fff;font-weight:700;font-size:0.78rem;padding:0.4rem 0.9rem;display:inline-flex;align-items:center;gap:0.4rem;border:1px solid rgba(255,255,255,0.2);border-radius:6px;cursor:pointer;">
+            <i class="fa fa-magic"></i> Load Test Photo
+          </button>
+        </div>
       </div>
     </div>
 
@@ -2767,6 +2776,9 @@
     <div style="display:flex;gap:0.6rem;margin-bottom:1.25rem;">
       <button type="button" class="btn-fitme" style="flex:1;justify-content:center;background:#1F2428;border:1px solid var(--neon-lime);color:var(--neon-lime);font-size:0.82rem;" id="btnSnapMemberPhoto" onclick="snapMemberFace()">
         <i class="fa fa-camera"></i> Snap Face Frame
+      </button>
+      <button type="button" class="btn-fitme" style="background:#1F2428;color:var(--neon-lime);border:1px solid var(--neon-lime);justify-content:center;padding:0.6rem 0.9rem;font-size:0.82rem;" id="btnMemTestPhoto" onclick="loadDemoMemberFace()" title="Use sample portrait for testing without a webcam">
+        <i class="fa fa-magic"></i> Test Photo
       </button>
       <button type="button" class="btn-fitme" style="display:none;flex:1;justify-content:center;background:#1F2428;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:0.82rem;" id="btnRetakeMemberPhoto" onclick="retakeMemberFace()">
         <i class="fa fa-redo"></i> Retake Photo
@@ -3147,10 +3159,44 @@
     const video = document.getElementById('memberFaceVideo');
     const placeholder = document.getElementById('memberCamPlaceholder');
     const snapBtn = document.getElementById('btnSnapMemberPhoto');
+    const btnPerm = document.getElementById('btnMemRequestCamPerm');
+    const errTitle = document.getElementById('memCamErrTitle');
+    const errDesc = document.getElementById('memCamErrDesc');
+    if (btnPerm) btnPerm.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Requesting...';
+
+    const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+    if (!window.isSecureContext && !isLocal) {
+      video.style.display = 'none';
+      placeholder.style.display = 'block';
+      snapBtn.style.display = 'none';
+      if (errTitle) errTitle.textContent = 'Insecure Network Connection';
+      if (errDesc) errDesc.innerHTML = 'Browsers block camera over HTTP on network IPs.<br>Please open via <strong style="color:var(--neon-lime);">http://localhost:8000</strong>.';
+      if (btnPerm) btnPerm.innerHTML = '<i class="fa fa-redo"></i> Retry';
+      return;
+    }
+
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      video.style.display = 'none';
+      placeholder.style.display = 'block';
+      snapBtn.style.display = 'none';
+      if (errTitle) errTitle.textContent = 'Camera API Not Supported';
+      if (errDesc) errDesc.textContent = 'Please select a portrait photo file from your device below.';
+      if (btnPerm) btnPerm.innerHTML = '<i class="fa fa-redo"></i> Retry';
+      return;
+    }
+
     try {
-      memberWebcamStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } }
-      });
+      if (memberWebcamStream) {
+        memberWebcamStream.getTracks().forEach(t => t.stop());
+        memberWebcamStream = null;
+      }
+      try {
+        memberWebcamStream = await navigator.mediaDevices.getUserMedia({
+          video: { width: { ideal: 640 }, height: { ideal: 480 } }
+        });
+      } catch (cErr) {
+        memberWebcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      }
       video.srcObject = memberWebcamStream;
       video.style.display = 'block';
       placeholder.style.display = 'none';
@@ -3160,7 +3206,102 @@
       video.style.display = 'none';
       placeholder.style.display = 'block';
       snapBtn.style.display = 'none';
+
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        if (errTitle) errTitle.textContent = 'Camera Blocked by Browser';
+        if (errDesc) errDesc.innerHTML = '1. Click the <strong>🔒 Lock icon</strong> in address bar.<br>2. Set <strong>Camera</strong> to <strong>Allow</strong>.<br>3. Click <strong>Try Camera Again</strong> below.';
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        if (errTitle) errTitle.textContent = 'No Webcam Hardware Found';
+        if (errDesc) errDesc.innerHTML = 'No physical camera detected on this PC.<br><br>💡 Click <strong style="color:var(--neon-lime);">Load Test Photo</strong> to test Face ID without hardware, or pick a file below.';
+      } else {
+        if (errTitle) errTitle.textContent = 'Camera Inactive or Denied';
+        if (errDesc) errDesc.textContent = (err.message || 'Unable to access camera') + '. Select a photo file or load test photo below.';
+      }
+      if (btnPerm) btnPerm.innerHTML = '<i class="fa fa-video"></i> Try Camera Again';
     }
+  }
+
+  function loadDemoMemberFace() {
+    stopMemberFaceCamera();
+    const canvas = document.createElement('canvas');
+    canvas.width = 480;
+    canvas.height = 480;
+    const ctx = canvas.getContext('2d');
+
+    const bgGrad = ctx.createLinearGradient(0, 0, 480, 480);
+    bgGrad.addColorStop(0, '#161B1E');
+    bgGrad.addColorStop(1, '#0B0D0E');
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, 480, 480);
+
+    ctx.strokeStyle = 'rgba(123, 201, 0, 0.15)';
+    ctx.lineWidth = 1;
+    for (let x = 0; x < 480; x += 40) {
+      ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, 480); ctx.stroke();
+    }
+    for (let y = 0; y < 480; y += 40) {
+      ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(480, y); ctx.stroke();
+    }
+
+    ctx.strokeStyle = '#7BC900';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(240, 240, 200, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.fillStyle = '#1F2428';
+    ctx.beginPath();
+    ctx.ellipse(240, 390, 150, 100, 0, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#7BC900';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    ctx.fillStyle = '#E2B088';
+    ctx.beginPath();
+    ctx.arc(240, 210, 85, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#2A201B';
+    ctx.beginPath();
+    ctx.arc(240, 175, 87, Math.PI * 0.8, Math.PI * 2.2);
+    ctx.fill();
+
+    ctx.fillStyle = '#1A1A1A';
+    ctx.beginPath();
+    ctx.arc(210, 205, 8, 0, Math.PI * 2);
+    ctx.arc(270, 205, 8, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.strokeStyle = '#9C5B39';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.arc(240, 240, 30, 0.2, Math.PI - 0.2);
+    ctx.stroke();
+
+    ctx.fillStyle = 'rgba(0,0,0,0.7)';
+    ctx.fillRect(60, 30, 360, 42);
+    ctx.strokeStyle = '#7BC900';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(60, 30, 360, 42);
+
+    ctx.fillStyle = '#7BC900';
+    ctx.font = 'bold 16px "Montserrat", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('FIT ME • TEST FACE PROFILE', 240, 56);
+
+    memCapturedBase64 = canvas.toDataURL('image/jpeg', 0.92);
+    const preview = document.getElementById('memberFacePreview');
+    preview.src = memCapturedBase64;
+    preview.style.display = 'block';
+
+    const beam = document.getElementById('faceScanBeam');
+    if (beam) beam.style.display = 'none';
+
+    document.getElementById('memberFaceVideo').style.display = 'none';
+    document.getElementById('memberCamPlaceholder').style.display = 'none';
+    document.getElementById('btnSnapMemberPhoto').style.display = 'none';
+    document.getElementById('btnRetakeMemberPhoto').style.display = 'inline-flex';
   }
 
   function stopMemberFaceCamera() {

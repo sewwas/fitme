@@ -4582,17 +4582,61 @@
   }
 
   // Remote Buzzer Override
+  function playAdminBuzzerAudio() {
+    try {
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sawtooth';
+      osc.frequency.setValueAtTime(480, audioCtx.currentTime);
+      gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 1.2);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + 1.2);
+    } catch(e) {
+      console.log('AudioContext not allowed or not supported', e);
+    }
+  }
+
   async function triggerBuzzer() {
+    const btns = document.querySelectorAll('.btn-buzzer');
+    btns.forEach(b => {
+      b.disabled = true;
+      b.style.background = '#EF4444';
+      b.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.85)';
+      b.innerHTML = '<i class="fa fa-door-open fa-spin"></i> PULSING (5s)...';
+    });
+
+    playAdminBuzzerAudio();
+
     try {
       const res = await fetch('/api/zkbio/remote-buzzer/', {
         method: 'POST',
         headers: { 'X-CSRFToken': '{{ csrf_token }}' }
       });
       const data = await res.json();
-      showToast(data.message || "Turnstile emergency speed gate pulsed OPEN for 5 seconds!");
+      showToast("⚡ " + (data.message || "Turnstile emergency speed gate pulsed OPEN for 5 seconds!"));
     } catch(err) {
-      showToast("Turnstile emergency speed gate pulsed OPEN for 5 seconds!");
+      showToast("⚡ Turnstile emergency speed gate pulsed OPEN for 5 seconds!");
     }
+
+    let remaining = 5;
+    const interval = setInterval(() => {
+      remaining--;
+      if (remaining > 0) {
+        btns.forEach(b => b.innerHTML = `<i class="fa fa-door-open"></i> OPEN (${remaining}s)...`);
+      } else {
+        clearInterval(interval);
+        btns.forEach(b => {
+          b.disabled = false;
+          b.style.background = '';
+          b.style.boxShadow = '';
+          b.innerHTML = '<i class="fa fa-door-open"></i> REMOTE BUZZER';
+        });
+      }
+    }, 1000);
   }
 
   // Resolve Alert

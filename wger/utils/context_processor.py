@@ -103,9 +103,12 @@ def get_custom_header(request):
     if request.user.is_authenticated and request.user.userprofile.gym:
         current_gym = request.user.userprofile.gym
     else:
-        global_gymconfig = GymConfig.objects.get(pk=1)
-        if global_gymconfig.default_gym:
-            current_gym = global_gymconfig.default_gym
+        try:
+            global_gymconfig = GymConfig.objects.get(pk=1)
+            if global_gymconfig.default_gym:
+                current_gym = global_gymconfig.default_gym
+        except GymConfig.DoesNotExist:
+            current_gym = None
 
     # Put the custom header together
     custom_header = None
