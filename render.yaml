@@ -23,11 +23,11 @@ services:
       - key: DJANGO_DB_DATABASE
         value: postgres
       - key: DJANGO_DB_USER
-        value: postgres
+        value: postgres.mnpooopfnedpcfrzhlne
       - key: DJANGO_DB_PORT
         value: "5432"
       - key: DJANGO_DB_HOST
-        sync: false
+        value: aws-0-ap-southeast-1.pooler.supabase.com
       - key: DJANGO_DB_PASSWORD
         sync: false
       - key: FITME_BRIDGE_TOKEN
