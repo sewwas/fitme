@@ -1,0 +1,22 @@
+# Ignore Python backend, virtualenv, and heavy assets from Vercel deployments
+.venv/
+wger/
+settings/
+db/
+db.sqlite3
+*.sqlite3
+media/
+scratch/
+scripts/
+*.pdf
+*.jpeg
+*.jpg
+*.csv
+Dockerfile
+docker-compose.yml
+requirements.txt
+pyproject.toml
+uv.lock
+setup_fitme.py
+zkbio-bridge-daemon/
+node_modules/

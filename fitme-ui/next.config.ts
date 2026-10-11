@@ -1,7 +1,9 @@
+import path from "path";
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "export",
+  outputFileTracingRoot: path.resolve("."),
   images: {
     unoptimized: true,
     remotePatterns: [
