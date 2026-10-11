@@ -242,8 +242,8 @@ STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
 )
-# Additional places to copy to static files
-STATICFILES_DIRS = (('node', os.path.join(BASE_DIR, '..', 'node_modules')),)
+_node_modules = os.path.join(BASE_DIR, '..', 'node_modules')
+STATICFILES_DIRS = (('node', _node_modules),) if os.path.isdir(_node_modules) else ()
 
 
 #
