@@ -17,7 +17,11 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: ALLOWED_HOSTS
-        value: ".onrender.com,fitmefitness.lk,localhost,127.0.0.1"
+        value: ".onrender.com,fitme-backend-mucu.onrender.com,fitmefitness-murex.vercel.app,fitmefitness.lk,localhost,127.0.0.1"
+      - key: CSRF_TRUSTED_ORIGINS
+        value: "https://fitme-backend-mucu.onrender.com,https://fitmefitness-murex.vercel.app,https://fitmefitness.lk,http://localhost:8000"
+      - key: X_FORWARDED_PROTO_HEADER_SET
+        value: "True"
       - key: DJANGO_STATIC_ROOT
         value: static
       - key: DJANGO_MEDIA_ROOT
