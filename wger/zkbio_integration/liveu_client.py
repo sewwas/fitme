@@ -240,13 +240,20 @@ class LiveUClient:
             device_info = r.get('device', {}) or {}
             terminal_name = device_info.get('name') or 'LiveU Cloud Reader'
 
+            dev_ip = device_info.get('ip') or '192.168.1.23'
+            import ipaddress
+            try:
+                ipaddress.ip_address(dev_ip)
+            except ValueError:
+                dev_ip = '192.168.1.23'
+
             log = DoorAccessLog.objects.create(
                 user=user,
                 zk_pin=pin,
                 punch_time=punch_time,
                 event_type=event_type,
                 verify_mode='FACE_ID',
-                device_ip='cloud',
+                device_ip=dev_ip,
                 terminal_name=terminal_name,
                 liveu_attendance_id=liveu_att_id,
                 raw_payload=r,
