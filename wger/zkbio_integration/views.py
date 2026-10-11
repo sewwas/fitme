@@ -217,16 +217,40 @@ def punches_ingest(request):
             from wger.gym_operations_payroll.models import StaffShift
             today = punch_time.date()
             shift = StaffShift.objects.filter(staff_user=user, shift_date=today).first()
-            if shift:
-                if expected_event == 'ENTRY':
-                    if not shift.actual_first_in:
-                        shift.actual_first_in = punch_time
-                    shift.status = 'ON_FLOOR'
-                    shift.is_off_floor = False
-                    shift.save(update_fields=['actual_first_in', 'status', 'is_off_floor'])
-                elif expected_event == 'EXIT':
-                    shift.actual_last_out = punch_time
-                    shift.save(update_fields=['actual_last_out'])
+            if not shift:
+                # Auto-provision daily shift so attendance is never lost
+                hour = punch_time.hour
+                if hour < 13:
+                    s_start = timezone.datetime.strptime('06:00', '%H:%M').time()
+                    s_end = timezone.datetime.strptime('15:00', '%H:%M').time()
+                else:
+                    s_start = timezone.datetime.strptime('13:00', '%H:%M').time()
+                    s_end = timezone.datetime.strptime('22:00', '%H:%M').time()
+                shift = StaffShift.objects.create(
+                    staff_user=user,
+                    shift_date=today,
+                    scheduled_start=s_start,
+                    scheduled_end=s_end,
+                    status='SCHEDULED'
+                )
+
+            if expected_event == 'ENTRY':
+                if not shift.actual_first_in:
+                    shift.actual_first_in = punch_time
+                shift.status = 'ON_FLOOR'
+                shift.is_off_floor = False
+                shift.save(update_fields=['actual_first_in', 'status', 'is_off_floor'])
+            elif expected_event == 'EXIT':
+                shift.actual_last_out = punch_time
+                sched_end_dt = timezone.make_aware(timezone.datetime.combine(today, shift.scheduled_end))
+                if punch_time > sched_end_dt:
+                    delta_ot = punch_time - sched_end_dt
+                    shift.overtime_minutes = int(delta_ot.total_seconds() / 60)
+                if punch_time >= sched_end_dt:
+                    shift.status = 'COMPLETED'
+                else:
+                    shift.status = 'OFF_FLOOR'
+                shift.save(update_fields=['actual_last_out', 'overtime_minutes', 'status'])
         except Exception as ex:
             logger.error(f"Error linking staff punch to shift: {ex}")
 
@@ -344,24 +368,28 @@ def upload_face_api(request):
     if not request.user.is_authenticated and not verify_bridge_token(request):
         return HttpResponseForbidden('Authentication or valid bridge token required')
 
-    user_id = request.POST.get('user_id')
+    user_id = request.POST.get('user_id') or request.POST.get('member_id')
     pin = request.POST.get('pin')
-    photo_file = request.FILES.get('photo')
+    photo_file = request.FILES.get('photo') or request.FILES.get('profile_photo')
     photo_b64 = request.POST.get('photo_base64')
 
     # Also handle JSON payload if sent via fetch(JSON.stringify())
     if not photo_file and not photo_b64 and request.body:
         try:
             body_data = json.loads(request.body.decode('utf-8'))
-            user_id = user_id or body_data.get('user_id')
+            user_id = user_id or body_data.get('user_id') or body_data.get('member_id')
             pin = pin or body_data.get('pin')
             photo_b64 = body_data.get('photo_base64')
         except Exception:
             pass
 
     target_user = None
-    # Staff / Superuser or bridge token can specify any user; regular member can only register own face
-    is_staff = request.user.is_authenticated and (request.user.is_staff or request.user.is_superuser)
+    # Staff / Superuser, Front Desk, Coach or bridge token can specify any user; regular member can only register own face
+    user_groups = set(request.user.groups.values_list('name', flat=True)) if request.user.is_authenticated else set()
+    is_staff = request.user.is_authenticated and (
+        request.user.is_staff or request.user.is_superuser or
+        bool(user_groups.intersection({'Front Desk', 'Coach', 'Super Admin'}))
+    )
     is_bridge = verify_bridge_token(request)
 
     if (is_staff or is_bridge) and user_id:

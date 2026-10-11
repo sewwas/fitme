@@ -15,12 +15,12 @@ h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
 
 /* Links */
 a {
-    color: #76C043;
+    color: #88D82D;
     text-decoration: none;
     transition: color 0.2s ease-in-out;
 }
 a:hover {
-    color: #8CE053;
+    color: #9EF040;
 }
 
 /* Cards & Containers (Removing the typical 'boxy' look) */
@@ -48,8 +48,8 @@ a:hover {
     border-radius: 8px !important;
 }
 .form-control:focus, .form-select:focus {
-    border-color: #76C043 !important;
-    box-shadow: 0 0 0 0.25rem rgba(118, 192, 67, 0.25) !important;
+    border-color: #88D82D !important;
+    box-shadow: 0 0 0 0.25rem rgba(136, 216, 45, 0.28) !important;
 }
 .input-group-text {
     background-color: #121517 !important;
@@ -66,14 +66,14 @@ a:hover {
     transition: all 0.2s ease-in-out !important;
 }
 .btn-primary {
-    background-color: #76C043 !important;
-    border-color: #76C043 !important;
+    background-color: #88D82D !important;
+    border-color: #88D82D !important;
     color: #0B0D0E !important;
 }
 .btn-primary:hover {
-    background-color: #8CE053 !important;
-    border-color: #8CE053 !important;
-    box-shadow: 0 0 15px rgba(118, 192, 67, 0.4) !important;
+    background-color: #9EF040 !important;
+    border-color: #9EF040 !important;
+    box-shadow: 0 0 15px rgba(136, 216, 45, 0.45) !important;
 }
 .btn-secondary, .btn-default {
     background-color: #121517 !important;
@@ -82,7 +82,7 @@ a:hover {
 }
 .btn-secondary:hover, .btn-default:hover {
     background-color: #1F2428 !important;
-    border-color: #76C043 !important;
+    border-color: #88D82D !important;
 }
 
 /* Navbar */
@@ -94,7 +94,7 @@ a:hover {
     color: #F8FAFC !important;
 }
 .nav-link:hover {
-    color: #76C043 !important;
+    color: #88D82D !important;
 }
 
 /* Tables */
@@ -112,7 +112,7 @@ td {
     background-color: rgba(255, 255, 255, 0.02) !important;
 }
 .table-hover tbody tr:hover {
-    background-color: rgba(118, 192, 67, 0.1) !important;
+    background-color: rgba(136, 216, 45, 0.1) !important;
 }
 
 /* Misc */

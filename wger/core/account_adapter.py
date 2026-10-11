@@ -62,6 +62,44 @@ class WgerAccountAdapter(DefaultAccountAdapter):
 
         return user
 
+    def pre_login(
+        self,
+        request,
+        user,
+        *,
+        email_verification,
+        signal_kwargs,
+        email,
+        signup,
+        redirect_url,
+    ):
+        # Automatically mark emails as verified for administrators and staff to bypass verification screen
+        if (
+            getattr(user, 'is_staff', False)
+            or getattr(user, 'is_superuser', False)
+            or user.username in ['admin', 'admin_ops']
+            or user.groups.filter(name__in=['super_admin', 'club_admin', 'front_desk', 'coach']).exists()
+        ):
+            from allauth.account.models import EmailAddress
+
+            check_email = email or user.email
+            if check_email:
+                ea, _ = EmailAddress.objects.get_or_create(user=user, email=check_email)
+                if not ea.verified:
+                    ea.verified = True
+                    ea.primary = True
+                    ea.save()
+
+        return super().pre_login(
+            request,
+            user,
+            email_verification=email_verification,
+            signal_kwargs=signal_kwargs,
+            email=email,
+            signup=signup,
+            redirect_url=redirect_url,
+        )
+
     def get_notification_language(self, context):
         """
         Return the locale code of the recipient's preferred notification

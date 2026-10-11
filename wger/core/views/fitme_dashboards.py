@@ -12,7 +12,7 @@ from django.http import JsonResponse
 from django.utils import timezone
 from django.db.models import Sum, Count
 
-from wger.membership.models import Subscription, MemberApplication, MembershipPlan
+from wger.membership.models import Subscription, MemberApplication, MembershipPlan, CoachProfile, MemberProfile
 from wger.core.views.user import get_role_dashboard
 
 
@@ -88,6 +88,7 @@ def get_public_home_context():
 @role_required('super_admin', 'admin')
 def super_admin_dashboard(request, active_tab=None):
     """Admin Console — Operations for Super Admin (full control + data overrides + plan builder) & Club Admin (operations & reporting)."""
+    from django.db.models import Count, Q, Sum
     from wger.membership.services import check_and_expire_subscriptions
     check_and_expire_subscriptions()
 
@@ -95,8 +96,12 @@ def super_admin_dashboard(request, active_tab=None):
     current_tab = active_tab or request.GET.get('tab', 'tab-admin-members')
 
     # Stats
-    active_subs = Subscription.objects.filter(status='active', end_date__gte=today)
-    expiring_soon = active_subs.filter(end_date__lte=today + timezone.timedelta(days=7))
+    sub_stat_aggs = Subscription.objects.filter(status='active', end_date__gte=today).aggregate(
+        active_cnt=Count('id'),
+        expiring_cnt=Count('id', filter=Q(end_date__lte=today + timezone.timedelta(days=7)))
+    )
+    active_members_count = sub_stat_aggs['active_cnt'] or 0
+    expiring_soon_count = sub_stat_aggs['expiring_cnt'] or 0
     pending_apps = MemberApplication.objects.filter(status='pending').count()
 
     # ZKBio Integration live floor counters & punches
@@ -155,7 +160,7 @@ def super_admin_dashboard(request, active_tab=None):
     }
 
     for u in users_qs:
-        groups = set(u.groups.values_list('name', flat=True))
+        groups = {g.name for g in u.groups.all()}
         if u.is_superuser or 'super_admin' in groups:
             primary_role = 'super_admin'
             role_label = 'Super Admin'
@@ -194,10 +199,16 @@ def super_admin_dashboard(request, active_tab=None):
         pin = ''
         has_gate_access = False
 
+        photo_url = ''
         if hasattr(u, 'member_profile') and u.member_profile:
             phone = u.member_profile.phone or phone
             nic_passport = u.member_profile.nic_passport or nic_passport
             pin = u.member_profile.biometric_pin or pin
+            if u.member_profile.profile_photo:
+                try:
+                    photo_url = u.member_profile.profile_photo.url
+                except Exception:
+                    pass
         if hasattr(u, 'coach_profile') and u.coach_profile:
             phone = u.coach_profile.phone or phone
         if hasattr(u, 'biometric_profile') and u.biometric_profile:
@@ -210,6 +221,7 @@ def super_admin_dashboard(request, active_tab=None):
             'username': u.username,
             'full_name': u.get_full_name() or u.username,
             'email': u.email,
+            'photo_url': photo_url,
             'primary_role': primary_role,
             'role_label': role_label,
             'role_color': role_color,
@@ -223,8 +235,20 @@ def super_admin_dashboard(request, active_tab=None):
         })
 
     all_members = list(MemberProfile.objects.select_related('user').order_by('-id')[:60])
-    for m in all_members:
-        m.latest_sub = Subscription.objects.filter(member=m.user).select_related('plan').order_by('-created_at').first()
+    member_user_ids = [m.user_id for m in all_members if m.user_id]
+    if member_user_ids:
+        subs_qs = Subscription.objects.filter(
+            member_id__in=member_user_ids
+        ).select_related('plan').prefetch_related('buddy_links__partner_member').order_by('-created_at')
+        latest_sub_by_user = {}
+        for s in subs_qs:
+            if s.member_id not in latest_sub_by_user:
+                latest_sub_by_user[s.member_id] = s
+        for m in all_members:
+            m.latest_sub = latest_sub_by_user.get(m.user_id)
+    else:
+        for m in all_members:
+            m.latest_sub = None
 
     coaches = CoachProfile.objects.select_related('user').all()
     programs = GymProgram.objects.all()
@@ -234,7 +258,7 @@ def super_admin_dashboard(request, active_tab=None):
     # ── Financial & Sales Reports Aggregation ──
     from decimal import Decimal
     from django.db.models import Sum
-    from wger.pos.models import POSSale, POSSaleItem
+    from wger.pos.models import POSSale, POSSaleItem, POSProduct, POSInventoryAudit, POSCashDrawerAudit
 
     today = timezone.localdate()
     week_start = today - timezone.timedelta(days=today.weekday())
@@ -242,17 +266,43 @@ def super_admin_dashboard(request, active_tab=None):
 
     from wger.gym_operations_payroll.models import ClubExpense
 
-    # 1. Membership Revenue (All-time, Month, Week, Today)
-    total_membership_rev = PaymentReceipt.objects.aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
-    today_membership_rev = PaymentReceipt.objects.filter(issued_at__date=today).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
-    week_membership_rev = PaymentReceipt.objects.filter(issued_at__date__gte=week_start).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
-    month_membership_rev = PaymentReceipt.objects.filter(issued_at__date__gte=month_start).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+    # 1. Membership Revenue & Payment Breakdown in 1 query
+    pr_aggs = PaymentReceipt.objects.aggregate(
+        total=Sum('amount_paid'),
+        today=Sum('amount_paid', filter=Q(issued_at__date=today)),
+        week=Sum('amount_paid', filter=Q(issued_at__date__gte=week_start)),
+        month=Sum('amount_paid', filter=Q(issued_at__date__gte=month_start)),
+        today_cash=Sum('amount_paid', filter=Q(issued_at__date=today, payment_method__icontains='cash')),
+        today_card=Sum('amount_paid', filter=Q(issued_at__date=today, payment_method__icontains='card')),
+        today_bank=Sum('amount_paid', filter=Q(issued_at__date=today, payment_method__icontains='bank')),
+    )
+    total_membership_rev = pr_aggs['total'] or Decimal('0.00')
+    today_membership_rev = pr_aggs['today'] or Decimal('0.00')
+    week_membership_rev = pr_aggs['week'] or Decimal('0.00')
+    month_membership_rev = pr_aggs['month'] or Decimal('0.00')
+    today_cash_mem = pr_aggs['today_cash'] or Decimal('0.00')
+    today_card_mem = pr_aggs['today_card'] or Decimal('0.00')
+    today_bank_mem = pr_aggs['today_bank'] or Decimal('0.00')
 
-    # 2. POS Store & Bar Revenue (All-time, Month, Week, Today)
-    total_pos_rev = POSSale.objects.filter(status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
-    today_pos_rev = POSSale.objects.filter(created_at__date=today, status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
-    week_pos_rev = POSSale.objects.filter(created_at__date__gte=week_start, status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
-    month_pos_rev = POSSale.objects.filter(created_at__date__gte=month_start, status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+    # 2. POS Store & Bar Revenue & Methods in 1 query
+    pos_aggs = POSSale.objects.filter(status='COMPLETED').aggregate(
+        total=Sum('total_amount'),
+        today=Sum('total_amount', filter=Q(created_at__date=today)),
+        week=Sum('total_amount', filter=Q(created_at__date__gte=week_start)),
+        month=Sum('total_amount', filter=Q(created_at__date__gte=month_start)),
+        today_cash=Sum('total_amount', filter=Q(created_at__date=today, payment_method='CASH')),
+        today_card=Sum('total_amount', filter=Q(created_at__date=today, payment_method='CARD')),
+        today_koko=Sum('total_amount', filter=Q(created_at__date=today, payment_method='KOKO')),
+        today_bank=Sum('total_amount', filter=Q(created_at__date=today, payment_method='BANK_TRANSFER')),
+    )
+    total_pos_rev = pos_aggs['total'] or Decimal('0.00')
+    today_pos_rev = pos_aggs['today'] or Decimal('0.00')
+    week_pos_rev = pos_aggs['week'] or Decimal('0.00')
+    month_pos_rev = pos_aggs['month'] or Decimal('0.00')
+    today_cash_pos = pos_aggs['today_cash'] or Decimal('0.00')
+    today_card_pos = pos_aggs['today_card'] or Decimal('0.00')
+    today_koko_pos = pos_aggs['today_koko'] or Decimal('0.00')
+    today_bank_pos = pos_aggs['today_bank'] or Decimal('0.00')
 
     # 3. Combined Gross Totals
     total_gross_rev = total_membership_rev + total_pos_rev
@@ -260,11 +310,17 @@ def super_admin_dashboard(request, active_tab=None):
     week_gross_rev = week_membership_rev + week_pos_rev
     month_gross_rev = month_membership_rev + month_pos_rev
 
-    # 4. Club Operating Expenses (OPEX)
-    total_expenses = ClubExpense.objects.aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    today_expenses = ClubExpense.objects.filter(expense_date=today).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    week_expenses = ClubExpense.objects.filter(expense_date__gte=week_start).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
-    month_expenses = ClubExpense.objects.filter(expense_date__gte=month_start).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+    # 4. Club Operating Expenses (OPEX) in 1 query
+    exp_aggs = ClubExpense.objects.aggregate(
+        total=Sum('amount'),
+        today=Sum('amount', filter=Q(expense_date=today)),
+        week=Sum('amount', filter=Q(expense_date__gte=week_start)),
+        month=Sum('amount', filter=Q(expense_date__gte=month_start)),
+    )
+    total_expenses = exp_aggs['total'] or Decimal('0.00')
+    today_expenses = exp_aggs['today'] or Decimal('0.00')
+    week_expenses = exp_aggs['week'] or Decimal('0.00')
+    month_expenses = exp_aggs['month'] or Decimal('0.00')
 
     # 5. Net Profit (Gross Inflow - OPEX)
     total_net_profit = total_gross_rev - total_expenses
@@ -273,29 +329,34 @@ def super_admin_dashboard(request, active_tab=None):
     month_net_profit = month_gross_rev - month_expenses
 
     # 6. Payment Method Breakdown (Today)
-    today_cash_mem = PaymentReceipt.objects.filter(issued_at__date=today, payment_method__icontains='cash').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
-    today_cash_pos = POSSale.objects.filter(created_at__date=today, status='COMPLETED', payment_method='CASH').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
     today_cash_total = today_cash_mem + today_cash_pos
-
-    today_card_mem = PaymentReceipt.objects.filter(issued_at__date=today, payment_method__icontains='card').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
-    today_card_pos = POSSale.objects.filter(created_at__date=today, status='COMPLETED', payment_method='CARD').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
     today_card_total = today_card_mem + today_card_pos
-
-    today_koko_pos = POSSale.objects.filter(created_at__date=today, status='COMPLETED', payment_method='KOKO').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
-    today_bank_mem = PaymentReceipt.objects.filter(issued_at__date=today, payment_method__icontains='bank').aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
-    today_bank_pos = POSSale.objects.filter(created_at__date=today, status='COMPLETED', payment_method='BANK_TRANSFER').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
     today_bank_total = today_bank_mem + today_bank_pos
     today_digital_total = today_card_total + today_koko_pos + today_bank_total
 
     # 7. Plan Performance & Billing Package Breakdown
-    all_plans = MembershipPlan.objects.all()
+    all_plans = list(MembershipPlan.objects.all())
+    from django.db.models import Count, Q
+    sub_counts = {
+        s['plan_id']: s for s in Subscription.objects.values('plan_id').annotate(
+            total_cnt=Count('id'),
+            active_cnt=Count('id', filter=Q(status='active', end_date__gte=today)),
+            total_amt=Sum('amount_paid')
+        )
+    }
+    receipt_by_plan = {
+        r['subscription__plan_id']: r['total']
+        for r in PaymentReceipt.objects.filter(subscription__plan_id__isnull=False)
+        .values('subscription__plan_id')
+        .annotate(total=Sum('amount_paid'))
+    }
+
     plan_performance = []
     for pl in all_plans:
-        active_cnt = Subscription.objects.filter(plan=pl, status='active', end_date__gte=today).count()
-        total_sub_cnt = Subscription.objects.filter(plan=pl).count()
-        plan_rev = PaymentReceipt.objects.filter(subscription__plan=pl).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
-        if plan_rev == Decimal('0.00'):
-            plan_rev = Subscription.objects.filter(plan=pl).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+        s_data = sub_counts.get(pl.id, {})
+        active_cnt = s_data.get('active_cnt', 0)
+        total_sub_cnt = s_data.get('total_cnt', 0)
+        plan_rev = receipt_by_plan.get(pl.id) or s_data.get('total_amt') or Decimal('0.00')
         rev_share = (float(plan_rev) / float(total_membership_rev) * 100) if total_membership_rev > 0 else 0
         plan_performance.append({
             'plan': pl,
@@ -348,6 +409,17 @@ def super_admin_dashboard(request, active_tab=None):
     combined_ledger.sort(key=lambda x: x['timestamp'], reverse=True)
     combined_ledger = combined_ledger[:50]
 
+    # 11. Inventory Audit & Stock Reconciliation Telemetry
+    all_pos_products = list(POSProduct.objects.filter(is_active=True).select_related('category'))
+    pos_cost_valuation = sum(p.cost_price * p.stock_quantity for p in all_pos_products)
+    pos_retail_valuation = sum(p.price * p.stock_quantity for p in all_pos_products)
+    pos_total_units = sum(p.stock_quantity for p in all_pos_products)
+
+    missing_stock_products = [p for p in all_pos_products if p.has_audit_discrepancy or p.stock_quantity <= 0]
+    recent_inventory_audits = POSInventoryAudit.objects.select_related('product', 'auditor').order_by('-audit_date')[:25]
+    total_shrinkage_loss = POSInventoryAudit.objects.filter(discrepancy__lt=0).aggregate(total=Sum('variance_value'))['total'] or Decimal('0.00')
+    recent_drawer_audits = POSCashDrawerAudit.objects.select_related('cashier').order_by('-audit_date')[:10]
+
     finance = {
         'total_gross_rev': total_gross_rev,
         'total_membership_rev': total_membership_rev,
@@ -378,10 +450,349 @@ def super_admin_dashboard(request, active_tab=None):
         'recent_expenses': recent_expenses,
         'top_pos_products': top_pos_products,
         'combined_ledger': combined_ledger,
+        'pos_cost_valuation': pos_cost_valuation,
+        'pos_retail_valuation': pos_retail_valuation,
+        'pos_total_units': pos_total_units,
+        'missing_stock_products': missing_stock_products,
+        'missing_stock_count': len(missing_stock_products),
+        'recent_inventory_audits': recent_inventory_audits,
+        'total_shrinkage_loss': abs(total_shrinkage_loss),
+        'recent_drawer_audits': recent_drawer_audits,
+    }
+
+    # ── Financial Audit, Revenue Telemetry & Discrepancy Diagnostics ──
+    current_year = today.year
+    audit_monthly_trends = []
+    import calendar
+    import json
+    for i in range(5, -1, -1):
+        y = today.year
+        m = today.month - i
+        while m <= 0:
+            m += 12
+            y -= 1
+        d_in_m = calendar.monthrange(y, m)[1]
+        m_start = timezone.datetime(y, m, 1, 0, 0, 0, tzinfo=timezone.get_current_timezone())
+        m_end = timezone.datetime(y, m, d_in_m, 23, 59, 59, tzinfo=timezone.get_current_timezone())
+
+        m_mem_rev = PaymentReceipt.objects.filter(
+            issued_at__range=[m_start, m_end]
+        ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+
+        m_pos_rev = POSSale.objects.filter(
+            status='COMPLETED',
+            created_at__range=[m_start, m_end]
+        ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+
+        m_opex = ClubExpense.objects.filter(
+            expense_date__range=[m_start.date(), m_end.date()]
+        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+
+        m_gross = m_mem_rev + m_pos_rev
+        m_net = m_gross - m_opex
+
+        audit_monthly_trends.append({
+            'label': m_start.strftime('%b %Y'),
+            'membership_rev': float(m_mem_rev),
+            'pos_rev': float(m_pos_rev),
+            'gross_rev': float(m_gross),
+            'opex': float(m_opex),
+            'net_profit': float(m_net),
+        })
+
+    audit_annual_rev = PaymentReceipt.objects.aggregate(total=Sum('annual_fee_amount'))['total'] or Decimal('0.00')
+    audit_pt_rev = PaymentReceipt.objects.aggregate(total=Sum('coaching_amount'))['total'] or Decimal('0.00')
+    audit_pkg_rev = PaymentReceipt.objects.aggregate(total=Sum('package_amount'))['total'] or Decimal('0.00')
+    audit_pos_total = POSSale.objects.filter(status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+
+    if audit_pkg_rev == 0 and total_membership_rev > 0:
+        audit_pkg_rev = max(Decimal('0.00'), total_membership_rev - audit_annual_rev - audit_pt_rev)
+
+    revenue_streams_data = {
+        'membership': float(audit_pkg_rev),
+        'pos': float(audit_pos_total),
+        'annual_fee': float(audit_annual_rev),
+        'coaching': float(audit_pt_rev),
+    }
+
+    exp_cats_qs = list(ClubExpense.objects.values('category').annotate(total=Sum('amount')).order_by('-total'))
+    exp_cat_labels_map = dict(ClubExpense.CATEGORY_CHOICES) if hasattr(ClubExpense, 'CATEGORY_CHOICES') else {
+        'rent': 'Facility Rent',
+        'electricity': 'Electricity (CEB)',
+        'water': 'Water & Utilities',
+        'staff_salary': 'Staff Payroll',
+        'maintenance': 'Equipment Maintenance',
+        'supplements_stock': 'Supplements Stock',
+        'cleaning': 'Cleaning & Sanitation',
+        'marketing': 'Marketing & Promo',
+        'other': 'General OPEX'
+    }
+    expenses_by_category_data = [
+        {
+            'category': c['category'],
+            'label': exp_cat_labels_map.get(c['category'], c['category'].replace('_', ' ').title()),
+            'total': float(c['total'] or 0)
+        }
+        for c in exp_cats_qs
+    ]
+
+    pay_methods_qs = list(PaymentReceipt.objects.values('payment_method').annotate(total=Sum('amount_paid')).order_by('-total'))
+    pay_methods_labels_map = {
+        'cash': 'Cash Drawer',
+        'card': 'POS Card Terminal',
+        'online_card': 'Online Card Gateway',
+        'bank_transfer': 'Direct Bank QR / Slip',
+        'koko': 'Koko Pay (Installments)',
+    }
+    payments_by_method_data = [
+        {
+            'method': p['payment_method'],
+            'label': pay_methods_labels_map.get(p['payment_method'], p['payment_method'].replace('_', ' ').title()),
+            'total': float(p['total'] or 0)
+        }
+        for p in pay_methods_qs
+    ]
+
+    active_sub_members = list(Subscription.objects.filter(
+        status='active', end_date__gte=today
+    ).values_list('member_id', flat=True).distinct())
+
+    paid_annual_member_ids = set(PaymentReceipt.objects.filter(
+        issued_at__year=current_year,
+        annual_fee_amount__gt=0
+    ).values_list('member_id', flat=True))
+
+    missing_annual_fee_members = []
+    for prof in MemberProfile.objects.filter(user_id__in=active_sub_members).select_related('user'):
+        if prof.user_id not in paid_annual_member_ids:
+            missing_annual_fee_members.append({
+                'user_id': prof.user_id,
+                'name': prof.user.get_full_name() or prof.user.username,
+                'phone': prof.phone or '—',
+                'pin': prof.biometric_pin or prof.user_id,
+            })
+
+    expired_unrenewed_subs = list(Subscription.objects.filter(
+        end_date__lt=today
+    ).exclude(
+        member_id__in=active_sub_members
+    ).select_related('member', 'plan').order_by('-end_date')[:25])
+
+    missing_bio_members = []
+    bio_map = {b.user_id: b for b in BiometricProfile.objects.filter(user_id__in=active_sub_members)}
+    for prof in MemberProfile.objects.filter(user_id__in=active_sub_members).select_related('user'):
+        b = bio_map.get(prof.user_id)
+        face_missing = not (b and b.face_enrolled)
+        fp_missing = not (b and b.fingerprint_enrolled)
+        if face_missing or fp_missing:
+            missing_bio_members.append({
+                'user_id': prof.user_id,
+                'name': prof.user.get_full_name() or prof.user.username,
+                'phone': prof.phone or '—',
+                'pin': prof.biometric_pin or prof.user_id,
+                'face_missing': face_missing,
+                'fp_missing': fp_missing,
+            })
+
+    missing_bill_expenses = list(ClubExpense.objects.filter(
+        Q(receipt_image='') | Q(receipt_image__isnull=True)
+    ).select_related('recorded_by').order_by('-expense_date', '-id')[:25])
+
+    stock_issues = list(POSProduct.objects.filter(
+        Q(stock_quantity__lte=0) | Q(has_audit_discrepancy=True)
+    ).select_related('category').order_by('stock_quantity')[:25])
+
+    total_audit_discrepancies = (
+        len(missing_annual_fee_members) +
+        len(expired_unrenewed_subs) +
+        len(missing_bio_members) +
+        len(missing_bill_expenses) +
+        len(stock_issues)
+    )
+
+    financial_audit = {
+        'monthly_trends': audit_monthly_trends,
+        'monthly_trends_json': json.dumps(audit_monthly_trends),
+        'revenue_streams': revenue_streams_data,
+        'revenue_streams_json': json.dumps(revenue_streams_data),
+        'expenses_by_category': expenses_by_category_data,
+        'expenses_by_category_json': json.dumps(expenses_by_category_data),
+        'payments_by_method': payments_by_method_data,
+        'payments_by_method_json': json.dumps(payments_by_method_data),
+        'missing_annual_fee_members': missing_annual_fee_members,
+        'missing_annual_fee_count': len(missing_annual_fee_members),
+        'expired_unrenewed_subs': expired_unrenewed_subs,
+        'expired_unrenewed_count': len(expired_unrenewed_subs),
+        'missing_bio_members': missing_bio_members,
+        'missing_bio_count': len(missing_bio_members),
+        'missing_bill_expenses': missing_bill_expenses,
+        'missing_bills_count': len(missing_bill_expenses),
+        'stock_issues': stock_issues,
+        'stock_issues_count': len(stock_issues),
+        'total_audit_discrepancies': total_audit_discrepancies,
     }
 
     is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
     current_role = 'super_admin' if is_super_admin else 'admin'
+
+    # ── Monthly Staff Payroll Ledger ──
+    from wger.gym_operations_payroll.models import PayrollLedger, StaffShift
+    from wger.membership.models import MemberProfile
+    import calendar
+    import json
+
+    now_date = timezone.now().date()
+    req_month_str = request.GET.get('payroll_month')
+    if req_month_str:
+        try:
+            first_of_selected_month = timezone.datetime.strptime(req_month_str, '%Y-%m').date().replace(day=1)
+        except Exception:
+            first_of_selected_month = now_date.replace(day=1)
+    else:
+        first_of_selected_month = now_date.replace(day=1)
+
+    last_day_num = calendar.monthrange(first_of_selected_month.year, first_of_selected_month.month)[1]
+    last_of_selected_month = first_of_selected_month.replace(day=last_day_num)
+
+    # Build available months for dropdown selector (current + past 11 months)
+    available_months = []
+    month_cursor = now_date.replace(day=1)
+    for _ in range(12):
+        m_val = month_cursor.strftime('%Y-%m')
+        available_months.append({
+            'value': m_val,
+            'label': month_cursor.strftime('%B %Y'),
+            'is_selected': (m_val == first_of_selected_month.strftime('%Y-%m'))
+        })
+        if month_cursor.month == 1:
+            month_cursor = month_cursor.replace(year=month_cursor.year - 1, month=12)
+        else:
+            month_cursor = month_cursor.replace(month=month_cursor.month - 1)
+
+    payroll_ledgers = list(PayrollLedger.objects.filter(
+        month=first_of_selected_month
+    ).select_related('staff_user').prefetch_related('staff_user__groups').order_by('staff_user__username'))
+
+    if not payroll_ledgers:
+        try:
+            from wger.gym_operations_payroll.tasks import calculate_monthly_payroll
+            calculate_monthly_payroll(first_of_selected_month.year, first_of_selected_month.month)
+            payroll_ledgers = list(PayrollLedger.objects.filter(
+                month=first_of_selected_month
+            ).select_related('staff_user').prefetch_related('staff_user__groups').order_by('staff_user__username'))
+        except Exception:
+            pass
+
+    # Attach PT client breakdown (7000/3000/4000 split) and duty attendance summary to each ledger
+    staff_user_ids = [l.staff_user_id for l in payroll_ledgers]
+    shifts_by_staff = {}
+    if staff_user_ids:
+        month_shifts = list(StaffShift.objects.filter(
+            staff_user_id__in=staff_user_ids,
+            shift_date__range=[first_of_selected_month, last_of_selected_month]
+        ))
+        for s in month_shifts:
+            shifts_by_staff.setdefault(s.staff_user_id, []).append(s)
+
+    profiles_by_coach = {}
+    if staff_user_ids:
+        from django.db.models import Prefetch
+        coached_profiles_qs = MemberProfile.objects.filter(
+            assigned_coach_id__in=staff_user_ids,
+            personal_trainer_needed=True,
+        ).select_related('user').prefetch_related(
+            Prefetch(
+                'user__subscriptions',
+                queryset=Subscription.objects.filter(
+                    status='active',
+                    start_date__lte=last_of_selected_month,
+                    end_date__gte=first_of_selected_month
+                ).select_related('plan')
+            )
+        )
+        for cp in coached_profiles_qs:
+            profiles_by_coach.setdefault(cp.assigned_coach_id, []).append(cp)
+
+    for l in payroll_ledgers:
+        g = next(iter(l.staff_user.groups.all()), None)
+        l.role_name = g.name if g else ('Super Admin' if l.staff_user.is_superuser else 'Staff')
+        l.role_slug = l.role_name.lower().replace(' ', '-')
+
+        pt_clients = []
+        for cp in profiles_by_coach.get(l.staff_user_id, []):
+            active_s = next(iter(cp.user.subscriptions.all()), None)
+            if active_s:
+                pt_clients.append({
+                    'name': cp.user.get_full_name() or cp.user.username,
+                    'username': cp.user.username,
+                    'phone': cp.phone or '—',
+                    'plan_name': active_s.plan.name if active_s.plan else 'Personal Coaching Package',
+                    'package_fee': 7000.00,
+                    'gym_share': 3000.00,
+                    'coach_share': 4000.00,
+                    'sub_start': active_s.start_date.strftime('%d %b %Y'),
+                    'sub_end': active_s.end_date.strftime('%d %b %Y'),
+                })
+
+        l.pt_clients_data = pt_clients
+        l.pt_clients_count = len(pt_clients)
+        l.pt_clients_json = json.dumps(pt_clients)
+        l.total_pt_package_revenue = len(pt_clients) * 7000.0
+        l.total_gym_share = len(pt_clients) * 3000.0
+        l.total_coach_commission = len(pt_clients) * 4000.0
+
+        st_shifts = shifts_by_staff.get(l.staff_user_id, [])
+        l.att_scheduled_shifts = len(st_shifts)
+        l.att_completed_shifts = sum(1 for s in st_shifts if s.actual_first_in is not None)
+        l.att_late_minutes = sum(s.calculate_late_minutes() for s in st_shifts)
+        l.att_overtime_minutes = sum(s.overtime_minutes for s in st_shifts)
+        l.att_absence_minutes = sum(s.unapproved_absence_minutes for s in st_shifts)
+        l.attendance_json = json.dumps({
+            'scheduled': l.att_scheduled_shifts,
+            'completed': l.att_completed_shifts,
+            'late_minutes': l.att_late_minutes,
+            'overtime_minutes': l.att_overtime_minutes,
+            'absence_minutes': l.att_absence_minutes,
+        })
+
+    from wger.gym_operations_payroll.models import StaffSalaryAdvance
+
+    total_payroll_net = sum(l.net_salary for l in payroll_ledgers)
+    total_payroll_base = sum(l.base_salary for l in payroll_ledgers)
+    total_payroll_commissions = sum(l.pt_commissions for l in payroll_ledgers)
+    total_payroll_overtime = sum(l.overtime_pay for l in payroll_ledgers)
+    total_payroll_penalties = sum(l.late_minutes_penalty + l.sudden_absence_penalty for l in payroll_ledgers)
+    total_payroll_epf_employee = sum(l.epf_employee_8 for l in payroll_ledgers)
+    total_payroll_epf_employer = sum(l.epf_employer_12 for l in payroll_ledgers)
+    total_payroll_etf_employer = sum(l.etf_employer_3 for l in payroll_ledgers)
+    total_payroll_advances = sum(l.salary_advance_deduction for l in payroll_ledgers)
+    total_gym_cost = sum(l.gym_total_cost for l in payroll_ledgers)
+
+    payroll_stats = {
+        'month_label': first_of_selected_month.strftime('%B %Y'),
+        'month_value': first_of_selected_month.strftime('%Y-%m'),
+        'total_staff': len(payroll_ledgers),
+        'total_net': float(total_payroll_net),
+        'total_base': float(total_payroll_base),
+        'total_commissions': float(total_payroll_commissions),
+        'total_overtime': float(total_payroll_overtime),
+        'total_penalties': float(total_payroll_penalties),
+        'total_epf_employee': float(total_payroll_epf_employee),
+        'total_epf_employer': float(total_payroll_epf_employer),
+        'total_etf_employer': float(total_payroll_etf_employer),
+        'total_advances': float(total_payroll_advances),
+        'total_gym_cost': float(total_gym_cost),
+    }
+
+    # ── Staff Attendance & Shift Rosters ──
+    recent_staff_shifts = list(StaffShift.objects.filter(
+        shift_date__range=[first_of_selected_month, last_of_selected_month]
+    ).select_related('staff_user').order_by('-shift_date', '-scheduled_start')[:40])
+    if not recent_staff_shifts:
+        recent_staff_shifts = list(StaffShift.objects.select_related('staff_user').order_by('-shift_date', '-scheduled_start')[:40])
+    staff_users_list = [u for u in all_system_users if u['user'].is_staff and u['user'].is_active]
+
+    recent_salary_advances = list(StaffSalaryAdvance.objects.select_related('staff_user', 'approved_by').order_by('-request_date', '-id')[:25])
 
     context = {
         'is_super_admin': is_super_admin,
@@ -389,6 +800,8 @@ def super_admin_dashboard(request, active_tab=None):
         'user_role': current_role,
         'page_title': 'Super Admin Master Console' if is_super_admin else 'Club Admin Operations Console',
         'active_tab': current_tab,
+        'selected_payroll_month': first_of_selected_month.strftime('%Y-%m'),
+        'available_months': available_months,
         'club_info': {
             'name': 'Fit Me',
             'tagline': 'Train with Purpose & Move with Confidence',
@@ -396,13 +809,25 @@ def super_admin_dashboard(request, active_tab=None):
             'phone': '070 762 7878',
         },
         'stats': {
-            'active_members': active_subs.count(),
-            'expiring_soon': expiring_soon.count(),
+            'active_members': active_members_count,
+            'expiring_soon': expiring_soon_count,
             'pending_applications': pending_apps,
             'today_access_count': today_punches,
             'open_absence_alerts': open_alerts_count,
             'members_on_floor': members_on_floor,
             'staff_on_floor': staff_on_floor,
+            'total_on_floor': members_on_floor + staff_on_floor,
+            'floor_capacity': 60,
+            'floor_occupancy_pct': min(100, int(((members_on_floor + staff_on_floor) / 60) * 100)),
+            'zkbio_terminal': {
+                'ip': '192.168.1.23',
+                'port': 4370,
+                'name': 'ZKTeco SpeedFace-V5L Turnstile',
+                'status': 'ONLINE',
+                'latency_ms': 1,
+                'anti_passback': 'ACTIVE (60s)',
+                'relay_state': 'ARMED',
+            },
         },
         'finance': finance,
         'active_absence_alerts': active_absence_alerts,
@@ -417,6 +842,12 @@ def super_admin_dashboard(request, active_tab=None):
         'payment_receipts': payment_receipts,
         'all_system_users': all_system_users,
         'user_stats': user_stats,
+        'payroll_ledgers': payroll_ledgers,
+        'payroll_stats': payroll_stats,
+        'recent_staff_shifts': recent_staff_shifts,
+        'staff_users_list': staff_users_list,
+        'recent_salary_advances': recent_salary_advances,
+        'financial_audit': financial_audit,
     }
     return render(request, 'dashboards/super_admin.html', context)
 
@@ -446,8 +877,74 @@ def front_desk_dashboard(request):
     recent_punches = DoorAccessLog.objects.select_related('user', 'user__member_profile').order_by('-punch_time')[:10]
 
     from django.contrib.auth import get_user_model
+    from django.db.models import Q
     User = get_user_model()
-    all_members = User.objects.filter(groups__name='member').select_related('member_profile', 'biometric_profile').order_by('first_name', 'username')
+    all_members = list(User.objects.filter(groups__name='member').select_related(
+        'member_profile', 'biometric_profile', 'member_profile__assigned_coach'
+    ).prefetch_related('subscriptions__plan').order_by('first_name', 'username'))
+
+    current_year = timezone.now().year
+    yearly_receipt_member_ids = set(
+        PaymentReceipt.objects.filter(
+            issued_at__year=current_year
+        ).filter(
+            Q(notes__icontains='Annual') | 
+            Q(notes__icontains='Yearly') | 
+            Q(notes__icontains='Registration') |
+            Q(notes__icontains='Initial membership enrollment')
+        ).values_list('member_id', flat=True)
+    )
+
+    today_date = timezone.now().date()
+    for m in all_members:
+        has_receipt = m.id in yearly_receipt_member_ids
+        notes_paid = False
+        prof = getattr(m, 'member_profile', None)
+        if prof and prof.notes:
+            pn = prof.notes.lower()
+            if str(current_year) in prof.notes and ('annual' in pn or 'yearly' in pn or 'registration' in pn):
+                notes_paid = True
+        m.has_paid_yearly_this_year = has_receipt or notes_paid
+
+        # Detect active / expired subscription dates
+        subs = list(m.subscriptions.all())
+        active_list = [s for s in subs if s.status == 'active' and s.end_date >= today_date]
+        if active_list:
+            best_active = max(active_list, key=lambda s: s.end_date)
+            m.has_active_subscription = True
+            m.active_sub = best_active
+            m.active_sub_end_str = best_active.end_date.strftime('%d %b %Y')
+            m.active_sub_end_iso = best_active.end_date.isoformat()
+            m.active_plan_name = best_active.plan.name if best_active.plan else 'Active Plan'
+            m.latest_sub_end_str = m.active_sub_end_str
+        else:
+            m.has_active_subscription = False
+            m.active_sub = None
+            m.active_sub_end_str = ''
+            m.active_sub_end_iso = ''
+            m.active_plan_name = ''
+            if subs:
+                latest_sub = max(subs, key=lambda s: s.end_date)
+                m.latest_sub_end_str = latest_sub.end_date.strftime('%d %b %Y')
+            else:
+                m.latest_sub_end_str = ''
+
+    for sub in active_subs:
+        if hasattr(sub, 'member'):
+            m = sub.member
+            has_receipt = m.id in yearly_receipt_member_ids
+            notes_paid = False
+            prof = getattr(m, 'member_profile', None)
+            if prof and prof.notes:
+                pn = prof.notes.lower()
+                if str(current_year) in prof.notes and ('annual' in pn or 'yearly' in pn or 'registration' in pn):
+                    notes_paid = True
+            m.has_paid_yearly_this_year = has_receipt or notes_paid
+            m.has_active_subscription = True
+            m.active_sub_end_str = sub.end_date.strftime('%d %b %Y')
+            m.active_sub_end_iso = sub.end_date.isoformat()
+            m.active_plan_name = sub.plan.name if sub.plan else 'Active Plan'
+            m.latest_sub_end_str = m.active_sub_end_str
 
     context = {
         'role': 'front_desk',
@@ -462,8 +959,13 @@ def front_desk_dashboard(request):
         'active_subscriptions': active_subs,
         'all_members': all_members,
         'plans': MembershipPlan.objects.filter(is_active=True),
+        'coaches': CoachProfile.objects.filter(is_active=True).select_related('user'),
         'recent_receipts': recent_receipts,
         'recent_door_punches': recent_punches,
+        'staff_users_list': [
+            {'id': u.id, 'username': u.username, 'full_name': u.get_full_name() or u.username}
+            for u in User.objects.filter(is_staff=True, is_active=True).order_by('username')
+        ],
     }
     return render(request, 'dashboards/front_desk.html', context)
 
@@ -479,10 +981,22 @@ def coach_dashboard(request):
 
     assigned_members = MemberProfile.objects.filter(
         assigned_coach=request.user
-    ).select_related('user')
+    ).select_related('user', 'assigned_program')
+
+    all_active_members = MemberProfile.objects.filter(
+        user__is_active=True
+    ).select_related('user', 'assigned_program', 'assigned_coach').order_by('user__first_name', 'user__username')
+
     if not assigned_members.exists():
-        # Fallback to all members if none explicitly assigned
-        assigned_members = MemberProfile.objects.select_related('user')[:20]
+        # Fallback to active members if none explicitly assigned
+        assigned_members = all_active_members[:20]
+
+    from wger.zkbio_integration.models import DoorAccessLog
+    recent_floor_punches = list(DoorAccessLog.objects.filter(
+        event_type='ENTRY',
+        punch_time__date=timezone.now().date()
+    ).select_related('user').order_by('-punch_time')[:20])
+    floor_user_ids = set(p.user_id for p in recent_floor_punches if p.user_id)
 
     member_ids = assigned_members.values_list('user_id', flat=True)
     unreviewed_meals = MealLog.objects.filter(
@@ -501,6 +1015,72 @@ def coach_dashboard(request):
     nutrition_targets = DailyFuelTarget.objects.filter(member__in=member_ids).select_related('member')
     at_risk_ids = [s.member_id for s in at_risk]
 
+    # ── Coach Monthly Earnings, Commissions & Payslip ──
+    from wger.gym_operations_payroll.models import PayrollLedger, StaffShift
+    import calendar
+    from decimal import Decimal
+
+    curr_first_day = timezone.now().date().replace(day=1)
+    curr_last_day_num = calendar.monthrange(curr_first_day.year, curr_first_day.month)[1]
+    curr_last_day = curr_first_day.replace(day=curr_last_day_num)
+
+    coach_ledger = PayrollLedger.objects.filter(
+        staff_user=request.user,
+        month=curr_first_day
+    ).first()
+
+    if not coach_ledger:
+        try:
+            from wger.gym_operations_payroll.tasks import calculate_monthly_payroll
+            calculate_monthly_payroll(curr_first_day.year, curr_first_day.month)
+            coach_ledger = PayrollLedger.objects.filter(
+                staff_user=request.user,
+                month=curr_first_day
+            ).first()
+        except Exception:
+            pass
+
+    # Coached PT Athletes with 7000/3000/4000 split
+    coach_pt_clients = []
+    pt_member_user_ids = [mp.user_id for mp in assigned_members if mp.personal_trainer_needed and mp.user_id]
+    active_subs_by_user = {}
+    if pt_member_user_ids:
+        for s in Subscription.objects.filter(
+            member_id__in=pt_member_user_ids,
+            status='active',
+            start_date__lte=curr_last_day,
+            end_date__gte=curr_first_day
+        ).select_related('plan').order_by('-start_date'):
+            if s.member_id not in active_subs_by_user:
+                active_subs_by_user[s.member_id] = s
+
+    for mem_prof in assigned_members:
+        if mem_prof.personal_trainer_needed:
+            active_s = active_subs_by_user.get(mem_prof.user_id)
+            if active_s:
+                coach_pt_clients.append({
+                    'name': mem_prof.user.get_full_name() or mem_prof.user.username,
+                    'username': mem_prof.user.username,
+                    'phone': mem_prof.phone or '—',
+                    'plan_name': active_s.plan.name if active_s.plan else 'Personal Coaching',
+                    'package_fee': Decimal('7000.00'),
+                    'gym_share': Decimal('3000.00'),
+                    'coach_share': Decimal('4000.00'),
+                    'validity': f"{active_s.start_date.strftime('%d %b')} – {active_s.end_date.strftime('%d %b %Y')}",
+                })
+
+    coach_shifts = list(StaffShift.objects.filter(
+        staff_user=request.user,
+        shift_date__range=[curr_first_day, curr_last_day]
+    ).order_by('-shift_date'))
+
+    coach_attendance = {
+        'scheduled': len(coach_shifts),
+        'completed': len([s for s in coach_shifts if s.actual_first_in]),
+        'late_minutes': sum(s.calculate_late_minutes() for s in coach_shifts),
+        'overtime_minutes': sum(s.overtime_minutes for s in coach_shifts),
+    }
+
     context = {
         'role': 'coach',
         'page_title': 'Coach Dashboard',
@@ -511,6 +1091,9 @@ def coach_dashboard(request):
             'phone': '070 762 7878',
         },
         'assigned_members': assigned_members,
+        'all_active_members': all_active_members,
+        'recent_floor_punches': recent_floor_punches,
+        'floor_user_ids': floor_user_ids,
         'unreviewed_meals': unreviewed_meals,
         'at_risk_members': at_risk,
         'at_risk_ids': at_risk_ids,
@@ -518,8 +1101,14 @@ def coach_dashboard(request):
         'recent_checkins': recent_checkins,
         'recent_workouts': recent_workouts,
         'nutrition_targets': nutrition_targets,
+        'coach_ledger': coach_ledger,
+        'coach_pt_clients': coach_pt_clients,
+        'coach_shifts': coach_shifts,
+        'coach_attendance': coach_attendance,
+        'curr_month_label': curr_first_day.strftime('%B %Y'),
     }
     return render(request, 'dashboards/coach.html', context)
+
 
 
 @login_required
@@ -596,6 +1185,18 @@ def member_dashboard(request):
     today_meals = MealLog.objects.filter(member=user, logged_at__date=today).order_by('-logged_at')
     recent_receipts = PaymentReceipt.objects.filter(member=user).order_by('-issued_at')[:5]
 
+    # Assessments & Coach Prescription Status
+    from wger.membership.models import NutritionAssessment, WorkoutAssessment
+    latest_nut_assessment = NutritionAssessment.objects.filter(member=user).order_by('-assessment_date', '-id').first()
+    latest_wrk_assessment = WorkoutAssessment.objects.filter(member=user).order_by('-assessment_date', '-id').first()
+    coach_plan_status = 'NOT_SUBMITTED'
+    if latest_nut_assessment or latest_wrk_assessment:
+        statuses = [a.status for a in [latest_nut_assessment, latest_wrk_assessment] if a]
+        if any(s in ['reviewed', 'assigned', 'active'] for s in statuses):
+            coach_plan_status = 'ACTIVE_APPROVED'
+        else:
+            coach_plan_status = 'PENDING_REVIEW'
+
     context = {
         'role': 'member',
         'page_title': 'My Dashboard',
@@ -634,6 +1235,11 @@ def member_dashboard(request):
         'today_meals': today_meals,
         'recent_receipts': recent_receipts,
         'membership_plans': MembershipPlan.objects.filter(is_active=True),
+        'latest_nut_assessment': latest_nut_assessment,
+        'latest_wrk_assessment': latest_wrk_assessment,
+        'coach_plan_status': coach_plan_status,
+        'is_coach': request.user.groups.filter(name__in=['coach', 'gym_trainer']).exists(),
+        'is_admin': request.user.is_staff or request.user.is_superuser or request.user.groups.filter(name__in=['gym_manager', 'super_admin']).exists(),
     }
     return render(request, 'dashboards/member.html', context)
 
@@ -650,7 +1256,9 @@ def public_registration_view(request):
     """
     if request.method == 'GET':
         plans = MembershipPlan.objects.filter(is_active=True)
-        return render(request, 'register.html', {'plans': plans})
+        from wger.membership.models import CoachProfile
+        coaches = CoachProfile.objects.filter(is_active=True).select_related('user')
+        return render(request, 'register.html', {'plans': plans, 'coaches': coaches})
 
     elif request.method == 'POST':
         data = request.POST
@@ -674,7 +1282,9 @@ def public_registration_view(request):
             except Exception:
                 return Decimal(default)
 
-        admission_fee = parse_dec(data.get('admission_fee', '1000.00'))
+        # Yearly fee (default 1000, 0 for student)
+        default_yearly = '0.00' if (plan and plan.plan_type == 'student') else '1000.00'
+        admission_fee = parse_dec(data.get('admission_fee', default_yearly))
         monthly_fee = parse_dec(data.get('monthly_fee', '4000.00'))
         discount = parse_dec(data.get('discount', '0.00'))
         total_paid = parse_dec(data.get('total_paid', '5000.00'))
@@ -684,6 +1294,13 @@ def public_registration_view(request):
         age = int(data.get('age')) if data.get('age') and data.get('age').isdigit() else None
         start_date = data.get('start_date') or None
         end_date = data.get('end_date') or None
+
+        # Preferred coach lookup
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        preferred_coach_id = data.get('preferred_coach_id')
+        preferred_coach = User.objects.filter(id=preferred_coach_id).first() if preferred_coach_id else None
+        pt_needed = (data.get('personal_trainer_needed') == 'yes') or (plan and plan.plan_type == 'personal_coaching') or bool(preferred_coach)
 
         app = MemberApplication.objects.create(
             full_name=full_name,
@@ -708,7 +1325,8 @@ def public_registration_view(request):
             is_under_medication=(data.get('under_meds') == 'yes'),
             medication_details=data.get('medication_details', '').strip(),
             blood_group=data.get('blood_group', '').strip(),
-            personal_trainer_needed=(data.get('personal_trainer_needed') == 'yes'),
+            personal_trainer_needed=pt_needed,
+            preferred_coach=preferred_coach,
             admission_fee=admission_fee,
             monthly_fee=monthly_fee,
             discount=discount,
@@ -978,16 +1596,24 @@ def record_payment_api(request):
     except Exception:
         data = request.POST
 
+    from decimal import Decimal
     from django.contrib.auth import get_user_model
     from wger.zkbio_integration.models import BiometricProfile
     from wger.membership.models import MemberProfile
     from wger.gym_operations_payroll.models import PaymentReceipt
+    from wger.gym_operations_payroll.models import PayrollLedger
     User = get_user_model()
 
     member_id = data.get('member_id')
     plan_id = data.get('plan_id')
     method = data.get('payment_method', 'cash')
     amount = data.get('amount_paid', 4000)
+    include_yearly_fee = bool(data.get('include_yearly_fee', False))
+    yearly_fee_val = data.get('yearly_fee_amount', 0)
+    try:
+        yearly_fee_amount = Decimal(str(yearly_fee_val))
+    except Exception:
+        yearly_fee_amount = Decimal('0.00')
 
     member = User.objects.filter(id=member_id).first()
     if not member:
@@ -995,12 +1621,25 @@ def record_payment_api(request):
 
     plan = MembershipPlan.objects.filter(id=plan_id).first() or MembershipPlan.objects.first()
 
+    coaching_only = bool(data.get('coaching_only', False))
     today = timezone.now().date()
+    # Seamless renewal: if member already has an active subscription expiring in the future, extend from that end date
+    latest_active_sub = Subscription.objects.filter(
+        member=member, status='active', end_date__gte=today
+    ).order_by('-end_date').first()
+
+    if coaching_only and latest_active_sub:
+        start_date = today
+        end_date = max(latest_active_sub.end_date, today + timezone.timedelta(days=getattr(plan, 'duration_days', 30)))
+    else:
+        start_date = (latest_active_sub.end_date + timezone.timedelta(days=1)) if latest_active_sub else today
+        end_date = start_date + timezone.timedelta(days=getattr(plan, 'duration_days', 30))
+
     sub = Subscription.objects.create(
         member=member,
         plan=plan,
-        start_date=today,
-        end_date=today + timezone.timedelta(days=getattr(plan, 'duration_days', 30)),
+        start_date=start_date,
+        end_date=end_date,
         status='active',
         payment_method=method,
         amount_paid=amount,
@@ -1018,7 +1657,94 @@ def record_payment_api(request):
     profile = MemberProfile.objects.filter(user=member).first()
     pin = profile.biometric_pin if profile else (bio.zk_pin if bio else '')
 
-    # Issue 80mm Thermal Payment Receipt
+    # Coach attribution and 7000 Personal Coaching split (4000 coach payslip / 3000 gym)
+    coach_id = data.get('coach_id')
+    assigned_coach_user = None
+    if coach_id:
+        assigned_coach_user = User.objects.filter(id=coach_id).first()
+        if assigned_coach_user and profile:
+            profile.assigned_coach = assigned_coach_user
+            profile.personal_trainer_needed = True
+            profile.save(update_fields=['assigned_coach', 'personal_trainer_needed'])
+    elif profile and profile.assigned_coach:
+        assigned_coach_user = profile.assigned_coach
+
+    # Check if this is a personal coaching package or coach was assigned with coaching payment
+    is_personal_coaching = (
+        (plan and getattr(plan, 'plan_type', '') == 'personal_coaching') or
+        (plan and 'coaching' in plan.name.lower()) or
+        bool(assigned_coach_user and Decimal(str(amount)) >= Decimal('7000.00'))
+    )
+
+    receipt_notes = 'Front Desk POS Payment'
+    if is_personal_coaching and assigned_coach_user:
+        first_of_month = today.replace(day=1)
+        ledger, _ = PayrollLedger.objects.get_or_create(
+            staff_user=assigned_coach_user,
+            month=first_of_month,
+            defaults={
+                'base_salary': Decimal('75000.00'),
+                'pt_commissions': Decimal('0.00'),
+            }
+        )
+        coach_cut = Decimal('4000.00')
+        gym_cut = Decimal('3000.00')
+        ledger.pt_commissions = (ledger.pt_commissions or Decimal('0.00')) + coach_cut
+        coach_name = assigned_coach_user.get_full_name() or assigned_coach_user.username
+        ledger.notes = (ledger.notes + f"\n+ LKR 4,000 PT Commission for member {member.username} ({plan.name if plan else 'Coaching'}).").strip()
+        if coaching_only:
+            receipt_notes = f"Personal Coaching Add-on (Monthly Active Pass) | LKR {gym_cut} Gym Facility Fee | LKR {coach_cut} Coach ({coach_name})"
+        else:
+            receipt_notes = f"Personal Coaching Split: LKR {gym_cut} Gym Facility Fee | LKR {coach_cut} Coach ({coach_name})"
+
+    # Handle Yearly Registration / Renewal Fee
+    if include_yearly_fee:
+        if yearly_fee_amount > 0:
+            receipt_notes = f"{receipt_notes} | Includes Annual Registration/Renewal Fee: LKR {yearly_fee_amount:,.0f}"
+            if profile:
+                profile.notes = (profile.notes + f"\nAnnual Registration/Renewal Fee LKR {yearly_fee_amount:,.0f} paid on {today}.").strip()
+                profile.save(update_fields=['notes'])
+        elif getattr(plan, 'plan_type', '') == 'student':
+            receipt_notes = f"{receipt_notes} | Student Package: LKR 0 Annual Registration Fee (Free)"
+
+    reference_note = str(data.get('reference_note', '')).strip()
+    if reference_note:
+        receipt_notes = f"{receipt_notes} | Ref: {reference_note}"
+
+    # Update subscription notes for full auditability
+    sub.notes = receipt_notes
+    sub.save(update_fields=['notes'])
+
+    # Compute granular billing amounts for accurate receipt itemization
+    amount_dec = Decimal(str(amount))
+    if not include_yearly_fee:
+        yearly_fee_amount = Decimal('0.00')
+
+    package_amount_raw = data.get('package_amount')
+    coaching_amount_raw = data.get('coaching_amount')
+    coach_name_str = (assigned_coach_user.get_full_name() or assigned_coach_user.username) if assigned_coach_user else ''
+
+    if package_amount_raw is not None and coaching_amount_raw is not None:
+        try:
+            package_amount = Decimal(str(package_amount_raw))
+        except Exception:
+            package_amount = Decimal('0.00')
+        try:
+            coaching_amount = Decimal(str(coaching_amount_raw))
+        except Exception:
+            coaching_amount = Decimal('0.00')
+    else:
+        if coaching_only:
+            package_amount = Decimal('0.00')
+            coaching_amount = Decimal('7000.00')
+        elif is_personal_coaching and assigned_coach_user and (not plan or plan.plan_type != 'personal_coaching'):
+            coaching_amount = Decimal('7000.00')
+            package_amount = max(Decimal('0.00'), amount_dec - coaching_amount - yearly_fee_amount)
+        else:
+            coaching_amount = Decimal('0.00')
+            package_amount = max(Decimal('0.00'), amount_dec - yearly_fee_amount)
+
+    # Issue 80mm Thermal Payment Receipt with Granular Line-Items
     receipt = PaymentReceipt.objects.create(
         receipt_number=PaymentReceipt.generate_next_receipt_number(),
         subscription=sub,
@@ -1027,11 +1753,15 @@ def record_payment_api(request):
         duration_days=getattr(plan, 'duration_days', 30),
         validity_start=sub.start_date,
         validity_end=sub.end_date,
-        amount_paid=amount,
+        amount_paid=amount_dec,
+        package_amount=package_amount,
+        coaching_amount=coaching_amount,
+        annual_fee_amount=yearly_fee_amount,
+        coach_name=coach_name_str,
         payment_method=method,
         cashier=request.user,
         member_pin=pin,
-        notes='Front Desk POS Payment'
+        notes=receipt_notes
     )
 
     return JsonResponse({
@@ -1040,6 +1770,48 @@ def record_payment_api(request):
         'receipt_id': receipt.id,
         'receipt_number': receipt.receipt_number,
         'receipt_url': f"/receipt/{receipt.id}/?autoprint=1"
+    })
+
+
+@login_required
+@role_required('front_desk', 'super_admin')
+def assign_coach_api(request, member_id):
+    """Front Desk or Super Admin assigns or updates a personal coach for a member."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    from django.contrib.auth import get_user_model
+    from wger.membership.models import MemberProfile
+    User = get_user_model()
+    member = User.objects.filter(id=member_id).first()
+    if not member:
+        return JsonResponse({'error': 'Member not found'}, status=404)
+
+    coach_id = data.get('coach_id')
+    profile, _ = MemberProfile.objects.get_or_create(user=member)
+    if coach_id:
+        coach = User.objects.filter(id=coach_id).first()
+        if not coach:
+            return JsonResponse({'error': 'Coach not found'}, status=404)
+        profile.assigned_coach = coach
+        profile.personal_trainer_needed = True
+        coach_name = coach.get_full_name() or coach.username
+    else:
+        profile.assigned_coach = None
+        profile.personal_trainer_needed = False
+        coach_name = 'None'
+
+    profile.save(update_fields=['assigned_coach', 'personal_trainer_needed'])
+    return JsonResponse({
+        'success': True,
+        'message': f"Personal coach for {member.username} set to '{coach_name}'.",
+        'coach_name': coach_name
     })
 
 
@@ -1061,7 +1833,16 @@ def view_receipt(request, receipt_id):
     if not (is_staff_or_admin or request.user == receipt.member):
         return HttpResponseForbidden("Unauthorized to view this receipt")
 
-    return render(request, 'receipt_80mm.html', {'receipt': receipt})
+    club_info = {
+        'name': 'FIT ME FITNESS & HEALTH CLUB',
+        'tagline': 'TRAIN WITH PURPOSE & MOVE WITH CONFIDENCE',
+        'address': 'New Town, Elpitiya Road, Pitigala, 80420',
+        'phone': '070 762 7878',
+        'email': 'info@fitme.lk',
+        'web': 'www.fitmefitness.lk',
+    }
+
+    return render(request, 'receipt_80mm.html', {'receipt': receipt, 'club_info': club_info})
 
 
 @login_required
@@ -1127,6 +1908,258 @@ def ping_member_api(request, member_id):
         'success': True,
         'message': f"Motivational nudge delivered to {member.get_full_name() or member.username}!",
         'ping_id': ping.id
+    })
+
+
+@login_required
+@role_required('front_desk', 'admin', 'super_admin')
+def desk_member_lookup_api(request):
+    """
+    Universal Member Quick-Search for Front Desk.
+    Searches by name, phone, or PIN.
+    Returns: full athlete status (Active / Expired / Unpaid / In Gym Now) + quick actions.
+    """
+    from django.contrib.auth import get_user_model
+    from django.db.models import Q
+    from wger.membership.models import Subscription
+    from wger.gym_operations_payroll.models import PaymentReceipt
+    from wger.zkbio_integration.models import DoorAccessLog
+
+    User = get_user_model()
+    q = request.GET.get('q', '').strip()
+    if not q or len(q) < 2:
+        return JsonResponse({'results': []})
+
+    users = User.objects.filter(
+        Q(first_name__icontains=q) |
+        Q(last_name__icontains=q) |
+        Q(username__icontains=q) |
+        Q(member_profile__phone__icontains=q) |
+        Q(biometric_profile__zk_pin__icontains=q)
+    ).select_related('member_profile', 'biometric_profile')[:15]
+
+    today = timezone.now().date()
+    results = []
+    for u in users:
+        sub = Subscription.objects.filter(member=u, status='active', end_date__gte=today).order_by('-end_date').first()
+        if not sub:
+            sub = Subscription.objects.filter(member=u).order_by('-end_date').first()
+
+        mem_prof = None
+        try:
+            mem_prof = u.member_profile
+        except Exception:
+            pass
+
+        bio_prof = None
+        try:
+            bio_prof = u.biometric_profile
+        except Exception:
+            pass
+
+        latest_punch = None
+        if bio_prof and bio_prof.zk_pin:
+            latest_punch = DoorAccessLog.objects.filter(
+                punch_time__date=today
+            ).filter(
+                Q(user=u) | Q(zk_pin=bio_prof.zk_pin)
+            ).order_by('-punch_time').first()
+        else:
+            latest_punch = DoorAccessLog.objects.filter(
+                punch_time__date=today,
+                user=u
+            ).order_by('-punch_time').first()
+
+        on_floor = (latest_punch.event_type == 'ENTRY') if latest_punch else False
+        last_receipt = PaymentReceipt.objects.filter(member=u).order_by('-issued_at').first()
+
+        yearly_paid_q = PaymentReceipt.objects.filter(
+            member=u,
+            issued_at__year=today.year
+        ).filter(
+            Q(notes__icontains='Annual') | 
+            Q(notes__icontains='Yearly') | 
+            Q(notes__icontains='Registration') |
+            Q(notes__icontains='Initial membership enrollment')
+        ).exists()
+        notes_paid_u = bool(mem_prof and mem_prof.notes and str(today.year) in mem_prof.notes and ('annual' in mem_prof.notes.lower() or 'yearly' in mem_prof.notes.lower() or 'registration' in mem_prof.notes.lower()))
+        yearly_fee_paid = yearly_paid_q or notes_paid_u
+
+        sub_status = 'NO_PLAN'
+        days_left = 0
+        plan_name = 'No Active Plan'
+        end_date_str = ''
+        if sub:
+            plan_name = sub.plan.name if sub.plan else 'Standard'
+            end_date_str = sub.end_date.strftime('%d %b %Y') if sub.end_date else ''
+            if sub.status == 'active' and sub.end_date and sub.end_date >= today:
+                sub_status = 'ACTIVE'
+                days_left = (sub.end_date - today).days
+            else:
+                sub_status = 'EXPIRED'
+
+        photo_url = None
+        if mem_prof and mem_prof.profile_photo:
+            try:
+                photo_url = mem_prof.profile_photo.url
+            except Exception:
+                pass
+
+        results.append({
+            'id': u.id,
+            'name': u.get_full_name() or u.username,
+            'username': u.username,
+            'phone': getattr(mem_prof, 'phone', '') or '',
+            'pin': getattr(bio_prof, 'zk_pin', '') or str(u.id),
+            'face_enrolled': getattr(bio_prof, 'face_enrolled', False) if bio_prof else False,
+            'fingerprint_enrolled': getattr(bio_prof, 'fingerprint_enrolled', False) if bio_prof else False,
+            'plan_name': plan_name,
+            'sub_status': sub_status,
+            'days_left': days_left,
+            'end_date': end_date_str,
+            'on_floor': on_floor,
+            'last_punch_time': latest_punch.punch_time.strftime('%H:%M:%S') if latest_punch else '',
+            'last_receipt_id': last_receipt.id if last_receipt else None,
+            'photo_url': photo_url,
+            'yearly_fee_paid': yearly_fee_paid,
+        })
+
+    return JsonResponse({'results': results})
+
+
+@login_required
+@role_required('front_desk', 'coach', 'super_admin')
+def member_full_profile_api(request, member_id):
+    """Returns complete 360-degree dossier for a gym member."""
+    from django.contrib.auth import get_user_model
+    from django.db.models import Q
+    from wger.membership.models import MemberProfile, Subscription, MemberApplication
+    from wger.zkbio_integration.models import BiometricProfile, DoorAccessLog
+    from wger.gym_operations_payroll.models import PaymentReceipt
+    User = get_user_model()
+
+    member = User.objects.filter(id=member_id).first()
+    if not member:
+        return JsonResponse({'error': 'Member not found'}, status=404)
+
+    prof = getattr(member, 'member_profile', None)
+    bio = getattr(member, 'biometric_profile', None)
+
+    today = timezone.now().date()
+    # Subscriptions
+    active_sub = Subscription.objects.filter(member=member, status='active', end_date__gte=today).order_by('-end_date').first()
+    latest_sub = active_sub or Subscription.objects.filter(member=member).order_by('-end_date').first()
+
+    # Receipts
+    receipts_qs = PaymentReceipt.objects.filter(member=member).order_by('-issued_at')[:6]
+    receipts_list = [{
+        'id': r.id,
+        'number': r.receipt_number,
+        'date': r.issued_at.strftime('%d %b %Y'),
+        'plan_name': r.plan_name,
+        'amount': float(r.amount_paid),
+        'method': r.payment_method.upper(),
+        'notes': r.notes or ''
+    } for r in receipts_qs]
+
+    # Door Access & Attendance
+    latest_punch = DoorAccessLog.objects.filter(user=member).order_by('-punch_time').first()
+    total_punches_month = DoorAccessLog.objects.filter(
+        user=member, 
+        event_type='ENTRY', 
+        punch_time__year=today.year, 
+        punch_time__month=today.month
+    ).count()
+
+    # Calculate Age
+    age = None
+    if prof and prof.date_of_birth:
+        dob = prof.date_of_birth
+        age = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+    else:
+        app = MemberApplication.objects.filter(created_user=member).first()
+        if app and app.age:
+            age = app.age
+
+    # Coach details
+    coach_name = None
+    if prof and prof.assigned_coach:
+        coach_name = prof.assigned_coach.get_full_name() or prof.assigned_coach.username
+
+    # Training Program
+    program_title = None
+    if prof and prof.assigned_program:
+        program_title = prof.assigned_program.title
+
+    # Photo URL
+    photo_url = None
+    if prof and prof.profile_photo:
+        try:
+            photo_url = prof.profile_photo.url
+        except Exception:
+            pass
+
+    return JsonResponse({
+        'success': True,
+        'member': {
+            'id': member.id,
+            'name': member.get_full_name() or member.username,
+            'username': member.username,
+            'email': member.email,
+            'phone': prof.phone if prof else '',
+            'nic_passport': prof.nic_passport if prof else '',
+            'gender': (prof.gender or 'N/A').capitalize() if prof else 'N/A',
+            'dob': prof.date_of_birth.strftime('%d %b %Y') if (prof and prof.date_of_birth) else 'N/A',
+            'age': age or 'N/A',
+            'blood_group': prof.blood_group if prof else 'N/A',
+            'address': prof.address if prof else '',
+            'photo_url': photo_url,
+            'date_joined': member.date_joined.strftime('%d %b %Y'),
+            # Emergency
+            'emergency_name': prof.emergency_contact_name if prof else '',
+            'emergency_relationship': prof.emergency_relationship if prof else '',
+            'emergency_phone': prof.emergency_contact_phone if prof else '',
+            # Medical
+            'medical_conditions': prof.medical_conditions if prof else '',
+            'under_medication': prof.under_medication if prof else '',
+            'primary_goal': prof.get_primary_goal_display() if prof else 'General Fitness',
+            # Coaching & Program
+            'assigned_coach': coach_name,
+            'personal_trainer_needed': prof.personal_trainer_needed if prof else False,
+            'assigned_program': program_title,
+            'notes': prof.notes if prof else '',
+            # Subscription
+            'plan_name': latest_sub.plan.name if (latest_sub and latest_sub.plan) else 'No Active Plan',
+            'sub_status': 'ACTIVE' if (active_sub and active_sub.end_date >= today) else ('EXPIRED' if latest_sub else 'NONE'),
+            'validity_start': latest_sub.start_date.strftime('%d %b %Y') if latest_sub else '',
+            'validity_end': latest_sub.end_date.strftime('%d %b %Y') if latest_sub else '',
+            'days_remaining': (latest_sub.end_date - today).days if (active_sub and latest_sub.end_date >= today) else 0,
+            'amount_paid': float(latest_sub.amount_paid) if latest_sub else 0,
+            # Hardware
+            'pin': bio.zk_pin if bio else str(member.id),
+            'face_enrolled': bio.face_enrolled if bio else False,
+            'fingerprint_enrolled': bio.fingerprint_enrolled if bio else False,
+            'gate_access_active': member.is_active and not (bio and bio.disabled),
+            'last_punch_time': latest_punch.punch_time.strftime('%d %b %Y, %I:%M %p') if latest_punch else 'Never',
+            'month_attendance_count': total_punches_month,
+            # Receipts
+            'receipts': receipts_list,
+            'yearly_fee_paid': (
+                PaymentReceipt.objects.filter(
+                    member=member,
+                    issued_at__year=today.year
+                ).filter(
+                    Q(notes__icontains='Annual') | 
+                    Q(notes__icontains='Yearly') | 
+                    Q(notes__icontains='Registration') |
+                    Q(notes__icontains='Initial membership enrollment')
+                ).exists() or bool(
+                    prof and prof.notes and str(today.year) in prof.notes and (
+                        'annual' in prof.notes.lower() or 'yearly' in prof.notes.lower() or 'registration' in prof.notes.lower()
+                    )
+                )
+            ),
+        }
     })
 
 
@@ -1354,6 +2387,10 @@ def assign_program_api(request, member_id):
         data = request.POST
 
     program_id = data.get('program_id')
+    schedule_days = data.get('schedule_days', '')
+    schedule_slot = data.get('schedule_slot', '')
+    coach_notes = str(data.get('coach_notes', '')).strip()
+
     from wger.membership.models import MemberProfile, GymProgram
     from django.contrib.auth import get_user_model
     User = get_user_model()
@@ -1368,11 +2405,20 @@ def assign_program_api(request, member_id):
 
     profile, _ = MemberProfile.objects.get_or_create(user=member)
     profile.assigned_program = program
-    profile.save(update_fields=['assigned_program'])
+
+    update_fields = ['assigned_program']
+    if schedule_days or schedule_slot or coach_notes:
+        schedule_summary = f"{schedule_days} [{schedule_slot}]"
+        if coach_notes:
+            schedule_summary += f" &bull; {coach_notes}"
+        profile.notes = schedule_summary
+        update_fields.append('notes')
+
+    profile.save(update_fields=update_fields)
 
     return JsonResponse({
         'success': True,
-        'message': f"Assigned '{program.title}' to {member.get_full_name() or member.username}!",
+        'message': f"Assigned '{program.title}' & schedule to {member.get_full_name() or member.username}!",
         'program_title': program.title
     })
 
@@ -2457,6 +3503,32 @@ def admin_delete_expense_api(request, expense_id):
 
 @login_required
 @role_required('super_admin', 'admin')
+def admin_upload_expense_receipt_api(request, expense_id):
+    """Super Admin & Admin attaches receipt/bill proof image to an existing expense."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    from wger.gym_operations_payroll.models import ClubExpense
+    exp = ClubExpense.objects.filter(id=expense_id).first()
+    if not exp:
+        return JsonResponse({'error': 'Expense record not found.'}, status=404)
+
+    receipt_file = request.FILES.get('receipt_image') or request.FILES.get('receipt_file')
+    if not receipt_file:
+        return JsonResponse({'error': 'Please select a bill image or PDF to upload.'}, status=400)
+
+    exp.receipt_image = receipt_file
+    exp.save(update_fields=['receipt_image'])
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Receipt proof attached to expense '{exp.title}' successfully.",
+        'receipt_image_url': exp.receipt_image.url if exp.receipt_image else None
+    })
+
+
+@login_required
+@role_required('super_admin', 'admin')
 def admin_export_expenses_csv(request):
     """Export operating expenses log to CSV."""
     import csv
@@ -2762,4 +3834,888 @@ def admin_unlink_partner_api(request, link_id):
         'success': True,
         'message': f"Unlinked {partner_name} from {plan_name}. Hardware turnstile access has been revoked."
     })
+
+
+# ═════════════════════════════════════════════════════════════════════
+# SUPER ADMIN: PAYROLL & COMMISSION MANAGEMENT APIS
+# ═════════════════════════════════════════════════════════════════════
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_recalculate_payroll_api(request):
+    """Triggers monthly payroll consolidation task for all staff users."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    year = data.get('year')
+    month = data.get('month')
+    try:
+        year = int(year) if year else None
+        month = int(month) if month else None
+    except (ValueError, TypeError):
+        year, month = None, None
+
+    from wger.gym_operations_payroll.tasks import calculate_monthly_payroll
+    result_msg = calculate_monthly_payroll(year=year, month=month)
+    return JsonResponse({
+        'success': True,
+        'message': result_msg or 'Monthly payroll recalculated and consolidated successfully.'
+    })
+
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_adjust_payroll_ledger_api(request, ledger_id):
+    """Allows Super Admin to adjust ledger fields (base salary, commissions, overtime, penalties, notes)."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    from decimal import Decimal
+    from wger.gym_operations_payroll.models import PayrollLedger
+    ledger = PayrollLedger.objects.filter(id=ledger_id).first()
+    if not ledger:
+        return JsonResponse({'error': 'Payroll ledger not found'}, status=404)
+
+    def parse_dec(val, curr):
+        try:
+            return Decimal(str(val).strip())
+        except Exception:
+            return curr
+
+    if 'base_salary' in data:
+        ledger.base_salary = parse_dec(data['base_salary'], ledger.base_salary)
+    if 'pt_commissions' in data:
+        ledger.pt_commissions = parse_dec(data['pt_commissions'], ledger.pt_commissions)
+    if 'overtime_pay' in data:
+        ledger.overtime_pay = parse_dec(data['overtime_pay'], ledger.overtime_pay)
+    if 'late_minutes_penalty' in data:
+        ledger.late_minutes_penalty = parse_dec(data['late_minutes_penalty'], ledger.late_minutes_penalty)
+    if 'sudden_absence_penalty' in data:
+        ledger.sudden_absence_penalty = parse_dec(data['sudden_absence_penalty'], ledger.sudden_absence_penalty)
+    if 'notes' in data:
+        ledger.notes = str(data['notes']).strip()
+
+    ledger.save()
+    return JsonResponse({
+        'success': True,
+        'message': f"Payroll updated for {ledger.staff_user.username}.",
+        'ledger': {
+            'id': ledger.id,
+            'base_salary': float(ledger.base_salary),
+            'pt_commissions': float(ledger.pt_commissions),
+            'overtime_pay': float(ledger.overtime_pay),
+            'late_minutes_penalty': float(ledger.late_minutes_penalty),
+            'sudden_absence_penalty': float(ledger.sudden_absence_penalty),
+            'net_salary': float(ledger.net_salary),
+            'notes': ledger.notes,
+            'is_finalized': ledger.is_finalized
+        }
+    })
+
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_finalize_payroll_ledger_api(request, ledger_id):
+    """Toggles finalized lock on a staff payroll ledger."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    from wger.gym_operations_payroll.models import PayrollLedger
+    ledger = PayrollLedger.objects.filter(id=ledger_id).first()
+    if not ledger:
+        return JsonResponse({'error': 'Payroll ledger not found'}, status=404)
+
+    ledger.is_finalized = not ledger.is_finalized
+    ledger.finalized_at = timezone.now() if ledger.is_finalized else None
+    ledger.save(update_fields=['is_finalized', 'finalized_at'])
+
+    status_str = "Finalized & Approved" if ledger.is_finalized else "Re-opened as Draft"
+    return JsonResponse({
+        'success': True,
+        'message': f"Payroll for {ledger.staff_user.username} is now {status_str}.",
+        'is_finalized': ledger.is_finalized,
+        'finalized_at': ledger.finalized_at.strftime('%Y-%m-%d %H:%M') if ledger.finalized_at else None
+    })
+
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_export_payroll_csv(request):
+    """Export monthly payroll ledgers to CSV."""
+    import csv
+    from django.http import HttpResponse
+    from wger.gym_operations_payroll.models import PayrollLedger
+
+    response = HttpResponse(content_type='text/csv')
+    today_str = timezone.now().strftime('%Y%m%d_%H%M')
+    response['Content-Disposition'] = f'attachment; filename="fitme_payroll_{today_str}.csv"'
+
+    writer = csv.writer(response)
+    writer.writerow(['Month', 'Staff Username', 'Full Name', 'Role', 'Base Salary (LKR)', 'PT Commissions (LKR)', 'Overtime Pay (LKR)', 'Late Penalty (LKR)', 'Absence Penalty (LKR)', 'Net Salary (LKR)', 'Finalized', 'Notes'])
+
+    for l in PayrollLedger.objects.select_related('staff_user').order_by('-month', 'staff_user__username'):
+        role_name = l.staff_user.groups.first().name if l.staff_user.groups.exists() else ('Super Admin' if l.staff_user.is_superuser else 'Staff')
+        writer.writerow([
+            l.month.strftime('%Y-%m'),
+            l.staff_user.username,
+            l.staff_user.get_full_name() or l.staff_user.username,
+            role_name,
+            f"{l.base_salary:.2f}",
+            f"{l.pt_commissions:.2f}",
+            f"{l.overtime_pay:.2f}",
+            f"{l.late_minutes_penalty:.2f}",
+            f"{l.sudden_absence_penalty:.2f}",
+            f"{l.net_salary:.2f}",
+            'YES' if l.is_finalized else 'NO',
+            l.notes.replace('\n', ' ')
+        ])
+
+    return response
+
+
+@login_required
+def admin_payroll_thermal_slip_view(request, ledger_id):
+    """Renders 80mm thermal payslip with auto-cut for POS receipt printers."""
+    from django.http import HttpResponse, HttpResponseForbidden
+    from wger.gym_operations_payroll.models import PayrollLedger, StaffShift
+    from wger.membership.models import MemberProfile
+    import calendar
+
+    is_admin = request.user.is_superuser or request.user.groups.filter(name__in=['super_admin', 'admin']).exists()
+    if not is_admin:
+        return HttpResponseForbidden("Access denied. Only Super Admin and Admin can access staff payroll slips.")
+
+    ledger = PayrollLedger.objects.select_related('staff_user').filter(id=ledger_id).first()
+    if not ledger:
+        return HttpResponse("Payroll ledger record not found.", status=404)
+
+    first_day = ledger.month.replace(day=1)
+    last_day_num = calendar.monthrange(first_day.year, first_day.month)[1]
+    last_day = first_day.replace(day=last_day_num)
+
+    # PT Coached Clients breakdown
+    coached_profiles = MemberProfile.objects.filter(
+        assigned_coach=ledger.staff_user,
+        personal_trainer_needed=True,
+    ).select_related('user').prefetch_related('user__subscriptions')
+
+    pt_clients = []
+    for cp in coached_profiles:
+        active_s = cp.user.subscriptions.filter(
+            status='active',
+            start_date__lte=last_day,
+            end_date__gte=first_day
+        ).first()
+        if active_s:
+            pt_clients.append({
+                'name': cp.user.get_full_name() or cp.user.username,
+                'username': cp.user.username,
+                'package_fee': 7000.0,
+                'gym_share': 3000.0,
+                'coach_share': 4000.0,
+            })
+
+    # Biometric duty attendance summary
+    shifts = StaffShift.objects.filter(
+        staff_user=ledger.staff_user,
+        shift_date__range=[first_day, last_day]
+    )
+    attendance = {
+        'scheduled': shifts.count(),
+        'completed': shifts.filter(actual_first_in__isnull=False).count(),
+        'late_minutes': sum(s.calculate_late_minutes() for s in shifts),
+        'overtime_minutes': sum(s.overtime_minutes for s in shifts),
+        'absence_minutes': sum(s.unapproved_absence_minutes for s in shifts),
+    }
+
+    context = {
+        'ledger': ledger,
+        'staff': ledger.staff_user,
+        'pt_clients': pt_clients,
+        'attendance': attendance,
+        'club_info': {
+            'name': 'FIT ME FITNESS',
+            'tagline': 'TRAIN WITH PURPOSE',
+            'address': 'New Town, Elpitiya Rd, Pitigala, 80420',
+            'phone': '070 762 7878',
+        },
+        'issued_date': timezone.now().strftime('%Y-%m-%d %H:%M'),
+    }
+    return render(request, 'payroll_thermal_slip.html', context)
+
+
+# ═════════════════════════════════════════════════════════════════
+# STAFF ATTENDANCE & SHIFT ROSTER MANAGEMENT APIS
+# ═════════════════════════════════════════════════════════════════
+
+@login_required
+@role_required('super_admin', 'admin', 'front_desk')
+def admin_clock_staff_attendance_api(request):
+    """
+    Clocks a staff member IN or OUT at the biometric door turnstile,
+    records the DoorAccessLog, and updates their active StaffShift.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    staff_id = data.get('staff_id')
+    direction = data.get('direction', 'IN').upper()
+    notes = data.get('notes', 'Manual turnstile clock via Console')
+
+    from django.contrib.auth import get_user_model
+    from wger.gym_operations_payroll.models import StaffShift
+    from wger.zkbio_integration.models import DoorAccessLog
+
+    User = get_user_model()
+    staff_user = User.objects.filter(id=staff_id, is_staff=True).first()
+    if not staff_user:
+        return JsonResponse({'error': 'Staff member not found'}, status=404)
+
+    now = timezone.now()
+    today = now.date()
+
+    # Find or auto-provision today's shift
+    shift = StaffShift.objects.filter(staff_user=staff_user, shift_date=today).first()
+    if not shift:
+        hour = now.hour
+        if hour < 13:
+            s_start = timezone.datetime.strptime('06:00', '%H:%M').time()
+            s_end = timezone.datetime.strptime('15:00', '%H:%M').time()
+        else:
+            s_start = timezone.datetime.strptime('13:00', '%H:%M').time()
+            s_end = timezone.datetime.strptime('22:00', '%H:%M').time()
+
+        shift = StaffShift.objects.create(
+            staff_user=staff_user,
+            shift_date=today,
+            scheduled_start=s_start,
+            scheduled_end=s_end,
+            status='SCHEDULED'
+        )
+
+    event_type = 'ENTRY' if direction == 'IN' else 'EXIT'
+
+    # Create DoorAccessLog
+    DoorAccessLog.objects.create(
+        user=staff_user,
+        zk_pin=f"STAFF-{staff_user.id}",
+        punch_time=now,
+        event_type=event_type,
+        verify_mode='BUZZER',
+        device_ip='192.168.1.23',
+        terminal_name='CONSOLE_MANUAL_ATTENDANCE',
+        raw_payload={'clocked_by': request.user.username, 'notes': notes}
+    )
+
+    if direction == 'IN':
+        if not shift.actual_first_in:
+            shift.actual_first_in = now
+        shift.status = 'ON_FLOOR'
+        shift.is_off_floor = False
+        shift.save(update_fields=['actual_first_in', 'status', 'is_off_floor'])
+    else:
+        shift.actual_last_out = now
+        sched_end_dt = timezone.make_aware(timezone.datetime.combine(today, shift.scheduled_end))
+        if now > sched_end_dt:
+            delta_ot = now - sched_end_dt
+            shift.overtime_minutes = int(delta_ot.total_seconds() / 60)
+        shift.status = 'COMPLETED' if now >= sched_end_dt else 'OFF_FLOOR'
+        shift.save(update_fields=['actual_last_out', 'overtime_minutes', 'status'])
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Successfully clocked {direction} for {staff_user.get_full_name() or staff_user.username}.",
+        'shift': {
+            'id': shift.id,
+            'staff': staff_user.username,
+            'status': shift.status,
+            'actual_in': shift.actual_first_in.strftime('%H:%M') if shift.actual_first_in else None,
+            'actual_out': shift.actual_last_out.strftime('%H:%M') if shift.actual_last_out else None,
+            'overtime_minutes': shift.overtime_minutes
+        }
+    })
+
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_create_staff_shift_api(request):
+    """Schedules a new staff shift roster record."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    from django.contrib.auth import get_user_model
+    from wger.gym_operations_payroll.models import StaffShift
+    from decimal import Decimal
+
+    User = get_user_model()
+    staff_id = data.get('staff_id')
+    shift_date_str = data.get('shift_date')
+    start_str = data.get('scheduled_start', '08:00')
+    end_str = data.get('scheduled_end', '17:00')
+    rate_str = data.get('base_hourly_rate', '500.00')
+
+    staff_user = User.objects.filter(id=staff_id, is_staff=True).first()
+    if not staff_user:
+        return JsonResponse({'error': 'Staff user not found'}, status=404)
+
+    try:
+        shift_date = timezone.datetime.strptime(shift_date_str, '%Y-%m-%d').date()
+        s_start = timezone.datetime.strptime(start_str, '%H:%M').time()
+        s_end = timezone.datetime.strptime(end_str, '%H:%M').time()
+        rate = Decimal(str(rate_str))
+    except Exception as e:
+        return JsonResponse({'error': f"Invalid date or time format: {e}"}, status=400)
+
+    shift = StaffShift.objects.create(
+        staff_user=staff_user,
+        shift_date=shift_date,
+        scheduled_start=s_start,
+        scheduled_end=s_end,
+        base_hourly_rate=rate,
+        status='SCHEDULED'
+    )
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Shift scheduled for {staff_user.username} on {shift_date}.",
+        'shift_id': shift.id
+    })
+
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_toggle_shift_leave_api(request, shift_id):
+    """Toggles approved leave for a scheduled shift."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    reason = data.get('leave_reason', 'Approved medical or personal leave')
+
+    from wger.gym_operations_payroll.models import StaffShift
+    shift = StaffShift.objects.filter(id=shift_id).first()
+    if not shift:
+        return JsonResponse({'error': 'Shift not found'}, status=404)
+
+    shift.approved_leave = not shift.approved_leave
+    shift.leave_reason = reason if shift.approved_leave else ''
+    shift.status = 'LEAVE' if shift.approved_leave else 'SCHEDULED'
+    shift.save(update_fields=['approved_leave', 'leave_reason', 'status'])
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Shift leave {'approved' if shift.approved_leave else 'revoked'} for {shift.staff_user.username}.",
+        'approved_leave': shift.approved_leave,
+        'status': shift.status
+    })
+
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_enroll_staff_payroll_api(request):
+    """Manually provisions or updates base salary for a staff member for a given month."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    from decimal import Decimal
+    from django.contrib.auth import get_user_model
+    from wger.gym_operations_payroll.models import PayrollLedger
+    from wger.gym_operations_payroll.tasks import calculate_monthly_payroll
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    User = get_user_model()
+    staff_id = data.get('staff_id')
+    month_str = data.get('month', '')
+    base_salary_str = data.get('base_salary', '75000.00')
+    notes = data.get('notes', '')
+
+    staff = User.objects.filter(id=staff_id, is_staff=True).first()
+    if not staff:
+        return JsonResponse({'error': 'Staff user not found.'}, status=404)
+
+    try:
+        if len(month_str) == 7:
+            month_date = timezone.datetime.strptime(month_str, '%Y-%m').date().replace(day=1)
+        else:
+            month_date = timezone.datetime.strptime(month_str, '%Y-%m-%d').date().replace(day=1)
+        base_salary = Decimal(str(base_salary_str))
+    except Exception as e:
+        return JsonResponse({'error': f"Invalid format: {e}"}, status=400)
+
+    ledger, created = PayrollLedger.objects.get_or_create(
+        staff_user=staff,
+        month=month_date,
+        defaults={
+            'base_salary': base_salary,
+            'notes': notes or f"Manual enrollment by {request.user.username}"
+        }
+    )
+    if not created:
+        ledger.base_salary = base_salary
+        if notes:
+            ledger.notes = notes
+        ledger.save()
+
+    # Recalculate dynamic components (commissions + attendance)
+    calculate_monthly_payroll(month_date.year, month_date.month)
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Payroll ledger for {staff.get_full_name() or staff.username} saved for {month_date.strftime('%B %Y')} with Base LKR {base_salary:,.2f}.",
+        'ledger_id': ledger.id
+    })
+
+
+@login_required
+@role_required('super_admin', 'admin', 'coach')
+def admin_get_pt_breakdown_api(request, ledger_id):
+    """Returns JSON breakdown of coached athletes and the LKR 7000 / 3000 / 4000 split for a coach."""
+    from wger.gym_operations_payroll.models import PayrollLedger
+    from wger.membership.models import MemberProfile
+    import calendar
+
+    ledger = PayrollLedger.objects.select_related('staff_user').filter(id=ledger_id).first()
+    if not ledger:
+        return JsonResponse({'error': 'Ledger not found.'}, status=404)
+
+    is_admin = request.user.is_superuser or request.user.groups.filter(name__in=['super_admin', 'admin']).exists()
+    if not is_admin and request.user != ledger.staff_user:
+        return JsonResponse({'error': 'Permission denied.'}, status=403)
+
+    first_day = ledger.month
+    last_day_num = calendar.monthrange(first_day.year, first_day.month)[1]
+    last_day = first_day.replace(day=last_day_num)
+
+    coached_profiles = MemberProfile.objects.filter(
+        assigned_coach=ledger.staff_user,
+        personal_trainer_needed=True,
+    ).select_related('user').prefetch_related('user__subscriptions')
+
+    pt_list = []
+    for cp in coached_profiles:
+        active_s = cp.user.subscriptions.filter(
+            status='active',
+            start_date__lte=last_day,
+            end_date__gte=first_day
+        ).first()
+        if active_s:
+            pt_list.append({
+                'id': cp.user.id,
+                'name': cp.user.get_full_name() or cp.user.username,
+                'username': cp.user.username,
+                'phone': cp.phone or '—',
+                'plan_name': active_s.plan.name if active_s.plan else 'Personal Coaching Package',
+                'package_fee': 7000.0,
+                'gym_share': 3000.0,
+                'coach_share': 4000.0,
+                'sub_start': active_s.start_date.strftime('%d %b %Y'),
+                'sub_end': active_s.end_date.strftime('%d %b %Y'),
+                'status': 'Active'
+            })
+
+    return JsonResponse({
+        'success': True,
+        'coach_name': ledger.staff_user.get_full_name() or ledger.staff_user.username,
+        'coach_username': ledger.staff_user.username,
+        'month': ledger.month.strftime('%B %Y'),
+        'total_clients': len(pt_list),
+        'package_fee_unit': 7000.0,
+        'gym_share_unit': 3000.0,
+        'coach_share_unit': 4000.0,
+        'total_gross_packages': len(pt_list) * 7000.0,
+        'total_gym_revenue': len(pt_list) * 3000.0,
+        'total_coach_commission': len(pt_list) * 4000.0,
+        'clients': pt_list
+    })
+
+
+# ═════════════════════════════════════════════════════════════════
+# STAFF WORK SCHEDULE, BULK ROSTERING & SALARY ADVANCES APIS
+# ═════════════════════════════════════════════════════════════════
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_get_staff_work_schedule_api(request, staff_id):
+    """Returns JSON of staff contract work schedule."""
+    from django.contrib.auth import get_user_model
+    from wger.gym_operations_payroll.models import StaffWorkSchedule
+    User = get_user_model()
+    staff = User.objects.filter(id=staff_id, is_staff=True).first()
+    if not staff:
+        return JsonResponse({'error': 'Staff user not found.'}, status=404)
+
+    sched = StaffWorkSchedule.objects.filter(staff_user=staff).first()
+    if sched:
+        data = {
+            'exists': True,
+            'staff_id': staff.id,
+            'staff_name': staff.get_full_name() or staff.username,
+            'default_base_salary': float(sched.default_base_salary),
+            'hourly_rate': float(sched.hourly_rate),
+            'epf_etf_eligible': sched.epf_etf_eligible,
+            'epf_number': sched.epf_number,
+            'monday_active': sched.monday_active,
+            'monday_start': sched.monday_start.strftime('%H:%M'),
+            'monday_end': sched.monday_end.strftime('%H:%M'),
+            'tuesday_active': sched.tuesday_active,
+            'tuesday_start': sched.tuesday_start.strftime('%H:%M'),
+            'tuesday_end': sched.tuesday_end.strftime('%H:%M'),
+            'wednesday_active': sched.wednesday_active,
+            'wednesday_start': sched.wednesday_start.strftime('%H:%M'),
+            'wednesday_end': sched.wednesday_end.strftime('%H:%M'),
+            'thursday_active': sched.thursday_active,
+            'thursday_start': sched.thursday_start.strftime('%H:%M'),
+            'thursday_end': sched.thursday_end.strftime('%H:%M'),
+            'friday_active': sched.friday_active,
+            'friday_start': sched.friday_start.strftime('%H:%M'),
+            'friday_end': sched.friday_end.strftime('%H:%M'),
+            'saturday_active': sched.saturday_active,
+            'saturday_start': sched.saturday_start.strftime('%H:%M'),
+            'saturday_end': sched.saturday_end.strftime('%H:%M'),
+            'sunday_active': sched.sunday_active,
+            'sunday_start': sched.sunday_start.strftime('%H:%M'),
+            'sunday_end': sched.sunday_end.strftime('%H:%M'),
+            'notes': sched.notes
+        }
+    else:
+        data = {
+            'exists': False,
+            'staff_id': staff.id,
+            'staff_name': staff.get_full_name() or staff.username,
+            'default_base_salary': 75000.0,
+            'hourly_rate': 500.0,
+            'epf_etf_eligible': True,
+            'epf_number': '',
+            'monday_active': True,
+            'monday_start': '06:00',
+            'monday_end': '15:00',
+            'tuesday_active': True,
+            'tuesday_start': '06:00',
+            'tuesday_end': '15:00',
+            'wednesday_active': True,
+            'wednesday_start': '06:00',
+            'wednesday_end': '15:00',
+            'thursday_active': True,
+            'thursday_start': '06:00',
+            'thursday_end': '15:00',
+            'friday_active': True,
+            'friday_start': '06:00',
+            'friday_end': '15:00',
+            'saturday_active': True,
+            'saturday_start': '08:00',
+            'saturday_end': '17:00',
+            'sunday_active': False,
+            'sunday_start': '08:00',
+            'sunday_end': '14:00',
+            'notes': ''
+        }
+    return JsonResponse({'success': True, 'schedule': data})
+
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_save_staff_work_schedule_api(request):
+    """Saves or updates master weekly schedule for a staff member."""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    from decimal import Decimal
+    from django.contrib.auth import get_user_model
+    from wger.gym_operations_payroll.models import StaffWorkSchedule
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    User = get_user_model()
+    staff_id = data.get('staff_id')
+    staff = User.objects.filter(id=staff_id, is_staff=True).first()
+    if not staff:
+        return JsonResponse({'error': 'Staff user not found.'}, status=404)
+
+    try:
+        sched, _ = StaffWorkSchedule.objects.get_or_create(staff_user=staff)
+        sched.default_base_salary = Decimal(str(data.get('default_base_salary', '75000.00')))
+        sched.hourly_rate = Decimal(str(data.get('hourly_rate', '500.00')))
+        sched.epf_etf_eligible = bool(data.get('epf_etf_eligible', True))
+        sched.epf_number = str(data.get('epf_number', '')).strip()
+
+        # Days
+        days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
+        for d in days:
+            setattr(sched, f"{d}_active", bool(data.get(f"{d}_active", False)))
+            start_val = data.get(f"{d}_start", '06:00')
+            end_val = data.get(f"{d}_end", '15:00')
+            setattr(sched, f"{d}_start", timezone.datetime.strptime(start_val, '%H:%M').time())
+            setattr(sched, f"{d}_end", timezone.datetime.strptime(end_val, '%H:%M').time())
+
+        sched.notes = str(data.get('notes', '')).strip()
+        sched.save()
+
+        return JsonResponse({
+            'success': True,
+            'message': f"Work schedule saved for {staff.get_full_name() or staff.username}.",
+            'schedule_id': sched.id
+        })
+    except Exception as e:
+        return JsonResponse({'error': f"Error saving schedule: {e}"}, status=400)
+
+
+@login_required
+@role_required('super_admin', 'admin')
+def admin_generate_bulk_roster_api(request):
+    """
+    1-Click Bulk Monthly or Date-Range Roster Generator.
+    Reads each staff member's StaffWorkSchedule and auto-provisions StaffShift records.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    import calendar
+    from datetime import timedelta
+    from decimal import Decimal
+    from django.contrib.auth import get_user_model
+    from wger.gym_operations_payroll.models import StaffShift, StaffWorkSchedule
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    User = get_user_model()
+    month_str = data.get('month', '')  # 'YYYY-MM'
+    staff_id = data.get('staff_id')
+    include_rest_days = data.get('include_rest_days', True)
+
+    now = timezone.now().date()
+    if month_str:
+        try:
+            start_date = timezone.datetime.strptime(month_str, '%Y-%m').date().replace(day=1)
+        except Exception:
+            start_date = now.replace(day=1)
+    else:
+        start_date = now.replace(day=1)
+
+    last_day_num = calendar.monthrange(start_date.year, start_date.month)[1]
+    end_date = start_date.replace(day=last_day_num)
+
+    staff_qs = User.objects.filter(is_staff=True, is_active=True)
+    if staff_id:
+        staff_qs = staff_qs.filter(id=staff_id)
+
+    total_shifts_created = 0
+    total_rest_days = 0
+
+    curr_date = start_date
+    while curr_date <= end_date:
+        weekday_idx = curr_date.weekday()  # 0=Mon ... 6=Sun
+        for staff in staff_qs:
+            # Check if shift already scheduled for this staff on this day
+            existing = StaffShift.objects.filter(staff_user=staff, shift_date=curr_date).first()
+            if existing:
+                continue
+
+            sched = StaffWorkSchedule.objects.filter(staff_user=staff).first()
+            if sched:
+                is_active, s_start, s_end = sched.get_schedule_for_weekday(weekday_idx)
+                rate = sched.hourly_rate
+            else:
+                # Default gym contract: Mon-Sat active (06:00-15:00 / Sat 08:00-17:00), Sun off
+                if weekday_idx < 5:
+                    is_active = True
+                    s_start = timezone.datetime.strptime('06:00', '%H:%M').time()
+                    s_end = timezone.datetime.strptime('15:00', '%H:%M').time()
+                elif weekday_idx == 5:
+                    is_active = True
+                    s_start = timezone.datetime.strptime('08:00', '%H:%M').time()
+                    s_end = timezone.datetime.strptime('17:00', '%H:%M').time()
+                else:
+                    is_active = False
+                    s_start = timezone.datetime.strptime('08:00', '%H:%M').time()
+                    s_end = timezone.datetime.strptime('14:00', '%H:%M').time()
+                rate = Decimal('500.00')
+
+            if is_active:
+                StaffShift.objects.create(
+                    staff_user=staff,
+                    shift_date=curr_date,
+                    scheduled_start=s_start,
+                    scheduled_end=s_end,
+                    base_hourly_rate=rate,
+                    status='SCHEDULED',
+                    is_rest_day=False
+                )
+                total_shifts_created += 1
+            elif include_rest_days:
+                StaffShift.objects.create(
+                    staff_user=staff,
+                    shift_date=curr_date,
+                    scheduled_start=s_start or timezone.datetime.strptime('08:00', '%H:%M').time(),
+                    scheduled_end=s_end or timezone.datetime.strptime('14:00', '%H:%M').time(),
+                    base_hourly_rate=rate,
+                    status='REST_DAY',
+                    is_rest_day=True
+                )
+                total_rest_days += 1
+
+        curr_date += timedelta(days=1)
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Bulk roster generated for {start_date.strftime('%B %Y')}: {total_shifts_created} active shifts and {total_rest_days} scheduled rest days created.",
+        'month': start_date.strftime('%B %Y'),
+        'shifts_created': total_shifts_created,
+        'rest_days_created': total_rest_days
+    })
+
+
+@login_required
+@role_required('super_admin', 'admin', 'front_desk')
+def admin_issue_salary_advance_api(request):
+    """
+    Disburses a staff salary advance from the Front Desk till or bank transfer.
+    Automatically creates a StaffSalaryAdvance and a linked ClubExpense (OPEX)
+    so cash-in-hand, OPEX, and net profit sync immediately.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    import json
+    from decimal import Decimal
+    from django.contrib.auth import get_user_model
+    from wger.gym_operations_payroll.models import StaffSalaryAdvance, ClubExpense
+    from wger.gym_operations_payroll.tasks import calculate_monthly_payroll
+
+    try:
+        data = json.loads(request.body.decode('utf-8'))
+    except Exception:
+        data = request.POST
+
+    User = get_user_model()
+    staff_id = data.get('staff_id')
+    amount_str = data.get('amount', '0.00')
+    payout_method = data.get('payout_method', 'cash')
+    reason = str(data.get('reason', '')).strip()
+
+    staff = User.objects.filter(id=staff_id, is_staff=True).first()
+    if not staff:
+        return JsonResponse({'error': 'Staff user not found.'}, status=404)
+
+    try:
+        amount = Decimal(str(amount_str))
+        if amount <= Decimal('0.00'):
+            return JsonResponse({'error': 'Advance amount must be greater than zero.'}, status=400)
+    except Exception:
+        return JsonResponse({'error': 'Invalid amount provided.'}, status=400)
+
+    now = timezone.now()
+    today = now.date()
+
+    # 1. Create StaffSalaryAdvance record
+    advance = StaffSalaryAdvance.objects.create(
+        staff_user=staff,
+        amount=amount,
+        request_date=today,
+        payout_method=payout_method,
+        reason=reason,
+        approved_by=request.user
+    )
+
+    # 2. Automatically record in OPEX (ClubExpense) to instantly reflect in Till & Finance Telemetry
+    exp_title = f"Staff Salary Advance: {staff.get_full_name() or staff.username}"
+    opex_exp = ClubExpense.objects.create(
+        title=exp_title,
+        category='staff_salary',
+        amount=amount,
+        expense_date=today,
+        payment_method=payout_method,
+        recorded_by=request.user,
+        receipt_ref=advance.receipt_voucher,
+        notes=f"Mid-month advance disbursed to @{staff.username}. Reason: {reason or 'Personal advance'}. Voucher: {advance.receipt_voucher}"
+    )
+
+    advance.opex_expense = opex_exp
+    advance.save(update_fields=['opex_expense'])
+
+    # 3. Trigger payroll consolidation for this month to reflect the deduction immediately
+    try:
+        calculate_monthly_payroll(today.year, today.month)
+    except Exception:
+        pass
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Advance of LKR {amount:,.2f} disbursed for {staff.get_full_name() or staff.username} ({advance.receipt_voucher}).",
+        'advance_id': advance.id,
+        'voucher_code': advance.receipt_voucher,
+        'staff_name': staff.get_full_name() or staff.username,
+        'amount': float(amount),
+        'voucher_url': f"/dashboard/advances/{advance.id}/thermal-voucher/"
+    })
+
+
+@login_required
+def admin_advance_thermal_voucher_view(request, advance_id):
+    """Renders 80mm POS Thermal Signature Slip for Staff Salary Advances."""
+    from django.http import HttpResponse, HttpResponseForbidden
+    from wger.gym_operations_payroll.models import StaffSalaryAdvance
+
+    is_admin = request.user.is_superuser or request.user.groups.filter(name__in=['super_admin', 'admin', 'front_desk']).exists()
+    if not is_admin:
+        return HttpResponseForbidden("Access denied. Only Super Admin and Front Desk can access staff advance vouchers.")
+
+    advance = StaffSalaryAdvance.objects.select_related('staff_user', 'approved_by', 'opex_expense').filter(id=advance_id).first()
+    if not advance:
+        return HttpResponse("Advance voucher not found.", status=404)
+
+    context = {
+        'advance': advance,
+        'staff': advance.staff_user,
+        'club_info': {
+            'name': 'FIT ME FITNESS',
+            'tagline': 'TRAIN WITH PURPOSE',
+            'address': 'New Town, Elpitiya Rd, Pitigala, 80420',
+            'phone': '070 762 7878',
+        },
+        'printed_at': timezone.now().strftime('%Y-%m-%d %H:%M:%S'),
+    }
+    return render(request, 'advance_thermal_voucher.html', context)
+
 

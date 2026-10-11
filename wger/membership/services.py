@@ -68,33 +68,31 @@ def check_and_expire_subscriptions(force=False):
 
         # 2. Comprehensive failsafe audit: Verify every non-staff BiometricProfile
         # Members without an active subscription MUST have disabled=True
-        member_bios = BiometricProfile.objects.filter(
+        member_bios = list(BiometricProfile.objects.filter(
             user__is_staff=False,
             user__is_superuser=False
-        ).select_related('user')
+        ).select_related('user'))
 
         from wger.gym_operations_payroll.models import BuddyMembership
 
+        # Batch fetch all active direct members & linked buddy partners in 2 bulk queries
+        active_member_ids = set(Subscription.objects.filter(
+            status='active',
+            start_date__lte=today,
+            end_date__gte=today
+        ).values_list('member_id', flat=True))
+
+        active_buddy_ids = set(BuddyMembership.objects.filter(
+            subscription__status='active',
+            subscription__start_date__lte=today,
+            subscription__end_date__gte=today
+        ).values_list('partner_member_id', flat=True))
+
+        valid_subscriber_user_ids = active_member_ids | active_buddy_ids
+
         for bio in member_bios:
             user = bio.user
-            # Check if this user currently has at least one valid active subscription directly
-            has_active_sub = Subscription.objects.filter(
-                member=user,
-                status='active',
-                start_date__lte=today,
-                end_date__gte=today
-            ).exists()
-
-            # OR as a linked partner on an active Buddy / Family membership
-            if not has_active_sub:
-                has_active_sub = BuddyMembership.objects.filter(
-                    partner_member=user,
-                    subscription__status='active',
-                    subscription__start_date__lte=today,
-                    subscription__end_date__gte=today
-                ).exists()
-
-            # Member is active on user table as well
+            has_active_sub = bio.user_id in valid_subscriber_user_ids
             should_have_access = bool(has_active_sub and user.is_active)
 
             if not should_have_access and not bio.disabled:

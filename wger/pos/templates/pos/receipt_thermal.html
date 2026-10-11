@@ -168,23 +168,23 @@
   <table>
     <tr>
       <td class="bold">Subtotal:</td>
-      <td class="text-right">Rs. {{ sale.subtotal|floatformat:2 }}</td>
+      <td class="text-right">LKR {{ sale.subtotal|floatformat:2 }}</td>
     </tr>
     {% if sale.discount > 0 %}
       <tr>
         <td>Discount:</td>
-        <td class="text-right">- Rs. {{ sale.discount|floatformat:2 }}</td>
+        <td class="text-right">- LKR {{ sale.discount|floatformat:2 }}</td>
       </tr>
     {% endif %}
     {% if sale.tax > 0 %}
       <tr>
         <td>Tax:</td>
-        <td class="text-right">Rs. {{ sale.tax|floatformat:2 }}</td>
+        <td class="text-right">LKR {{ sale.tax|floatformat:2 }}</td>
       </tr>
     {% endif %}
     <tr class="total-row">
       <td style="padding-top:4px;">NET TOTAL:</td>
-      <td class="text-right" style="padding-top:4px;">Rs. {{ sale.total_amount|floatformat:2 }}</td>
+      <td class="text-right" style="padding-top:4px;">LKR {{ sale.total_amount|floatformat:2 }}</td>
     </tr>
   </table>
 
@@ -198,11 +198,11 @@
     {% if sale.payment_method == 'CASH' %}
       <tr>
         <td>Cash Received:</td>
-        <td class="text-right">Rs. {{ sale.amount_received|floatformat:2 }}</td>
+        <td class="text-right">LKR {{ sale.amount_received|floatformat:2 }}</td>
       </tr>
       <tr>
         <td class="bold">Change Returned:</td>
-        <td class="text-right bold">Rs. {{ sale.change_returned|floatformat:2 }}</td>
+        <td class="text-right bold">LKR {{ sale.change_returned|floatformat:2 }}</td>
       </tr>
     {% endif %}
   </table>

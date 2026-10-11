@@ -15,10 +15,10 @@
     --bg-dark: #0B0D0E;
     --card-bg: #121517;
     --card-surface: #1F2428;
-    --neon-lime: #76C043;
-    --neon-hover: #8AE04F;
-    --neon-glow: rgba(118, 192, 67, 0.25);
-    --neon-glow-high: rgba(118, 192, 67, 0.55);
+    --neon-lime: #88D82D;
+    --neon-hover: #9EF040;
+    --neon-glow: rgba(136, 216, 45, 0.28);
+    --neon-glow-high: rgba(136, 216, 45, 0.6);
     --cyan: #06B6D4;
     --amber: #F59E0B;
     --danger: #E63946;
@@ -61,7 +61,7 @@
     font-family: 'Montserrat', sans-serif;
     font-size: 1.35rem;
     font-weight: 900;
-    color: #fff;
+    color: #C5CBD3;
     letter-spacing: 1px;
   }
   .brand-name span { color: var(--neon-lime); }
@@ -72,46 +72,76 @@
   }
 
   /* ── Layout & Sidebar (6 Sub-modules) ── */
+  /* ── Layout & Collapsible Sidebar ── */
   .layout-container { display: flex; flex: 1; min-height: calc(100vh - 65px); }
   .sidebar {
-    width: 230px; background: #0E1113; border-right: 1px solid var(--border-color);
-    padding: 1.5rem 0; flex-shrink: 0;
+    width: 235px; background: #0E1113; border-right: 1px solid var(--border-color);
+    padding: 1rem 0 1.5rem; flex-shrink: 0;
+    transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-x: hidden;
   }
+  .sidebar.collapsed { width: 66px; }
+  .sidebar-section {
+    padding: 0.5rem 1.15rem 0.25rem; font-size: 0.65rem; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.8px; font-weight: 800;
+    white-space: nowrap;
+  }
+  .sidebar.collapsed .sidebar-section { display: none; }
+  .sidebar-toggle-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 0 1rem 0.75rem; border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    margin-bottom: 0.5rem;
+  }
+  .sidebar.collapsed .sidebar-toggle-row { justify-content: center; padding: 0 0 0.75rem; }
+  .sidebar.collapsed .sidebar-toggle-row span { display: none; }
+  .btn-sidebar-toggle {
+    background: #181D20; border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--neon-lime); border-radius: 6px; width: 28px; height: 28px;
+    display: inline-flex; align-items: center; justify-content: center;
+    cursor: pointer; font-size: 0.8rem; transition: all 0.2s;
+  }
+  .btn-sidebar-toggle:hover { background: var(--neon-lime); color: #000; }
+  .nav-tab-btn {
+    width: 100%; display: flex; align-items: center; gap: 0.7rem; padding: 0.62rem 1.15rem;
+    color: #ccc; background: none; border: none; border-left: 3px solid transparent;
+    text-align: left; font-size: 0.84rem; font-family: 'Inter', sans-serif; font-weight: 600;
+    cursor: pointer; transition: all 0.18s; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .nav-tab-btn:hover, .nav-tab-btn.active {
+    color: var(--neon-lime); border-left-color: var(--neon-lime); background: rgba(118, 192, 67, 0.08);
+  }
+  .nav-tab-btn i { width: 18px; min-width: 18px; text-align: center; font-size: 0.95rem; flex-shrink: 0; }
+  .sidebar.collapsed .nav-tab-btn {
+    justify-content: center; padding: 0.7rem 0;
+    border-left: none; border-right: 3px solid transparent;
+  }
+  .sidebar.collapsed .nav-tab-btn:hover, .sidebar.collapsed .nav-tab-btn.active {
+    border-right-color: var(--neon-lime);
+  }
+  .sidebar.collapsed .nav-tab-btn span.tab-label,
+  .sidebar.collapsed .nav-tab-btn span.badge-pill { display: none; }
+
   @media(max-width: 900px) {
     .layout-container { flex-direction: column; }
     .sidebar {
-      width: 100%; border-right: none; border-bottom: 2px solid var(--border-color);
+      width: 100% !important; border-right: none; border-bottom: 2px solid var(--border-color);
       display: flex; overflow-x: auto; padding: 0.4rem 0.5rem;
       position: sticky; top: 55px; z-index: 90; background: #0E1113;
       -webkit-overflow-scrolling: touch; gap: 0.35rem;
     }
-    .sidebar-section { display: none; }
+    .sidebar-section, .sidebar-toggle-row { display: none; }
     .nav-tab-btn {
       width: auto !important; flex-shrink: 0; border-left: none !important;
       border-bottom: 3px solid transparent; padding: 0.6rem 0.95rem;
       font-size: 0.82rem; border-radius: 6px;
     }
+    .sidebar.collapsed .nav-tab-btn span.tab-label { display: inline; }
     .nav-tab-btn:hover, .nav-tab-btn.active {
       border-left-color: transparent !important; border-bottom-color: var(--neon-lime) !important;
       background: rgba(118, 192, 67, 0.12);
     }
   }
-
-  .sidebar-section {
-    padding: 0.5rem 1.25rem 0.25rem; font-size: 0.65rem; color: var(--text-muted);
-    text-transform: uppercase; letter-spacing: 1px; font-weight: 800;
-  }
-
-  .nav-tab-btn {
-    width: 100%; display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.25rem;
-    color: #ccc; background: none; border: none; border-left: 3px solid transparent;
-    text-align: left; font-size: 0.88rem; font-family: 'Inter', sans-serif; font-weight: 600;
-    cursor: pointer; transition: all 0.2s; white-space: nowrap;
-  }
-  .nav-tab-btn:hover, .nav-tab-btn.active {
-    color: var(--neon-lime); border-left-color: var(--neon-lime); background: rgba(118, 192, 67, 0.08);
-  }
-  .nav-tab-btn i { width: 20px; text-align: center; }
 
   /* ── Main Content ── */
   .main-content { flex: 1; padding: 2.2rem 2rem; overflow-y: auto; }
@@ -167,6 +197,27 @@
   .btn-cyan { background: var(--cyan); color: #000; }
   .btn-cyan:hover { background: #22D3EE; }
 
+  /* Filter pills */
+  .filter-pill {
+    background: var(--card-surface); border: 1px solid var(--border-color); color: var(--text-muted);
+    padding: 0.35rem 0.8rem; border-radius: 20px; font-size: 0.74rem; font-weight: 700; cursor: pointer;
+    transition: all 0.2s; display: inline-flex; align-items: center; gap: 0.35rem;
+  }
+  .filter-pill:hover, .filter-pill.active {
+    background: rgba(118, 192, 67, 0.15); border-color: var(--neon-lime); color: var(--neon-lime);
+  }
+
+  /* Modal */
+  .modal-overlay {
+    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.85); z-index: 2500; align-items: center; justify-content: center;
+    padding: 1.5rem 1rem; overflow-y: auto; backdrop-filter: blur(4px);
+  }
+  .modal-box {
+    background: var(--card-bg); border: 1.5px solid var(--neon-lime); border-radius: 16px;
+    padding: 1.75rem; max-width: 760px; width: 95%; box-shadow: 0 10px 40px var(--neon-glow);
+  }
+
   /* Toast */
   .fitme-toast {
     position: fixed; bottom: 25px; right: 25px; background: #14181B; border: 2px solid var(--neon-lime);
@@ -188,7 +239,7 @@
   <div style="display:flex;align-items:center;">
     <a href="/" class="brand">
       <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me">
-      <span class="brand-name">FIT <span>ME</span></span>
+      <span class="brand-name"><span style="color:var(--neon-lime);">FIT</span> <span style="color:#C5CBD3;">ME</span></span>
     </a>
     <span class="role-badge">Coach Portal • Pitigala</span>
   </div>
@@ -203,15 +254,23 @@
 </header>
 
 <div class="layout-container">
-  <!-- Sidebar Navigation with All 6 Modules -->
-  <aside class="sidebar">
-    <div class="sidebar-section">Coaching Modules</div>
-    <button class="nav-tab-btn active" onclick="switchTab('tab-members', this)"><i class="fa fa-users"></i> 1. Members</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-programs', this)"><i class="fa fa-dumbbell"></i> 2. Programs</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-workoutplans', this)"><i class="fa fa-clipboard-list"></i> 3. Workout Plans</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-nutritionplans', this)"><i class="fa fa-apple-alt"></i> 4. Nutrition Plans</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-progressreviews', this)"><i class="fa fa-utensils"></i> 5. Progress Reviews</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-checkins', this)"><i class="fa fa-camera"></i> 6. Check-ins</button>
+  <!-- Sidebar Navigation with Streamlined Coaching Modules -->
+  <aside class="sidebar" id="coachSidebar">
+    <div class="sidebar-toggle-row">
+      <span style="font-size:0.68rem;font-weight:800;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;">Coaching Ops</span>
+      <button type="button" class="btn-sidebar-toggle" onclick="toggleCoachSidebarCollapse()" id="btnCoachSidebarToggle" title="Minimize / Expand Sidebar">
+        <i class="fa fa-angles-left" id="coachSidebarToggleIcon"></i>
+      </button>
+    </div>
+
+    <div class="sidebar-section">Modules</div>
+    <button class="nav-tab-btn active" onclick="switchTab('tab-members', this)" title="Athlete Roster"><i class="fa fa-users"></i> <span class="tab-label">1. Athlete Roster</span></button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-assessments', this)" title="Intake & Prescriptions"><i class="fa fa-clipboard-check"></i> <span class="tab-label">2. Prescriptions</span> <span id="coachPendingBadge" class="badge-pill" style="display:none;background:var(--danger);color:#fff;font-size:0.65rem;padding:2px 7px;border-radius:10px;margin-left:auto;font-weight:800;">0</span></button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-programs', this)" title="Master Program Builder"><i class="fa fa-dumbbell"></i> <span class="tab-label">3. Program Builder</span></button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-progressreviews', this)" title="Progress & Meal Feed"><i class="fa fa-utensils"></i> <span class="tab-label">4. Meal Reviews</span></button>
+
+    <div class="sidebar-section" style="margin-top:0.75rem;">Finance</div>
+    <button class="nav-tab-btn" onclick="switchTab('tab-earnings', this)" title="Earnings & Shifts"><i class="fa fa-wallet"></i> <span class="tab-label">5. Earnings &amp; Shifts</span></button>
   </aside>
 
   <!-- Main Content Area -->
@@ -227,6 +286,10 @@
           <div class="stat-label">Assigned Athletes</div>
           <div class="stat-num" style="color:var(--neon-lime);">{{ assigned_members.count }}</div>
         </div>
+        <div class="stat-card" style="cursor:pointer;" onclick="switchTab('tab-assessments', document.querySelectorAll('.nav-tab-btn')[1])">
+          <div class="stat-label">Pending Assessments</div>
+          <div class="stat-num" id="statPendingAssessments" style="color:var(--cyan);">0</div>
+        </div>
         <div class="stat-card">
           <div class="stat-label">Pending Meal Reviews</div>
           <div class="stat-num" style="color:var(--amber);">{{ unreviewed_meals.count }}</div>
@@ -238,23 +301,87 @@
       </div>
 
       <div class="fitme-card">
-        <div class="card-header">
+        <div class="card-header" style="flex-wrap:wrap;gap:0.75rem;">
           <div class="card-title"><i class="fa fa-users" style="color:var(--neon-lime);"></i> Active Member Directory</div>
-          <span style="font-size:0.75rem;color:var(--text-muted);">{{ assigned_members.count }} Total</span>
+          
+          <!-- Roster Scope Switchers -->
+          <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+            <button type="button" class="filter-pill active" id="btnFilterMyAthletes" onclick="setRosterScope('my', this)" title="Show athletes assigned to your coaching roster">
+              <i class="fa fa-user-check"></i> My Athletes ({{ assigned_members|length }})
+            </button>
+            <button type="button" class="filter-pill" id="btnFilterAllMembers" onclick="setRosterScope('all', this)" title="Show all active members across Fit Me gym">
+              <i class="fa fa-users"></i> All Gym Members ({{ all_active_members|length }})
+            </button>
+            <button type="button" class="filter-pill" id="btnFilterFloor" onclick="setRosterScope('floor', this)" title="Show athletes who checked in at the turnstile today">
+              <span style="width:7px;height:7px;border-radius:50%;background:var(--neon-lime);box-shadow:0 0 6px var(--neon-lime);"></span>
+              On Floor Today ({{ recent_floor_punches|length }})
+            </button>
+          </div>
+
+          <div style="display:flex;align-items:center;gap:0.75rem;flex:1;max-width:320px;position:relative;">
+            <i class="fa fa-search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;"></i>
+            <input type="text" id="rosterSearchInput" onkeyup="filterAthleteRoster()" placeholder="Fast search athlete by name, phone, PIN, goal..." class="form-control" style="padding-left:34px;padding-top:0.4rem;padding-bottom:0.4rem;font-size:0.8rem;background:#13171A;border:1px solid rgba(255,255,255,0.15);border-radius:6px;color:#fff;width:100%;">
+          </div>
+          <span style="font-size:0.75rem;color:var(--text-muted);" id="rosterCountBadge">{{ assigned_members|length }} Athletes</span>
         </div>
         <div class="card-body" style="padding:0;">
-          <table class="table-custom">
+          <table class="table-custom" id="athleteRosterTable">
             <thead>
-              <tr><th>Member</th><th>Goal</th><th>Hardware PIN</th><th>Status</th><th>Actions</th></tr>
+              <tr>
+                <th>Athlete Member</th>
+                <th>Primary Goal</th>
+                <th>Biometric PIN</th>
+                <th>Prescribed Split &amp; Schedule</th>
+                <th>Attendance</th>
+                <th style="text-align:right;">Actions</th>
+              </tr>
             </thead>
             <tbody>
-              {% for mp in assigned_members %}
-                <tr>
+              {% for mp in all_active_members %}
+                <tr class="athlete-row" 
+                    data-is-assigned="{% if mp in assigned_members %}true{% else %}false{% endif %}"
+                    data-on-floor="{% if mp.user_id in floor_user_ids %}true{% else %}false{% endif %}"
+                    data-search="{{ mp.user.get_full_name|lower }} {{ mp.user.username|lower }} {{ mp.phone|default:'' }} {{ mp.get_primary_goal_display|lower }} {{ mp.user.id }}">
                   <td>
-                    <div style="font-weight:700;color:#fff;">{{ mp.user.get_full_name|default:mp.user.username }}</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);">{{ mp.phone|default:"070 762 7878" }}</div>
+                    <div style="display:flex;align-items:center;gap:0.6rem;">
+                      <div onclick="openMemberProfile({{ mp.user.id }})" style="cursor:pointer;width:34px;height:34px;border-radius:50%;background:#22282D;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:0.75rem;border:1.5px solid var(--border-color);overflow:hidden;flex-shrink:0;" title="Click to view 360° Athlete Dossier">
+                        {% if mp.profile_photo %}
+                          <img src="{{ mp.profile_photo.url }}" style="width:100%;height:100%;object-fit:cover;">
+                        {% else %}
+                          {{ mp.user.get_full_name|default:mp.user.username|slice:":2"|upper }}
+                        {% endif %}
+                      </div>
+                      <div>
+                        <div style="font-weight:700;color:#fff;cursor:pointer;display:inline-flex;align-items:center;gap:0.35rem;" onclick="openMemberProfile({{ mp.user.id }})" title="Click to view 360° Athlete Dossier">
+                          <span>{{ mp.user.get_full_name|default:mp.user.username }}</span>
+                          <i class="fa fa-external-link-alt" style="font-size:0.65rem;color:var(--cyan);opacity:0.8;"></i>
+                          {% if mp.user_id in floor_user_ids %}
+                            <span style="font-size:0.62rem;background:rgba(136,216,45,0.2);color:var(--neon-lime);border:1px solid rgba(136,216,45,0.4);padding:1px 5px;border-radius:4px;font-weight:800;">
+                              <i class="fa fa-door-open"></i> ON FLOOR
+                            </span>
+                          {% endif %}
+                        </div>
+                        <div style="font-size:0.75rem;color:var(--text-muted);">
+                          {{ mp.phone|default:"070 762 7878" }} &bull; @{{ mp.user.username }}
+                          {% if mp.assigned_coach %}
+                            &bull; <span style="color:#A78BFA;">Coach: {{ mp.assigned_coach.first_name|default:mp.assigned_coach.username }}</span>
+                          {% endif %}
+                        </div>
+                      </div>
+                    </div>
                   </td>
-                  <td>{{ mp.get_primary_goal_display|default:"General Fitness" }}</td>
+                  <td><span class="badge" style="background:#1E293B;color:#94A3B8;border:1px solid #334155;">{{ mp.get_primary_goal_display|default:"General Fitness" }}</span></td>
+                  <td>
+                    <code style="color:var(--cyan);font-weight:800;font-size:0.82rem;background:#10222A;padding:0.2rem 0.45rem;border-radius:4px;border:1px solid rgba(0,240,255,0.25);">#FM{{ mp.user.biometric_profile.zk_pin|default:mp.user.id }}</code>
+                  </td>
+                  <td>
+                    {% if mp.assigned_program %}
+                      <div style="font-weight:700;color:var(--neon-lime);font-size:0.82rem;">{{ mp.assigned_program.title }}</div>
+                      <div style="font-size:0.72rem;color:var(--text-muted);">{{ mp.notes|default:"Personalized Training Split"|truncatechars:35 }}</div>
+                    {% else %}
+                      <span style="font-size:0.75rem;color:var(--text-muted);font-style:italic;">No Split Assigned</span>
+                    {% endif %}
+                  </td>
                   <td>
                     {% if mp.user_id in at_risk_ids %}
                       <span style="background:rgba(230,57,70,0.15);color:var(--danger);border:1px solid var(--danger);padding:0.2rem 0.55rem;border-radius:4px;font-size:0.7rem;font-weight:800;display:inline-flex;align-items:center;gap:0.3rem;"><i class="fa fa-exclamation-triangle"></i> 2d+ Inactive</span>
@@ -262,17 +389,22 @@
                       <span style="color:var(--neon-lime);font-size:0.75rem;font-weight:700;display:inline-flex;align-items:center;gap:0.3rem;"><i class="fa fa-check-circle"></i> Active</span>
                     {% endif %}
                   </td>
-                  <td>
-                    <button class="btn-action btn-cyan" onclick="sendNudge({{ mp.user.id }}, '{{ mp.user.first_name|default:mp.user.username }}')">
-                      <i class="fa fa-bell"></i> Nudge
-                    </button>
-                    <button class="btn-action btn-lime" onclick="openAssignModal({{ mp.user.id }}, '{{ mp.user.first_name|default:mp.user.username }}')">
-                      <i class="fa fa-dumbbell"></i> Assign Split
-                    </button>
+                  <td style="text-align:right;">
+                    <div style="display:inline-flex;gap:0.35rem;">
+                      <button type="button" class="btn-action" style="background:#1B252C;border:1px solid rgba(0,240,255,0.35);color:#00F0FF;font-size:0.72rem;padding:0.35rem 0.65rem;" onclick="openMemberProfile({{ mp.user.id }})" title="View Complete 360° Athlete Dossier">
+                        <i class="fa fa-id-card"></i> Profile
+                      </button>
+                      <button type="button" class="btn-action btn-lime" onclick="openAssignModal({{ mp.user.id }}, '{{ mp.user.first_name|default:mp.user.username|escapejs }}')" title="Schedule Workout Split &amp; Frequency" style="font-size:0.72rem;padding:0.35rem 0.65rem;">
+                        <i class="fa fa-calendar-check"></i> Split
+                      </button>
+                      <button type="button" class="btn-action btn-cyan" onclick="sendNudge({{ mp.user.id }}, '{{ mp.user.first_name|default:mp.user.username|escapejs }}')" title="Send Habit Reminder / Nudge" style="font-size:0.72rem;padding:0.35rem 0.65rem;">
+                        <i class="fa fa-bell"></i> Nudge
+                      </button>
+                    </div>
                   </td>
                 </tr>
               {% empty %}
-                <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);">No members assigned to your roster yet.</td></tr>
+                <tr id="noAthletesRow"><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No members found in directory.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -280,14 +412,138 @@
       </div>
     </div>
 
-    <!-- 2. PROGRAMS TAB -->
-    <div id="tab-programs" class="tab-pane">
-      <h1 class="page-title">Training Programs Catalog</h1>
-      <p class="page-sub">Master training templates available to prescribe for athletes.</p>
+    <!-- 2. MEMBER ASSESSMENTS TAB -->
+    <div id="tab-assessments" class="tab-pane">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:1rem;margin-bottom:1.5rem;">
+        <div>
+          <h1 class="page-title">Member Intake &amp; Assessment Reviews 📋</h1>
+          <p class="page-sub" style="margin-bottom:0;">Review athlete evaluation submissions from Coach Dhananjaya's intake forms. Prescribe workout splits and fuel targets.</p>
+        </div>
+        <button class="btn-action btn-cyan" onclick="loadCoachAssessments()" style="padding:0.6rem 1.25rem;">
+          <i class="fa fa-sync-alt"></i> Refresh Intake Queue
+        </button>
+      </div>
 
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1.5rem;">
+      <!-- Queue Sub-tab Switchers -->
+      <div style="display:flex;gap:0.75rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+        <button type="button" id="btnCoachNutToggle" onclick="toggleCoachAssessmentView('nutrition')" class="btn-action btn-lime" style="padding:0.65rem 1.4rem;font-size:0.88rem;">
+          <i class="fa fa-apple-alt"></i> Nutrition Assessments (<span id="nutQueueCount">0</span> Pending)
+        </button>
+        <button type="button" id="btnCoachWrkToggle" onclick="toggleCoachAssessmentView('workout')" class="btn-action" style="background:#1B2024;border:1px solid rgba(255,255,255,0.15);color:#fff;padding:0.65rem 1.4rem;font-size:0.88rem;">
+          <i class="fa fa-dumbbell"></i> Workout Assessments (<span id="wrkQueueCount">0</span> Pending)
+        </button>
+      </div>
+
+      <!-- Nutrition Assessments Queue -->
+      <div id="coachNutContainer" class="fitme-card">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa fa-utensils" style="color:var(--amber);"></i>
+            <span>Pending Nutrition Intake Assessments</span>
+          </div>
+          <span style="font-size:0.75rem;color:var(--text-muted);">Requires Coach Caloric &amp; Macronutrient Prescription</span>
+        </div>
+        <div class="card-body" style="padding:0;overflow-x:auto;">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Athlete</th>
+                <th>Submitted</th>
+                <th>Current / Goal Weight</th>
+                <th>Primary Goals</th>
+                <th>Daily Activity</th>
+                <th>Medical Flags</th>
+                <th style="text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="coachNutTableBody">
+              <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-spinner fa-spin"></i> Loading pending assessments...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Workout Assessments Queue -->
+      <div id="coachWrkContainer" class="fitme-card" style="display:none;">
+        <div class="card-header">
+          <div class="card-title">
+            <i class="fa fa-running" style="color:var(--neon-lime);"></i>
+            <span>Pending Workout Intake Assessments</span>
+          </div>
+          <span style="font-size:0.75rem;color:var(--text-muted);">Requires Program Split &amp; Frequency Prescription</span>
+        </div>
+        <div class="card-body" style="padding:0;overflow-x:auto;">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Athlete</th>
+                <th>Submitted</th>
+                <th>Experience Level</th>
+                <th>Current / Goal Weight</th>
+                <th>Primary Goals</th>
+                <th>Injuries / Limitations</th>
+                <th style="text-align:right;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="coachWrkTableBody">
+              <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-spinner fa-spin"></i> Loading pending assessments...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Quick Action: Direct Nutrition Prescription Form (For Quick Athlete Adjustments) -->
+      <div class="fitme-card" style="margin-top:2rem;">
+        <div class="card-header">
+          <div class="card-title"><i class="fa fa-sliders-h" style="color:var(--neon-lime);"></i> Quick Adjust Daily Fuel &amp; Macro Targets</div>
+          <span style="font-size:0.75rem;color:var(--text-muted);">Override daily kcal &amp; protein targets for active athletes</span>
+        </div>
+        <div class="card-body">
+          <form id="coachNutritionForm" onsubmit="submitCoachNutrition(event)" style="max-width:680px;">
+            <div style="margin-bottom:1rem;">
+              <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;font-weight:700;">Select Athlete *</label>
+              <select id="cnMemberId" class="form-control" required>
+                {% for mp in assigned_members %}
+                  <option value="{{ mp.user.id }}">{{ mp.user.get_full_name|default:mp.user.username }} (PIN: {{ mp.biometric_pin|default:"#1001" }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+              <div>
+                <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;font-weight:700;">Daily Target Calories (kcal) *</label>
+                <input type="number" id="cnCalories" value="2300" required class="form-control">
+              </div>
+              <div>
+                <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;font-weight:700;">Daily Target Protein (g) *</label>
+                <input type="number" id="cnProtein" value="160" required class="form-control">
+              </div>
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
+              <div>
+                <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;font-weight:700;">Target Carbs (g)</label>
+                <input type="number" id="cnCarbs" value="240" class="form-control">
+              </div>
+              <div>
+                <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;font-weight:700;">Target Fats (g)</label>
+                <input type="number" id="cnFat" value="65" class="form-control">
+              </div>
+            </div>
+            <button type="submit" class="btn-action btn-lime" id="btnSaveNutrition" style="padding:0.7rem 1.5rem;font-size:0.85rem;">
+              <i class="fa fa-save"></i> Save Athlete Nutrition Targets
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. MASTER PROGRAM BUILDER TAB -->
+    <div id="tab-programs" class="tab-pane">
+      <h1 class="page-title">Master Program Splits &amp; Training Feed</h1>
+      <p class="page-sub">Training templates catalog and real-time feed of workout sets logged by athletes.</p>
+
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1.5rem;margin-bottom:2rem;">
         {% for prog in programs %}
-          <div class="fitme-card" style="padding:1.5rem;display:flex;flex-direction:column;justify-content:space-between;">
+          <div class="fitme-card" style="padding:1.5rem;display:flex;flex-direction:column;justify-content:space-between;margin-bottom:0;">
             <div>
               <span style="font-size:0.7rem;color:var(--neon-lime);background:rgba(118,192,67,0.12);border:1px solid var(--neon-lime);padding:0.2rem 0.5rem;border-radius:4px;font-weight:800;text-transform:uppercase;">
                 {{ prog.get_category_display }}
@@ -304,16 +560,12 @@
           </div>
         {% endfor %}
       </div>
-    </div>
 
-    <!-- 3. WORKOUT PLANS TAB -->
-    <div id="tab-workoutplans" class="tab-pane">
-      <h1 class="page-title">Athlete Workout Activity &amp; Prescriptions</h1>
-      <p class="page-sub">Live feed of exercises, sets, reps, and resistance logged by athletes.</p>
-
+      <!-- Athlete Workout Live Activity Feed -->
       <div class="fitme-card">
         <div class="card-header">
           <div class="card-title"><i class="fa fa-history" style="color:var(--cyan);"></i> Athlete Workout Activity Feed</div>
+          <span style="font-size:0.75rem;color:var(--text-muted);">Real-time athlete set &amp; rep logs</span>
         </div>
         <div class="card-body" style="padding:0;">
           <table class="table-custom">
@@ -335,53 +587,6 @@
               {% endfor %}
             </tbody>
           </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- 4. NUTRITION PLANS TAB -->
-    <div id="tab-nutritionplans" class="tab-pane">
-      <h1 class="page-title">Macronutrient Target Configurator</h1>
-      <p class="page-sub">Set daily target calories, protein, carbs, and hydration for your athletes.</p>
-
-      <div class="fitme-card">
-        <div class="card-header">
-          <div class="card-title"><i class="fa fa-sliders-h" style="color:var(--neon-lime);"></i> Configure Daily Nutrition Targets</div>
-        </div>
-        <div class="card-body">
-          <form id="coachNutritionForm" onsubmit="submitCoachNutrition(event)" style="max-width:550px;">
-            <div style="margin-bottom:1rem;">
-              <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Select Athlete *</label>
-              <select id="cnMemberId" class="form-control" required>
-                {% for mp in assigned_members %}
-                  <option value="{{ mp.user.id }}">{{ mp.user.get_full_name|default:mp.user.username }} (PIN: {{ mp.biometric_pin|default:"#1001" }})</option>
-                {% endfor %}
-              </select>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
-              <div>
-                <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Daily Target Calories (kcal) *</label>
-                <input type="number" id="cnCalories" value="2300" required class="form-control">
-              </div>
-              <div>
-                <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Daily Target Protein (g) *</label>
-                <input type="number" id="cnProtein" value="160" required class="form-control">
-              </div>
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1.5rem;">
-              <div>
-                <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Target Carbs (g)</label>
-                <input type="number" id="cnCarbs" value="240" class="form-control">
-              </div>
-              <div>
-                <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Target Fats (g)</label>
-                <input type="number" id="cnFat" value="65" class="form-control">
-              </div>
-            </div>
-            <button type="submit" class="btn-action btn-lime" id="btnSaveNutrition" style="padding:0.7rem 1.5rem;font-size:0.85rem;">
-              <i class="fa fa-save"></i> Save Athlete Nutrition Targets
-            </button>
-          </form>
         </div>
       </div>
     </div>
@@ -424,16 +629,12 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 6. CHECK-INS TAB -->
-    <div id="tab-checkins" class="tab-pane">
-      <h1 class="page-title">Athlete Check-in Gallery</h1>
-      <p class="page-sub">Monthly physique check-in photos and circumference metrics.</p>
-
-      <div class="fitme-card">
+      <!-- Athlete Physique Check-in Gallery (Unified with Progress & Fuel) -->
+      <div class="fitme-card" style="margin-top:2rem;">
         <div class="card-header">
-          <div class="card-title"><i class="fa fa-camera" style="color:var(--neon-lime);"></i> Recent Body Check-ins</div>
+          <div class="card-title"><i class="fa fa-camera" style="color:var(--neon-lime);"></i> Athlete Physique Check-ins &amp; Transformation Photos</div>
+          <span style="font-size:0.75rem;color:var(--text-muted);">Visual progress monitoring alongside meal compliance</span>
         </div>
         <div class="card-body">
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:1.5rem;">
@@ -452,7 +653,8 @@
               </div>
             {% empty %}
               <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);">
-                Athlete check-in logs will be displayed here.
+                <i class="fa fa-images" style="font-size:2rem;margin-bottom:0.5rem;color:var(--text-muted);display:block;"></i>
+                Athlete physique check-in logs and transformation photos will be displayed here.
               </div>
             {% endfor %}
           </div>
@@ -460,30 +662,498 @@
       </div>
     </div>
 
+    <!-- 7. MY EARNINGS & PAYSLIP TAB -->
+    <div id="tab-earnings" class="tab-pane">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
+        <div>
+          <h1 class="page-title"><i class="fa fa-wallet" style="color:var(--neon-lime);margin-right:0.5rem;"></i>My Earnings &amp; Payslips</h1>
+          <p class="page-sub">Monthly salary compensation, Personal Coaching commission splits (LKR 4,000 / member), overtime pay, and biometric door attendance ledger &mdash; {{ curr_month_label }}.</p>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid" style="grid-template-columns:repeat(auto-fit, minmax(210px, 1fr));margin-bottom:1.5rem;">
+        <div class="stat-card" style="border-left:3px solid var(--neon-lime);">
+          <div class="stat-label">Net Take-Home Pay ({{ curr_month_label }})</div>
+          <div class="stat-num" style="color:var(--neon-lime);font-size:1.75rem;">
+            LKR {{ coach_ledger.net_salary|default:0|floatformat:2 }}
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;">Status: {% if coach_ledger.is_finalized %}<span style="color:#10B981;font-weight:700;">Finalized</span>{% else %}<span style="color:#F59E0B;font-weight:700;">Draft</span>{% endif %}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Base Salary</div>
+          <div class="stat-num" style="color:#fff;font-size:1.75rem;">
+            LKR {{ coach_ledger.base_salary|default:0|floatformat:2 }}
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;">Contracted baseline</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid var(--cyan);">
+          <div class="stat-label">PT Coaching Commissions</div>
+          <div class="stat-num" style="color:var(--cyan);font-size:1.75rem;">
+            + LKR {{ coach_ledger.pt_commissions|default:0|floatformat:2 }}
+          </div>
+          <div style="font-size:0.75rem;color:var(--cyan);margin-top:0.3rem;">⚡ LKR 4,000 &times; {{ coach_pt_clients|length }} active clients</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Overtime vs Deductions</div>
+          <div class="stat-num" style="color:{% if coach_ledger.overtime_pay >= coach_ledger.late_minutes_penalty %}var(--neon-lime){% else %}var(--danger){% endif %};font-size:1.45rem;">
+            +{{ coach_ledger.overtime_pay|default:0|floatformat:0 }} / -{{ coach_ledger.late_minutes_penalty|default:0|floatformat:0 }}
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.3rem;">1.5x OT &bull; Late arrival deductions</div>
+        </div>
+      </div>
+
+      <!-- Card: Coached Athletes & Split Breakdown -->
+      <div class="fitme-card">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
+          <div class="card-title">
+            <i class="fa fa-dumbbell" style="color:var(--cyan);"></i> My Coached Athletes &amp; Personal Training Fee Split
+          </div>
+          <div style="font-size:0.78rem;color:var(--text-muted);">
+            Policy: <code style="color:var(--neon-lime);">LKR 7,000 Package = LKR 3,000 Gym / LKR 4,000 Coach Direct Commission</code>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;overflow-x:auto;">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Athlete</th>
+                <th>Contact</th>
+                <th>Package Plan</th>
+                <th>Package Fee</th>
+                <th>Gym Share</th>
+                <th style="color:var(--cyan);">My Payout</th>
+                <th>Validity</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for cp in coach_pt_clients %}
+                <tr>
+                  <td>
+                    <div style="font-weight:700;color:#fff;">{{ cp.name }}</div>
+                    <div style="font-size:0.72rem;color:var(--text-muted);">@{{ cp.username }}</div>
+                  </td>
+                  <td>{{ cp.phone }}</td>
+                  <td><span class="badge" style="background:rgba(118,192,67,0.15);color:var(--neon-lime);border:1px solid var(--neon-lime);font-size:0.72rem;padding:0.2rem 0.5rem;border-radius:4px;">{{ cp.plan_name }}</span></td>
+                  <td style="font-weight:700;">LKR {{ cp.package_fee|floatformat:2 }}</td>
+                  <td style="color:var(--neon-lime);font-weight:700;">LKR {{ cp.gym_share|floatformat:2 }}</td>
+                  <td style="color:var(--cyan);font-weight:800;font-size:0.95rem;">+ LKR {{ cp.coach_share|floatformat:2 }}</td>
+                  <td style="font-size:0.75rem;color:var(--text-muted);">{{ cp.validity }}</td>
+                  <td><span class="badge" style="background:rgba(16,185,129,0.15);color:#10B981;border:1px solid #10B981;font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:4px;">Active</span></td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                    <i class="fa fa-dumbbell" style="font-size:1.8rem;color:var(--cyan);display:block;margin-bottom:0.4rem;"></i>
+                    No athletes currently assigned for Personal Coaching with active monthly subscriptions.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Card: Attendance & Shift Duty Logs -->
+      <div class="fitme-card" style="margin-top:1.5rem;">
+        <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
+          <div class="card-title">
+            <i class="fa fa-user-clock" style="color:var(--neon-lime);"></i> My Shift Duty &amp; Biometric Door Punch Logs
+          </div>
+          <div style="font-size:0.78rem;color:var(--text-muted);">
+            Summary: Scheduled: <strong>{{ coach_attendance.scheduled }}</strong> &bull; Completed: <strong>{{ coach_attendance.completed }}</strong> &bull; Late: <strong style="color:var(--danger);">{{ coach_attendance.late_minutes }}m</strong> &bull; OT: <strong style="color:var(--neon-lime);">+{{ coach_attendance.overtime_minutes }}m</strong>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;overflow-x:auto;">
+          <table class="table-custom">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Scheduled Hours</th>
+                <th>Clock In (Door)</th>
+                <th>Clock Out (Door)</th>
+                <th>Late / Overtime</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for s in coach_shifts %}
+                <tr>
+                  <td style="font-weight:700;">{{ s.shift_date|date:"D, d M Y" }}</td>
+                  <td>{{ s.scheduled_start|time:"H:i" }} &ndash; {{ s.scheduled_end|time:"H:i" }}</td>
+                  <td>
+                    {% if s.actual_first_in %}
+                      <span style="color:#fff;font-weight:700;">{{ s.actual_first_in|time:"H:i:s" }}</span>
+                      {% with late=s.calculate_late_minutes %}
+                        {% if late > 0 %}
+                          <span style="color:var(--danger);font-size:0.72rem;margin-left:4px;font-weight:800;">({{ late }}m late)</span>
+                        {% else %}
+                          <span style="color:var(--neon-lime);font-size:0.72rem;margin-left:4px;">(On Time)</span>
+                        {% endif %}
+                      {% endwith %}
+                    {% else %}
+                      <span style="color:var(--text-muted);">Not Clocked</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if s.actual_last_out %}
+                      <span style="color:#fff;font-weight:700;">{{ s.actual_last_out|time:"H:i:s" }}</span>
+                    {% else %}
+                      <span style="color:var(--text-muted);">&mdash;</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if s.overtime_minutes > 0 %}
+                      <span style="color:var(--neon-lime);font-weight:800;">+{{ s.overtime_minutes }}m OT</span>
+                    {% elif s.calculate_late_minutes > 0 %}
+                      <span style="color:var(--danger);font-weight:700;">-{{ s.calculate_late_minutes }}m Late</span>
+                    {% else %}
+                      <span style="color:var(--text-muted);">Standard</span>
+                    {% endif %}
+                  </td>
+                  <td>
+                    {% if s.approved_leave %}
+                      <span class="badge" style="background:rgba(0,240,255,0.15);color:var(--cyan);border:1px solid var(--cyan);font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:4px;">Leave</span>
+                    {% elif s.status == 'ON_FLOOR' %}
+                      <span class="badge" style="background:rgba(118,192,67,0.15);color:var(--neon-lime);border:1px solid var(--neon-lime);font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:4px;">On Floor</span>
+                    {% elif s.status == 'COMPLETED' %}
+                      <span class="badge" style="background:rgba(16,185,129,0.15);color:#10B981;border:1px solid #10B981;font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:4px;">Completed</span>
+                    {% else %}
+                      <span class="badge" style="background:rgba(255,255,255,0.06);color:#ccc;font-size:0.7rem;padding:0.15rem 0.4rem;border-radius:4px;">{{ s.status }}</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                    No shift duty records found for this month.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
-<!-- Modal: Assign Program -->
-<div id="assignProgramModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:2000;align-items:center;justify-content:center;">
-  <div style="background:#14181B;border:2px solid var(--neon-lime);border-radius:16px;padding:2rem;max-width:440px;width:90%;">
-    <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;margin-bottom:0.5rem;" id="modalAssignTitle">Assign Program Routine</h3>
+<!-- Modal: Prescribe Workout Split & Schedule to Athlete -->
+<div id="assignProgramModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2000;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto;">
+  <div style="background:#14181B;border:2px solid var(--neon-lime);border-radius:16px;padding:2rem;max-width:540px;width:100%;box-shadow:0 15px 50px rgba(0,0,0,0.9);">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+      <h3 style="font-family:'Montserrat',sans-serif;font-weight:900;color:#fff;margin:0;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;" id="modalAssignTitle">
+        <i class="fa fa-dumbbell" style="color:var(--neon-lime);"></i> Schedule Split &amp; Routine
+      </h3>
+      <button type="button" onclick="closeAssignModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+
     <input type="hidden" id="modalAthleteId">
-    <div style="margin:1.25rem 0;">
-      <label style="display:block;font-size:0.78rem;color:var(--text-muted);margin-bottom:0.4rem;">Select Program</label>
-      <select id="modalProgramSelect" class="form-control">
+
+    <div style="margin-bottom:1rem;">
+      <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;text-transform:uppercase;font-weight:700;">Select Workout Split Program *</label>
+      <select id="modalProgramSelect" class="form-control" style="background:#1B2024;border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:6px;padding:0.6rem;">
         {% for prog in programs %}
-          <option value="{{ prog.id }}">{{ prog.title }} ({{ prog.duration_weeks }} wks)</option>
+          <option value="{{ prog.id }}">{{ prog.title }} ({{ prog.duration_weeks }} Weeks)</option>
         {% endfor %}
       </select>
     </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem;margin-bottom:1rem;">
+      <div>
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;text-transform:uppercase;font-weight:700;">Weekly Schedule Days</label>
+        <select id="modalScheduleDays" class="form-control" style="background:#1B2024;border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:6px;padding:0.6rem;">
+          <option value="Mon, Wed, Fri (3 Days)">Mon / Wed / Fri (3 Days)</option>
+          <option value="Tue, Thu, Sat (3 Days)">Tue / Thu / Sat (3 Days)</option>
+          <option value="Mon, Tue, Thu, Fri (4 Days)">Mon, Tue, Thu, Fri (4 Days)</option>
+          <option value="Mon to Fri (5 Days PPL)">Mon to Fri (5 Days PPL)</option>
+          <option value="Daily Flexible (6 Days)">Daily Flexible (6 Days)</option>
+        </select>
+      </div>
+      <div>
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;text-transform:uppercase;font-weight:700;">Target Training Slot</label>
+        <select id="modalScheduleSlot" class="form-control" style="background:#1B2024;border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:6px;padding:0.6rem;">
+          <option value="Early Morning (06:00 - 08:30 AM)">Early Morning (06:00 - 08:30 AM)</option>
+          <option value="Midday (11:00 AM - 02:00 PM)">Midday (11:00 AM - 02:00 PM)</option>
+          <option value="Evening Peak (05:00 - 08:30 PM)">Evening Peak (05:00 - 08:30 PM)</option>
+          <option value="Night Owl (08:30 - 10:30 PM)">Night Owl (08:30 - 10:30 PM)</option>
+        </select>
+      </div>
+    </div>
+
+    <div style="margin-bottom:1.5rem;">
+      <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;text-transform:uppercase;font-weight:700;">Athlete Needs &amp; Coach Guidance Notes</label>
+      <textarea id="modalCoachNotes" rows="2" class="form-control" placeholder="e.g. Needs focus on core stability, strict 60s rest intervals, 15m post-workout treadmill cardio..." style="background:#1B2024;border:1px solid rgba(255,255,255,0.12);color:#fff;border-radius:6px;padding:0.6rem;"></textarea>
+    </div>
+
     <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
-      <button type="button" class="btn-action" style="background:#333;color:#fff;" onclick="closeAssignModal()">Cancel</button>
-      <button type="button" class="btn-action btn-lime" onclick="confirmAssignProgram()">Confirm Prescription</button>
+      <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeAssignModal()">Cancel</button>
+      <button type="button" class="btn-action btn-lime" id="btnConfirmAssign" onclick="confirmAssignProgram()" style="padding:0.6rem 1.4rem;">
+        <i class="fa fa-check-circle"></i> Save Schedule &amp; Split
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Review Nutrition Assessment & Formulate Fuel Plan -->
+<div id="coachNutritionReviewModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2000;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto;">
+  <div style="background:#14181B;border:2px solid var(--amber);border-radius:16px;padding:2rem;max-width:760px;width:100%;box-shadow:0 15px 50px rgba(0,0,0,0.9);max-height:90vh;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:0.75rem;">
+      <h3 style="font-family:'Montserrat',sans-serif;font-weight:900;color:#fff;margin:0;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;" id="modalNutTitle">
+        <i class="fa fa-utensils" style="color:var(--amber);"></i> Review Nutrition Assessment
+      </h3>
+      <button type="button" onclick="closeReviewNutrition()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+
+    <div style="overflow-y:auto;flex:1;padding-right:0.5rem;">
+      <!-- Athlete Answers Display Card -->
+      <div id="nutAthleteDetailsView" style="background:#191E22;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;">
+        <div style="text-align:center;color:var(--text-muted);padding:1.5rem;"><i class="fa fa-spinner fa-spin"></i> Loading athlete assessment data...</div>
+      </div>
+
+      <!-- Coach Prescription Form -->
+      <form id="coachNutPrescriptionForm" onsubmit="submitCoachNutritionReview(event)">
+        <input type="hidden" id="coachNutAssessmentId">
+        <div style="background:#1A2127;border:1px solid var(--amber);border-radius:12px;padding:1.25rem;margin-bottom:1rem;">
+          <h4 style="font-family:'Montserrat',sans-serif;font-weight:800;color:var(--amber);margin-bottom:1rem;font-size:0.95rem;display:flex;align-items:center;gap:0.5rem;">
+            <i class="fa fa-pen-alt"></i> Formulate Athlete's Daily Fuel &amp; Nutrition Target
+          </h4>
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:0.75rem;margin-bottom:1rem;">
+            <div>
+              <label style="display:block;font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Target Calories (kcal)</label>
+              <input type="number" id="coachNutCal" class="form-control" placeholder="e.g. 2100" style="background:#13171A;border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:6px;padding:0.5rem;">
+            </div>
+            <div>
+              <label style="display:block;font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Target Protein (g)</label>
+              <input type="number" id="coachNutPro" class="form-control" placeholder="e.g. 150" style="background:#13171A;border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:6px;padding:0.5rem;">
+            </div>
+            <div>
+              <label style="display:block;font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Target Carbs (g)</label>
+              <input type="number" id="coachNutCarb" class="form-control" placeholder="e.g. 220" style="background:#13171A;border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:6px;padding:0.5rem;">
+            </div>
+            <div>
+              <label style="display:block;font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Target Fat (g)</label>
+              <input type="number" id="coachNutFat" class="form-control" placeholder="e.g. 60" style="background:#13171A;border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:6px;padding:0.5rem;">
+            </div>
+            <div>
+              <label style="display:block;font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Target Water (ml)</label>
+              <input type="number" id="coachNutWater" class="form-control" placeholder="e.g. 3000" style="background:#13171A;border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:6px;padding:0.5rem;">
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Coach Guidance, Meal Timing &amp; Dietary Strategy *</label>
+            <textarea id="coachNutNotes" rows="3" class="form-control" placeholder="e.g. Focus on 3 main meals + 1 post-workout shake. Prioritize egg whites, chicken breast, red rice, and dhal. Restrict sugary tea to 1 cup without added sugar..." required style="background:#13171A;border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:6px;padding:0.6rem;"></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;padding-top:0.75rem;">
+          <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeReviewNutrition()">Cancel</button>
+          <button type="submit" class="btn-action btn-lime" id="btnSaveNutReview" style="padding:0.65rem 1.6rem;">
+            <i class="fa fa-check-circle"></i> Save &amp; Assign Nutrition Plan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Review Workout Assessment & Formulate Program Split -->
+<div id="coachWorkoutReviewModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2000;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto;">
+  <div style="background:#14181B;border:2px solid var(--neon-lime);border-radius:16px;padding:2rem;max-width:760px;width:100%;box-shadow:0 15px 50px rgba(0,0,0,0.9);max-height:90vh;display:flex;flex-direction:column;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:0.75rem;">
+      <h3 style="font-family:'Montserrat',sans-serif;font-weight:900;color:#fff;margin:0;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;" id="modalWrkTitle">
+        <i class="fa fa-dumbbell" style="color:var(--neon-lime);"></i> Review Workout Assessment
+      </h3>
+      <button type="button" onclick="closeReviewWorkout()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+
+    <div style="overflow-y:auto;flex:1;padding-right:0.5rem;">
+      <!-- Athlete Answers Display Card -->
+      <div id="wrkAthleteDetailsView" style="background:#191E22;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.25rem;margin-bottom:1.5rem;">
+        <div style="text-align:center;color:var(--text-muted);padding:1.5rem;"><i class="fa fa-spinner fa-spin"></i> Loading athlete assessment data...</div>
+      </div>
+
+      <!-- Coach Prescription Form -->
+      <form id="coachWrkPrescriptionForm" onsubmit="submitCoachWorkoutReview(event)">
+        <input type="hidden" id="coachWrkAssessmentId">
+        <div style="background:#1A2127;border:1px solid var(--neon-lime);border-radius:12px;padding:1.25rem;margin-bottom:1rem;">
+          <h4 style="font-family:'Montserrat',sans-serif;font-weight:800;color:var(--neon-lime);margin-bottom:1rem;font-size:0.95rem;display:flex;align-items:center;gap:0.5rem;">
+            <i class="fa fa-pen-alt"></i> Formulate Athlete's Training Split &amp; Program
+          </h4>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+            <div>
+              <label style="display:block;font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Assign Master Program *</label>
+              <select id="coachWrkProgramSelect" class="form-control" style="background:#13171A;border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:6px;padding:0.5rem;">
+                <option value="">-- Custom Program / Standalone Split --</option>
+                {% for prog in programs %}
+                  <option value="{{ prog.id }}">{{ prog.title }} ({{ prog.duration_weeks }} Wks)</option>
+                {% endfor %}
+              </select>
+            </div>
+            <div>
+              <label style="display:block;font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Training Days / Week</label>
+              <input type="number" id="coachWrkDays" class="form-control" min="1" max="7" placeholder="e.g. 4" style="background:#13171A;border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:6px;padding:0.5rem;">
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1rem;">
+            <div>
+              <label style="display:block;font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Session Duration (Minutes)</label>
+              <input type="number" id="coachWrkDuration" class="form-control" placeholder="e.g. 60" style="background:#13171A;border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:6px;padding:0.5rem;">
+            </div>
+            <div>
+              <label style="display:block;font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Cardio Recommendation</label>
+              <input type="text" id="coachWrkCardio" class="form-control" placeholder="e.g. 15-20 min LISS incline treadmill walk post-workout" style="background:#13171A;border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:6px;padding:0.5rem;">
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.72rem;color:var(--text-muted);font-weight:700;text-transform:uppercase;margin-bottom:0.3rem;">Coach Split Structure &amp; Technical Guidance *</label>
+            <textarea id="coachWrkNotes" rows="3" class="form-control" placeholder="e.g. Day 1: Upper Chest & Back. Day 2: Quads & Abs. Day 3: Shoulders & Arms. Day 4: Posterior Chain & Hamstrings. Strict warm-up on rotator cuffs before pressing..." required style="background:#13171A;border:1px solid rgba(255,255,255,0.15);color:#fff;border-radius:6px;padding:0.6rem;"></textarea>
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;padding-top:0.75rem;">
+          <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeReviewWorkout()">Cancel</button>
+          <button type="submit" class="btn-action btn-lime" id="btnSaveWrkReview" style="padding:0.65rem 1.6rem;">
+            <i class="fa fa-check-circle"></i> Save &amp; Prescribe Workout Plan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Member 360° Athlete Profile Dossier -->
+<div class="modal-overlay" id="memberProfileModal" style="display:none;z-index:9999;">
+  <div class="modal-box" style="max-width:760px;max-height:90vh;overflow-y:auto;padding:1.5rem;background:#14181B;border:1.5px solid var(--neon-lime);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,0.85);">
+    
+    <!-- Modal Header -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:1rem;margin-bottom:1.25rem;">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div id="mpAvatar" style="width:62px;height:62px;border-radius:50%;background:#22282D;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.3rem;border:2px solid var(--neon-lime);overflow:hidden;flex-shrink:0;">
+          FM
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+            <h3 id="mpFullName" style="font-family:'Montserrat',sans-serif;font-weight:900;color:#fff;margin:0;font-size:1.25rem;">Member Name</h3>
+            <span id="mpSubBadge" style="font-size:0.72rem;font-weight:800;padding:0.2rem 0.55rem;border-radius:999px;background:rgba(136,216,45,0.18);color:var(--neon-lime);border:1px solid rgba(136,216,45,0.3);">ACTIVE</span>
+            <span id="mpFloorLiveBadge" style="font-size:0.72rem;font-weight:800;padding:0.2rem 0.55rem;border-radius:999px;background:rgba(0,240,255,0.15);color:#00F0FF;border:1px solid rgba(0,240,255,0.3);display:none;"><i class="fa fa-door-open"></i> ON FLOOR TODAY</span>
+          </div>
+          <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;">
+            <span id="mpUsername">@username</span> &bull; 
+            Turnstile PIN: <strong style="color:var(--neon-lime);" id="mpPin">#FM1001</strong> &bull; 
+            Member Since: <span id="mpJoinedDate" style="color:#ccc;">--</span>
+          </div>
+        </div>
+      </div>
+      <button type="button" onclick="closeMemberProfile()" style="background:none;border:none;color:#888;font-size:1.4rem;cursor:pointer;padding:0.2rem 0.5rem;" title="Close Dossier">&times;</button>
+    </div>
+
+    <!-- Modal Body: 4 Clean Dossier Sections for Coach -->
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+
+      <!-- Section 1: Personal & Identity Dossier -->
+      <div style="background:#1B2024;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1rem;">
+        <div style="font-size:0.74rem;font-weight:800;color:var(--neon-lime);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+          <i class="fa fa-user"></i> 1. Personal &amp; Identity Dossier
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:0.75rem;font-size:0.82rem;">
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">PHONE</span><strong style="color:#fff;" id="mpPhone">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">EMAIL</span><strong style="color:#fff;" id="mpEmail">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">NIC / PASSPORT</span><strong style="color:#fff;" id="mpNic">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">GENDER / AGE</span><strong style="color:#fff;" id="mpGenderAge">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">DATE OF BIRTH</span><strong style="color:#fff;" id="mpDob">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">BLOOD GROUP</span><strong style="color:#fff;" id="mpBlood">--</strong></div>
+        </div>
+        <div style="margin-top:0.6rem;font-size:0.82rem;border-top:1px dashed rgba(255,255,255,0.08);padding-top:0.5rem;">
+          <span style="color:var(--text-muted);font-size:0.72rem;">RESIDENTIAL ADDRESS: </span>
+          <strong style="color:#E6EDF3;" id="mpAddress">--</strong>
+        </div>
+      </div>
+
+      <!-- Section 2: Emergency Contact & Health Clearance (CRITICAL FOR COACH SAFETY) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <div style="background:#1B2024;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1rem;">
+          <div style="font-size:0.74rem;font-weight:800;color:#F59E0B;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+            <i class="fa fa-phone-alt"></i> 2. Emergency Contact
+          </div>
+          <div style="font-size:0.82rem;line-height:1.5;">
+            <div>Contact: <strong style="color:#fff;" id="mpEmergName">None listed</strong></div>
+            <div>Relationship: <strong style="color:#ccc;" id="mpEmergRel">--</strong></div>
+            <div>Phone: <strong style="color:var(--neon-lime);" id="mpEmergPhone">--</strong></div>
+          </div>
+        </div>
+
+        <div style="background:#1B2024;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1rem;" id="mpMedicalContainer">
+          <div style="font-size:0.74rem;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+            <i class="fa fa-heartbeat"></i> 3. Medical &amp; Health Clearance
+          </div>
+          <div style="font-size:0.82rem;line-height:1.5;">
+            <div>Conditions: <strong style="color:#fff;" id="mpMedConditions">None reported</strong></div>
+            <div>Medications: <strong style="color:#fff;" id="mpMedications">None reported</strong></div>
+            <div>Primary Goal: <strong style="color:var(--cyan);" id="mpGoal">General Fitness</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Training Split & Prescribed Schedule -->
+      <div style="background:#1B2024;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1rem;">
+        <div style="font-size:0.74rem;font-weight:800;color:var(--cyan);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+          <i class="fa fa-dumbbell"></i> 4. Training Split &amp; Coaching Prescriptions
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:0.75rem;font-size:0.82rem;">
+          <div>
+            <span style="color:var(--text-muted);display:block;font-size:0.72rem;">ASSIGNED COACH</span>
+            <strong style="color:var(--neon-lime);" id="mpCoach">No Coach Assigned</strong>
+          </div>
+          <div>
+            <span style="color:var(--text-muted);display:block;font-size:0.72rem;">PRESCRIBED TRAINING SPLIT</span>
+            <strong style="color:#fff;" id="mpProgram">Standard Workout Routine</strong>
+          </div>
+          <div>
+            <span style="color:var(--text-muted);display:block;font-size:0.72rem;">MONTH ATTENDANCE</span>
+            <strong style="color:#fff;" id="mpAttendance">0 Check-ins this month</strong>
+          </div>
+        </div>
+        <div id="mpNotesContainer" style="margin-top:0.6rem;font-size:0.8rem;color:#ccc;background:rgba(0,0,0,0.25);padding:0.5rem 0.75rem;border-radius:6px;">
+          Coaching Notes: <span id="mpStaffNotes">None</span>
+        </div>
+      </div>
+
+      <!-- Section 4: Membership Plan & Validity -->
+      <div style="background:#1B2024;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1rem;">
+        <div style="font-size:0.74rem;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+          <i class="fa fa-id-badge"></i> 5. Active Plan &amp; Hardware Status
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:0.75rem;font-size:0.82rem;">
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">CURRENT PACKAGE</span><strong style="color:#fff;" id="mpPlan">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">VALIDITY PERIOD</span><strong style="color:#fff;" id="mpValidity">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">HARDWARE CREDENTIALS</span><strong style="color:#00F0FF;" id="mpHardwareStatus">Armed &bull; Face ID Active</strong></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem;border-top:1px solid rgba(255,255,255,0.1);padding-top:1rem;flex-wrap:wrap;gap:0.75rem;">
+      <button type="button" class="btn-action" style="background:#22282D;color:#ccc;" onclick="closeMemberProfile()">Close Dossier</button>
+      <div style="display:flex;gap:0.5rem;">
+        <button type="button" class="btn-action btn-cyan" id="mpBtnNudge" onclick="sendNudgeFromProfile()">
+          <i class="fa fa-bell"></i> Send Nudge
+        </button>
+        <button type="button" class="btn-action btn-lime" id="mpBtnSchedule" onclick="openAssignFromProfile()">
+          <i class="fa fa-calendar-check"></i> Prescribe Workout Split
+        </button>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
+  let currentCoachProfileMember = null;
+  let currentRosterScope = 'my';
+
   function showToast(msg) {
     const t = document.getElementById('coachToast');
     document.getElementById('coachToastMsg').textContent = msg;
@@ -491,11 +1161,212 @@
     setTimeout(() => { t.style.display = 'none'; }, 4500);
   }
 
+  function setRosterScope(scope, btn) {
+    currentRosterScope = scope;
+    document.querySelectorAll('.filter-pill').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    filterAthleteRoster();
+  }
+
+  function filterAthleteRoster() {
+    const q = (document.getElementById('rosterSearchInput')?.value || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('.athlete-row');
+    let visibleCount = 0;
+    rows.forEach(r => {
+      const text = r.getAttribute('data-search') || '';
+      const isAssigned = r.getAttribute('data-is-assigned') === 'true';
+      const onFloor = r.getAttribute('data-on-floor') === 'true';
+
+      let scopeMatch = true;
+      if (currentRosterScope === 'my') {
+        scopeMatch = isAssigned;
+      } else if (currentRosterScope === 'floor') {
+        scopeMatch = onFloor;
+      }
+
+      const searchMatch = !q || text.includes(q);
+
+      if (scopeMatch && searchMatch) {
+        r.style.display = '';
+        visibleCount++;
+      } else {
+        r.style.display = 'none';
+      }
+    });
+
+    const badge = document.getElementById('rosterCountBadge');
+    if (badge) {
+      badge.textContent = `${visibleCount} Athletes`;
+    }
+  }
+
+  async function openMemberProfile(memberId) {
+    if (!memberId) return;
+    const modal = document.getElementById('memberProfileModal');
+    if (!modal) return;
+
+    // Reset fields to loading state
+    document.getElementById('mpFullName').innerText = 'Loading Athlete Profile...';
+    document.getElementById('mpUsername').innerText = '@...';
+    document.getElementById('mpPin').innerText = '#...';
+    document.getElementById('mpJoinedDate').innerText = '...';
+    document.getElementById('mpPhone').innerText = '...';
+    document.getElementById('mpEmail').innerText = '...';
+    document.getElementById('mpNic').innerText = '...';
+    document.getElementById('mpGenderAge').innerText = '...';
+    document.getElementById('mpDob').innerText = '...';
+    document.getElementById('mpBlood').innerText = '...';
+    document.getElementById('mpAddress').innerText = '...';
+    document.getElementById('mpEmergName').innerText = 'None listed';
+    document.getElementById('mpEmergRel').innerText = '--';
+    document.getElementById('mpEmergPhone').innerText = '--';
+    document.getElementById('mpMedConditions').innerText = 'None reported';
+    document.getElementById('mpMedications').innerText = 'None reported';
+    document.getElementById('mpGoal').innerText = '...';
+    document.getElementById('mpCoach').innerText = '...';
+    document.getElementById('mpProgram').innerText = '...';
+    document.getElementById('mpAttendance').innerText = '...';
+    document.getElementById('mpStaffNotes').innerText = 'None';
+    document.getElementById('mpPlan').innerText = '...';
+    document.getElementById('mpValidity').innerText = '...';
+    document.getElementById('mpHardwareStatus').innerText = '...';
+    const floorBadge = document.getElementById('mpFloorLiveBadge');
+    if (floorBadge) floorBadge.style.display = 'none';
+
+    modal.style.display = 'flex';
+
+    try {
+      const res = await fetch(`/api/members/${memberId}/profile/`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data.success || !data.member) {
+        alert(data.error || 'Failed to load member profile');
+        return;
+      }
+
+      const m = data.member;
+      currentCoachProfileMember = m;
+
+      // Avatar
+      const av = document.getElementById('mpAvatar');
+      if (m.photo_url) {
+        av.innerHTML = `<img src="${m.photo_url}" style="width:100%;height:100%;object-fit:cover;">`;
+      } else {
+        av.innerText = (m.name || 'M').substring(0, 2).toUpperCase();
+      }
+
+      // Header
+      document.getElementById('mpFullName').innerText = m.name;
+      document.getElementById('mpUsername').innerText = `@${m.username}`;
+      document.getElementById('mpPin').innerText = `#FM${m.pin}`;
+      document.getElementById('mpJoinedDate').innerText = m.date_joined || '--';
+
+      // Status badges
+      const subBadge = document.getElementById('mpSubBadge');
+      if (m.sub_status === 'ACTIVE') {
+        subBadge.className = 'badge';
+        subBadge.style.background = 'rgba(136,216,45,0.18)';
+        subBadge.style.color = 'var(--neon-lime)';
+        subBadge.style.border = '1px solid rgba(136,216,45,0.3)';
+        subBadge.innerHTML = `<i class="fa fa-check-circle"></i> ACTIVE (${m.days_remaining}d left)`;
+      } else if (m.sub_status === 'EXPIRED') {
+        subBadge.className = 'badge';
+        subBadge.style.background = 'rgba(239,68,68,0.18)';
+        subBadge.style.color = 'var(--danger)';
+        subBadge.style.border = '1px solid rgba(239,68,68,0.3)';
+        subBadge.innerHTML = `<i class="fa fa-times-circle"></i> EXPIRED`;
+      } else {
+        subBadge.className = 'badge';
+        subBadge.style.background = 'rgba(245,158,11,0.18)';
+        subBadge.style.color = 'var(--amber)';
+        subBadge.style.border = '1px solid rgba(245,158,11,0.3)';
+        subBadge.innerHTML = `<i class="fa fa-clock"></i> NO ACTIVE PLAN`;
+      }
+
+      // Details
+      document.getElementById('mpPhone').innerText = m.phone || '--';
+      document.getElementById('mpEmail').innerText = m.email || '--';
+      document.getElementById('mpNic').innerText = m.nic || '--';
+      document.getElementById('mpGenderAge').innerText = `${m.gender || 'Not specified'} ${m.age ? '(' + m.age + ' yrs)' : ''}`;
+      document.getElementById('mpDob').innerText = m.dob || '--';
+      document.getElementById('mpBlood').innerText = m.blood_group || '--';
+      document.getElementById('mpAddress').innerText = m.address || '--';
+
+      // Emergency & Medical
+      document.getElementById('mpEmergName').innerText = m.emergency_name || 'None listed';
+      document.getElementById('mpEmergRel').innerText = m.emergency_relationship || '--';
+      document.getElementById('mpEmergPhone').innerText = m.emergency_phone || '--';
+      
+      const medCond = document.getElementById('mpMedConditions');
+      if (m.has_medical_conditions) {
+        medCond.style.color = 'var(--danger)';
+        medCond.innerHTML = `<i class="fa fa-exclamation-triangle"></i> ${m.medical_conditions}`;
+      } else {
+        medCond.style.color = '#fff';
+        medCond.innerText = m.medical_conditions || 'None reported';
+      }
+
+      document.getElementById('mpMedications').innerText = m.medications || 'None reported';
+      document.getElementById('mpGoal').innerText = m.primary_goal || 'General Fitness';
+
+      // Coaching & Training
+      document.getElementById('mpCoach').innerText = m.assigned_coach || 'No Coach Assigned (Standard Floor)';
+      document.getElementById('mpProgram').innerText = m.assigned_program || 'Standard Workout Routine';
+      document.getElementById('mpAttendance').innerText = `${m.monthly_attendance || 0} Check-ins this month`;
+      document.getElementById('mpStaffNotes').innerText = m.notes || 'None';
+
+      // Membership
+      document.getElementById('mpPlan').innerText = m.plan_name ? `${m.plan_name} (LKR ${m.plan_price || 0})` : 'None';
+      document.getElementById('mpValidity').innerText = m.valid_until ? `Ends ${m.valid_until}` : 'Inactive';
+      document.getElementById('mpHardwareStatus').innerText = `Face ID: ${m.face_enrolled ? 'Enrolled' : 'Missing'} • Finger: ${m.fingerprint_enrolled ? 'Enrolled' : 'Missing'}`;
+
+    } catch(err) {
+      alert('Error fetching member profile: ' + err);
+      closeMemberProfile();
+    }
+  }
+
+  function closeMemberProfile() {
+    const modal = document.getElementById('memberProfileModal');
+    if (modal) modal.style.display = 'none';
+    currentCoachProfileMember = null;
+  }
+
+  function sendNudgeFromProfile() {
+    if (!currentCoachProfileMember) return;
+    sendNudge(currentCoachProfileMember.id, currentCoachProfileMember.name);
+  }
+
+  function openAssignFromProfile() {
+    if (!currentCoachProfileMember) return;
+    const m = currentCoachProfileMember;
+    closeMemberProfile();
+    openAssignModal(m.id, m.name);
+  }
+
   function switchTab(tabId, btn) {
+    if (!tabId) return;
+    tabId = tabId.replace('#', '').trim();
+    const pane = document.getElementById(tabId);
+    if (!pane) return;
+
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
-    if (btn) btn.classList.add('active');
+    pane.classList.add('active');
+
+    let match = btn;
+    if (!match) {
+      match = document.querySelector(`.nav-tab-btn[onclick*="${tabId}"]`);
+    }
+    if (match) match.classList.add('active');
+
+    // Persist active tab across reloads, actions, and browser history
+    try {
+      localStorage.setItem('fitme_coach_active_tab', tabId);
+      if (window.location.hash !== '#' + tabId) {
+        history.replaceState(null, null, '#' + tabId);
+      }
+    } catch(e) {}
   }
 
   // Motivational Nudge
@@ -518,10 +1389,10 @@
     }
   }
 
-  // Assign Program Modal
+  // Assign Program & Schedule Modal
   function openAssignModal(memberId, name) {
     document.getElementById('modalAthleteId').value = memberId;
-    document.getElementById('modalAssignTitle').textContent = `Assign Split to ${name}`;
+    document.getElementById('modalAssignTitle').innerHTML = `<i class="fa fa-dumbbell" style="color:var(--neon-lime);"></i> Schedule Split for ${name}`;
     document.getElementById('assignProgramModal').style.display = 'flex';
   }
   function closeAssignModal() {
@@ -531,6 +1402,13 @@
   async function confirmAssignProgram() {
     const memberId = document.getElementById('modalAthleteId').value;
     const programId = document.getElementById('modalProgramSelect').value;
+    const scheduleDays = document.getElementById('modalScheduleDays').value;
+    const scheduleSlot = document.getElementById('modalScheduleSlot').value;
+    const coachNotes = document.getElementById('modalCoachNotes').value;
+
+    const btn = document.getElementById('btnConfirmAssign');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
 
     try {
       const res = await fetch(`/dashboard/api/members/${memberId}/assign-plan/`, {
@@ -539,15 +1417,27 @@
           'X-CSRFToken': '{{ csrf_token }}',
           'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ program_id: programId })
+        body: JSON.stringify({
+          program_id: programId,
+          schedule_days: scheduleDays,
+          schedule_slot: scheduleSlot,
+          coach_notes: coachNotes
+        })
       });
       const data = await res.json();
       if (data.success) {
         closeAssignModal();
-        showToast(data.message);
+        showToast(data.message || 'Prescribed split & schedule saved successfully!');
+        setTimeout(() => location.reload(), 800);
+      } else {
+        alert(data.error || 'Failed to assign program.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-check-circle"></i> Save Schedule & Split';
       }
     } catch(err) {
       alert("Error: " + err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check-circle"></i> Save Schedule & Split';
     }
   }
 
@@ -604,6 +1494,431 @@
       alert("Error: " + err);
     }
   }
+
+  // ─── Coach Assessment Reviews (Dhananjaya Assessments) ─────────────────────
+  function toggleCoachAssessmentView(type) {
+    const nutC = document.getElementById('coachNutContainer');
+    const wrkC = document.getElementById('coachWrkContainer');
+    const btnNut = document.getElementById('btnCoachNutToggle');
+    const btnWrk = document.getElementById('btnCoachWrkToggle');
+
+    if (type === 'nutrition') {
+      nutC.style.display = 'block';
+      wrkC.style.display = 'none';
+      btnNut.className = 'btn-action btn-lime';
+      btnNut.style.background = '';
+      btnNut.style.color = '';
+      btnWrk.className = 'btn-action';
+      btnWrk.style.background = '#1B2024';
+      btnWrk.style.color = '#fff';
+      btnWrk.style.border = '1px solid rgba(255,255,255,0.15)';
+    } else {
+      nutC.style.display = 'none';
+      wrkC.style.display = 'block';
+      btnWrk.className = 'btn-action btn-lime';
+      btnWrk.style.background = '';
+      btnWrk.style.color = '';
+      btnNut.className = 'btn-action';
+      btnNut.style.background = '#1B2024';
+      btnNut.style.color = '#fff';
+      btnNut.style.border = '1px solid rgba(255,255,255,0.15)';
+    }
+  }
+
+  async function loadCoachAssessments() {
+    try {
+      const res = await fetch('/api/assessments/pending/');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      const nutList = data.nutrition || [];
+      const wrkList = data.workout || [];
+      const totalPending = nutList.length + wrkList.length;
+
+      // Badges
+      const badge = document.getElementById('coachPendingBadge');
+      if (badge) {
+        badge.textContent = totalPending;
+        badge.style.display = totalPending > 0 ? 'inline-block' : 'none';
+      }
+      const statCard = document.getElementById('statPendingAssessments');
+      if (statCard) statCard.textContent = totalPending;
+
+      const nutQueue = document.getElementById('nutQueueCount');
+      if (nutQueue) nutQueue.textContent = nutList.length;
+      const wrkQueue = document.getElementById('wrkQueueCount');
+      if (wrkQueue) wrkQueue.textContent = wrkList.length;
+
+      // Render Nutrition Table
+      const nutTbody = document.getElementById('coachNutTableBody');
+      if (nutList.length === 0) {
+        nutTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-check-circle" style="color:var(--neon-lime);"></i> No pending nutrition assessments! All athletes are up-to-date.</td></tr>';
+      } else {
+        nutTbody.innerHTML = nutList.map(a => `
+          <tr>
+            <td>
+              <div style="font-weight:700;color:#fff;">${a.member_name}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">Athlete #${a.member_id}</div>
+            </td>
+            <td style="font-size:0.8rem;color:#ccc;">${new Date(a.submitted_at).toLocaleDateString()}</td>
+            <td>
+              <div style="font-weight:800;color:var(--neon-lime);">${a.current_weight_kg ? a.current_weight_kg + ' kg' : '--'}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">Goal: ${a.target_weight_kg ? a.target_weight_kg + ' kg' : '--'}</div>
+            </td>
+            <td><span style="background:rgba(255,255,255,0.06);color:#ddd;padding:0.2rem 0.5rem;border-radius:4px;font-size:0.75rem;">${(a.primary_goals || 'General Fitness').replace(/,/g, ', ')}</span></td>
+            <td><span style="font-size:0.8rem;text-transform:capitalize;">${(a.activity_level || 'Moderate').replace(/_/g, ' ')}</span></td>
+            <td>
+              ${a.medical_conditions ? `<span style="color:var(--danger);font-size:0.75rem;font-weight:700;"><i class="fa fa-exclamation-circle"></i> ${a.medical_conditions}</span>` : `<span style="color:var(--neon-lime);font-size:0.75rem;">None</span>`}
+            </td>
+            <td style="text-align:right;">
+              <button class="btn-action btn-lime" onclick="openReviewNutrition(${a.id}, '${a.member_name.replace(/'/g, "\\'")}')">
+                <i class="fa fa-clipboard-check"></i> Review &amp; Set Plan
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+      // Render Workout Table
+      const wrkTbody = document.getElementById('coachWrkTableBody');
+      if (wrkList.length === 0) {
+        wrkTbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-check-circle" style="color:var(--neon-lime);"></i> No pending workout assessments! All athletes have active splits.</td></tr>';
+      } else {
+        wrkTbody.innerHTML = wrkList.map(a => `
+          <tr>
+            <td>
+              <div style="font-weight:700;color:#fff;">${a.member_name}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">Athlete #${a.member_id}</div>
+            </td>
+            <td style="font-size:0.8rem;color:#ccc;">${new Date(a.submitted_at).toLocaleDateString()}</td>
+            <td><span style="font-size:0.78rem;background:#162329;color:var(--cyan);border:1px solid rgba(6,182,212,0.3);padding:0.2rem 0.5rem;border-radius:4px;font-weight:700;text-transform:capitalize;">${(a.training_experience || 'None').replace(/_/g, ' ')}</span></td>
+            <td>
+              <div style="font-weight:800;color:var(--neon-lime);">${a.current_weight_kg ? a.current_weight_kg + ' kg' : '--'}</div>
+              <div style="font-size:0.72rem;color:var(--text-muted);">Goal: ${a.target_weight_kg ? a.target_weight_kg + ' kg' : '--'}</div>
+            </td>
+            <td><span style="background:rgba(255,255,255,0.06);color:#ddd;padding:0.2rem 0.5rem;border-radius:4px;font-size:0.75rem;">${(a.primary_goals || 'General Fitness').replace(/,/g, ', ')}</span></td>
+            <td>
+              ${a.injuries ? `<span style="color:var(--danger);font-size:0.75rem;font-weight:700;"><i class="fa fa-heartbeat"></i> ${a.injuries}</span>` : `<span style="color:var(--neon-lime);font-size:0.75rem;">Cleared</span>`}
+            </td>
+            <td style="text-align:right;">
+              <button class="btn-action btn-cyan" onclick="openReviewWorkout(${a.id}, '${a.member_name.replace(/'/g, "\\'")}')">
+                <i class="fa fa-dumbbell"></i> Review &amp; Prescribe
+              </button>
+            </td>
+          </tr>
+        `).join('');
+      }
+
+    } catch (err) {
+      console.error('Failed loading coach assessments:', err);
+    }
+  }
+
+  // Nutrition Review Modal
+  async function openReviewNutrition(id, name) {
+    document.getElementById('coachNutAssessmentId').value = id;
+    document.getElementById('modalNutTitle').innerHTML = `<i class="fa fa-utensils" style="color:var(--amber);"></i> Review Nutrition Assessment &bull; ${name}`;
+    document.getElementById('nutAthleteDetailsView').innerHTML = '<div style="text-align:center;padding:1.5rem;"><i class="fa fa-spinner fa-spin"></i> Loading athlete evaluation...</div>';
+    document.getElementById('coachNutritionReviewModal').style.display = 'flex';
+
+    try {
+      const res = await fetch(`/api/assessments/nutrition/${id}/detail/`);
+      const data = await res.json();
+      if (!data.success) {
+        document.getElementById('nutAthleteDetailsView').innerHTML = '<div style="color:var(--danger);">Error loading details</div>';
+        return;
+      }
+      const a = data.assessment;
+
+      // Prefill coach plan targets if already saved
+      document.getElementById('coachNutCal').value = a.coach_calorie_target || '';
+      document.getElementById('coachNutPro').value = a.coach_protein_target_g || '';
+      document.getElementById('coachNutCarb').value = a.coach_carbs_target_g || '';
+      document.getElementById('coachNutFat').value = a.coach_fat_target_g || '';
+      document.getElementById('coachNutWater').value = a.coach_water_target_ml || '';
+      document.getElementById('coachNutNotes').value = a.coach_plan_notes || '';
+
+      document.getElementById('nutAthleteDetailsView').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:0.75rem;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:0.75rem;margin-bottom:0.75rem;">
+          <div><span style="font-size:0.7rem;color:var(--text-muted);display:block;">ATHLETE</span><strong style="color:#fff;">${a.full_name || name}</strong></div>
+          <div><span style="font-size:0.7rem;color:var(--text-muted);display:block;">AGE / GENDER</span><strong style="color:#fff;">${a.age || '--'} yrs &bull; ${a.gender || '--'}</strong></div>
+          <div><span style="font-size:0.7rem;color:var(--text-muted);display:block;">HEIGHT / WAIST</span><strong style="color:#fff;">${a.height_cm || '--'} cm &bull; ${a.waist_cm || '--'} cm</strong></div>
+          <div><span style="font-size:0.7rem;color:var(--text-muted);display:block;">WEIGHT (CURRENT &rarr; GOAL)</span><strong style="color:var(--neon-lime);">${a.current_weight_kg || '--'} kg &rarr; ${a.target_weight_kg || '--'} kg</strong></div>
+        </div>
+
+        <div style="font-size:0.83rem;line-height:1.55;display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div>
+            <div style="color:var(--neon-lime);font-weight:700;margin-bottom:0.25rem;">Goals &amp; Diet History</div>
+            <div><strong>Primary Goals:</strong> ${a.primary_goals || '--'} ${a.primary_goals_other ? '(' + a.primary_goals_other + ')' : ''}</div>
+            <div><strong>Timeline:</strong> ${a.goal_timeline_weeks || '--'} wks &bull; <strong>Importance:</strong> ${a.goal_importance || '--'}/10</div>
+            <div><strong>Weight History:</strong> High: ${a.highest_adult_weight_kg || '--'} kg | Low: ${a.lowest_adult_weight_kg || '--'} kg</div>
+            <div><strong>Past Diets:</strong> ${a.previous_diet_types || 'None'}</div>
+            <div><strong>Reasons Stopped:</strong> ${a.diet_stop_reasons || 'None stated'}</div>
+
+            <div style="color:var(--cyan);font-weight:700;margin:0.75rem 0 0.25rem;">Daily Activity &amp; Exercise</div>
+            <div><strong>Activity Level:</strong> ${a.activity_level || '--'} (${a.work_hours_per_day || '--'}h work, ${a.sitting_hours_per_day || '--'}h sitting)</div>
+            <div><strong>Daily Steps:</strong> ${a.daily_steps || '--'} &bull; <strong>Commute:</strong> ${a.daily_commute_minutes || '--'} min</div>
+            <div><strong>Exercise Routine:</strong> ${a.currently_exercising ? 'Active (' + a.exercise_days_per_week + ' d/wk, ' + a.session_duration_minutes + ' min)' : 'Inactive'}</div>
+          </div>
+
+          <div>
+            <div style="color:var(--amber);font-weight:700;margin-bottom:0.25rem;">Eating Habits &amp; Meals</div>
+            <div><strong>Diet Preference:</strong> ${a.dietary_preference || '--'} &bull; ${a.meals_per_day || '--'} meals/day</div>
+            <div><strong>Disliked Foods:</strong> ${a.disliked_foods || 'None'}</div>
+            <div><strong>Allergies:</strong> <span style="color:${a.allergies ? 'var(--danger)' : '#fff'};font-weight:700;">${a.allergies || 'None'}</span></div>
+            <div><strong>Typical Day:</strong> Breakfast: ${a.typical_breakfast || '--'} | Lunch: ${a.typical_lunch || '--'} | Dinner: ${a.typical_dinner || '--'}</div>
+            <div><strong>Water Intake:</strong> ${a.daily_water_ml || '--'} ml/day &bull; <strong>Tea/Coffee:</strong> ${a.daily_tea_coffee_cups || 0} cups (Sugar: ${a.sugar_in_tea ? 'Yes' : 'No'})</div>
+            <div><strong>Dining Out:</strong> ${a.outside_food_frequency || 'Rare'}</div>
+
+            <div style="color:var(--danger);font-weight:700;margin:0.75rem 0 0.25rem;">Medical, Sleep &amp; Stress</div>
+            <div><strong>Medical Conditions:</strong> ${a.medical_conditions || 'None reported'}</div>
+            <div><strong>Supplements / Meds:</strong> ${a.current_supplements || '--'} / ${a.current_medications || '--'}</div>
+            <div><strong>Sleep &amp; Stress:</strong> ${a.sleep_hours_per_night || '--'}h (${a.sleep_quality || '--'}) &bull; Stress: ${a.stress_level || '--'}/10</div>
+            ${a.member_notes ? `<div style="background:#121517;padding:0.4rem 0.6rem;border-radius:4px;margin-top:0.4rem;border-left:2px solid var(--amber);"><strong>Member Notes:</strong> "${a.member_notes}"</div>` : ''}
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById('nutAthleteDetailsView').innerHTML = '<div style="color:var(--danger);">Error connecting to assessment server</div>';
+    }
+  }
+
+  function closeReviewNutrition() {
+    document.getElementById('coachNutritionReviewModal').style.display = 'none';
+  }
+
+  async function submitCoachNutritionReview(e) {
+    e.preventDefault();
+    const id = document.getElementById('coachNutAssessmentId').value;
+    const btn = document.getElementById('btnSaveNutReview');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving Fuel Plan...';
+
+    const payload = {
+      coach_calorie_target: document.getElementById('coachNutCal').value,
+      coach_protein_target_g: document.getElementById('coachNutPro').value,
+      coach_carbs_target_g: document.getElementById('coachNutCarb').value,
+      coach_fat_target_g: document.getElementById('coachNutFat').value,
+      coach_water_target_ml: document.getElementById('coachNutWater').value,
+      coach_plan_notes: document.getElementById('coachNutNotes').value,
+    };
+
+    try {
+      const res = await fetch(`/api/assessments/nutrition/${id}/review/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeReviewNutrition();
+        showToast(data.message || 'Nutrition plan saved and synced with member!');
+        loadCoachAssessments();
+      } else {
+        alert('Error: ' + (data.error || 'Failed to save nutrition plan'));
+      }
+    } catch (err) {
+      alert('Error saving plan: ' + err);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check-circle"></i> Save &amp; Assign Nutrition Plan';
+    }
+  }
+
+  // Workout Review Modal
+  async function openReviewWorkout(id, name) {
+    document.getElementById('coachWrkAssessmentId').value = id;
+    document.getElementById('modalWrkTitle').innerHTML = `<i class="fa fa-dumbbell" style="color:var(--neon-lime);"></i> Review Workout Assessment &bull; ${name}`;
+    document.getElementById('wrkAthleteDetailsView').innerHTML = '<div style="text-align:center;padding:1.5rem;"><i class="fa fa-spinner fa-spin"></i> Loading athlete evaluation...</div>';
+    document.getElementById('coachWorkoutReviewModal').style.display = 'flex';
+
+    try {
+      const res = await fetch(`/api/assessments/workout/${id}/detail/`);
+      const data = await res.json();
+      if (!data.success) {
+        document.getElementById('wrkAthleteDetailsView').innerHTML = '<div style="color:var(--danger);">Error loading details</div>';
+        return;
+      }
+      const a = data.assessment;
+
+      // Populate program dropdown
+      if (data.programs) {
+        const select = document.getElementById('coachWrkProgramSelect');
+        select.innerHTML = '<option value="">-- Custom Program / Standalone Split --</option>' +
+          data.programs.map(p => `<option value="${p.id}" ${a.assigned_program && a.assigned_program.id === p.id ? 'selected' : ''}>${p.title} (${p.category})</option>`).join('');
+      }
+
+      // Prefill coach targets
+      document.getElementById('coachWrkDays').value = a.coach_training_days_per_week || a.training_days_per_week || '';
+      document.getElementById('coachWrkDuration').value = a.coach_session_duration_minutes || a.session_duration_minutes || '';
+      document.getElementById('coachWrkCardio').value = a.coach_cardio_recommendation || '';
+      document.getElementById('coachWrkNotes').value = a.coach_plan_notes || '';
+
+      document.getElementById('wrkAthleteDetailsView').innerHTML = `
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:0.75rem;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:0.75rem;margin-bottom:0.75rem;">
+          <div><span style="font-size:0.7rem;color:var(--text-muted);display:block;">ATHLETE</span><strong style="color:#fff;">${a.full_name || name}</strong></div>
+          <div><span style="font-size:0.7rem;color:var(--text-muted);display:block;">AGE / GENDER</span><strong style="color:#fff;">${a.age || '--'} yrs &bull; ${a.gender || '--'}</strong></div>
+          <div><span style="font-size:0.7rem;color:var(--text-muted);display:block;">HEIGHT / BODY FAT</span><strong style="color:#fff;">${a.height_cm || '--'} cm &bull; ${a.body_fat_pct ? a.body_fat_pct + '%' : '--'}</strong></div>
+          <div><span style="font-size:0.7rem;color:var(--text-muted);display:block;">WEIGHT (CURRENT &rarr; GOAL)</span><strong style="color:var(--neon-lime);">${a.current_weight_kg || '--'} kg &rarr; ${a.target_weight_kg || '--'} kg</strong></div>
+        </div>
+
+        <div style="font-size:0.83rem;line-height:1.55;display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div>
+            <div style="color:var(--neon-lime);font-weight:700;margin-bottom:0.25rem;">Experience &amp; Circumferences</div>
+            <div><strong>Experience:</strong> <span style="color:var(--cyan);font-weight:700;text-transform:capitalize;">${(a.training_experience || 'None').replace(/_/g, ' ')}</span> &bull; <strong>Streak:</strong> ${a.longest_training_streak_months || 0} mos</div>
+            <div><strong>Past Training:</strong> ${a.previous_training_types || 'None'}</div>
+            <div><strong>Measurements:</strong> Waist: ${a.waist_cm || '--'} | Hip: ${a.hip_cm || '--'} | Chest: ${a.chest_cm || '--'} | Arm: ${a.bicep_cm || '--'} | Thigh: ${a.thigh_cm || '--'}</div>
+            <div><strong>Functional Ratings:</strong> Strength: ${a.strength_self_rating || '--'}/5 &bull; Stamina: ${a.endurance_self_rating || '--'}/5 &bull; Mobility: ${a.flexibility_self_rating || '--'}/5</div>
+            <div><strong>Test Scores:</strong> Push-ups: ${a.pushups_reps || '--'} | Squats: ${a.squats_reps || '--'} | Plank: ${a.plank_seconds || '--'}s</div>
+
+            <div style="color:var(--cyan);font-weight:700;margin:0.75rem 0 0.25rem;">Equipment &amp; Gym Access</div>
+            <div><strong>Fit Me Gym Access:</strong> ${a.gym_access ? 'Yes (Full)' : 'No'} &bull; Preferred Zone: ${a.preferred_gym_area || 'Any'}</div>
+            <div><strong>Home Equipment:</strong> ${a.home_equipment || 'None'}</div>
+          </div>
+
+          <div>
+            <div style="color:var(--danger);font-weight:700;margin-bottom:0.25rem;">Injuries &amp; Physical Flags</div>
+            <div><strong>Current Injuries:</strong> <span style="color:${a.current_injuries ? 'var(--danger)' : '#fff'};font-weight:700;">${a.current_injuries || 'None'}</span></div>
+            <div><strong>Past Injuries:</strong> ${a.past_injuries || 'None reported'}</div>
+            <div><strong>Physical Limitations:</strong> ${a.physical_limitations || 'None'}</div>
+            <div><strong>Doctor Clearance:</strong> ${a.cleared_by_doctor ? '<span style="color:var(--neon-lime);">Cleared</span>' : '<span style="color:var(--danger);">Requires Clearance</span>'}</div>
+
+            <div style="color:var(--amber);font-weight:700;margin:0.75rem 0 0.25rem;">Athlete Preferences &amp; Goals</div>
+            <div><strong>Primary Goals:</strong> ${a.primary_goals || '--'} (${a.goal_timeline_weeks || '--'} wks)</div>
+            <div><strong>Avoid Exercises:</strong> <span style="color:var(--danger);">${a.exercises_to_avoid || 'None'}</span></div>
+            <div><strong>Favorite Exercises:</strong> ${a.preferred_exercises || 'None'}</div>
+            <div><strong>Split &amp; Cardio Preference:</strong> ${a.training_split_preference || '--'} &bull; ${a.cardio_preference || '--'}</div>
+            ${a.member_notes ? `<div style="background:#121517;padding:0.4rem 0.6rem;border-radius:4px;margin-top:0.4rem;border-left:2px solid var(--neon-lime);"><strong>Member Notes:</strong> "${a.member_notes}"</div>` : ''}
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      document.getElementById('wrkAthleteDetailsView').innerHTML = '<div style="color:var(--danger);">Error connecting to assessment server</div>';
+    }
+  }
+
+  function closeReviewWorkout() {
+    document.getElementById('coachWorkoutReviewModal').style.display = 'none';
+  }
+
+  async function submitCoachWorkoutReview(e) {
+    e.preventDefault();
+    const id = document.getElementById('coachWrkAssessmentId').value;
+    const btn = document.getElementById('btnSaveWrkReview');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving Workout Plan...';
+
+    const payload = {
+      assigned_program_id: document.getElementById('coachWrkProgramSelect').value,
+      coach_training_days_per_week: document.getElementById('coachWrkDays').value,
+      coach_session_duration_minutes: document.getElementById('coachWrkDuration').value,
+      coach_cardio_recommendation: document.getElementById('coachWrkCardio').value,
+      coach_plan_notes: document.getElementById('coachWrkNotes').value,
+    };
+
+    try {
+      const res = await fetch(`/api/assessments/workout/${id}/review/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeReviewWorkout();
+        showToast(data.message || 'Workout plan and split prescribed successfully!');
+        loadCoachAssessments();
+      } else {
+        alert('Error: ' + (data.error || 'Failed to save workout plan'));
+      }
+    } catch (err) {
+      alert('Error saving workout plan: ' + err);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check-circle"></i> Save &amp; Prescribe Workout Plan';
+    }
+  }
+
+  // ── Collapsible Sidebar Toggle & Persistence ──
+  function toggleCoachSidebarCollapse() {
+    const sb = document.getElementById('coachSidebar');
+    if (!sb) return;
+    const isCollapsed = sb.classList.toggle('collapsed');
+    localStorage.setItem('fitme_coach_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+    const icon = document.getElementById('coachSidebarToggleIcon');
+    if (icon) {
+      icon.className = isCollapsed ? 'fa fa-angles-right' : 'fa fa-angles-left';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let targetTab = null;
+    if (window.location.hash) {
+      const h = window.location.hash.replace('#', '').trim();
+      if (document.getElementById(h)) targetTab = h;
+    }
+    if (!targetTab) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const q = urlParams.get('tab');
+      if (q && document.getElementById(q)) targetTab = q;
+    }
+    if (!targetTab) {
+      const saved = localStorage.getItem('fitme_coach_active_tab');
+      if (saved && document.getElementById(saved)) targetTab = saved;
+    }
+    if (targetTab) {
+      switchTab(targetTab);
+    }
+
+    // Restore scroll position
+    try {
+      const savedScroll = sessionStorage.getItem('fitme_coach_scroll_pos');
+      if (savedScroll !== null) {
+        sessionStorage.removeItem('fitme_coach_scroll_pos');
+        window.scrollTo({ top: parseInt(savedScroll, 10), behavior: 'instant' });
+      }
+    } catch(e) {}
+
+    loadCoachAssessments();
+    filterAthleteRoster();
+    if (localStorage.getItem('fitme_coach_sidebar_collapsed') === 'true') {
+      const sb = document.getElementById('coachSidebar');
+      if (sb) {
+        sb.classList.add('collapsed');
+        const icon = document.getElementById('coachSidebarToggleIcon');
+        if (icon) icon.className = 'fa fa-angles-right';
+      }
+    }
+  });
+
+  // Keyboard shortcut to close active modals
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      closeMemberProfile();
+      closeAssignModal();
+      closeReviewNutrition();
+      closeReviewWorkout();
+    }
+  });
+
+  window.addEventListener('hashchange', () => {
+    if (window.location.hash) {
+      const h = window.location.hash.replace('#', '').trim();
+      if (document.getElementById(h)) switchTab(h);
+    }
+  });
+
+  window.addEventListener('beforeunload', () => {
+    try {
+      sessionStorage.setItem('fitme_coach_scroll_pos', window.scrollY.toString());
+    } catch(e) {}
+  });
 </script>
 </body>
 </html>

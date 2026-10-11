@@ -1,9 +1,11 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{{ page_title }}</title>
+  <link rel="icon" href="{% static 'images/logos/fitme-official-logo.jpg' %}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
@@ -15,9 +17,9 @@
       --card-hover: #191F24;
       --sidebar-bg: #0E1215;
       --border-color: rgba(255, 255, 255, 0.08);
-      --border-focus: rgba(204, 255, 0, 0.4);
-      --neon-lime: #CCFF00;
-      --neon-glow: rgba(204, 255, 0, 0.25);
+      --border-focus: rgba(136, 216, 45, 0.4);
+      --neon-lime: #88D82D;
+      --neon-glow: rgba(136, 216, 45, 0.28);
       --cyan: #00F0FF;
       --danger: #FF3366;
       --warning: #F59E0B;
@@ -75,38 +77,6 @@
       padding: 0.2rem 0.55rem;
       border-radius: 4px;
       letter-spacing: 1px;
-    }
-
-    /* BARCODE SCANNER INPUT */
-    .barcode-search-box {
-      flex: 1;
-      max-width: 420px;
-      position: relative;
-    }
-    .barcode-search-box input {
-      width: 100%;
-      background: #151A1E;
-      border: 1px solid var(--border-color);
-      border-radius: 8px;
-      padding: 0.6rem 1rem 0.6rem 2.4rem;
-      color: #fff;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.88rem;
-      transition: all 0.2s;
-    }
-    .barcode-search-box input:focus {
-      outline: none;
-      border-color: var(--neon-lime);
-      box-shadow: 0 0 10px var(--neon-glow);
-      background: #181E23;
-    }
-    .barcode-search-box i {
-      position: absolute;
-      left: 0.85rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--neon-lime);
-      font-size: 0.95rem;
     }
 
     /* TOP STATS */
@@ -369,6 +339,25 @@
       background: var(--neon-lime);
       color: #000;
     }
+    .btn-audit-card {
+      background: rgba(0, 240, 255, 0.1);
+      border: 1px solid rgba(0, 240, 255, 0.3);
+      color: var(--cyan);
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-audit-card:hover {
+      background: var(--cyan);
+      color: #000;
+      box-shadow: 0 0 10px rgba(0, 240, 255, 0.4);
+    }
 
     /* RIGHT TICKET REGISTER PANE */
     .ticket-pane {
@@ -552,8 +541,8 @@
     /* PAYMENT METHOD SELECTOR */
     .pay-methods-grid {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.4rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
     }
     .pay-btn {
       background: #181E23;
@@ -791,27 +780,33 @@
 <!-- TOPBAR -->
 <header class="pos-topbar">
   <div class="brand-section">
-    <a href="/pos/" class="brand-logo">
-      <i class="fa fa-bolt"></i> FIT ME
+    <a href="/pos/" class="brand-logo" style="display:flex;align-items:center;gap:0.65rem;">
+      <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me Logo" style="height:36px;width:36px;border-radius:50%;border:1.5px solid var(--neon-lime);object-fit:cover;box-shadow:0 0 10px rgba(136,216,45,0.35);">
+      <div style="display:flex;flex-direction:column;line-height:1.1;">
+        <span style="font-family:'Montserrat',sans-serif;font-weight:900;letter-spacing:1px;font-size:1.3rem;">
+          <span style="color:var(--neon-lime);">FIT</span> <span style="color:#C5CBD3;">ME</span>
+        </span>
+        <span style="font-size:0.62rem;color:var(--text-muted);font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">Pitigala Gym Bar POS</span>
+      </div>
     </a>
-    <span class="brand-badge">GYM BAR &amp; SUPPLEMENTS POS</span>
-  </div>
-
-  <div class="barcode-search-box">
-    <i class="fa fa-barcode"></i>
-    <input type="text" id="barcodeScannerInput" placeholder="Scan Barcode or Type SKU + Enter..." autocomplete="off">
+    <span class="brand-badge">BAR &amp; SUPPLEMENTS</span>
   </div>
 
   <div class="top-stats">
     <div class="stat-badge">
       <i class="fa fa-cash-register" style="color:var(--neon-lime);"></i>
-      <span>Today's POS: <strong id="todayRevenueDisplay">Rs. {{ today_revenue|floatformat:2 }}</strong></span>
+      <span>Today's POS: <strong id="todayRevenueDisplay">LKR {{ today_revenue|floatformat:2 }}</strong></span>
     </div>
     <div class="stat-badge">
       <i class="fa fa-shopping-bag" style="color:var(--cyan);"></i>
       <span>Orders: <strong id="todaySalesCount">{{ today_count }}</strong></span>
     </div>
-    {% if low_stock_count > 0 %}
+    {% if missing_stock_count > 0 %}
+      <div class="stat-badge" onclick="filterMissingCategory()" style="border-color:rgba(255,51,102,0.5);background:rgba(255,51,102,0.1);cursor:pointer;" title="Click to view missing items">
+        <i class="fa fa-triangle-exclamation" style="color:var(--danger);"></i>
+        <span>Missing: <strong style="color:var(--danger);">{{ missing_stock_count }} items</strong></span>
+      </div>
+    {% elif low_stock_count > 0 %}
       <div class="stat-badge" style="border-color:rgba(245,158,11,0.4);">
         <i class="fa fa-exclamation-triangle" style="color:var(--warning);"></i>
         <span>Low Stock: <strong style="color:var(--warning);">{{ low_stock_count }}</strong></span>
@@ -819,17 +814,34 @@
     {% endif %}
   </div>
 
-  <div style="display:flex;align-items:center;gap:0.5rem;">
+  <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+    <button type="button" class="btn-top" onclick="openStockAuditModal()" style="background:#172228;color:var(--neon-lime);border-color:rgba(136,216,45,0.4);" title="Physical Stock Audit & Count Check">
+      <i class="fa fa-clipboard-check"></i> Stock Audit
+    </button>
+    <a href="/pos/audit/plan/" target="_blank" class="btn-top" style="background:#172228;color:var(--cyan);border-color:rgba(0,240,255,0.4);text-decoration:none;" title="Print Official Stock Audit Count Plan Sheet">
+      <i class="fa fa-file-invoice"></i> Audit Plan
+    </a>
+    <button type="button" class="btn-top" onclick="openDrawerAuditModal()" style="background:#172228;color:#F59E0B;border-color:rgba(245,158,11,0.4);" title="Reconcile Cash Drawer / Shift Till">
+      <i class="fa fa-calculator"></i> Till Audit
+    </button>
+    <button type="button" class="btn-top" onclick="openAuditHistoryModal()" style="background:#172228;color:#C084FC;border-color:rgba(192,132,252,0.4);" title="Audit History & Discrepancies Log">
+      <i class="fa fa-history"></i> Logs
+    </button>
+    {% if is_admin %}
+      <button type="button" class="btn-top" onclick="openRestockModal()" style="background:#172228;color:var(--neon-lime);border-color:rgba(136,216,45,0.4);" title="Quick Inventory Restock (Admin Authorized)">
+        <i class="fa fa-boxes"></i> Restock
+      </button>
+    {% endif %}
     {% if is_admin %}
       <button class="btn-top btn-lime" onclick="openAddProductModal()">
-        <i class="fa fa-plus-circle"></i> Add Product
+        <i class="fa fa-plus-circle"></i> Add Item
       </button>
     {% endif %}
     <a href="/dashboard/front-desk/" class="btn-top">
       <i class="fa fa-concierge-bell"></i> Front Desk
     </a>
     <a href="/dashboard/admin/" class="btn-top">
-      <i class="fa fa-shield-alt"></i> Super Admin
+      <i class="fa fa-shield-alt"></i> Admin
     </a>
   </div>
 </header>
@@ -845,6 +857,11 @@
       <button class="cat-pill active" data-cat="all" onclick="filterCategory('all', this)">
         <i class="fa fa-th-large"></i> All Products ({{ products.count }})
       </button>
+      {% if missing_stock_count > 0 %}
+      <button class="cat-pill" id="catPillMissing" data-cat="missing" onclick="filterMissingCategory(this)" style="border-color:rgba(255,51,102,0.4);color:#FF6B8B;background:rgba(255,51,102,0.08);">
+        <i class="fa fa-triangle-exclamation"></i> Missing Items ({{ missing_stock_count }})
+      </button>
+      {% endif %}
       {% for cat in categories %}
         <button class="cat-pill" data-cat="{{ cat.id }}" onclick="filterCategory('{{ cat.id }}', this)">
           <i class="fa {{ cat.icon }}"></i> {{ cat.name }} ({{ cat.products.count }})
@@ -872,9 +889,10 @@
                data-cat="{{ prod.category.id }}"
                data-name="{{ prod.name|lower }}"
                data-sku="{{ prod.sku|lower }}"
-               data-barcode="{{ prod.barcode|lower }}"
                data-price="{{ prod.price }}"
+               data-cost="{{ prod.cost_price|default:0 }}"
                data-stock="{{ prod.stock_quantity }}"
+               data-missing="{% if prod.has_audit_discrepancy %}true{% else %}false{% endif %}"
                onclick="addToCart({{ prod.id }}, '{{ prod.name|escapejs }}', '{{ prod.sku|escapejs }}', {{ prod.price }}, {{ prod.stock_quantity }})">
             <div>
               <div class="prod-icon-box">
@@ -884,11 +902,14 @@
               <div class="prod-meta">
                 <span class="prod-sku">#{{ prod.sku }}</span>
                 <span>{{ prod.unit }}</span>
+                {% if prod.has_audit_discrepancy %}
+                  <span style="color:#FF3366;font-size:0.68rem;font-weight:800;background:rgba(255,51,102,0.15);padding:1px 5px;border-radius:4px;"><i class="fa fa-triangle-exclamation"></i> Missing {{ prod.last_discrepancy_count }}</span>
+                {% endif %}
               </div>
             </div>
 
             <div>
-              <div class="prod-price">Rs. {{ prod.price|floatformat:2 }}</div>
+              <div class="prod-price">LKR {{ prod.price|floatformat:2 }}</div>
               <div class="prod-footer">
                 {% if prod.is_out_of_stock %}
                   <span class="stock-badge stock-out"><i class="fa fa-times-circle"></i> Out of Stock</span>
@@ -897,9 +918,14 @@
                 {% else %}
                   <span class="stock-badge stock-in"><i class="fa fa-check-circle"></i> {{ prod.stock_quantity }} in stock</span>
                 {% endif %}
-                <button type="button" class="btn-add-mini" title="Add to ticket">
-                  <i class="fa fa-plus"></i>
-                </button>
+                <div style="display:flex;align-items:center;gap:0.35rem;">
+                  <button type="button" class="btn-audit-card" onclick="event.stopPropagation(); quickAuditProduct({{ prod.id }}, '{{ prod.name|escapejs }}', {{ prod.stock_quantity }}, {{ prod.cost_price|default:0 }}, {{ prod.price }}, '{{ prod.unit|default:'unit'|escapejs }}')" title="Audit &amp; Check Stock Count">
+                    <i class="fa fa-clipboard-check"></i>
+                  </button>
+                  <button type="button" class="btn-add-mini" title="Add to ticket">
+                    <i class="fa fa-plus"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -960,7 +986,7 @@
     <div class="ticket-footer">
       <div class="calc-row">
         <span>Subtotal:</span>
-        <span id="subtotalDisplay">Rs. 0.00</span>
+        <span id="subtotalDisplay">LKR 0.00</span>
       </div>
       <div class="calc-row">
         <span>Discount:</span>
@@ -972,7 +998,7 @@
       </div>
       <div class="calc-row total">
         <span>TOTAL TO PAY:</span>
-        <span class="total-amount" id="totalDisplay">Rs. 0.00</span>
+        <span class="total-amount" id="totalDisplay">LKR 0.00</span>
       </div>
 
       <!-- Payment Method -->
@@ -982,9 +1008,6 @@
         </button>
         <button type="button" class="pay-btn" data-method="CARD" onclick="selectPayMethod('CARD', this)">
           <i class="fa fa-credit-card"></i> Card / POS
-        </button>
-        <button type="button" class="pay-btn" data-method="KOKO" onclick="selectPayMethod('KOKO', this)">
-          <i class="fa fa-layer-group"></i> Koko Pay
         </button>
         <button type="button" class="pay-btn" data-method="BANK_TRANSFER" onclick="selectPayMethod('BANK_TRANSFER', this)">
           <i class="fa fa-qrcode"></i> Bank / QR
@@ -1002,7 +1025,7 @@
         <div class="cash-input-row">
           <span style="font-size:0.75rem;color:var(--text-muted);">Cash Tendered:</span>
           <input type="number" id="cashReceivedInput" value="0" min="0" step="50" oninput="calculateChange()">
-          <span class="cash-change-display" id="changeDisplay">Change: Rs. 0.00</span>
+          <span class="cash-change-display" id="changeDisplay">Change: LKR 0.00</span>
         </div>
       </div>
 
@@ -1045,13 +1068,9 @@
         </div>
       </div>
       <div class="form-row">
-        <div class="form-group">
+        <div class="form-group" style="width:100%;">
           <label>SKU Short Code</label>
           <input type="text" id="newProdSku" placeholder="Auto-generated if blank">
-        </div>
-        <div class="form-group">
-          <label>Barcode (EAN/UPC)</label>
-          <input type="text" id="newProdBarcode" placeholder="Scan or type barcode">
         </div>
       </div>
       <div class="form-row">
@@ -1087,7 +1106,8 @@
 </div>
 {% endif %}
 
-<!-- MODAL: QUICK RESTOCK -->
+{% if is_admin %}
+<!-- MODAL: QUICK RESTOCK (Admin & Super Admin) -->
 <div class="modal-backdrop" id="restockModal">
   <div class="modal-card">
     <div class="modal-header">
@@ -1116,6 +1136,7 @@
     </div>
   </div>
 </div>
+{% endif %}
 
 <!-- MODAL: THERMAL RECEIPT SUCCESS -->
 <div class="modal-backdrop" id="receiptModal">
@@ -1136,6 +1157,313 @@
           <i class="fa fa-print"></i> Print Receipt
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: PHYSICAL STOCK AUDIT & DISCREPANCY RECONCILIATION -->
+<div class="modal-backdrop" id="stockAuditModal">
+  <div class="modal-card" style="max-width:540px;">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa fa-clipboard-check" style="color:var(--neon-lime);"></i> Physical Stock Audit &amp; Count Check</div>
+      <button type="button" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;" onclick="closeStockAuditModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Select Product to Audit *</label>
+        <select id="auditProductSelect" onchange="handleAuditProductChange()">
+          {% for prod in products %}
+            <option value="{{ prod.id }}" data-name="{{ prod.name|escapejs }}" data-stock="{{ prod.stock_quantity }}" data-cost="{{ prod.cost_price|default:0 }}" data-price="{{ prod.price }}" data-unit="{{ prod.unit }}">
+              {{ prod.name }} [SKU: {{ prod.sku }}] — Expected: {{ prod.stock_quantity }} {{ prod.unit }}s
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Telemetry row -->
+      <div style="display:grid;grid-template-columns:repeat(3, 1fr);gap:0.6rem;background:#0E1215;padding:0.75rem;border-radius:8px;border:1px solid var(--border-color);">
+        <div>
+          <span style="font-size:0.7rem;color:var(--text-muted);display:block;text-transform:uppercase;">System Expected</span>
+          <strong id="auditExpectedDisplay" style="font-size:1.1rem;color:#fff;font-family:'JetBrains Mono',monospace;">0</strong>
+        </div>
+        <div>
+          <span style="font-size:0.7rem;color:var(--text-muted);display:block;text-transform:uppercase;">Unit Cost Price</span>
+          <strong id="auditCostDisplay" style="font-size:1.1rem;color:var(--cyan);font-family:'JetBrains Mono',monospace;">LKR 0.00</strong>
+        </div>
+        <div>
+          <span style="font-size:0.7rem;color:var(--text-muted);display:block;text-transform:uppercase;">Selling Price</span>
+          <strong id="auditPriceDisplay" style="font-size:1.1rem;color:var(--neon-lime);font-family:'JetBrains Mono',monospace;">LKR 0.00</strong>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Physically Counted Units *</label>
+          <input type="number" id="auditCountedInput" min="0" step="1" oninput="calculateAuditDiscrepancy()" placeholder="Units verified on shelf">
+        </div>
+        <div class="form-group">
+          <label>Discrepancy Result</label>
+          <div id="auditDiscrepancyBadge" style="padding:0.6rem 0.8rem;border-radius:6px;background:#0E1215;border:1px solid var(--border-color);font-family:'JetBrains Mono',monospace;font-size:0.82rem;font-weight:800;color:#fff;display:flex;align-items:center;height:38px;">
+            Enter counted units
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Audit Reason / Classification</label>
+          <select id="auditReasonSelect">
+            {% for code, label in audit_reasons %}
+              <option value="{{ code }}">{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div class="form-group">
+          <label style="display:flex;justify-content:space-between;align-items:center;">
+            <span>Action to Apply *</span>
+            {% if not is_super_admin %}
+              <span style="font-size:0.68rem;color:var(--warning);font-weight:700;"><i class="fa fa-lock"></i> Super Admin Only</span>
+            {% endif %}
+          </label>
+          <select id="auditActionSelect">
+            {% if is_super_admin %}
+              <option value="STOCK_ADJUSTED">Adjust System Stock to Counted (Super Admin Authorized)</option>
+              <option value="FLAGGED_MISSING">Flag as Missing (Keep Stock, Under Review)</option>
+            {% else %}
+              <option value="FLAGGED_MISSING" selected>Flag as Missing (Keep Stock, Under Review)</option>
+              <option value="STOCK_ADJUSTED" disabled>Adjust System Stock (Locked • Super Admin Only)</option>
+            {% endif %}
+          </select>
+        </div>
+      </div>
+
+      {% if not is_super_admin %}
+        <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:6px;padding:0.55rem 0.75rem;margin-bottom:0.75rem;font-size:0.76rem;color:#FCD34D;line-height:1.4;">
+          <i class="fa fa-shield-alt"></i> <strong>High-Risk Security Protocol:</strong> Direct inventory stock alterations are restricted to <strong>Super Admin</strong>. Your physical shelf count check will be saved as an official audit record and flagged for Super Admin reconciliation.
+        </div>
+      {% endif %}
+
+      <div class="form-group">
+        <label>Audit Observations / Missing Investigation Notes</label>
+        <textarea id="auditNotesInput" rows="2" placeholder="e.g. Checked bar chiller and storage locker; seal damaged or missing 2 bottles..." style="background:#0E1215;border:1px solid var(--border-color);color:#fff;padding:0.6rem;border-radius:6px;font-size:0.82rem;font-family:inherit;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-top" onclick="closeStockAuditModal()">Cancel</button>
+      <button class="btn-top btn-lime" id="btnSubmitAudit" onclick="submitStockAudit()">
+        <i class="fa fa-save"></i> Save &amp; Apply Audit
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CASH DRAWER SHIFT BALANCING AUDIT -->
+<div class="modal-backdrop" id="drawerAuditModal">
+  <div class="modal-card" style="max-width:500px;">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa fa-calculator" style="color:#F59E0B;"></i> Cash Drawer &amp; Till Shift Audit</div>
+      <button type="button" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;" onclick="closeDrawerAuditModal()">&times;</button>
+    </div>
+    <div class="modal-body">
+      <div style="background:#0E1215;border:1px solid var(--border-color);padding:0.85rem;border-radius:8px;margin-bottom:0.5rem;">
+        <div style="display:flex;justify-content:space-between;font-size:0.82rem;color:var(--text-muted);margin-bottom:0.35rem;">
+          <span>Today's Recorded POS Cash Sales:</span>
+          <strong id="drawerPosCashSales" style="color:var(--neon-lime);font-family:'JetBrains Mono',monospace;">LKR {{ today_revenue|floatformat:2 }}</strong>
+        </div>
+        <div style="font-size:0.75rem;color:var(--text-muted);">
+          Auditor: <span style="color:#fff;font-weight:700;">{{ request.user.get_full_name|default:request.user.username }}</span> &bull; Date: <span style="color:#fff;">{% now "Y-m-d H:i" %}</span>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Opening Cash Float (LKR)</label>
+          <input type="number" id="drawerFloatInput" value="5000" step="50" oninput="calculateDrawerDiscrepancy()">
+        </div>
+        <div class="form-group">
+          <label>Counted Cash in Drawer (LKR) *</label>
+          <input type="number" id="drawerCountedInput" step="50" oninput="calculateDrawerDiscrepancy()" placeholder="Counted notes &amp; coins">
+        </div>
+      </div>
+
+      <div id="drawerDiscrepancyBox" style="background:#111519;border:1px solid var(--border-color);border-radius:8px;padding:0.85rem;text-align:center;">
+        <span style="font-size:0.75rem;color:var(--text-muted);display:block;text-transform:uppercase;">Drawer Balancing Result</span>
+        <div id="drawerDiscrepancyStatus" style="font-size:1.1rem;font-weight:900;font-family:'JetBrains Mono',monospace;margin-top:0.25rem;color:var(--text-muted);">
+          Enter counted cash to balance till
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-top:0.5rem;">
+        <label>Shift Reconciliation Notes</label>
+        <textarea id="drawerNotesInput" rows="2" placeholder="e.g. End of morning shift handover; exact change verified..." style="background:#0E1215;border:1px solid var(--border-color);color:#fff;padding:0.6rem;border-radius:6px;font-size:0.82rem;font-family:inherit;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-top" onclick="closeDrawerAuditModal()">Cancel</button>
+      <button class="btn-top" style="background:#F59E0B;color:#000;font-weight:800;" onclick="submitDrawerAudit()">
+        <i class="fa fa-check-circle"></i> Complete Till Audit
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AUDIT LOGS & MISSING ITEMS VIEWER -->
+<div class="modal-backdrop" id="auditHistoryModal">
+  <div class="modal-card" style="max-width:760px;width:95%;">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fa fa-history" style="color:#C084FC;"></i> Inventory Audit Logs &amp; Discrepancy Finder</div>
+      <button type="button" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;" onclick="closeAuditHistoryModal()">&times;</button>
+    </div>
+    <div class="modal-body" style="padding:1rem;">
+      <div style="display:flex;gap:0.5rem;margin-bottom:1rem;border-bottom:1px solid var(--border-color);padding-bottom:0.5rem;">
+        <button type="button" class="btn-top" id="tabBtnMissingFinder" onclick="switchAuditHistoryTab('missing')" style="font-size:0.78rem;background:rgba(255,51,102,0.15);border-color:#FF3366;color:#fff;">
+          <i class="fa fa-triangle-exclamation" style="color:var(--danger);"></i> Missing Items ({{ missing_stock_count }})
+        </button>
+        <button type="button" class="btn-top" id="tabBtnAuditLog" onclick="switchAuditHistoryTab('logs')" style="font-size:0.78rem;">
+          <i class="fa fa-list-check" style="color:var(--neon-lime);"></i> Recent Stock Audits
+        </button>
+        <button type="button" class="btn-top" id="tabBtnTillLog" onclick="switchAuditHistoryTab('tills')" style="font-size:0.78rem;">
+          <i class="fa fa-cash-register" style="color:#F59E0B;"></i> Till Shift Audits
+        </button>
+      </div>
+
+      <!-- Tab 1: Missing Items -->
+      <div id="auditTabMissing">
+        <div style="background:#0E1215;padding:0.75rem;border-radius:8px;margin-bottom:0.75rem;font-size:0.78rem;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center;">
+          <span>Items flagged with missing stock during recent physical counts:</span>
+          <a href="/pos/audit/plan/" target="_blank" style="color:var(--cyan);text-decoration:none;font-weight:700;"><i class="fa fa-print"></i> Print Shelf Audit Plan</a>
+        </div>
+        <div style="max-height:360px;overflow-y:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:0.8rem;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border-color);color:var(--text-muted);text-align:left;">
+                <th style="padding:6px;">Product</th>
+                <th style="padding:6px;">SKU</th>
+                <th style="padding:6px;text-align:center;">Current Stock</th>
+                <th style="padding:6px;text-align:center;">Missing Units</th>
+                <th style="padding:6px;text-align:right;">Cost Price</th>
+                <th style="padding:6px;text-align:center;">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for prod in missing_stock_products %}
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                  <td style="padding:8px 6px;font-weight:700;color:#fff;">{{ prod.name }}</td>
+                  <td style="padding:8px 6px;font-family:'JetBrains Mono',monospace;color:var(--text-muted);">{{ prod.sku }}</td>
+                  <td style="padding:8px 6px;text-align:center;font-weight:700;">{{ prod.stock_quantity }}</td>
+                  <td style="padding:8px 6px;text-align:center;">
+                    <span style="background:rgba(255,51,102,0.18);color:#FF3366;font-weight:800;padding:2px 6px;border-radius:4px;">
+                      {{ prod.last_discrepancy_count }} units
+                    </span>
+                  </td>
+                  <td style="padding:8px 6px;text-align:right;color:#FF3366;font-family:'JetBrains Mono',monospace;font-weight:700;">
+                    LKR {{ prod.cost_price|default:0|floatformat:2 }}
+                  </td>
+                  <td style="padding:8px 6px;text-align:center;">
+                    <button type="button" class="btn-top" onclick="quickAuditProduct({{ prod.id }}, '{{ prod.name|escapejs }}', {{ prod.stock_quantity }}, {{ prod.cost_price|default:0 }}, {{ prod.price }}, '{{ prod.unit|default:'unit'|escapejs }}')" style="padding:3px 8px;font-size:0.72rem;background:#182025;color:var(--neon-lime);">
+                      Re-Audit
+                    </button>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr>
+                  <td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                    <i class="fa fa-check-circle" style="color:#10B981;font-size:1.5rem;margin-bottom:0.5rem;display:block;"></i>
+                    No missing stock discrepancies detected! All products are reconciled.
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 2: Recent Stock Audits -->
+      <div id="auditTabLogs" style="display:none;">
+        <div style="max-height:360px;overflow-y:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border-color);color:var(--text-muted);text-align:left;">
+                <th style="padding:6px;">Date &amp; Time</th>
+                <th style="padding:6px;">Product</th>
+                <th style="padding:6px;text-align:center;">Expected &rarr; Counted</th>
+                <th style="padding:6px;text-align:center;">Discrepancy</th>
+                <th style="padding:6px;">Reason</th>
+                <th style="padding:6px;">Auditor</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for a in recent_audits %}
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                  <td style="padding:6px;color:var(--text-muted);white-space:nowrap;">{{ a.audit_date|date:"d M H:i" }}</td>
+                  <td style="padding:6px;color:#fff;font-weight:700;">{{ a.product.name }}</td>
+                  <td style="padding:6px;text-align:center;font-family:'JetBrains Mono',monospace;">{{ a.expected_quantity }} &rarr; {{ a.counted_quantity }}</td>
+                  <td style="padding:6px;text-align:center;">
+                    {% if a.discrepancy < 0 %}
+                      <span style="color:#FF3366;font-weight:800;">{{ a.discrepancy }}</span>
+                    {% elif a.discrepancy > 0 %}
+                      <span style="color:var(--neon-lime);font-weight:800;">+{{ a.discrepancy }}</span>
+                    {% else %}
+                      <span style="color:#10B981;font-weight:700;">0 (Match)</span>
+                    {% endif %}
+                  </td>
+                  <td style="padding:6px;color:var(--text-muted);">{{ a.get_reason_display }}</td>
+                  <td style="padding:6px;color:var(--cyan);">{{ a.auditor.username|default:"Staff" }}</td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No stock audits recorded yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Tab 3: Till Shift Audits -->
+      <div id="auditTabTills" style="display:none;">
+        <div style="max-height:360px;overflow-y:auto;">
+          <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border-color);color:var(--text-muted);text-align:left;">
+                <th style="padding:6px;">Date &amp; Time</th>
+                <th style="padding:6px;">Cashier</th>
+                <th style="padding:6px;text-align:right;">Expected Cash</th>
+                <th style="padding:6px;text-align:right;">Counted Cash</th>
+                <th style="padding:6px;text-align:center;">Discrepancy</th>
+                <th style="padding:6px;text-align:center;">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for ta in recent_drawer_audits %}
+                <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                  <td style="padding:6px;color:var(--text-muted);">{{ ta.audit_date|date:"d M H:i" }}</td>
+                  <td style="padding:6px;color:#fff;font-weight:700;">{{ ta.cashier.username|default:"Staff" }}</td>
+                  <td style="padding:6px;text-align:right;font-family:'JetBrains Mono',monospace;">LKR {{ ta.expected_cash|floatformat:2 }}</td>
+                  <td style="padding:6px;text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-lime);">LKR {{ ta.counted_cash|floatformat:2 }}</td>
+                  <td style="padding:6px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:800;">
+                    {% if ta.discrepancy < 0 %}
+                      <span style="color:#FF3366;">-LKR {{ ta.discrepancy|floatformat:2 }}</span>
+                    {% elif ta.discrepancy > 0 %}
+                      <span style="color:#F59E0B;">+LKR {{ ta.discrepancy|floatformat:2 }}</span>
+                    {% else %}
+                      <span style="color:#10B981;">LKR 0.00</span>
+                    {% endif %}
+                  </td>
+                  <td style="padding:6px;text-align:center;">
+                    <span style="font-size:0.7rem;padding:2px 6px;border-radius:4px;font-weight:800;{% if ta.status == 'BALANCED' %}background:rgba(16,185,129,0.15);color:#10B981;{% else %}background:rgba(255,51,102,0.15);color:#FF3366;{% endif %}">
+                      {{ ta.status }}
+                    </span>
+                  </td>
+                </tr>
+              {% empty %}
+                <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No till shift audits recorded yet.</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-top" onclick="closeAuditHistoryModal()">Close</button>
     </div>
   </div>
 </div>
@@ -1214,14 +1542,14 @@
           <div class="cart-row">
             <div class="cart-row-details">
               <div class="cart-row-name">${escapeHtml(item.name)}</div>
-              <div class="cart-row-unit-price">Rs. ${item.price.toFixed(2)} &bull; ${item.sku}</div>
+              <div class="cart-row-unit-price">LKR ${item.price.toFixed(2)} &bull; ${item.sku}</div>
             </div>
             <div class="cart-row-stepper">
               <button class="stepper-btn" onclick="updateQty(${item.id}, -1)">-</button>
               <span class="stepper-qty">${item.quantity}</span>
               <button class="stepper-btn" onclick="updateQty(${item.id}, 1)">+</button>
             </div>
-            <div class="cart-row-total">Rs. ${lineTotal}</div>
+            <div class="cart-row-total">LKR ${lineTotal}</div>
             <button class="cart-row-delete" onclick="removeFromCart(${item.id})"><i class="fa fa-times"></i></button>
           </div>
         `;
@@ -1238,9 +1566,9 @@
     const discount = parseFloat(document.getElementById('discountInput').value || 0);
     const total = Math.max(0, subtotal - discount);
 
-    document.getElementById('subtotalDisplay').innerText = `Rs. ${subtotal.toFixed(2)}`;
-    document.getElementById('totalDisplay').innerText = `Rs. ${total.toFixed(2)}`;
-    document.getElementById('btnCheckout').innerHTML = `<i class="fa fa-check-circle"></i> CHARGE RS. ${total.toFixed(2)} & PRINT`;
+    document.getElementById('subtotalDisplay').innerText = `LKR ${subtotal.toFixed(2)}`;
+    document.getElementById('totalDisplay').innerText = `LKR ${total.toFixed(2)}`;
+    document.getElementById('btnCheckout').innerHTML = `<i class="fa fa-check-circle"></i> CHARGE LKR ${total.toFixed(2)} & PRINT`;
 
     calculateChange();
   }
@@ -1258,11 +1586,13 @@
     document.querySelectorAll('.pay-btn').forEach(b => b.classList.remove('active'));
     btn.classList.add('active');
     const cashBox = document.getElementById('cashTenderBox');
-    if (method === 'CASH') {
-      cashBox.style.display = 'flex';
-      calculateChange();
-    } else {
-      cashBox.style.display = 'none';
+    if (cashBox) {
+      if (method === 'CASH') {
+        cashBox.style.display = 'flex';
+        calculateChange();
+      } else {
+        cashBox.style.display = 'none';
+      }
     }
   }
 
@@ -1287,7 +1617,7 @@
     const total = Math.max(0, subtotal - discount);
     const rec = parseFloat(document.getElementById('cashReceivedInput').value || 0);
     const change = Math.max(0, rec - total);
-    document.getElementById('changeDisplay').innerText = `Change: Rs. ${change.toFixed(2)}`;
+    document.getElementById('changeDisplay').innerText = `Change: LKR ${change.toFixed(2)}`;
   }
 
   // ── Customer Selector ──
@@ -1307,7 +1637,7 @@
   // ── Category & Search Filter ──
   function filterCategory(catId, btn) {
     document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
-    btn.classList.add('active');
+    if (btn) btn.classList.add('active');
     const cards = document.querySelectorAll('.product-card');
     cards.forEach(card => {
       const cardCat = card.getAttribute('data-cat');
@@ -1317,6 +1647,7 @@
         card.style.display = 'none';
       }
     });
+    try { localStorage.setItem('fitme_pos_active_cat', catId); } catch(e) {}
   }
 
   function handleProductSearch() {
@@ -1325,35 +1656,13 @@
     cards.forEach(card => {
       const name = card.getAttribute('data-name');
       const sku = card.getAttribute('data-sku');
-      const barcode = card.getAttribute('data-barcode');
-      if (!q || name.includes(q) || sku.includes(q) || barcode.includes(q)) {
+      if (!q || name.includes(q) || sku.includes(q)) {
         card.style.display = '';
       } else {
         card.style.display = 'none';
       }
     });
   }
-
-  // ── Barcode Scanner Listener ──
-  document.getElementById('barcodeScannerInput').addEventListener('keydown', function(e) {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      const code = this.value.trim().toLowerCase();
-      if (!code) return;
-      const cards = Array.from(document.querySelectorAll('.product-card'));
-      const match = cards.find(c =>
-        c.getAttribute('data-sku') === code ||
-        c.getAttribute('data-barcode') === code
-      );
-      if (match) {
-        match.click();
-        showToast("Scanned & added to cart!");
-        this.value = '';
-      } else {
-        showToast(`Item not found for code: ${code}`, true);
-      }
-    }
-  });
 
   // ── Checkout Submission ──
   async function processCheckout() {
@@ -1434,7 +1743,7 @@
       <tr>
         <td>${escapeHtml(it.name)}</td>
         <td style="text-align:center;">${it.quantity}</td>
-        <td style="text-align:right;">Rs. ${it.total_price.toFixed(2)}</td>
+        <td style="text-align:right;">LKR ${it.total_price.toFixed(2)}</td>
       </tr>
     `).join('');
 
@@ -1462,11 +1771,11 @@
       <div style="border-top:1px dashed #000;margin:6px 0;"></div>
       <div style="display:flex;justify-content:space-between;font-weight:bold;font-size:13px;">
         <span>NET TOTAL:</span>
-        <span>Rs. ${sale.total_amount.toFixed(2)}</span>
+        <span>LKR ${sale.total_amount.toFixed(2)}</span>
       </div>
       <div style="font-size:11px;margin-top:4px;">
         Method: <strong>${sale.payment_method}</strong>
-        ${sale.payment_method === 'Cash' ? `&bull; Change: Rs. ${sale.change_returned.toFixed(2)}` : ''}
+        ${sale.payment_method === 'Cash' ? `&bull; Change: LKR ${sale.change_returned.toFixed(2)}` : ''}
       </div>
       <div style="border-top:1px dashed #000;margin:8px 0;"></div>
       <div style="text-align:center;font-size:10px;">*** THANK YOU FOR TRAINING WITH FIT ME! ***</div>
@@ -1508,7 +1817,6 @@
     const catVal = document.getElementById('newProdCategory').value;
     const newCatName = document.getElementById('newCatName').value.trim();
     const sku = document.getElementById('newProdSku').value.trim();
-    const barcode = document.getElementById('newProdBarcode').value.trim();
     const price = parseFloat(document.getElementById('newProdPrice').value || 0);
     const cost = parseFloat(document.getElementById('newProdCost').value || 0);
     const stock = parseInt(document.getElementById('newProdStock').value || 0);
@@ -1525,7 +1833,6 @@
       category_id: catVal === 'new' ? null : parseInt(catVal),
       new_category_name: newCatName,
       sku,
-      barcode,
       price,
       cost_price: cost,
       stock_quantity: stock,
@@ -1616,6 +1923,254 @@
     });
   }
 
+  // ── Stock Audit Operations ──
+  function openStockAuditModal(selectedProdId = null) {
+    const modal = document.getElementById('stockAuditModal');
+    if (!modal) return;
+    const select = document.getElementById('auditProductSelect');
+    if (selectedProdId && select) {
+      select.value = selectedProdId;
+    }
+    handleAuditProductChange();
+    modal.classList.add('open');
+    setTimeout(() => {
+      const inp = document.getElementById('auditCountedInput');
+      if (inp) inp.focus();
+    }, 150);
+  }
+
+  function closeStockAuditModal() {
+    const modal = document.getElementById('stockAuditModal');
+    if (modal) modal.classList.remove('open');
+  }
+
+  function handleAuditProductChange() {
+    const select = document.getElementById('auditProductSelect');
+    if (!select || !select.selectedOptions.length) return;
+    const opt = select.selectedOptions[0];
+    const stock = parseInt(opt.getAttribute('data-stock') || '0', 10);
+    const cost = parseFloat(opt.getAttribute('data-cost') || '0');
+    const price = parseFloat(opt.getAttribute('data-price') || '0');
+    const unit = opt.getAttribute('data-unit') || 'unit';
+
+    document.getElementById('auditExpectedDisplay').textContent = `${stock} ${unit}`;
+    document.getElementById('auditCostDisplay').textContent = `LKR ${cost.toFixed(2)}`;
+    document.getElementById('auditPriceDisplay').textContent = `LKR ${price.toFixed(2)}`;
+    
+    const countInput = document.getElementById('auditCountedInput');
+    countInput.value = stock;
+    calculateAuditDiscrepancy();
+  }
+
+  function quickAuditProduct(id, name, stock, cost, price, unit) {
+    openStockAuditModal(id);
+  }
+
+  function calculateAuditDiscrepancy() {
+    const select = document.getElementById('auditProductSelect');
+    if (!select || !select.selectedOptions.length) return;
+    const opt = select.selectedOptions[0];
+    const expected = parseInt(opt.getAttribute('data-stock') || '0', 10);
+    const cost = parseFloat(opt.getAttribute('data-cost') || '0');
+    const countInput = document.getElementById('auditCountedInput');
+    const countedVal = countInput.value.trim();
+
+    const badge = document.getElementById('auditDiscrepancyBadge');
+    if (countedVal === '') {
+      badge.innerHTML = `<span style="color:var(--text-muted);">Enter counted units</span>`;
+      return;
+    }
+
+    const counted = parseInt(countedVal, 10);
+    const diff = counted - expected;
+    const varianceVal = Math.abs(diff) * cost;
+
+    if (diff === 0) {
+      badge.innerHTML = `<span style="color:#10B981;"><i class="fa fa-check-circle"></i> Exact Match (0 Variance)</span>`;
+      badge.style.borderColor = 'rgba(16,185,129,0.4)';
+    } else if (diff < 0) {
+      badge.innerHTML = `<span style="color:#FF3366;"><i class="fa fa-triangle-exclamation"></i> MISSING ${Math.abs(diff)} unit(s) &bull; Loss: LKR ${varianceVal.toFixed(2)}</span>`;
+      badge.style.borderColor = 'rgba(255,51,102,0.6)';
+      badge.style.background = 'rgba(255,51,102,0.1)';
+    } else {
+      badge.innerHTML = `<span style="color:var(--neon-lime);"><i class="fa fa-plus-circle"></i> EXCESS +${diff} unit(s) &bull; Gain: LKR ${varianceVal.toFixed(2)}</span>`;
+      badge.style.borderColor = 'rgba(136,216,45,0.6)';
+      badge.style.background = 'rgba(136,216,45,0.1)';
+    }
+  }
+
+  async function submitStockAudit() {
+    const select = document.getElementById('auditProductSelect');
+    if (!select) return;
+    const productId = select.value;
+    const countedQty = document.getElementById('auditCountedInput').value;
+    if (countedQty === '') {
+      alert('Please enter physically counted units on shelf.');
+      return;
+    }
+    const reason = document.getElementById('auditReasonSelect').value;
+    const actionTaken = document.getElementById('auditActionSelect').value;
+    const notes = document.getElementById('auditNotesInput').value.trim();
+
+    const isSuperAdmin = {{ is_super_admin|yesno:"true,false" }};
+    if (actionTaken === 'STOCK_ADJUSTED' && !isSuperAdmin) {
+      alert('High-Risk Operation Blocked: Changing live stock inventory numbers is restricted strictly to Super Admin. Please select "Flag as Missing (Keep Stock, Under Review)".');
+      return;
+    }
+
+    const btn = document.getElementById('btnSubmitAudit');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
+
+    try {
+      const res = await fetch('/pos/api/audit/stock/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+          product_id: parseInt(productId, 10),
+          counted_quantity: parseInt(countedQty, 10),
+          reason: reason,
+          action_taken: actionTaken,
+          notes: notes
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message, data.audit.discrepancy < 0);
+        closeStockAuditModal();
+        setTimeout(() => window.location.reload(), 700);
+      } else {
+        alert('Stock Audit Error: ' + (data.error || 'Server error'));
+      }
+    } catch(err) {
+      alert('Network Error: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-save"></i> Save &amp; Apply Audit';
+    }
+  }
+
+  // ── Cash Drawer / Shift Till Audit ──
+  function openDrawerAuditModal() {
+    const modal = document.getElementById('drawerAuditModal');
+    if (!modal) return;
+    modal.classList.add('open');
+    calculateDrawerDiscrepancy();
+    setTimeout(() => {
+      const inp = document.getElementById('drawerCountedInput');
+      if (inp) inp.focus();
+    }, 150);
+  }
+
+  function closeDrawerAuditModal() {
+    const modal = document.getElementById('drawerAuditModal');
+    if (modal) modal.classList.remove('open');
+  }
+
+  function calculateDrawerDiscrepancy() {
+    const posSales = parseFloat('{{ today_revenue|default:0 }}') || 0;
+    const openFloat = parseFloat(document.getElementById('drawerFloatInput').value || '0') || 0;
+    const countedVal = document.getElementById('drawerCountedInput').value.trim();
+    const statusBox = document.getElementById('drawerDiscrepancyStatus');
+    const wrapper = document.getElementById('drawerDiscrepancyBox');
+
+    if (countedVal === '') {
+      statusBox.innerHTML = 'Enter counted cash to balance till';
+      statusBox.style.color = 'var(--text-muted)';
+      wrapper.style.borderColor = 'var(--border-color)';
+      return;
+    }
+
+    const countedCash = parseFloat(countedVal) || 0;
+    const expectedCash = openFloat + posSales;
+    const diff = countedCash - expectedCash;
+
+    if (Math.abs(diff) < 0.01) {
+      statusBox.innerHTML = '<span style="color:#10B981;"><i class="fa fa-check-circle"></i> BALANCED (Exact Match)</span>';
+      wrapper.style.borderColor = 'rgba(16,185,129,0.4)';
+    } else if (diff < 0) {
+      statusBox.innerHTML = `<span style="color:#FF3366;"><i class="fa fa-exclamation-triangle"></i> SHORTAGE: -LKR ${Math.abs(diff).toFixed(2)} Missing</span>`;
+      wrapper.style.borderColor = 'rgba(255,51,102,0.6)';
+    } else {
+      statusBox.innerHTML = `<span style="color:#F59E0B;"><i class="fa fa-plus-circle"></i> OVERAGE: +LKR ${diff.toFixed(2)} Excess Cash</span>`;
+      wrapper.style.borderColor = 'rgba(245,158,11,0.6)';
+    }
+  }
+
+  async function submitDrawerAudit() {
+    const openFloat = parseFloat(document.getElementById('drawerFloatInput').value || '0');
+    const countedVal = document.getElementById('drawerCountedInput').value.trim();
+    if (countedVal === '') {
+      alert('Please enter physically counted cash in the drawer.');
+      return;
+    }
+    const countedCash = parseFloat(countedVal);
+    const notes = document.getElementById('drawerNotesInput').value.trim();
+
+    try {
+      const res = await fetch('/pos/api/audit/drawer/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+          opening_float: openFloat,
+          counted_cash: countedCash,
+          notes: notes
+        })
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message, data.audit.status === 'SHORTAGE');
+        closeDrawerAuditModal();
+      } else {
+        alert('Till Audit Error: ' + (data.error || 'Server error'));
+      }
+    } catch(err) {
+      alert('Network Error: ' + err.message);
+    }
+  }
+
+  // ── Audit History Viewer ──
+  function openAuditHistoryModal() {
+    const modal = document.getElementById('auditHistoryModal');
+    if (modal) modal.classList.add('open');
+  }
+
+  function closeAuditHistoryModal() {
+    const modal = document.getElementById('auditHistoryModal');
+    if (modal) modal.classList.remove('open');
+  }
+
+  function switchAuditHistoryTab(tab) {
+    document.getElementById('auditTabMissing').style.display = tab === 'missing' ? 'block' : 'none';
+    document.getElementById('auditTabLogs').style.display = tab === 'logs' ? 'block' : 'none';
+    document.getElementById('auditTabTills').style.display = tab === 'tills' ? 'block' : 'none';
+
+    document.getElementById('tabBtnMissingFinder').className = tab === 'missing' ? 'btn-top active' : 'btn-top';
+    document.getElementById('tabBtnAuditLog').className = tab === 'logs' ? 'btn-top active' : 'btn-top';
+    document.getElementById('tabBtnTillLog').className = tab === 'tills' ? 'btn-top active' : 'btn-top';
+  }
+
+  function filterMissingCategory(btn = null) {
+    const cards = document.querySelectorAll('.product-card');
+    cards.forEach(card => {
+      const isMissing = card.getAttribute('data-missing') === 'true';
+      card.style.display = isMissing ? 'flex' : 'none';
+    });
+
+    document.querySelectorAll('.cat-pill').forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+    else {
+      const p = document.getElementById('catPillMissing');
+      if (p) p.classList.add('active');
+    }
+  }
+
   // ── Keyboard Shortcuts ──
   window.addEventListener('keydown', function(e) {
     if (e.key === 'F2') {
@@ -1625,7 +2180,32 @@
       closeAddProductModal();
       closeRestockModal();
       closeReceiptModal();
+      closeStockAuditModal();
+      closeDrawerAuditModal();
+      closeAuditHistoryModal();
     }
+  });
+
+  // ── Scroll & Filter State Persistence ──
+  document.addEventListener('DOMContentLoaded', () => {
+    try {
+      const savedScroll = sessionStorage.getItem('fitme_pos_scroll_pos');
+      if (savedScroll !== null) {
+        sessionStorage.removeItem('fitme_pos_scroll_pos');
+        window.scrollTo({ top: parseInt(savedScroll, 10), behavior: 'instant' });
+      }
+      const savedCat = localStorage.getItem('fitme_pos_active_cat');
+      if (savedCat && savedCat !== 'all') {
+        const catBtn = document.querySelector(`.cat-pill[onclick*="'${savedCat}'"]`);
+        if (catBtn) filterCategory(savedCat, catBtn);
+      }
+    } catch(e) {}
+  });
+
+  window.addEventListener('beforeunload', () => {
+    try {
+      sessionStorage.setItem('fitme_pos_scroll_pos', window.scrollY.toString());
+    } catch(e) {}
   });
 </script>
 </body>

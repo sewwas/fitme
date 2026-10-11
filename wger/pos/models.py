@@ -27,7 +27,6 @@ class POSProduct(models.Model):
     category = models.ForeignKey(POSCategory, on_delete=models.CASCADE, related_name='products')
     name = models.CharField(max_length=120)
     sku = models.CharField(max_length=40, unique=True, db_index=True, help_text="Stock Keeping Unit / Short Code")
-    barcode = models.CharField(max_length=60, blank=True, db_index=True, help_text="UPC/EAN barcode for laser scanner")
     price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Retail Price in LKR")
     cost_price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Cost Price in LKR")
     stock_quantity = models.IntegerField(default=0, help_text="Current units in stock at front desk")
@@ -35,6 +34,9 @@ class POSProduct(models.Model):
     unit = models.CharField(max_length=30, default='unit', help_text="e.g. bottle, scoop, can, bar, piece")
     image_url = models.URLField(max_length=500, blank=True, null=True, help_text="Product picture URL")
     is_active = models.BooleanField(default=True, help_text="Visible in POS catalog")
+    last_audited_at = models.DateTimeField(null=True, blank=True, help_text="Timestamp of last physical stock audit")
+    has_audit_discrepancy = models.BooleanField(default=False, help_text="Flagged when recent audit found missing stock")
+    last_discrepancy_count = models.IntegerField(default=0, help_text="Units missing (negative) or excess (positive) in last audit")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -60,7 +62,7 @@ class POSSale(models.Model):
     PAYMENT_CHOICES = [
         ('CASH', 'Cash'),
         ('CARD', 'Credit / Debit Card (POS Machine)'),
-        ('KOKO', 'Koko / Mintpay (Pay in 3)'),
+        ('KOKO', 'Koko Pay (Buy Now, Pay in 3)'),
         ('BANK_TRANSFER', 'Bank Transfer / QR Pay'),
         ('MEMBER_TAB', 'Member Account Tab'),
     ]
@@ -130,3 +132,97 @@ class POSSaleItem(models.Model):
 
     def __str__(self):
         return f"{self.quantity}x {self.product_name} @ {self.unit_price} = {self.total_price}"
+
+
+class POSInventoryAudit(models.Model):
+    """
+    Physical stock audit and discrepancy tracking log.
+    Enables staff/admins to reconcile counted units against system expectation,
+    flag missing items, and record financial shrinkage/variance.
+    """
+    AUDIT_REASONS = [
+        ('MISSING_SHRINKAGE', 'Missing / Unexplained Stock Loss'),
+        ('COUNT_CORRECTION', 'Physical Count Adjustment'),
+        ('DAMAGED_EXPIRED', 'Damaged or Expired Stock'),
+        ('THEFT_SUSPECTED', 'Suspected Loss / Theft'),
+        ('RESTOCK_DISCREPANCY', 'Supplier Invoice / Restock Discrepancy'),
+        ('SAMPLE_PROMO', 'Gym Bar / Coach Demo Sample'),
+    ]
+
+    ACTION_CHOICES = [
+        ('STOCK_ADJUSTED', 'Stock Level Adjusted'),
+        ('FLAGGED_MISSING', 'Flagged as Missing (Pending Review)'),
+        ('RECONCILED', 'Reconciled & Closed'),
+    ]
+
+    product = models.ForeignKey(POSProduct, on_delete=models.CASCADE, related_name='audit_logs')
+    auditor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='pos_audits'
+    )
+    expected_quantity = models.IntegerField(help_text="Units expected in system before physical count")
+    counted_quantity = models.IntegerField(help_text="Physical count verified on shelf")
+    discrepancy = models.IntegerField(help_text="counted - expected (negative indicates missing stock)")
+    unit_cost = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Cost price at audit")
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Retail price at audit")
+    variance_value = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Financial impact = discrepancy * unit_cost")
+    reason = models.CharField(max_length=40, choices=AUDIT_REASONS, default='COUNT_CORRECTION')
+    action_taken = models.CharField(max_length=40, choices=ACTION_CHOICES, default='STOCK_ADJUSTED')
+    notes = models.TextField(blank=True, help_text="Notes on where item was searched or audit details")
+    audit_date = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        verbose_name = 'POS Inventory Audit'
+        verbose_name_plural = 'POS Inventory Audits'
+        ordering = ['-audit_date']
+
+    def __str__(self):
+        sign = "+" if self.discrepancy > 0 else ""
+        return f"Audit {self.product.name}: {sign}{self.discrepancy} units ({self.get_reason_display()})"
+
+    @property
+    def is_missing(self):
+        return self.discrepancy < 0
+
+    @property
+    def missing_units(self):
+        return abs(self.discrepancy) if self.discrepancy < 0 else 0
+
+
+class POSCashDrawerAudit(models.Model):
+    """
+    Cash drawer balancing and shift reconciliation audit.
+    Compares physical cash counted in drawer against recorded cash sales.
+    """
+    STATUS_CHOICES = [
+        ('BALANCED', 'Balanced (Exact Match)'),
+        ('SHORTAGE', 'Cash Shortage (Missing Cash)'),
+        ('OVERAGE', 'Cash Overage (Excess Cash)'),
+    ]
+
+    cashier = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='cash_drawer_audits'
+    )
+    opening_float = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Starting cash float in drawer")
+    cash_sales_total = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Recorded POS cash sales")
+    expected_cash = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="opening_float + cash_sales_total")
+    counted_cash = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Physical cash counted in till")
+    discrepancy = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="counted_cash - expected_cash")
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='BALANCED')
+    notes = models.TextField(blank=True)
+    audit_date = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        verbose_name = 'POS Cash Drawer Audit'
+        verbose_name_plural = 'POS Cash Drawer Audits'
+        ordering = ['-audit_date']
+
+    def __str__(self):
+        return f"Drawer Audit {self.audit_date.strftime('%Y-%m-%d')} — {self.status} ({self.discrepancy})"

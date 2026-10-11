@@ -59,7 +59,7 @@ def processor(request):
         'no_messages': request.META.get('HTTP_X_WGER_NO_MESSAGES', False),
 
         # Default cache time for template fragment caching
-        'cache_timeout': settings.CACHES['default']['TIMEOUT'],
+        'cache_timeout': getattr(settings, 'CACHES', {}).get('default', {}).get('TIMEOUT', 300),
 
         # Used for logged in trainers
         'trainer_identity': request.session.get('trainer.identity'),

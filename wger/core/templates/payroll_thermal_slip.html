@@ -1,0 +1,208 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Payslip #PAY-{{ ledger.id|stringformat:"04d" }} — Fit Me 80mm Thermal Slip</title>
+  <style>
+    @page {
+      size: 80mm auto;
+      margin: 0;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      width: 72mm;
+      margin: 0 auto;
+      padding: 4mm 2mm 15mm 2mm;
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 12px;
+      font-weight: 600;
+      line-height: 1.25;
+      color: #000;
+      background: #fff;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+    .text-left { text-align: left; }
+    .bold { font-weight: 900; }
+    .uppercase { text-transform: uppercase; }
+    .header { text-align: center; border-bottom: 2px dashed #000; padding-bottom: 5px; margin-bottom: 6px; }
+    .logo-title { font-size: 18px; font-weight: 900; letter-spacing: 2px; }
+    .divider { border-bottom: 1px dashed #000; margin: 5px 0; }
+    .divider-double { border-bottom: 2px solid #000; margin: 6px 0; }
+    .row { display: flex; justify-content: space-between; margin: 2px 0; font-size: 11px; }
+    .box { border: 2px solid #000; padding: 6px 4px; margin: 8px 0; text-align: center; }
+    .net-val { font-size: 18px; font-weight: 900; margin-top: 3px; }
+    .no-print { display: flex; gap: 8px; justify-content: center; margin-bottom: 12px; }
+    .btn { background: #000; color: #fff; padding: 6px 12px; border: none; font-size: 12px; cursor: pointer; border-radius: 4px; font-weight: bold; }
+    @media print {
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="no-print">
+    <button class="btn" onclick="window.print()"><i class="fa fa-print"></i> Print 80mm Thermal</button>
+    <button class="btn" style="background:#555;" onclick="window.close()">Close</button>
+  </div>
+
+  <div class="header">
+    <div class="logo-title">FIT ME FITNESS</div>
+    <div style="font-size:10px;font-weight:bold;">STAFF SALARY &amp; COMMISSION SLIP</div>
+    <div style="font-size:9px;">{{ club_info.address }}</div>
+    <div style="font-size:9px;">Hotline: {{ club_info.phone }}</div>
+  </div>
+
+  <div class="row">
+    <span>VOUCHER NO:</span>
+    <span class="bold">#PAY-{{ ledger.id|stringformat:"04d" }}</span>
+  </div>
+  <div class="row">
+    <span>PAY PERIOD:</span>
+    <span class="bold">{{ ledger.month|date:"F Y"|upper }}</span>
+  </div>
+  <div class="row">
+    <span>PRINT DATE:</span>
+    <span>{{ issued_date }}</span>
+  </div>
+
+  <div class="divider"></div>
+
+  <div class="row">
+    <span>STAFF:</span>
+    <span class="bold">{{ ledger.staff_user.get_full_name|default:ledger.staff_user.username }}</span>
+  </div>
+  <div class="row">
+    <span>USERNAME:</span>
+    <span>@{{ ledger.staff_user.username }}</span>
+  </div>
+  <div class="row">
+    <span>STATUS:</span>
+    <span class="bold">{% if ledger.is_finalized %}APPROVED{% else %}DRAFT{% endif %}</span>
+  </div>
+
+  <div class="divider-double"></div>
+
+  <div style="font-size:11px;font-weight:900;margin-bottom:3px;">[ EARNINGS &amp; COMMISSIONS ]</div>
+  <div class="row">
+    <span>BASE SALARY</span>
+    <span>LKR {{ ledger.base_salary|floatformat:2 }}</span>
+  </div>
+  <div class="row">
+    <span>PT COMMISSIONS</span>
+    <span>+ LKR {{ ledger.pt_commissions|floatformat:2 }}</span>
+  </div>
+  <div class="row">
+    <span>OVERTIME (1.5x)</span>
+    <span>+ LKR {{ ledger.overtime_pay|floatformat:2 }}</span>
+  </div>
+
+  <div class="divider"></div>
+
+  {% if pt_clients %}
+  <div style="font-size:11px;font-weight:900;margin-bottom:3px;">[ PT COACHED ATHLETES &amp; SPLIT ]</div>
+  {% for c in pt_clients %}
+  <div class="row">
+    <span>• {{ c.name|truncatechars:18 }}</span>
+    <span class="bold">+ LKR {{ c.coach_share|floatformat:2 }}</span>
+  </div>
+  {% endfor %}
+  <div class="row" style="font-size:9px;color:#333;margin-top:2px;">
+    <span>SPLIT: LKR 7,000 PKG</span>
+    <span>GYM: 3K | COACH: 4K</span>
+  </div>
+  <div class="divider"></div>
+  {% endif %}
+
+  {% if attendance %}
+  <div style="font-size:11px;font-weight:900;margin-bottom:3px;">[ BIOMETRIC ATTENDANCE SUMMARY ]</div>
+  <div class="row">
+    <span>SHIFTS SCHEDULED / WORKED:</span>
+    <span class="bold">{{ attendance.scheduled }} / {{ attendance.completed }}</span>
+  </div>
+  <div class="row">
+    <span>LATE ARRIVAL DELAYS:</span>
+    <span class="bold">{% if attendance.late_minutes %}{{ attendance.late_minutes }} mins{% else %}0 mins (On Time){% endif %}</span>
+  </div>
+  <div class="row">
+    <span>OVERTIME DURATION (1.5x):</span>
+    <span class="bold">{% if attendance.overtime_minutes %}{{ attendance.overtime_minutes }} mins{% else %}0 mins{% endif %}</span>
+  </div>
+  <div class="divider"></div>
+  {% endif %}
+
+  <div style="font-size:11px;font-weight:900;margin-bottom:3px;">[ STATUTORY &amp; OTHER DEDUCTIONS ]</div>
+  {% if ledger.epf_employee_8 > 0 %}
+  <div class="row">
+    <span>EPF (8% EMPLOYEE)</span>
+    <span>- LKR {{ ledger.epf_employee_8|floatformat:2 }}</span>
+  </div>
+  {% endif %}
+  {% if ledger.salary_advance_deduction > 0 %}
+  <div class="row">
+    <span>SALARY ADVANCES DEDUCTED</span>
+    <span class="bold">- LKR {{ ledger.salary_advance_deduction|floatformat:2 }}</span>
+  </div>
+  {% endif %}
+  <div class="row">
+    <span>LATE MINUTES PENALTY</span>
+    <span>- LKR {{ ledger.late_minutes_penalty|floatformat:2 }}</span>
+  </div>
+  <div class="row">
+    <span>SUDDEN ABSENCE PENALTY</span>
+    <span>- LKR {{ ledger.sudden_absence_penalty|floatformat:2 }}</span>
+  </div>
+
+  <div class="box">
+    <div style="font-size:10px;font-weight:800;letter-spacing:1px;">NET SALARY PAYABLE (TAKE HOME)</div>
+    <div class="net-val">LKR {{ ledger.net_salary|floatformat:2 }}</div>
+  </div>
+
+  {% if ledger.epf_employer_12 > 0 or ledger.etf_employer_3 > 0 %}
+  <div class="divider"></div>
+  <div style="font-size:10px;font-weight:900;margin-bottom:2px;">[ EMPLOYER CONTRIBUTIONS (FIT ME) ]</div>
+  <div class="row" style="font-size:10px;">
+    <span>EPF EMPLOYER (12%):</span>
+    <span>+ LKR {{ ledger.epf_employer_12|floatformat:2 }}</span>
+  </div>
+  <div class="row" style="font-size:10px;">
+    <span>ETF EMPLOYER (3%):</span>
+    <span>+ LKR {{ ledger.etf_employer_3|floatformat:2 }}</span>
+  </div>
+  {% endif %}
+
+  {% if ledger.notes %}
+  <div class="divider"></div>
+  <div style="font-size:10px;margin-top:2px;">
+    <strong>REMARKS:</strong> {{ ledger.notes }}
+  </div>
+  {% endif %}
+
+  <div class="divider"></div>
+
+  <div style="margin-top:20px;display:flex;justify-content:space-between;font-size:10px;">
+    <div style="text-align:center;width:45%;border-top:1px dashed #000;padding-top:4px;">
+      MANAGEMENT
+    </div>
+    <div style="text-align:center;width:45%;border-top:1px dashed #000;padding-top:4px;">
+      STAFF SIGN
+    </div>
+  </div>
+
+  <div style="text-align:center;margin-top:15px;font-size:9px;color:#333;">
+    *** OFFICIAL FIT ME PAYROLL RECORD ***
+  </div>
+
+  <script>
+    window.onload = function() {
+      window.print();
+    };
+  </script>
+</body>
+</html>

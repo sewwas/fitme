@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Fit Me — Premium Smart Fitness Club | Pitigala</title>
+  <title>Fit Me — Fitness Club | Pitigala</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -16,10 +16,10 @@
       --card-bg: #121517;
       --card-secondary: #1F2428;
       --border-color: rgba(255, 255, 255, 0.08);
-      --neon-lime: #76C043;
-      --neon-hover: #8AE04F;
-      --neon-glow: rgba(118, 192, 67, 0.25);
-      --neon-glow-high: rgba(118, 192, 67, 0.55);
+      --neon-lime: #88D82D;
+      --neon-hover: #9EF040;
+      --neon-glow: rgba(136, 216, 45, 0.28);
+      --neon-glow-high: rgba(136, 216, 45, 0.6);
       --cyan: #06B6D4;
       --text-primary: #FFFFFF;
       --text-muted: #8E9BA4;
@@ -75,8 +75,10 @@
       font-size: 1.35rem;
       letter-spacing: 1px;
       line-height: 1.1;
+      color: #C5CBD3;
     }
     .brand-title span { color: var(--neon-lime); }
+    .brand-title .brand-me { color: #C5CBD3; }
 
     .brand-sub {
       font-size: 0.65rem;
@@ -172,16 +174,16 @@
     }
 
     .hero-cover-wrapper {
-      max-width: 960px;
+      max-width: 780px;
       margin: 0 auto 2.25rem;
-      border-radius: 20px;
+      border-radius: 22px;
       overflow: hidden;
       border: 2px solid var(--neon-lime);
-      box-shadow: 0 20px 60px rgba(0,0,0,0.85), 0 0 40px var(--neon-glow);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.85), 0 0 45px var(--neon-glow);
       transition: all 0.3s ease;
     }
     .hero-cover-wrapper:hover {
-      box-shadow: 0 25px 70px rgba(0,0,0,0.9), 0 0 50px var(--neon-glow-high);
+      box-shadow: 0 25px 75px rgba(0,0,0,0.9), 0 0 60px var(--neon-glow-high);
       transform: translateY(-2px);
     }
     .hero-cover-img {
@@ -672,7 +674,7 @@
     <a href="/" class="brand-group">
       <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me Logo" class="brand-logo-img">
       <div>
-        <div class="brand-title">FIT <span>ME</span></div>
+        <div class="brand-title"><span style="color:var(--neon-lime);">FIT</span> <span class="brand-me" style="color:#C5CBD3;">ME</span></div>
         <div class="brand-sub">Train with Purpose &amp; Move with Confidence</div>
       </div>
     </a>
@@ -937,7 +939,7 @@
             <span style="color:var(--neon-lime);">Limited Time Offer!</span> Packages Valid For A Limited Time Only
           </div>
           <div style="color:var(--text-muted);font-size:0.84rem;margin-top:2px;">
-            A Registration Fee of <strong>Rs. 1,000</strong> applies for all new members • <strong style="color:var(--neon-lime);">Students: No Registration Fee</strong> • Effective from 27th April 2026.
+            A Yearly Fee of <strong>LKR 1,000</strong> applies for all standard membership packages • <strong style="color:var(--neon-lime);">Students: FREE / No Yearly Fee</strong> • Effective from 27th April 2026.
           </div>
         </div>
       </div>
@@ -952,7 +954,7 @@
           {% if p.discount and p.discount > 0 %}
             <div class="plan-tag" style="background:var(--neon-lime);color:#000;font-weight:800;">SAVE LKR {{ p.discount|floatformat:0 }}</div>
           {% elif p.plan_type == 'student' %}
-            <div class="plan-tag" style="background:#00F0FF;color:#000;font-weight:800;">NO REG FEE</div>
+            <div class="plan-tag" style="background:#00F0FF;color:#000;font-weight:800;">NO YEARLY FEE</div>
           {% elif p.plan_type == 'couples' %}
             <div class="plan-tag">POPULAR</div>
           {% endif %}
@@ -984,7 +986,7 @@
               <li><i class="fa fa-check"></i> Digital Pass &amp; Apple-Style Macro Rings</li>
               <li><i class="fa fa-check"></i> Personal Fitness Intake Assessment</li>
               {% if p.plan_type == 'student' %}
-                <li style="color:var(--cyan);font-weight:700;"><i class="fa fa-graduation-cap"></i> Zero Registration Fee</li>
+                <li style="color:var(--cyan);font-weight:700;"><i class="fa fa-graduation-cap"></i> Zero Yearly Fee</li>
               {% endif %}
             </ul>
           </div>
@@ -1155,7 +1157,7 @@
         <div class="brand-group" style="margin-bottom:0.75rem;">
           <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me Logo" class="brand-logo-img" style="width:48px;height:48px;">
           <div>
-            <div class="brand-title">FIT <span>ME</span></div>
+            <div class="brand-title"><span style="color:var(--neon-lime);">FIT</span> <span class="brand-me" style="color:#C5CBD3;">ME</span></div>
             <div class="brand-sub">Train with Purpose &amp; Move with Confidence</div>
           </div>
         </div>

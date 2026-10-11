@@ -22,11 +22,11 @@ export function FitMeFooter() {
                 />
               </div>
               <div className="flex flex-col">
-                <span className="text-xl font-black tracking-widest text-[#F8FAFC]">
-                  FIT ME
+                <span className="text-xl font-black tracking-widest">
+                  <span className="text-[#88D82D]">FIT</span> <span className="text-[#C5CBD3]">ME</span>
                 </span>
-                <span className="text-[10px] font-bold tracking-widest text-[#76C043] uppercase">
-                  Train with Purpose & Move with Confidence
+                <span className="text-[10px] font-bold tracking-widest text-[#88D82D] uppercase">
+                  Train with Purpose &amp; Move with Confidence
                 </span>
               </div>
             </Link>

@@ -100,7 +100,10 @@ def calculate_monthly_payroll(year=None, month=None):
     Calculates monthly net salary:
     Net = Base_Salary + Overtime_Pay + PT_Commissions - (Late_Minutes_Penalty + Sudden_Absence_Penalty)
     """
-    from wger.gym_operations_payroll.models import StaffShift, PayrollLedger, SuddenAbsenceAlert
+    from wger.gym_operations_payroll.models import (
+        StaffShift, PayrollLedger, SuddenAbsenceAlert,
+        StaffWorkSchedule, StaffSalaryAdvance
+    )
     from django.contrib.auth import get_user_model
     User = get_user_model()
 
@@ -121,6 +124,12 @@ def calculate_monthly_payroll(year=None, month=None):
     generated = 0
 
     for staff in staff_users:
+        # Check if staff has a customized StaffWorkSchedule contract
+        work_sched = StaffWorkSchedule.objects.filter(staff_user=staff).first()
+        base_salary_val = work_sched.default_base_salary if work_sched else Decimal('75000.00')
+        hourly_rate = work_sched.hourly_rate if work_sched else Decimal('500.00')
+        minute_rate = hourly_rate / Decimal('60.0')
+
         shifts = StaffShift.objects.filter(
             staff_user=staff,
             shift_date__range=[first_day, last_day]
@@ -130,33 +139,71 @@ def calculate_monthly_payroll(year=None, month=None):
         total_absence_minutes = sum(s.unapproved_absence_minutes for s in shifts)
         total_overtime_minutes = sum(s.overtime_minutes for s in shifts)
 
-        # Rates
-        hourly_rate = Decimal('500.00')
-        minute_rate = hourly_rate / Decimal('60.0')
-
         overtime_pay = (Decimal(total_overtime_minutes) * minute_rate * Decimal('1.5')).quantize(Decimal('0.01'))
         late_penalty = (Decimal(total_late_minutes) * minute_rate).quantize(Decimal('0.01'))
         absence_penalty = (Decimal(total_absence_minutes) * minute_rate * Decimal('1.25')).quantize(Decimal('0.01'))
 
+        # Calculate dynamic PT coaching commissions (LKR 4,000 per active coached client)
+        from wger.membership.models import MemberProfile
+        coached_count = MemberProfile.objects.filter(
+            assigned_coach=staff,
+            personal_trainer_needed=True,
+            user__subscriptions__status='active',
+            user__subscriptions__start_date__lte=last_day,
+            user__subscriptions__end_date__gte=first_day
+        ).distinct().count()
+        computed_pt_commission = Decimal(coached_count) * Decimal('4000.00')
+
+        # Calculate EPF & ETF (Sri Lankan Statutory Compliance)
+        epf_eligible = work_sched.epf_etf_eligible if work_sched else True
+        epf_employee_8 = (base_salary_val * Decimal('0.08')).quantize(Decimal('0.01')) if epf_eligible else Decimal('0.00')
+        epf_employer_12 = (base_salary_val * Decimal('0.12')).quantize(Decimal('0.01')) if epf_eligible else Decimal('0.00')
+        etf_employer_3 = (base_salary_val * Decimal('0.03')).quantize(Decimal('0.01')) if epf_eligible else Decimal('0.00')
+
+        # Calculate mid-month Staff Salary Advances disbursed in this period
+        advances_qs = StaffSalaryAdvance.objects.filter(
+            staff_user=staff,
+            request_date__range=[first_day, last_day]
+        )
+        total_advances = sum((a.amount for a in advances_qs), Decimal('0.00'))
+
         # Fetch or initialize ledger
-        ledger, _ = PayrollLedger.objects.get_or_create(
+        ledger, created = PayrollLedger.objects.get_or_create(
             staff_user=staff,
             month=first_day,
             defaults={
-                'base_salary': Decimal('75000.00'),
+                'base_salary': base_salary_val,
                 'overtime_pay': overtime_pay,
-                'pt_commissions': Decimal('15000.00'), # Baseline PT commission
+                'pt_commissions': computed_pt_commission,
                 'late_minutes_penalty': late_penalty,
                 'sudden_absence_penalty': absence_penalty,
-                'notes': f"Auto-computed: {total_late_minutes}m late, {total_absence_minutes}m unapproved absence, {total_overtime_minutes}m overtime."
+                'epf_employee_8': epf_employee_8,
+                'epf_employer_12': epf_employer_12,
+                'etf_employer_3': etf_employer_3,
+                'salary_advance_deduction': total_advances,
+                'notes': f"Auto-computed: {coached_count} coached clients (LKR {computed_pt_commission:,.2f}), {total_late_minutes}m late, {total_absence_minutes}m unapproved absence, {total_overtime_minutes}m overtime, advances: LKR {total_advances:,.2f}."
             }
         )
 
         if not ledger.is_finalized:
+            if not created and ledger.base_salary == Decimal('0.00'):
+                ledger.base_salary = base_salary_val
             ledger.overtime_pay = overtime_pay
             ledger.late_minutes_penalty = late_penalty
             ledger.sudden_absence_penalty = absence_penalty
+            ledger.epf_employee_8 = epf_employee_8
+            ledger.epf_employer_12 = epf_employer_12
+            ledger.etf_employer_3 = etf_employer_3
+            ledger.salary_advance_deduction = total_advances
+
+            if created or (ledger.pt_commissions or Decimal('0.00')) < computed_pt_commission:
+                ledger.pt_commissions = computed_pt_commission
+
+            ledger.notes = f"Auto-computed: {coached_count} coached client(s) (LKR {computed_pt_commission:,.2f}), {total_late_minutes}m late, {total_absence_minutes}m absence, {total_overtime_minutes}m OT, advances: LKR {total_advances:,.2f}."
             ledger.save()
+
+            # Associate advances with ledger
+            advances_qs.filter(ledger__isnull=True).update(ledger=ledger)
             generated += 1
 
     return f"Consolidated payroll for {generated} staff members for month {first_day}."

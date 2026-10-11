@@ -3,7 +3,12 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Receipt #{{ receipt.receipt_number }} — Fit Me Official Receipt</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bill & Receipt #{{ receipt.receipt_number }} — Fit Me Official</title>
+  <link rel="icon" href="{% static 'images/logos/fitme-official-logo.jpg' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
   <style>
     /* ── 80mm Thermal POS Specifications ── */
     @page {
@@ -18,331 +23,513 @@
     }
 
     body {
-      width: 72mm;
-      margin: 0 auto;
-      padding: 3mm 2mm 12mm 2mm;
-      font-family: 'Courier New', Courier, 'Lucida Console', Monaco, monospace;
-      font-size: 12px;
-      font-weight: 600;
-      line-height: 1.25;
+      background: #0B0D0E;
       color: #000;
-      background: #fff;
+      font-family: 'JetBrains Mono', 'Courier New', Courier, monospace;
+      font-size: 11.5px;
+      line-height: 1.3;
+      padding: 30px 10px 50px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
 
+    /* ── Floating Screen Control Bar (Hidden in Print) ── */
+    .screen-toolbar {
+      position: fixed;
+      top: 14px;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(18, 22, 25, 0.95);
+      border: 1px solid rgba(136, 216, 45, 0.35);
+      backdrop-filter: blur(12px);
+      padding: 8px 16px;
+      border-radius: 999px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.65), 0 0 20px rgba(136, 216, 45, 0.15);
+    }
+
+    .toolbar-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 800;
+      font-size: 12px;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .toolbar-title span {
+      color: #88D82D;
+    }
+
+    .btn-action-print {
+      background: #88D82D;
+      color: #0c0f12;
+      border: none;
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11.5px;
+      font-weight: 900;
+      letter-spacing: 0.5px;
+      padding: 7px 18px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+      box-shadow: 0 0 14px rgba(136, 216, 45, 0.4);
+    }
+
+    .btn-action-print:hover {
+      background: #9ef035;
+      transform: translateY(-1px);
+      box-shadow: 0 0 20px rgba(136, 216, 45, 0.6);
+    }
+
+    .btn-action-close {
+      background: rgba(255, 255, 255, 0.08);
+      color: #bbb;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      font-family: 'Montserrat', sans-serif;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 7px 14px;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-action-close:hover {
+      background: rgba(255, 255, 255, 0.16);
+      color: #fff;
+    }
+
+    /* ── The 80mm Physical Thermal Receipt Sheet ── */
+    .receipt-sheet {
+      width: 76mm;
+      max-width: 76mm;
+      background: #fff;
+      padding: 5mm 3.5mm 10mm 3.5mm;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+      border-radius: 4px;
+      margin-top: 40px;
+      color: #000;
+    }
+
+    /* Utility Classes */
     .text-center { text-align: center; }
     .text-right { text-align: right; }
     .text-left { text-align: left; }
-    .bold { font-weight: 900; }
+    .bold { font-weight: 800; }
+    .bolder { font-weight: 900; }
     .uppercase { text-transform: uppercase; }
 
-    .header {
+    /* Header & Branding */
+    .brand-header {
       text-align: center;
       padding-bottom: 4px;
-      margin-bottom: 6px;
-      border-bottom: 2px dashed #000;
+      margin-bottom: 5px;
     }
 
-    .logo-title {
-      font-size: 18px;
+    .brand-logo-img {
+      width: 22mm;
+      height: 22mm;
+      border-radius: 50%;
+      border: 1.5px solid #000;
+      object-fit: cover;
+      margin: 0 auto 4px;
+      display: block;
+      filter: grayscale(100%) contrast(160%);
+    }
+
+    .brand-title {
+      font-family: 'Montserrat', 'Arial Black', sans-serif;
+      font-size: 19px;
       font-weight: 900;
       letter-spacing: 2px;
-      margin-bottom: 2px;
+      line-height: 1.1;
+      color: #000;
     }
 
-    .subtitle {
-      font-size: 10px;
-      font-weight: 700;
-      letter-spacing: 0.5px;
-    }
-
-    .store-info {
+    .brand-sub {
+      font-family: 'Montserrat', sans-serif;
       font-size: 9px;
-      margin-top: 3px;
-      line-height: 1.2;
+      font-weight: 800;
+      letter-spacing: 0.8px;
+      margin-top: 2px;
     }
 
-    .divider {
+    .brand-contact {
+      font-size: 8.5px;
+      line-height: 1.3;
+      margin-top: 3px;
+      color: #111;
+    }
+
+    .doc-title-pill {
+      display: inline-block;
+      border: 1.5px solid #000;
+      padding: 2px 8px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 9.5px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      margin: 5px auto 2px;
+    }
+
+    /* Dividers */
+    .div-dashed {
       border-bottom: 1px dashed #000;
+      margin: 4px 0;
+    }
+
+    .div-double {
+      border-bottom: 2px solid #000;
       margin: 5px 0;
     }
 
-    .divider-double {
-      border-bottom: 2px solid #000;
-      margin: 6px 0;
+    .div-dotted {
+      border-bottom: 1px dotted #444;
+      margin: 4px 0;
     }
 
+    /* Meta Details Table */
     .meta-table {
       width: 100%;
-      font-size: 11px;
-      margin-bottom: 4px;
+      border-collapse: collapse;
+      font-size: 10.5px;
+      margin: 3px 0 4px;
     }
 
     .meta-table td {
-      padding: 1px 0;
+      padding: 1.5px 0;
       vertical-align: top;
     }
 
-    .pin-box {
-      border: 2px solid #000;
-      padding: 5px 2px;
-      margin: 6px 0;
-      text-align: center;
-      background: #f4f4f4;
+    .meta-table .label {
+      font-weight: 700;
+      color: #333;
     }
 
-    .pin-title {
-      font-size: 9px;
-      letter-spacing: 1px;
+    .meta-table .val {
+      text-align: right;
       font-weight: 800;
+      color: #000;
     }
 
-    .pin-value {
-      font-size: 18px;
-      font-weight: 900;
-      letter-spacing: 3px;
-      margin: 2px 0;
-    }
-
+    /* Itemized Table */
     .items-table {
       width: 100%;
-      font-size: 11px;
       border-collapse: collapse;
-      margin: 6px 0;
+      font-size: 11px;
+      margin: 4px 0 3px;
     }
 
     .items-table th {
+      border-top: 1px dashed #000;
       border-bottom: 1px dashed #000;
       padding: 3px 0;
-      text-align: left;
-      font-size: 10px;
+      font-size: 9.5px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
     }
 
     .items-table td {
-      padding: 3px 0;
+      padding: 3.5px 0;
       vertical-align: top;
     }
 
+    .item-name {
+      font-weight: 800;
+      font-size: 11px;
+      line-height: 1.2;
+    }
+
+    .item-detail {
+      font-size: 8.5px;
+      color: #333;
+      margin-top: 1.5px;
+      line-height: 1.2;
+    }
+
+    .item-badge {
+      display: inline-block;
+      font-size: 7.5px;
+      font-weight: 800;
+      border: 1px solid #000;
+      padding: 0 3px;
+      margin-top: 2px;
+      border-radius: 2px;
+      text-transform: uppercase;
+    }
+
+    /* Totals Breakdown Table */
     .totals-table {
       width: 100%;
+      border-collapse: collapse;
       font-size: 11px;
-      margin-top: 4px;
+      margin-top: 2px;
     }
 
     .totals-table td {
       padding: 2px 0;
     }
 
-    .grand-total {
-      font-size: 14px;
+    .totals-table .total-label {
+      font-weight: 700;
+    }
+
+    .totals-table .total-val {
+      text-align: right;
+      font-weight: 800;
+    }
+
+    .grand-total-row td {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13.5px;
       font-weight: 900;
-      border-top: 1px dashed #000;
+      border-top: 1.5px dashed #000;
       border-bottom: 2px solid #000;
-      padding: 4px 0 !important;
+      padding: 5px 0 !important;
+      letter-spacing: -0.2px;
     }
 
-    .barcode-area {
-      text-align: center;
-      margin: 8px 0 4px;
-    }
-
-    .barcode-bars {
-      display: inline-block;
-      letter-spacing: 1px;
-      font-size: 11px;
-      font-weight: 900;
-      font-family: monospace;
-      padding: 2px 4px;
-      border: 1px solid #000;
-    }
-
-    .footer {
-      text-align: center;
-      font-size: 9px;
-      margin-top: 8px;
+    /* Reference & Notes Box */
+    .notes-box {
+      border: 1px dashed #000;
+      background: #fafafa;
+      padding: 4px 5px;
+      margin: 5px 0;
+      font-size: 8.5px;
       line-height: 1.3;
     }
 
-    /* ── Autocut paper feed buffer ── */
-    .cut-feed {
-      height: 15mm;
+    /* Barcode Section */
+    .barcode-section {
+      text-align: center;
+      margin: 6px 0 4px;
+    }
+
+    .barcode-bars {
+      font-family: monospace;
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: 1.5px;
+      border: 1px solid #000;
+      padding: 2px 5px;
+      display: inline-block;
+    }
+
+    .barcode-text {
+      font-size: 8.5px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-top: 2px;
+    }
+
+    /* Clean Minimal Footer */
+    .receipt-footer {
+      text-align: center;
+      font-size: 9px;
+      line-height: 1.4;
+      margin-top: 6px;
+      color: #111;
+    }
+
+    .receipt-footer .thank-you {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 10px;
+      margin-bottom: 2px;
+      letter-spacing: 0.5px;
+    }
+
+    /* Paper Cut Feed Buffer */
+    .cut-feed-space {
+      height: 12mm;
       width: 100%;
     }
 
-    /* ── Screen Preview Bar (Hidden during actual 80mm print) ── */
-    .screen-actions {
-      position: fixed;
-      top: 10px;
-      right: 10px;
-      background: #0B0D0E;
-      padding: 8px 12px;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      display: flex;
-      gap: 8px;
-      z-index: 9999;
-    }
-
-    .btn-print {
-      background: #76C043;
-      color: #000;
-      border: none;
-      font-weight: 800;
-      font-size: 12px;
-      padding: 6px 14px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .btn-close {
-      background: #333;
-      color: #fff;
-      border: none;
-      font-size: 12px;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
+    /* ── Print Media Query Overrides (For 80mm Roll) ── */
     @media print {
-      .screen-actions {
+      body {
+        background: #fff !important;
+        padding: 0 !important;
+        min-height: auto !important;
+      }
+
+      .screen-toolbar {
         display: none !important;
       }
-      body {
-        padding-top: 0;
+
+      .receipt-sheet {
+        width: 72mm !important;
+        max-width: 72mm !important;
+        margin: 0 auto !important;
+        padding: 2mm 1.5mm 8mm 1.5mm !important;
+        box-shadow: none !important;
+        border-radius: 0 !important;
       }
     }
   </style>
 </head>
 <body>
 
-  <!-- Screen Floating Control (Hidden in Print) -->
-  <div class="screen-actions">
-    <button class="btn-print" onclick="window.print()">
-      🖨️ PRINT RECEIPT
+  <!-- Floating Screen Topbar -->
+  <div class="screen-toolbar">
+    <div class="toolbar-title">
+      <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">
+      FIT ME <span>BILL #{{ receipt.receipt_number }}</span>
+    </div>
+    <button class="btn-action-print" onclick="window.print()">
+      🖨️ PRINT 80mm SLIP
     </button>
-    <button class="btn-close" onclick="window.close();">
+    <button class="btn-action-close" onclick="window.close()">
       ✕ CLOSE
     </button>
   </div>
 
-  <!-- Thermal Receipt Body -->
-  <div class="header">
-    <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me" style="width: 28mm; height: 28mm; border-radius: 50%; object-fit: cover; filter: grayscale(100%) contrast(150%); margin: 0 auto 4px; display: block;">
-    <div class="logo-title">FIT ME</div>
-    <div class="subtitle">TRAIN WITH PURPOSE &amp; MOVE WITH CONFIDENCE</div>
-    <div class="store-info">
-      New Town, Elpitiya Road, Pitigala, 80420<br>
-      Hotline: 070 762 7878<br>
-      www.fitme.lk • info@fitme.lk
+  <!-- Physical 80mm Thermal Receipt Slip -->
+  <div class="receipt-sheet">
+    
+    <!-- Header Branding -->
+    <div class="brand-header">
+      <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me" class="brand-logo-img">
+      <div class="brand-title">FIT ME</div>
+      <div class="brand-sub">TRAIN WITH PURPOSE • MOVE WITH CONFIDENCE</div>
+      <div class="brand-contact">
+        New Town, Elpitiya Road, Pitigala, 80420<br>
+        Hotline: 070 762 7878 &bull; www.fitmefitness.lk
+      </div>
+      <div>
+        <span class="doc-title-pill">OFFICIAL BILL &amp; RECEIPT</span>
+      </div>
     </div>
-  </div>
 
-  <table class="meta-table">
-    <tr>
-      <td class="bold">RECEIPT #:</td>
-      <td class="text-right bold">{{ receipt.receipt_number }}</td>
-    </tr>
-    <tr>
-      <td>DATE/TIME:</td>
-      <td class="text-right">{{ receipt.issued_at|date:"d/m/Y h:i A" }}</td>
-    </tr>
-    <tr>
-      <td>CASHIER:</td>
-      <td class="text-right">{{ receipt.cashier.get_full_name|default:receipt.cashier.username }}</td>
-    </tr>
-    <tr>
-      <td>MEMBER:</td>
-      <td class="text-right bold">{{ receipt.member.get_full_name|default:receipt.member.username }}</td>
-    </tr>
-    <tr>
-      <td>PHONE:</td>
-      <td class="text-right">{{ receipt.member.member_profile.phone|default:"-" }}</td>
-    </tr>
-  </table>
+    <div class="div-dashed"></div>
 
-  <!-- Biometric Turnstile Access Verification -->
-  <div class="pin-box">
-    <div class="pin-title">BIOMETRIC ACCESS CREDENTIAL</div>
-    <div class="pin-value" style="font-size:13px;letter-spacing:1px;">FACE ID &amp; FINGERPRINT</div>
-    <div style="font-size:9px;font-weight:700;margin-top:2px;">MEMBER ID: #FM{{ receipt.member_pin }}</div>
-    <div style="font-size:8px;font-weight:600;color:#222;margin-top:1px;">NO KEYPAD PIN REQUIRED — SCAN FACE OR FINGERPRINT</div>
-  </div>
-
-  <!-- Purchased Items Table -->
-  <table class="items-table">
-    <thead>
+    <!-- Transaction & Member Metadata (Essential Only) -->
+    <table class="meta-table">
       <tr>
-        <th>DESCRIPTION</th>
-        <th class="text-right">AMOUNT (LKR)</th>
+        <td class="label">RECEIPT NO:</td>
+        <td class="val">#{{ receipt.receipt_number }}</td>
       </tr>
-    </thead>
-    <tbody>
       <tr>
-        <td>
-          <div class="bold">{{ receipt.plan_name }}</div>
-          <div style="font-size:9px;">
-            Validity: {{ receipt.validity_start|date:"d/m/Y" }} - {{ receipt.validity_end|date:"d/m/Y" }}<br>
-            Duration: {{ receipt.duration_days }} Days Active
-          </div>
-        </td>
-        <td class="text-right bold">
-          {{ receipt.amount_paid|floatformat:2 }}
-        </td>
+        <td class="label">DATE / TIME:</td>
+        <td class="val">{{ receipt.issued_at|date:"d/m/Y h:i A" }}</td>
       </tr>
-    </tbody>
-  </table>
+      <tr>
+        <td class="label">CASHIER:</td>
+        <td class="val">{{ receipt.cashier.get_full_name|default:receipt.cashier.username }}</td>
+      </tr>
+      <tr>
+        <td class="label">MEMBER NAME:</td>
+        <td class="val bold">{{ receipt.member.get_full_name|default:receipt.member.username }}</td>
+      </tr>
+      <tr>
+        <td class="label">PHONE:</td>
+        <td class="val">{{ receipt.member.member_profile.phone|default:"-" }}</td>
+      </tr>
+      <tr>
+        <td class="label">VALIDITY:</td>
+        <td class="val bold">{{ receipt.validity_start|date:"d/m/Y" }} &ndash; {{ receipt.validity_end|date:"d/m/Y" }}</td>
+      </tr>
+    </table>
 
-  <!-- Totals Section -->
-  <table class="totals-table">
-    <tr>
-      <td>SUBTOTAL:</td>
-      <td class="text-right">LKR {{ receipt.amount_paid|floatformat:2 }}</td>
-    </tr>
-    <tr>
-      <td>DISCOUNT:</td>
-      <td class="text-right">LKR 0.00</td>
-    </tr>
-    <tr class="grand-total">
-      <td class="bold">TOTAL PAID:</td>
-      <td class="text-right bold">LKR {{ receipt.amount_paid|floatformat:2 }}</td>
-    </tr>
-    <tr>
-      <td style="padding-top:4px;">PAYMENT METHOD:</td>
-      <td class="text-right bold uppercase" style="padding-top:4px;">{{ receipt.payment_method }}</td>
-    </tr>
-  </table>
+    <!-- Itemized Breakdown Table (Base Package, Coaching, Annual Registration Fee) -->
+    <table class="items-table">
+      <thead>
+        <tr>
+          <th class="text-left">DESCRIPTION &amp; DETAILS</th>
+          <th class="text-right">AMOUNT (LKR)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in receipt.get_line_items %}
+        <tr>
+          <td>
+            <div class="item-name">{{ item.name }}</div>
+            <div class="item-detail">{{ item.detail }}</div>
+            {% if item.badge %}
+            <span class="item-badge">{{ item.badge }}</span>
+            {% endif %}
+          </td>
+          <td class="text-right bold" style="padding-top:4px;">
+            {{ item.amount|floatformat:2 }}
+          </td>
+        </tr>
+        {% empty %}
+        <tr>
+          <td>
+            <div class="item-name">{{ receipt.plan_name }}</div>
+            <div class="item-detail">{{ receipt.duration_days }} Days Validity ({{ receipt.validity_start|date:"d/m/Y" }} - {{ receipt.validity_end|date:"d/m/Y" }})</div>
+          </td>
+          <td class="text-right bold">
+            {{ receipt.amount_paid|floatformat:2 }}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
 
-  <div class="divider-double"></div>
+    <div class="div-dotted"></div>
 
-  <!-- Barcode / Digital Code Area -->
-  <div class="barcode-area">
-    <div class="barcode-bars">||| | |||| | ||| || |||</div>
-    <div style="font-size:9px;margin-top:2px;letter-spacing:1px;">*{{ receipt.receipt_number }}*</div>
+    <!-- Billing Totals & Net Payable -->
+    <table class="totals-table">
+      <tr>
+        <td class="total-label">SUBTOTAL:</td>
+        <td class="total-val">LKR {{ receipt.amount_paid|floatformat:2 }}</td>
+      </tr>
+      <tr class="grand-total-row">
+        <td>TOTAL PAID:</td>
+        <td class="text-right">LKR {{ receipt.amount_paid|floatformat:2 }}</td>
+      </tr>
+      <tr>
+        <td style="padding-top:4px;" class="total-label">PAYMENT METHOD:</td>
+        <td style="padding-top:4px;" class="total-val uppercase">{{ receipt.payment_method }}</td>
+      </tr>
+    </table>
+
+    <!-- Audit & Transaction Notes (If any) -->
+    {% if receipt.notes %}
+    <div class="notes-box">
+      <strong>NOTES:</strong> {{ receipt.notes }}
+    </div>
+    {% endif %}
+
+    <div class="div-double"></div>
+
+    <!-- Digital Barcode / Security ID -->
+    <div class="barcode-section">
+      <div class="barcode-bars">|||| || | |||| ||| | ||| |||| |</div>
+      <div class="barcode-text">*{{ receipt.receipt_number }}*</div>
+    </div>
+
+    <!-- Clean Minimal Footer -->
+    <div class="receipt-footer">
+      <div class="thank-you">THANK YOU FOR TRAINING WITH FIT ME!</div>
+      <div>www.fitmefitness.lk</div>
+    </div>
+
+    <!-- Autocut paper feed buffer to ensure paper cutter clears footer -->
+    <div class="cut-feed-space"></div>
+
   </div>
-
-  <!-- Footer Policies -->
-  <div class="footer">
-    <div class="bold" style="font-size:10px;margin-bottom:2px;">THANK YOU FOR TRAINING WITH US!</div>
-    Please keep this receipt for entrance verification.<br>
-    Gate access via automated Face Recognition &amp; Optical Fingerprint.<br>
-    Anti-passback cooldown: 60 seconds.<br>
-    Fees non-refundable &amp; non-transferable.<br>
-    Powered by Fit Me Smart Gym OS
-  </div>
-
-  <!-- Feed Buffer to clear thermal paper cutter before autocut -->
-  <div class="cut-feed"></div>
 
   <script>
-    // Auto-invoke print dialog if autoprint parameter or opened in popup
-    window.addEventListener('DOMContentLoaded', () => {
+    // Automatic thermal print triggering when opened with ?autoprint=1
+    window.addEventListener('DOMContentLoaded', function() {
       const params = new URLSearchParams(window.location.search);
       if (params.get('autoprint') === '1' || params.get('print') === 'true') {
-        setTimeout(() => {
+        setTimeout(function() {
           window.print();
-        }, 400);
+        }, 350);
       }
     });
   </script>

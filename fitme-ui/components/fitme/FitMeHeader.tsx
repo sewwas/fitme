@@ -63,10 +63,10 @@ export function FitMeHeader() {
               />
             </div>
             <div className="flex flex-col">
-              <span className="text-lg font-black tracking-widest text-[#F8FAFC] group-hover:text-[#76C043] transition-colors duration-200">
-                FIT ME
+              <span className="text-lg font-black tracking-widest transition-colors duration-200">
+                <span className="text-[#88D82D]">FIT</span> <span className="text-[#C5CBD3]">ME</span>
               </span>
-              <span className="text-[10px] font-semibold tracking-wider text-[#76C043] uppercase">
+              <span className="text-[10px] font-semibold tracking-wider text-[#88D82D] uppercase">
                 Train with Purpose
               </span>
             </div>

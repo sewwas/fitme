@@ -81,9 +81,9 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(118, 192, 67, 0.15);
-    border: 1px solid #76C043;
-    color: #76C043;
+    background: rgba(136, 216, 45, 0.15);
+    border: 1px solid #88D82D;
+    color: #88D82D;
     padding: 0.35rem 0.85rem;
     border-radius: 50px;
     font-size: 0.72rem;
@@ -91,7 +91,7 @@
     letter-spacing: 1px;
     text-transform: uppercase;
     margin-bottom: 0.85rem;
-    box-shadow: 0 0 12px rgba(118, 192, 67, 0.3);
+    box-shadow: 0 0 12px rgba(136, 216, 45, 0.3);
 }
 
 .fitme-cover-tagline {
@@ -126,8 +126,8 @@
     width: 82px;
     height: 82px;
     border-radius: 50%;
-    border: 2px solid #76C043;
-    box-shadow: 0 0 20px rgba(118, 192, 67, 0.35);
+    border: 2px solid #88D82D;
+    box-shadow: 0 0 20px rgba(136, 216, 45, 0.35);
     object-fit: cover;
     margin: 0 auto 0.85rem;
     display: block;
@@ -137,10 +137,10 @@
     font-family: 'Montserrat', sans-serif;
     font-size: 1.45rem;
     font-weight: 900;
-    color: #fff;
+    color: #C5CBD3;
     letter-spacing: 0.5px;
 }
-.fitme-login-title span { color: #76C043; }
+.fitme-login-title span { color: #88D82D; }
 
 .fitme-login-subtitle {
     font-size: 0.82rem;
@@ -158,9 +158,9 @@
 }
 
 .fitme-auth-form-pane .form-control:focus {
-    border-color: #76C043;
+    border-color: #88D82D;
     background-color: #0E1113;
-    box-shadow: 0 0 0 3px rgba(118, 192, 67, 0.25);
+    box-shadow: 0 0 0 3px rgba(136, 216, 45, 0.25);
     color: #fff;
 }
 
@@ -172,7 +172,7 @@
 }
 
 .btn-fitme-submit {
-    background: #76C043;
+    background: #88D82D;
     color: #000;
     font-family: 'Montserrat', sans-serif;
     font-weight: 900;
@@ -182,12 +182,12 @@
     padding: 0.75rem;
     width: 100%;
     transition: all 0.2s;
-    box-shadow: 0 0 18px rgba(118, 192, 67, 0.3);
+    box-shadow: 0 0 18px rgba(136, 216, 45, 0.3);
 }
 .btn-fitme-submit:hover {
-    background: #8AE04F;
+    background: #9EF040;
     transform: translateY(-1px);
-    box-shadow: 0 0 25px rgba(118, 192, 67, 0.5);
+    box-shadow: 0 0 25px rgba(136, 216, 45, 0.5);
     color: #000;
 }
 </style>
@@ -204,7 +204,7 @@
             <div class="fitme-cover-gradient"></div>
             <div class="fitme-cover-content">
                 <div class="fitme-cover-badge">
-                    <i class="fa fa-bolt"></i> Colombo's Smart Gym OS
+                    <i class="fa fa-bolt"></i> Pitigala's Smart Gym OS
                 </div>
                 <div class="fitme-cover-tagline">
                     <strong style="color:#fff;font-size:1.05rem;display:block;margin-bottom:0.25rem;">Train with Purpose &amp; Move with Confidence</strong>
@@ -219,7 +219,7 @@
             <!-- Logo & Brand -->
             <div class="fitme-login-brand-header">
                 <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" class="fitme-official-logo" alt="Fit Me Logo">
-                <div class="fitme-login-title">FIT <span>ME</span> PORTAL</div>
+                <div class="fitme-login-title"><span style="color:#88D82D;">FIT</span> <span style="color:#C5CBD3;">ME</span> PORTAL</div>
                 <div class="fitme-login-subtitle">Sign in to access Member, Staff &amp; Admin consoles</div>
             </div>
 
@@ -270,7 +270,7 @@
                     {% else %}
                         <span></span>
                     {% endif %}
-                    <a href="{% url 'core:user:password_reset' %}" style="color:#76C043;font-size:0.82rem;font-weight:600;text-decoration:none;">
+                    <a href="{% url 'core:user:password_reset' %}" style="color:#88D82D;font-size:0.82rem;font-weight:600;text-decoration:none;">
                         {% translate "Forgot password?" %}
                     </a>
                 </div>
@@ -286,7 +286,7 @@
                 <hr class="flex-grow-1 my-0" style="border-color:rgba(255,255,255,0.08);">
             </div>
 
-            <a href="/register/" class="btn w-100 py-2 mb-2" style="background:transparent;border:2px solid #76C043;color:#76C043;font-family:'Montserrat',sans-serif;font-weight:800;font-size:0.88rem;border-radius:10px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;" onmouseover="this.style.background='#76C043';this.style.color='#000'" onmouseout="this.style.background='transparent';this.style.color='#76C043'">
+            <a href="/register/" class="btn w-100 py-2 mb-2" style="background:transparent;border:2px solid #88D82D;color:#88D82D;font-family:'Montserrat',sans-serif;font-weight:800;font-size:0.88rem;border-radius:10px;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:0.5rem;transition:all 0.2s;" onmouseover="this.style.background='#88D82D';this.style.color='#000'" onmouseout="this.style.background='transparent';this.style.color='#88D82D'">
                 <i class="fa fa-file-signature"></i> Membership Registration Form
             </a>
 

@@ -36,7 +36,7 @@ class Command(BaseCommand):
                 'registration_fee': 1000.00,
                 'duration_days': 30,
                 'max_members': 1,
-                'description': 'Standard single member gym access. Rs. 4,000 per month.'
+                'description': 'Standard single member gym access. LKR 4,000 per month.'
             },
             {
                 'name': '3 Months Package',
@@ -47,7 +47,7 @@ class Command(BaseCommand):
                 'registration_fee': 1000.00,
                 'duration_days': 90,
                 'max_members': 1,
-                'description': '3 Months package. Original Price: Rs. 12,000, Discount: Rs. 1,000. Total: Rs. 11,000.'
+                'description': '3 Months package. Original Price: LKR 12,000, Discount: LKR 1,000. Total: LKR 11,000.'
             },
             {
                 'name': '6 Months Package',
@@ -58,7 +58,7 @@ class Command(BaseCommand):
                 'registration_fee': 1000.00,
                 'duration_days': 180,
                 'max_members': 1,
-                'description': '6 Months package. Original Price: Rs. 24,000, Discount: Rs. 2,500. Total: Rs. 21,500.'
+                'description': '6 Months package. Original Price: LKR 24,000, Discount: LKR 2,500. Total: LKR 21,500.'
             },
             {
                 'name': 'Couple Monthly Package',
@@ -69,7 +69,7 @@ class Command(BaseCommand):
                 'registration_fee': 1000.00,
                 'duration_days': 30,
                 'max_members': 2,
-                'description': 'Two members sharing one monthly plan. Original Price: Rs. 8,000, Discount: Rs. 500. Total: Rs. 7,500 / month.'
+                'description': 'Two members sharing one monthly plan. Original Price: LKR 8,000, Discount: LKR 500. Total: LKR 7,500 / month.'
             },
             {
                 'name': '3 Persons Family Monthly Package',
@@ -80,7 +80,7 @@ class Command(BaseCommand):
                 'registration_fee': 1000.00,
                 'duration_days': 30,
                 'max_members': 3,
-                'description': '3 Persons from same family monthly package. Original Price: Rs. 12,000, Discount: Rs. 1,000. Total: Rs. 11,000 / month.'
+                'description': '3 Persons from same family monthly package. Original Price: LKR 12,000, Discount: LKR 1,000. Total: LKR 11,000 / month.'
             },
             {
                 'name': 'Student Package',
@@ -91,7 +91,7 @@ class Command(BaseCommand):
                 'registration_fee': 0.00,
                 'duration_days': 30,
                 'max_members': 1,
-                'description': 'Discounted plan for students with valid ID. No Registration Fee! Total: Rs. 3,500 / month.'
+                'description': 'Discounted plan for students with valid ID. No Registration Fee! Total: LKR 3,500 / month.'
             },
         ]
         for p in plans:

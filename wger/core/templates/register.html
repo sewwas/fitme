@@ -16,11 +16,10 @@
       --card-bg: #121517;
       --card-secondary: #1A1F23;
       --input-bg: #15191C;
-      --border-color: rgba(255, 255, 255, 0.1);
-      --neon-lime: #76C043;
-      --neon-hover: #8AE04F;
-      --neon-glow: rgba(118, 192, 67, 0.25);
-      --neon-glow-high: rgba(118, 192, 67, 0.5);
+      --neon-lime: #88D82D;
+      --neon-hover: #9EF040;
+      --neon-glow: rgba(136, 216, 45, 0.28);
+      --neon-glow-high: rgba(136, 216, 45, 0.6);
       --text-primary: #FFFFFF;
       --text-muted: #8E9BA4;
       --danger: #E63946;
@@ -74,7 +73,7 @@
       font-weight: 900;
       font-size: 1.85rem;
       letter-spacing: 1.5px;
-      color: #fff;
+      color: #C5CBD3;
     }
     .club-title span { color: var(--neon-lime); }
 
@@ -288,10 +287,10 @@
         <i class="fa fa-arrow-left"></i> Home
       </a>
       <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me" style="width: 88px; height: 88px; border-radius: 50%; border: 3px solid var(--neon-lime); box-shadow: 0 0 25px var(--neon-glow); margin: 0 auto 0.85rem; display: block; object-fit: cover;">
-      <div class="club-title">FIT <span>ME</span> FITNESS CLUB</div>
+      <div class="club-title"><span style="color:var(--neon-lime);">FIT</span> <span style="color:#C5CBD3;">ME</span> FITNESS CLUB</div>
       <div style="font-size: 0.85rem; color: #8E9BA4; letter-spacing: 0.5px; margin-top: 0.2rem; font-weight: 600;">Train with Purpose &amp; Move with Confidence</div>
       <div style="font-size: 0.78rem; color: var(--neon-lime); margin-top: 0.35rem; font-weight: 600;">New Town, Elpitiya Road, Pitigala, 80420 • Hotline: 070 762 7878</div>
-      <div class="form-doc-title" style="margin-top:0.75rem;display:inline-block;background:rgba(118,192,67,0.12);border:1px solid var(--neon-lime);color:var(--neon-lime);padding:0.35rem 1.25rem;border-radius:50px;font-size:0.85rem;">Official Membership Registration Form</div>
+      <div class="form-doc-title" style="margin-top:0.75rem;display:inline-block;background:rgba(136,216,45,0.12);border:1px solid var(--neon-lime);color:var(--neon-lime);padding:0.35rem 1.25rem;border-radius:50px;font-size:0.85rem;">Official Membership Registration Form</div>
     </div>
 
     <!-- Success Screen (Shown after submit) -->
@@ -424,10 +423,10 @@
             <select class="form-control" name="plan_id" id="planSelect" onchange="updatePlanPrice()">
               {% for plan in plans %}
                 <option value="{{ plan.id }}" 
-                        data-price="{{ plan.price_monthly }}" 
-                        data-original="{{ plan.original_price|default:plan.price_monthly }}"
-                        data-discount="{{ plan.discount|default:0 }}"
-                        data-regfee="{{ plan.registration_fee }}"
+                        data-price="{{ plan.price_monthly|stringformat:'.2f' }}" 
+                        data-original="{{ plan.original_price|default:plan.price_monthly|stringformat:'.2f' }}"
+                        data-discount="{{ plan.discount|default:0|stringformat:'.2f' }}"
+                        data-regfee="{{ plan.registration_fee|stringformat:'.2f' }}"
                         data-duration="{{ plan.duration_days }}"
                         data-type="{{ plan.plan_type }}"
                         {% if forloop.first %}selected{% endif %}>
@@ -544,19 +543,32 @@
       <div class="section-box">
         <div class="section-title">
           <span class="section-num">6</span>
-          Trainer Requirement
+          Trainer Requirement &amp; Personal Coaching
         </div>
         <div class="form-group">
           <label>Personal Trainer Needed?</label>
           <div class="radio-card-group">
             <label class="radio-card">
-              <input type="radio" name="personal_trainer_needed" value="no" checked>
+              <input type="radio" name="personal_trainer_needed" id="ptNo" value="no" checked onclick="toggleCoachSelection(false)">
               <span>No (Standard Floor Access)</span>
             </label>
             <label class="radio-card">
-              <input type="radio" name="personal_trainer_needed" value="yes">
-              <span>Yes (Assign Personal Coach)</span>
+              <input type="radio" name="personal_trainer_needed" id="ptYes" value="yes" onclick="toggleCoachSelection(true)">
+              <span>Yes (Personal Coaching — LKR 7,000/mo)</span>
             </label>
+          </div>
+        </div>
+
+        <div id="coachSelectBox" style="display:none;margin-top:1rem;background:#1F2428;padding:1rem;border-radius:10px;border-left:3px solid var(--neon-lime);">
+          <label style="font-size:0.8rem;font-weight:700;color:#fff;text-transform:uppercase;display:block;margin-bottom:0.4rem;">Select Preferred Coach</label>
+          <select class="form-control" name="preferred_coach_id" id="preferredCoachSelect">
+            <option value="">Any Available Certified Coach</option>
+            {% for c in coaches %}
+              <option value="{{ c.user.id }}">{{ c.user.get_full_name|default:c.user.username }} ({{ c.specialties }})</option>
+            {% endfor %}
+          </select>
+          <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.4rem;">
+            ⚡ <strong>Fee Breakdown:</strong> LKR 3,000 Gym Facility Access + LKR 4,000 Dedicated Coach Training.
           </div>
         </div>
       </div>
@@ -570,16 +582,16 @@
 
         <!-- Official Pricing Flyer Notice -->
         <div style="background:rgba(123,201,0,0.08);border:1px solid rgba(123,201,0,0.3);border-radius:10px;padding:0.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;">
-          <i class="fa fa-clock" style="color:var(--neon-lime);font-size:1.25rem;"></i>
+          <i class="fa fa-info-circle" style="color:var(--neon-lime);font-size:1.25rem;"></i>
           <div style="font-size:0.83rem;color:#e6edf3;">
-            <strong style="color:var(--neon-lime);">LIMITED TIME OFFER:</strong> Packages valid for a limited time only. 
-            Registration fee of <strong>Rs. 1,000</strong> applies for all new members (Students: <strong>No Registration Fee</strong>). Effective from 27th April 2026.
+            <strong style="color:var(--neon-lime);">ANNUAL MEMBERSHIP DUES:</strong> 
+            A Yearly Fee of <strong>LKR 1,000</strong> applies to membership packages (Students: <strong>FREE / No Yearly Fee</strong>).
           </div>
         </div>
 
         <div class="grid-4">
           <div class="form-group">
-            <label>Admission / Reg Fee (LKR)</label>
+            <label>Yearly Fee (LKR)</label>
             <input type="number" class="form-control" name="admission_fee" id="admissionFee" value="1000" oninput="calculateTotal()">
           </div>
           <div class="form-group">
@@ -692,12 +704,38 @@
       document.getElementById('endDate').value = start.toISOString().split('T')[0];
     }
 
+    function toggleCoachSelection(show) {
+      const box = document.getElementById('coachSelectBox');
+      if (box) box.style.display = show ? 'block' : 'none';
+      const ptYes = document.getElementById('ptYes');
+      const ptNo = document.getElementById('ptNo');
+      if (show && ptYes) ptYes.checked = true;
+      if (!show && ptNo) ptNo.checked = true;
+    }
+
     function updatePlanPrice() {
       const select = document.getElementById('planSelect');
       const opt = select.options[select.selectedIndex];
       if (!opt) return;
-      const price = parseFloat(opt.getAttribute('data-price') || 4000);
-      const regFee = parseFloat(opt.getAttribute('data-regfee') !== null ? opt.getAttribute('data-regfee') : 1000);
+      const rawPrice = opt.getAttribute('data-price') || '4000';
+      const price = parseFloat(String(rawPrice).replace(/,/g, '')) || 4000;
+      const planType = (opt.getAttribute('data-type') || '').toLowerCase();
+      const planName = (opt.textContent || '').toLowerCase();
+
+      // Yearly fee: Free (LKR 0) for students, LKR 1,000 for standard packages
+      let yearlyFee = 1000;
+      if (planType === 'student' || planName.includes('student')) {
+        yearlyFee = 0;
+      } else {
+        const rawReg = opt.getAttribute('data-regfee');
+        yearlyFee = parseFloat(String(rawReg !== null && rawReg !== undefined ? rawReg : 1000).replace(/,/g, '')) || 1000;
+      }
+
+      // Auto-trigger coach selector if Personal Coaching package is selected
+      if (planType === 'personal_coaching' || planName.includes('coaching') || price === 7000) {
+        toggleCoachSelection(true);
+      }
+
       const durationDays = parseInt(opt.getAttribute('data-duration') || '30');
 
       // Auto-sync duration radio
@@ -716,7 +754,7 @@
       }
       updatePlanDates();
 
-      document.getElementById('admissionFee').value = regFee;
+      document.getElementById('admissionFee').value = yearlyFee;
       document.getElementById('monthlyFee').value = price;
       calculateTotal();
     }

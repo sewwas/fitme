@@ -67,10 +67,10 @@ export function MobileMenu({
             />
           </div>
           <div className="flex flex-col">
-            <span className="text-base font-black tracking-wider text-[#F8FAFC]">
-              FIT ME
+            <span className="text-base font-black tracking-wider">
+              <span className="text-[#88D82D]">FIT</span> <span className="text-[#C5CBD3]">ME</span>
             </span>
-            <span className="text-[9px] font-bold tracking-widest text-[#76C043] uppercase">
+            <span className="text-[9px] font-bold tracking-widest text-[#88D82D] uppercase">
               Train with Purpose
             </span>
           </div>

@@ -186,6 +186,9 @@ WGER_SETTINGS['EMAIL_FROM'] = DEFAULT_FROM_EMAIL
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 EMAIL_FROM_ADDRESS = DEFAULT_FROM_EMAIL
 
+# Email verification: in development default to optional so verification screens do not block staff/admin
+ACCOUNT_EMAIL_VERIFICATION = env.str('ACCOUNT_EMAIL_VERIFICATION', 'optional' if DEBUG else 'mandatory')
+
 # Management
 WGER_SETTINGS['ALLOW_GUEST_USERS'] = env.bool('ALLOW_GUEST_USERS', False)
 WGER_SETTINGS['ALLOW_REGISTRATION'] = env.bool('ALLOW_REGISTRATION', False)
@@ -236,12 +239,14 @@ CACHES = {
     'default': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'fitme-default',
+        'TIMEOUT': env.int('DJANGO_CACHE_TIMEOUT', 300),
     },
     # Dedicated cache for django-axes brute-force login tracking.
     # Using a separate entry prevents axes from evicting app-cache entries.
     'axes': {
         'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
         'LOCATION': 'fitme-axes',
+        'TIMEOUT': env.int('DJANGO_CACHE_TIMEOUT', 300),
     },
 }
 
@@ -310,10 +315,12 @@ AXES_HANDLER = env.str('AXES_HANDLER', 'axes.handlers.database.AxesDatabaseHandl
 if AXES_HANDLER == 'axes.handlers.cache.AxesCacheHandler':
     # Only define AXES_CACHE when the cache handler is explicitly selected
     AXES_CACHE = env.str('AXES_CACHE', 'default')
+AXES_RESET_ON_SUCCESS = True
 AXES_IPWARE_PROXY_COUNT = env.int('AXES_IPWARE_PROXY_COUNT', 0)
 AXES_IPWARE_META_PRECEDENCE_ORDER = env.list(
     'AXES_IPWARE_META_PRECEDENCE_ORDER', default=['REMOTE_ADDR']
 )
+
 
 #
 # Django-allauth social providers

@@ -15,10 +15,10 @@
     --bg-dark: #0B0D0E;
     --card-bg: #121517;
     --card-surface: #1F2428;
-    --neon-lime: #76C043;
-    --neon-hover: #8AE04F;
-    --neon-glow: rgba(118, 192, 67, 0.28);
-    --neon-glow-high: rgba(118, 192, 67, 0.55);
+    --neon-lime: #88D82D;
+    --neon-hover: #9EF040;
+    --neon-glow: rgba(136, 216, 45, 0.28);
+    --neon-glow-high: rgba(136, 216, 45, 0.6);
     --cyan: #06B6D4;
     --cyan-glow: rgba(6, 182, 212, 0.28);
     --amber: #F59E0B;
@@ -61,8 +61,8 @@
   .brand-name {
     font-family: 'Montserrat', sans-serif;
     font-weight: 900;
+    color: #C5CBD3;
     font-size: 1.35rem;
-    color: #fff;
     letter-spacing: 1px;
   }
   .brand-name span { color: var(--neon-lime); }
@@ -87,47 +87,99 @@
     min-height: calc(100vh - 65px);
   }
 
-  .sidebar {
-    width: 240px;
-    background: #0E1113;
-    border-right: 1px solid var(--border-color);
-    padding: 1.5rem 0;
-    flex-shrink: 0;
+  /* ── Layout & Collapsible Sidebar ── */
+  .layout-container {
+    display: flex;
+    flex: 1;
+    min-height: calc(100vh - 65px);
   }
 
+  .sidebar {
+    width: 235px;
+    background: #0E1113;
+    border-right: 1px solid var(--border-color);
+    padding: 1rem 0 1.5rem;
+    flex-shrink: 0;
+    transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-x: hidden;
+  }
+  .sidebar.collapsed { width: 66px; }
+
   .sidebar-section {
-    padding: 0.5rem 1.25rem 0.25rem;
+    padding: 0.5rem 1.15rem 0.25rem;
     font-size: 0.65rem;
     color: var(--text-muted);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
     font-weight: 800;
+    white-space: nowrap;
   }
+  .sidebar.collapsed .sidebar-section { display: none; }
+
+  .sidebar-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    margin-bottom: 0.5rem;
+  }
+  .sidebar.collapsed .sidebar-toggle-row { justify-content: center; padding: 0 0 0.75rem; }
+  .sidebar.collapsed .sidebar-toggle-row span { display: none; }
+
+  .btn-sidebar-toggle {
+    background: #181D20;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--neon-lime);
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+  }
+  .btn-sidebar-toggle:hover { background: var(--neon-lime); color: #000; }
 
   .nav-tab-btn {
     width: 100%;
     display: flex;
     align-items: center;
-    gap: 0.75rem;
-    padding: 0.75rem 1.25rem;
+    gap: 0.7rem;
+    padding: 0.62rem 1.15rem;
     color: #ccc;
     background: none;
     border: none;
     border-left: 3px solid transparent;
     text-align: left;
-    font-size: 0.88rem;
+    font-size: 0.84rem;
     font-family: 'Inter', sans-serif;
     font-weight: 600;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.18s;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .nav-tab-btn:hover, .nav-tab-btn.active {
     color: var(--neon-lime);
     border-left-color: var(--neon-lime);
     background: rgba(118, 192, 67, 0.08);
   }
-  .nav-tab-btn i { width: 20px; text-align: center; font-size: 1rem; }
+  .nav-tab-btn i { width: 18px; min-width: 18px; text-align: center; font-size: 0.95rem; flex-shrink: 0; }
+  .sidebar.collapsed .nav-tab-btn {
+    justify-content: center;
+    padding: 0.7rem 0;
+    border-left: none;
+    border-right: 3px solid transparent;
+  }
+  .sidebar.collapsed .nav-tab-btn:hover, .sidebar.collapsed .nav-tab-btn.active {
+    border-right-color: var(--neon-lime);
+  }
+  .sidebar.collapsed .nav-tab-btn span.tab-label,
+  .sidebar.collapsed .nav-tab-btn span.badge-pill { display: none; }
 
   /* ── Main Content Area ── */
   .main-content {
@@ -190,7 +242,7 @@
     .two-col-grid { grid-template-columns: 1fr; gap: 1.25rem; }
     .layout-container { flex-direction: column; }
     .sidebar {
-      width: 100%;
+      width: 100% !important;
       border-right: none;
       border-bottom: 2px solid var(--border-color);
       display: flex;
@@ -203,7 +255,10 @@
       -webkit-overflow-scrolling: touch;
       gap: 0.35rem;
     }
-    .sidebar-section { display: none; }
+    .sidebar-section, .sidebar-toggle-row { display: none !important; }
+    .sidebar.collapsed { width: 100% !important; padding: 0.4rem 0.5rem !important; }
+    .sidebar.collapsed .nav-tab-btn span.tab-label { display: inline !important; }
+    .sidebar.collapsed .nav-tab-btn span.badge-pill { display: inline !important; }
     .nav-tab-btn {
       width: auto;
       flex-shrink: 0;
@@ -262,11 +317,24 @@
       padding: 1rem;
     }
     .id-pass-card {
-      padding: 1.25rem;
+      padding: 1.15rem;
       border-radius: 16px;
     }
     .id-user-name {
-      font-size: 1.15rem;
+      font-size: 1.25rem;
+    }
+    .id-meta-grid {
+      gap: 0.5rem;
+    }
+    @media(max-width: 440px) {
+      .id-actions-grid {
+        grid-template-columns: 1fr;
+      }
+      .id-card-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.75rem;
+      }
     }
     .rings-container {
       flex-direction: column;
@@ -310,58 +378,368 @@
   }
   .card-body { padding: 1.5rem; }
 
-  /* ── Digital ID Card ── */
+  /* ── Digital ID Smart Pass Card ── */
   .id-pass-card {
-    background: linear-gradient(145deg, #15191C 0%, #0D0F11 100%);
-    border: 2px solid var(--neon-lime);
+    background: radial-gradient(circle at 10% 15%, rgba(28, 34, 40, 0.95) 0%, rgba(12, 15, 18, 0.98) 90%);
+    border: 1.5px solid rgba(255, 255, 255, 0.08);
     border-radius: 20px;
-    padding: 1.75rem;
-    box-shadow: 0 10px 40px var(--neon-glow);
+    padding: 1.5rem;
     position: relative;
+    overflow: hidden;
     margin-bottom: 1.5rem;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+    transition: all 0.25s ease;
+  }
+  .id-pass-card::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--neon-lime), rgba(136, 216, 45, 0.2) 60%, transparent 100%);
   }
   .id-pass-card.inactive {
-    border-color: var(--danger);
-    box-shadow: 0 10px 40px rgba(230, 57, 70, 0.28);
+    border-color: rgba(255, 77, 109, 0.35);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6), 0 0 28px rgba(255, 51, 102, 0.08);
+  }
+  .id-pass-card.inactive::before {
+    background: linear-gradient(90deg, #FF3366, rgba(255, 51, 102, 0.2) 60%, transparent 100%);
+  }
+  .id-card-watermark {
+    position: absolute;
+    top: -15px;
+    right: -15px;
+    font-size: 8.5rem;
+    color: rgba(255, 255, 255, 0.02);
+    pointer-events: none;
+    transform: rotate(15deg);
+    z-index: 0;
+  }
+  .id-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    position: relative;
+    z-index: 1;
+  }
+  .id-photo-frame {
+    width: 72px;
+    height: 72px;
+    border-radius: 18px;
+    border: 2px solid var(--neon-lime);
+    background: #171C20;
+    overflow: hidden;
+    position: relative;
+    cursor: pointer;
+    flex-shrink: 0;
+    box-shadow: 0 6px 18px rgba(0,0,0,0.45);
+    transition: transform 0.2s ease, border-color 0.2s ease;
+  }
+  .id-photo-frame:hover {
+    transform: scale(1.03);
+  }
+  .id-photo-frame img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
   }
   .id-pass-card.inactive .id-photo-frame {
-    border-color: var(--danger);
+    border-color: rgba(255, 77, 109, 0.6);
   }
-  .id-card-top { display: flex; justify-content: space-between; align-items: flex-start; }
-  .id-photo-frame {
-    width: 68px; height: 68px; border-radius: 14px;
-    border: 2px solid var(--neon-lime);
-    background: #1F2428; overflow: hidden; display: flex; align-items: center; justify-content: center;
+  .id-fallback-avatar {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #1F272E 0%, #111518 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--neon-lime);
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 900;
+    font-size: 1.85rem;
+    text-shadow: 0 0 12px rgba(136, 216, 45, 0.4);
+    user-select: none;
   }
-  .id-photo-frame img { width: 100%; height: 100%; object-fit: cover; }
-  .id-photo-frame i { font-size: 2.2rem; color: var(--text-muted); }
-
+  .id-pass-card.inactive .id-fallback-avatar {
+    color: #FF6B8B;
+    text-shadow: 0 0 12px rgba(255, 77, 109, 0.4);
+  }
+  .id-photo-badge {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    background: #0E1215;
+    border: 1.5px solid var(--neon-lime);
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--neon-lime);
+    font-size: 0.65rem;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.6);
+    pointer-events: none;
+  }
+  .id-pass-card.inactive .id-photo-badge {
+    border-color: #FF4D6D;
+    color: #FF4D6D;
+  }
   .biometric-status-badge {
-    display: inline-flex; align-items: center; gap: 0.6rem;
-    background: rgba(118, 192, 67, 0.12); border: 1px solid var(--neon-lime);
-    padding: 0.4rem 0.85rem; border-radius: 30px; font-size: 0.74rem; font-weight: 800;
-    color: var(--neon-lime); letter-spacing: 0.8px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(136, 216, 45, 0.12);
+    border: 1px solid rgba(136, 216, 45, 0.35);
+    padding: 0.35rem 0.8rem;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+    color: var(--neon-lime);
+    letter-spacing: 0.5px;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
   }
   .biometric-status-badge.inactive {
-    background: rgba(230, 57, 70, 0.12); border-color: var(--danger); color: var(--danger);
+    background: rgba(255, 51, 102, 0.12);
+    border-color: rgba(255, 51, 102, 0.35);
+    color: #FF4D6D;
   }
   .pulse-dot {
-    width: 9px; height: 9px; border-radius: 50%;
-    background: var(--neon-lime); box-shadow: 0 0 10px var(--neon-lime);
-    animation: livePulse 1.6s infinite ease-in-out;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--neon-lime);
+    box-shadow: 0 0 8px var(--neon-lime);
+    animation: livePulse 1.8s infinite ease-in-out;
+    flex-shrink: 0;
   }
-  .biometric-status-badge.inactive .pulse-dot { background: var(--danger); box-shadow: 0 0 10px var(--danger); }
-  @keyframes livePulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.4; transform: scale(1.3); } }
-
-  .id-user-name { font-family: 'Montserrat', sans-serif; font-size: 1.35rem; font-weight: 900; margin-top: 1rem; }
-  .id-user-plan { color: var(--neon-lime); font-weight: 700; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 1px; }
-
+  .biometric-status-badge.inactive .pulse-dot {
+    background: #FF4D6D;
+    box-shadow: 0 0 8px #FF4D6D;
+  }
+  @keyframes livePulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(1.3); }
+  }
+  .id-profile-info {
+    margin-top: 0.95rem;
+    position: relative;
+    z-index: 1;
+  }
+  .id-user-name {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 1.45rem;
+    font-weight: 900;
+    color: #FFFFFF;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+  .id-btn-photo-edit {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #C5CBD3;
+    font-size: 0.72rem;
+    padding: 0.25rem 0.65rem;
+    border-radius: 6px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    font-weight: 700;
+    transition: all 0.2s;
+  }
+  .id-btn-photo-edit:hover {
+    background: rgba(136, 216, 45, 0.15);
+    border-color: var(--neon-lime);
+    color: var(--neon-lime);
+  }
+  .id-plan-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.76rem;
+    font-weight: 800;
+    padding: 0.22rem 0.65rem;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .id-plan-pill.active {
+    background: rgba(136, 216, 45, 0.12);
+    border: 1px solid rgba(136, 216, 45, 0.3);
+    color: var(--neon-lime);
+  }
+  .id-plan-pill.expired {
+    background: rgba(255, 51, 102, 0.12);
+    border: 1px solid rgba(255, 51, 102, 0.3);
+    color: #FF4D6D;
+  }
   .id-meta-grid {
-    margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.08);
-    display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; font-size: 0.8rem;
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    position: relative;
+    z-index: 1;
   }
-  .id-meta-label { color: var(--text-muted); font-size: 0.72rem; text-transform: uppercase; }
-  .id-meta-val { color: var(--text-primary); font-weight: 700; font-family: monospace; font-size: 0.95rem; }
+  .id-meta-card {
+    background: rgba(255, 255, 255, 0.025);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+    padding: 0.65rem 0.85rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 58px;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  .id-meta-card:hover {
+    border-color: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.04);
+  }
+  .id-meta-label {
+    font-size: 0.68rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+  }
+  .id-meta-val {
+    margin-top: 0.25rem;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.3rem;
+  }
+  .id-tag-locked {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    background: rgba(255, 51, 102, 0.15);
+    border: 1px solid rgba(255, 51, 102, 0.4);
+    color: #FF4D6D;
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+  .id-tag-active {
+    font-size: 0.6rem;
+    padding: 0.1rem 0.4rem;
+    border-radius: 4px;
+    background: rgba(136, 216, 45, 0.15);
+    border: 1px solid rgba(136, 216, 45, 0.4);
+    color: var(--neon-lime);
+    font-weight: 800;
+    letter-spacing: 0.5px;
+  }
+  .id-actions-grid {
+    margin-top: 1rem;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.65rem;
+    position: relative;
+    z-index: 1;
+  }
+  .btn-id-outline {
+    background: rgba(25, 30, 35, 0.85);
+    border: 1.5px solid var(--neon-lime);
+    color: var(--neon-lime);
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 0.6rem 0.65rem;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    transition: all 0.2s ease;
+  }
+  .btn-id-outline:hover {
+    background: rgba(136, 216, 45, 0.15);
+    box-shadow: 0 0 12px rgba(136, 216, 45, 0.25);
+    transform: translateY(-1px);
+  }
+  .btn-id-primary {
+    background: linear-gradient(135deg, #88D82D 0%, #6EBD1B 100%);
+    border: none;
+    color: #0B0E11;
+    font-weight: 900;
+    font-size: 0.78rem;
+    padding: 0.6rem 0.65rem;
+    border-radius: 10px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    box-shadow: 0 4px 16px rgba(136, 216, 45, 0.35);
+    transition: all 0.2s ease;
+  }
+  .btn-id-primary:hover {
+    box-shadow: 0 6px 20px rgba(136, 216, 45, 0.5);
+    transform: translateY(-1px);
+    filter: brightness(1.06);
+  }
+  .door-locked-banner {
+    margin-top: 1rem;
+    padding: 1rem 1.15rem;
+    background: linear-gradient(145deg, rgba(38, 14, 18, 0.95) 0%, rgba(22, 10, 13, 0.95) 100%);
+    border: 1px solid rgba(255, 77, 109, 0.25);
+    border-left: 4px solid #FF3366;
+    border-radius: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+  }
+  .btn-renew-cta {
+    background: linear-gradient(135deg, #88D82D 0%, #6EBD1B 100%);
+    border: none;
+    color: #0B0E11;
+    font-weight: 900;
+    font-size: 0.82rem;
+    padding: 0.55rem 1.15rem;
+    border-radius: 9px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    box-shadow: 0 4px 14px rgba(136, 216, 45, 0.35);
+    transition: all 0.2s ease;
+  }
+  .btn-renew-cta:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(136, 216, 45, 0.5);
+  }
+  .btn-desk-contact {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: #E2E8F0;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    padding: 0.55rem 0.95rem;
+    border-radius: 9px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-decoration: none;
+    transition: all 0.2s ease;
+  }
+  .btn-desk-contact:hover {
+    background: rgba(255, 255, 255, 0.12);
+    color: #fff;
+  }
 
   /* ── Concentric Rings ── */
   .rings-container { display: flex; align-items: center; justify-content: space-around; gap: 1.5rem; flex-wrap: wrap; }
@@ -417,6 +795,62 @@
     display: inline-flex; align-items: center; gap: 0.5rem; transition: all 0.2s; box-shadow: 0 4px 15px var(--neon-glow);
   }
   .btn-fitme:hover { background: #8AE04F; transform: translateY(-1px); }
+
+  /* ── Form Grids & Assessment Form Controls ── */
+  .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  .form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  .form-grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.75rem; }
+  .assessment-section {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 14px;
+    padding: 1.35rem;
+    margin-bottom: 1.5rem;
+  }
+  .assessment-section-title {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 800;
+    color: var(--neon-lime);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .checkbox-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: #171B1E;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.5rem 0.85rem;
+    font-size: 0.82rem;
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.15s;
+    color: #ddd;
+  }
+  .checkbox-pill:hover {
+    border-color: var(--neon-lime);
+    background: rgba(118, 192, 67, 0.08);
+    color: #fff;
+  }
+  .checkbox-pill input[type="checkbox"], .checkbox-pill input[type="radio"] {
+    accent-color: var(--neon-lime);
+    cursor: pointer;
+  }
+  .form-label {
+    display: block;
+    font-size: 0.76rem;
+    color: var(--text-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.35rem;
+  }
 
   /* Face ID Scanner Viewfinder */
   .face-scanner-box {
@@ -486,14 +920,18 @@
   <a href="/" class="brand">
     <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me">
     <div>
-      <span class="brand-name">FIT <span>ME</span></span>
+      <span class="brand-name"><span style="color:var(--neon-lime);">FIT</span> <span style="color:#C5CBD3;">ME</span></span>
       <span class="brand-tagline">Train with Purpose &amp; Move with Confidence</span>
     </div>
   </a>
   <div class="user-actions">
     <span><i class="fa fa-map-marker-alt" style="color:var(--neon-lime);"></i> Pitigala</span>
-    <a href="/dashboard/admin/"><i class="fa fa-shield-alt"></i> Admin</a>
-    <a href="/dashboard/coach/"><i class="fa fa-dumbbell"></i> Coach</a>
+    {% if is_admin %}
+      <a href="/dashboard/admin/"><i class="fa fa-shield-alt"></i> Admin</a>
+    {% endif %}
+    {% if is_coach %}
+      <a href="/dashboard/coach/"><i class="fa fa-dumbbell"></i> Coach</a>
+    {% endif %}
     <form method="post" action="/account/logout/" style="display:inline;">{% csrf_token %}
       <button type="submit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;"><i class="fa fa-sign-out-alt"></i> Logout</button>
     </form>
@@ -501,17 +939,21 @@
 </header>
 
 <div class="layout-container">
-  <!-- Sidebar Navigation with All 8 Modules -->
-  <aside class="sidebar">
-    <div class="sidebar-section">Member Platform</div>
-    <button class="nav-tab-btn active" onclick="switchTab('tab-dashboard', this)"><i class="fa fa-id-card"></i> 1. Dashboard</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-myprogram', this)"><i class="fa fa-calendar-alt"></i> 2. My Program</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-workout', this)"><i class="fa fa-dumbbell"></i> 3. Workout Logger</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-nutrition', this)"><i class="fa fa-utensils"></i> 4. Nutrition &amp; Fuel</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-progress', this)"><i class="fa fa-chart-line"></i> 5. Progress</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-measurements', this)"><i class="fa fa-ruler"></i> 6. Measurements</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-timeline', this)"><i class="fa fa-camera"></i> 7. Transformation</button>
-    <button class="nav-tab-btn" onclick="switchTab('tab-membership', this)"><i class="fa fa-receipt"></i> 8. Membership</button>
+  <!-- Streamlined Sidebar Navigation -->
+  <aside class="sidebar" id="memberSidebar">
+    <div class="sidebar-toggle-row">
+      <span style="font-size:0.68rem;font-weight:800;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;">Member Platform</span>
+      <button type="button" class="btn-sidebar-toggle" onclick="toggleMemberSidebarCollapse()" id="btnMemberSidebarToggle" title="Minimize / Expand Sidebar">
+        <i class="fa fa-angles-left" id="memberSidebarToggleIcon"></i>
+      </button>
+    </div>
+    <div class="sidebar-section">Modules</div>
+    <button class="nav-tab-btn active" onclick="switchTab('tab-dashboard', this)" title="Dashboard"><i class="fa fa-id-card"></i> <span class="tab-label">Dashboard</span></button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-workout', this)" title="Workouts &amp; Program"><i class="fa fa-dumbbell"></i> <span class="tab-label">Workouts</span></button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-nutrition', this)" title="Nutrition &amp; Fuel"><i class="fa fa-utensils"></i> <span class="tab-label">Nutrition</span></button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-assessment', this)" title="Assessments &amp; Coach Plan"><i class="fa fa-clipboard-check"></i> <span class="tab-label">Assessments</span> <span id="assessmentNavBadge" class="badge-pill" style="display:none;background:var(--neon-lime);color:#000;font-size:0.65rem;padding:2px 6px;border-radius:10px;margin-left:auto;font-weight:800;">READY</span></button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-progress', this)" title="Body &amp; Progress"><i class="fa fa-chart-line"></i> <span class="tab-label">Body Progress</span></button>
+    <button class="nav-tab-btn" onclick="switchTab('tab-membership', this)" title="Membership &amp; Passes"><i class="fa fa-receipt"></i> <span class="tab-label">Membership</span></button>
   </aside>
 
   <!-- Main Content Area -->
@@ -528,101 +970,152 @@
         <!-- Left: Digital ID Pass & Streak -->
         <div>
           <div class="id-pass-card {% if not door_access_active %}inactive{% endif %}">
+            <div class="id-card-watermark" aria-hidden="true">
+              <i class="fa fa-fingerprint"></i>
+            </div>
+
             <div class="id-card-top">
-              <div class="id-photo-frame">
+              <div class="id-photo-frame" onclick="openMemberPhotoModal()" title="Click to update your profile photo">
                 {% if profile and profile.profile_photo %}
-                  <img src="{{ profile.profile_photo.url }}" alt="Member Photo">
+                  <img src="{{ profile.profile_photo.url }}" alt="" id="memberPassPhoto"
+                       onerror="this.style.display='none'; document.getElementById('memberPassFallbackAvatar').style.display='flex';">
+                  <div id="memberPassFallbackAvatar" class="id-fallback-avatar" style="display:none;">
+                    <span>{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}</span>
+                  </div>
                 {% else %}
-                  <i class="fa fa-user"></i>
+                  <div id="memberPassFallbackAvatar" class="id-fallback-avatar">
+                    <span>{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}</span>
+                  </div>
                 {% endif %}
+                <div class="id-photo-badge" title="Change Photo">
+                  <i class="fa fa-camera"></i>
+                </div>
               </div>
+
               <div>
                 {% if door_access_active %}
                   <div class="biometric-status-badge">
                     <span class="pulse-dot"></span>
-                    DOOR &amp; FACE ACCESS ACTIVE
+                    <span>DOOR &amp; FACE ACCESS ACTIVE</span>
                   </div>
                 {% else %}
                   <div class="biometric-status-badge inactive">
                     <span class="pulse-dot"></span>
-                    ACCESS REVOKED • EXPIRED
+                    <span>ACCESS REVOKED &bull; EXPIRED</span>
                   </div>
                 {% endif %}
               </div>
             </div>
 
-            <div class="id-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
-            <div class="id-user-plan" style="{% if not door_access_active %}color:var(--danger);{% endif %}">
-              {% if subscription %}
-                {{ subscription.plan.name }} {% if not door_access_active %}(EXPIRED){% endif %}
-              {% else %}
-                No Active Plan
-              {% endif %}
+            <div class="id-profile-info">
+              <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.4rem;">
+                <div class="id-user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+                <button type="button" class="id-btn-photo-edit" onclick="openMemberPhotoModal()">
+                  <i class="fa fa-camera"></i> Update Photo
+                </button>
+              </div>
+              <div style="margin-top:0.4rem;">
+                {% if subscription and door_access_active %}
+                  <span class="id-plan-pill active">
+                    <i class="fa fa-crown"></i> {{ subscription.plan.name }} &bull; Active Access
+                  </span>
+                {% elif subscription %}
+                  <span class="id-plan-pill expired">
+                    <i class="fa fa-clock"></i> {{ subscription.plan.name }} &bull; Expired {{ subscription.end_date|date:"d M Y" }}
+                  </span>
+                {% else %}
+                  <span class="id-plan-pill expired">
+                    <i class="fa fa-exclamation-triangle"></i> No Active Plan &bull; Renewal Required
+                  </span>
+                {% endif %}
+              </div>
             </div>
 
             <div class="id-meta-grid">
-              <div>
-                <div class="id-meta-label">Hardware PIN</div>
-                <div class="id-meta-val" id="idPassPin" style="color:{% if door_access_active %}var(--neon-lime){% else %}var(--danger){% endif %};font-size:1.15rem;">
-                  {% if bio_profile %}{{ bio_profile.zk_pin }}{% elif profile and profile.biometric_pin %}{{ profile.biometric_pin }}{% else %}#1001{% endif %}
-                  {% if not door_access_active %}<span style="font-size:0.65rem;text-transform:uppercase;color:var(--danger);display:block;">[Access Locked]</span>{% endif %}
+              <div class="id-meta-card">
+                <div class="id-meta-label">
+                  <i class="fa fa-fingerprint" style="color:var(--neon-lime);"></i> Hardware PIN
                 </div>
-              </div>
-              <div>
-                <div class="id-meta-label">Club Branch</div>
-                <div class="id-meta-val">Pitigala 80420</div>
-              </div>
-              <div>
-                <div class="id-meta-label">Face ID Status</div>
-                <div class="id-meta-val" id="idPassFaceStatus">
-                  {% if bio_profile and bio_profile.face_enrolled %}
-                    <span style="color:var(--neon-lime);font-size:0.85rem;font-weight:800;"><i class="fa fa-check-circle"></i> ACTIVE</span>
+                <div class="id-meta-val" id="idPassPin">
+                  <span style="font-family:'JetBrains Mono',monospace;letter-spacing:1px;font-size:1.1rem;color:{% if door_access_active %}var(--neon-lime){% else %}#FF4D6D{% endif %};">
+                    {% if bio_profile %}{{ bio_profile.zk_pin }}{% elif profile and profile.biometric_pin %}{{ profile.biometric_pin }}{% else %}#1001{% endif %}
+                  </span>
+                  {% if door_access_active %}
+                    <span class="id-tag-active">ARMED</span>
                   {% else %}
-                    <span style="color:var(--warning);font-size:0.85rem;font-weight:800;"><i class="fa fa-exclamation-triangle"></i> NOT SET</span>
+                    <span class="id-tag-locked">LOCKED</span>
                   {% endif %}
                 </div>
               </div>
-              <div>
-                <div class="id-meta-label">Days Left</div>
-                <div class="id-meta-val" id="idPassDays" style="color:{% if door_access_active %}var(--neon-lime){% else %}var(--danger){% endif %};">
-                  {% if door_access_active and subscription %}
-                    {{ subscription.days_remaining }} days
-                  {% elif subscription and subscription.end_date %}
-                    0 days (Ended {{ subscription.end_date|date:"d M Y" }})
+
+              <div class="id-meta-card">
+                <div class="id-meta-label">
+                  <i class="fa fa-map-marker-alt" style="color:var(--cyan);"></i> Club Branch
+                </div>
+                <div class="id-meta-val" style="font-size:0.88rem;color:#E6EDF3;">
+                  <span>Pitigala</span>
+                  <span style="font-size:0.72rem;color:var(--text-muted);font-weight:600;">80420</span>
+                </div>
+              </div>
+
+              <div class="id-meta-card">
+                <div class="id-meta-label">
+                  <i class="fa fa-smile" style="color:#A78BFA;"></i> Face ID Status
+                </div>
+                <div class="id-meta-val" id="idPassFaceStatus">
+                  {% if bio_profile and bio_profile.face_enrolled %}
+                    <span style="color:var(--neon-lime);font-size:0.82rem;font-weight:800;display:inline-flex;align-items:center;gap:0.3rem;">
+                      <i class="fa fa-check-circle"></i> ACTIVE
+                    </span>
                   {% else %}
-                    0 days
+                    <span style="color:var(--warning);font-size:0.82rem;font-weight:800;display:inline-flex;align-items:center;gap:0.3rem;">
+                      <i class="fa fa-exclamation-triangle"></i> NOT ENROLLED
+                    </span>
+                  {% endif %}
+                </div>
+              </div>
+
+              <div class="id-meta-card">
+                <div class="id-meta-label">
+                  <i class="fa fa-calendar-alt" style="color:#F59E0B;"></i> Validity
+                </div>
+                <div class="id-meta-val" id="idPassDays">
+                  {% if door_access_active and subscription %}
+                    <span style="color:var(--neon-lime);font-size:0.88rem;">{{ subscription.days_remaining }} Days Left</span>
+                  {% elif subscription and subscription.end_date %}
+                    <span style="color:#FF4D6D;font-size:0.76rem;">Ended {{ subscription.end_date|date:"d M Y" }}</span>
+                  {% else %}
+                    <span style="color:#FF4D6D;font-size:0.82rem;">0 Days (Expired)</span>
                   {% endif %}
                 </div>
               </div>
             </div>
 
-            <!-- Face ID Actions -->
-            <div style="margin-top:1.1rem;padding-top:0.9rem;border-top:1px solid rgba(255,255,255,0.08);display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;">
-              <button type="button" class="btn-fitme" onclick="openFaceRegisterModal()" style="background:#1F2428;border:1px solid var(--neon-lime);color:var(--neon-lime);font-size:0.75rem;padding:0.55rem 0.5rem;justify-content:center;">
-                <i class="fa fa-camera"></i> <span id="faceBtnText">{% if bio_profile and bio_profile.face_enrolled %}Re-scan Face{% else %}Register Face ID{% endif %}</span>
-              </button>
-              <button type="button" class="btn-fitme" onclick="testFaceUnlock()" style="font-size:0.75rem;padding:0.55rem 0.5rem;justify-content:center;">
-                <i class="fa fa-door-open"></i> Test Face Unlock
+            <!-- Face ID Registration Action -->
+            <div style="margin-top:1rem; position:relative; z-index:1;">
+              <button type="button" class="btn-id-primary" onclick="openFaceRegisterModal()" style="width:100%; justify-content:center; padding:0.65rem 1rem;">
+                <i class="fa fa-camera"></i> <span id="faceBtnText">{% if bio_profile and bio_profile.face_enrolled %}Re-scan Face ID Photo{% else %}Register Face ID Photo{% endif %}</span>
               </button>
             </div>
 
             {% if not door_access_active %}
-              <div id="doorLockedBanner" style="margin-top:1.25rem;padding:1rem;background:rgba(230,57,70,0.12);border:1px solid rgba(230,57,70,0.3);border-radius:12px;display:flex;flex-direction:column;gap:0.4rem;">
-                <div style="color:var(--danger);font-weight:800;font-size:0.85rem;display:flex;align-items:center;gap:0.5rem;">
-                  <i class="fa fa-lock"></i> Gate &amp; Face ID Access Locked
+              <div id="doorLockedBanner" class="door-locked-banner">
+                <div style="color:#FF4D6D;font-weight:800;font-size:0.88rem;display:flex;align-items:center;gap:0.45rem;">
+                  <i class="fa fa-lock"></i>
+                  <span>Turnstile &amp; Face ID Access Locked</span>
                 </div>
-                <p style="font-size:0.75rem;color:var(--text-muted);margin:0;line-height:1.4;">
+                <p style="font-size:0.76rem;color:#B0B8C1;margin:0;line-height:1.45;">
                   {% if access_summary and access_summary.reason %}
                     {{ access_summary.reason }}
                   {% else %}
                     Your monthly subscription has ended. Automated turnstile gate unlock, Face ID recognition, fingerprint scanning, and PIN entry are deactivated.
                   {% endif %}
                 </p>
-                <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.4rem;">
-                  <button type="button" class="btn-fitme" onclick="openSelfRenewModal()" style="font-size:0.78rem;padding:0.45rem 1rem;">
+                <div style="display:flex;gap:0.55rem;flex-wrap:wrap;margin-top:0.35rem;">
+                  <button type="button" class="btn-renew-cta" onclick="openSelfRenewModal()">
                     <i class="fa fa-bolt"></i> Self-Renew &amp; Unlock Door
                   </button>
-                  <a href="tel:0707627878" style="display:inline-flex;align-items:center;gap:0.4rem;color:#fff;background:#2A3138;border:1px solid #3A444C;padding:0.45rem 0.8rem;border-radius:8px;font-size:0.75rem;font-weight:700;text-decoration:none;">
+                  <a href="tel:0707627878" class="btn-desk-contact">
                     <i class="fa fa-phone"></i> Front Desk
                   </a>
                 </div>
@@ -664,8 +1157,8 @@
               <div class="rings-container">
                 <div class="rings-svg-wrap">
                   <svg class="rings-svg" width="190" height="190" viewBox="0 0 200 200">
-                    <circle class="ring-bg" cx="100" cy="100" r="80" stroke="#76C043" />
-                    <circle class="ring-fill" cx="100" cy="100" r="80" stroke="#76C043" stroke-dasharray="502.6" stroke-dashoffset="135" id="proteinRing" />
+                    <circle class="ring-bg" cx="100" cy="100" r="80" stroke="#88D82D" />
+                    <circle class="ring-fill" cx="100" cy="100" r="80" stroke="#88D82D" stroke-dasharray="502.6" stroke-dashoffset="135" id="proteinRing" />
 
                     <circle class="ring-bg" cx="100" cy="100" r="62" stroke="#06B6D4" />
                     <circle class="ring-fill" cx="100" cy="100" r="62" stroke="#06B6D4" stroke-dasharray="389.5" stroke-dashoffset="77" id="waterRing" />
@@ -707,44 +1200,64 @@
             </div>
           </div>
 
-          <!-- 3D Morph Comparison Slider -->
+          <!-- Today's Training & Quick Shortcuts -->
           <div class="fitme-card">
             <div class="card-header">
               <div class="card-title">
-                <i class="fa fa-sliders-h" style="color:var(--neon-lime);"></i>
-                3D Physique Morph Comparison
+                <i class="fa fa-dumbbell" style="color:var(--neon-lime);"></i>
+                Active Training &amp; Routine
               </div>
-              <span style="font-size:0.75rem;color:var(--text-muted);">Drag handle horizontally</span>
+              <div style="display:flex;align-items:center;gap:0.5rem;">
+                {% if coach_plan_status == 'ACTIVE_APPROVED' %}
+                  <span class="biometric-status-badge" style="background:rgba(118,192,67,0.15);border:1px solid var(--neon-lime);color:var(--neon-lime);font-size:0.7rem;padding:3px 8px;border-radius:6px;font-weight:800;">
+                    <i class="fa fa-check-circle"></i> COACH APPROVED
+                  </span>
+                {% elif coach_plan_status == 'PENDING_REVIEW' %}
+                  <span class="biometric-status-badge" style="background:rgba(245,158,11,0.15);border:1px solid var(--amber);color:var(--amber);font-size:0.7rem;padding:3px 8px;border-radius:6px;font-weight:800;">
+                    <i class="fa fa-clock"></i> INTAKE UNDER REVIEW
+                  </span>
+                {% else %}
+                  <span class="biometric-status-badge" style="background:rgba(6,182,212,0.15);border:1px solid var(--cyan);color:var(--cyan);font-size:0.7rem;padding:3px 8px;border-radius:6px;font-weight:800;">
+                    <i class="fa fa-clipboard-list"></i> INTAKE PENDING
+                  </span>
+                {% endif %}
+              </div>
             </div>
             <div class="card-body">
-              <div class="morph-slider-container" id="morphContainer">
-                <div class="morph-img-layer morph-img-before" id="beforeLayer"
-                     style="{% if before_checkin and before_checkin.photo_front %}background-image:url('{{ before_checkin.photo_front.url }}');{% else %}background:linear-gradient(135deg,#1E2428 0%,#111417 100%);{% endif %}">
-                  {% if not before_checkin or not before_checkin.photo_front %}
-                    <div style="width:50%;text-align:center;color:var(--text-muted);padding:1rem;">
-                      <i class="fa fa-camera" style="font-size:2.8rem;margin-bottom:0.75rem;opacity:0.4;"></i>
-                      <div style="font-weight:700;font-size:0.9rem;">Initial Baseline Photo</div>
-                      <div style="font-size:0.75rem;opacity:0.7;">Check-in month 1</div>
-                    </div>
-                  {% endif %}
+              <div style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.25rem;color:#fff;margin-bottom:0.25rem;">
+                {{ active_program.title|default:"Hypertrophy Master Split" }}
+              </div>
+              <div style="color:var(--text-muted);font-size:0.82rem;margin-bottom:1rem;">
+                {{ active_program.duration_weeks|default:"12" }} Weeks • {{ active_program.sessions_per_week|default:"5" }} Days / Week • Coach Dhananjaya
+              </div>
+
+              <!-- Coach Review Banner / Feedback -->
+              <div style="background:#171C20;border-left:3px solid {% if coach_plan_status == 'ACTIVE_APPROVED' %}var(--neon-lime){% elif coach_plan_status == 'PENDING_REVIEW' %}var(--amber){% else %}var(--cyan){% endif %};border-radius:8px;padding:0.75rem 1rem;margin-bottom:1.25rem;display:flex;align-items:center;justify-content:space-between;gap:0.75rem;">
+                <div>
+                  <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;letter-spacing:0.5px;">Coach Dhananjaya Review Status</div>
+                  <div style="font-size:0.85rem;color:#fff;font-weight:700;margin-top:2px;">
+                    {% if coach_plan_status == 'ACTIVE_APPROVED' %}
+                      ⚡ Tailored workout &amp; fuel prescription active.
+                    {% elif coach_plan_status == 'PENDING_REVIEW' %}
+                      ⏳ Assessment submitted. Coach Dhananjaya is preparing your split.
+                    {% else %}
+                      📋 Fill your intake form to receive a custom gym program.
+                    {% endif %}
+                  </div>
                 </div>
+                <button type="button" onclick="switchTab('tab-assessment')" style="background:none;border:none;color:var(--neon-lime);font-size:0.78rem;font-weight:700;cursor:pointer;white-space:nowrap;">
+                  View Form &rarr;
+                </button>
+              </div>
 
-                <div class="morph-img-layer morph-img-after" id="afterLayer"
-                     style="{% if after_checkin and after_checkin.photo_front %}background-image:url('{{ after_checkin.photo_front.url }}');{% else %}background:linear-gradient(135deg,#142312 0%,#0B130A 100%);{% endif %}">
-                  {% if not after_checkin or not after_checkin.photo_front %}
-                    <div style="width:50%;text-align:center;color:var(--neon-lime);padding:1rem;">
-                      <i class="fa fa-trophy" style="font-size:2.8rem;margin-bottom:0.75rem;filter:drop-shadow(0 0 10px var(--neon-glow));"></i>
-                      <div style="font-weight:800;font-size:0.95rem;">Current Lean Physique</div>
-                      <div style="font-size:0.75rem;color:var(--text-muted);">Latest check-in</div>
-                    </div>
-                  {% endif %}
-                </div>
-
-                <div class="morph-label before">Before (Day 1)</div>
-                <div class="morph-label after">After (Current)</div>
-
-                <div class="morph-divider-line" id="morphLine"></div>
-                <div class="morph-handle" id="morphHandle"><i class="fa fa-arrows-alt-h"></i></div>
+              <!-- Hero 1-Click Workout CTA Button -->
+              <div style="display:grid;grid-template-columns:1.3fr 1fr;gap:0.75rem;">
+                <button type="button" class="btn-fitme" onclick="switchTab('tab-workout')" style="justify-content:center;padding:0.85rem 1rem;font-size:0.92rem;font-weight:900;letter-spacing:0.5px;box-shadow:0 0 20px var(--neon-glow);background:var(--neon-lime);color:#000;">
+                  <i class="fa fa-bolt"></i> START TODAY'S WORKOUT
+                </button>
+                <button type="button" class="btn-fitme" onclick="switchTab('tab-assessment')" style="background:#1B2024;color:#fff;border-color:rgba(255,255,255,0.2);justify-content:center;padding:0.85rem 1rem;font-size:0.82rem;">
+                  <i class="fa fa-clipboard-check"></i> Coach Plan &amp; Forms
+                </button>
               </div>
             </div>
           </div>
@@ -752,41 +1265,42 @@
       </div>
     </div>
 
-    <!-- 2. MY PROGRAM TAB -->
-    <div id="tab-myprogram" class="tab-pane">
+    <!-- 2. WORKOUTS & PROGRAM TAB (Unified) -->
+    <div id="tab-workout" class="tab-pane">
       <div class="hero-header">
-        <h1 class="welcome-title">My Assigned Program</h1>
-        <p class="welcome-sub">Coach-curated training split and weekly progressive overload targets</p>
+        <h1 class="welcome-title">My Workouts &amp; Program</h1>
+        <p class="welcome-sub">Coach-curated training split and live exercise set logging</p>
       </div>
 
+      <!-- Current Assigned Routine Card -->
       <div class="fitme-card">
         <div class="card-header">
           <div class="card-title"><i class="fa fa-calendar-check" style="color:var(--neon-lime);"></i> Current Active Training Routine</div>
           <span class="biometric-status-badge">ACTIVE SPLIT</span>
         </div>
         <div class="card-body">
-          <h2 style="font-family:'Montserrat';font-weight:900;font-size:1.5rem;color:#fff;margin-bottom:0.4rem;">
+          <h2 style="font-family:'Montserrat';font-weight:900;font-size:1.4rem;color:#fff;margin-bottom:0.4rem;">
             {{ active_program.title|default:"Hypertrophy Master Split" }}
           </h2>
-          <p style="color:var(--text-muted);font-size:0.9rem;margin-bottom:1.25rem;">
+          <p style="color:var(--text-muted);font-size:0.88rem;margin-bottom:1.25rem;">
             {{ active_program.description|default:"Progressive overload volume split focused on optimal muscle fiber recruitment and aesthetic physique conditioning." }}
           </p>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:1rem;margin-bottom:1.5rem;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;margin-bottom:1.5rem;">
             <div style="background:var(--card-surface);padding:1rem;border-radius:10px;border-left:3px solid var(--neon-lime);">
               <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Duration</div>
-              <div style="font-weight:800;font-size:1.1rem;color:#fff;">{{ active_program.duration_weeks|default:"12" }} Weeks</div>
+              <div style="font-weight:800;font-size:1.05rem;color:#fff;">{{ active_program.duration_weeks|default:"12" }} Weeks</div>
             </div>
             <div style="background:var(--card-surface);padding:1rem;border-radius:10px;border-left:3px solid var(--cyan);">
               <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Weekly Frequency</div>
-              <div style="font-weight:800;font-size:1.1rem;color:#fff;">{{ active_program.sessions_per_week|default:"5" }} Days / Week</div>
+              <div style="font-weight:800;font-size:1.05rem;color:#fff;">{{ active_program.sessions_per_week|default:"5" }} Days / Week</div>
             </div>
             <div style="background:var(--card-surface);padding:1rem;border-radius:10px;border-left:3px solid var(--amber);">
               <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;">Assigned Coach</div>
-              <div style="font-weight:800;font-size:1.1rem;color:#fff;">Coach Kamal</div>
+              <div style="font-weight:800;font-size:1.05rem;color:#fff;">Coach Dhananjaya</div>
             </div>
           </div>
 
-          <h3 style="font-family:'Montserrat';font-weight:800;font-size:1.1rem;margin-bottom:1rem;">Weekly Schedule &amp; Day Splits</h3>
+          <h3 style="font-family:'Montserrat';font-weight:800;font-size:1rem;margin-bottom:0.75rem;">Weekly Schedule &amp; Day Splits</h3>
           <div class="table-responsive">
             <table class="table-custom">
               <thead>
@@ -803,14 +1317,6 @@
             </table>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- 3. WORKOUT TAB -->
-    <div id="tab-workout" class="tab-pane">
-      <div class="hero-header">
-        <h1 class="welcome-title">Live Workout Logger</h1>
-        <p class="welcome-sub">Record sets, reps, and resistance with instant feedback</p>
       </div>
 
       <div class="two-col-grid">
@@ -972,42 +1478,77 @@
       </div>
     </div>
 
-    <!-- 5. PROGRESS TAB -->
+    <!-- 5. BODY & PROGRESS TAB (Unified) -->
     <div id="tab-progress" class="tab-pane">
       <div class="hero-header">
-        <h1 class="welcome-title">Progress &amp; Body Weight Trend</h1>
-        <p class="welcome-sub">Historical weight curve and gym floor check-in consistency</p>
+        <h1 class="welcome-title">Body Metrics &amp; Progress</h1>
+        <p class="welcome-sub">Weight trend, circumference measurements, and physique transformation timeline</p>
       </div>
 
-      <div class="fitme-card">
-        <div class="card-header">
-          <div class="card-title"><i class="fa fa-chart-line" style="color:var(--neon-lime);"></i> Weight Progression (kg)</div>
-          <span style="font-size:0.75rem;color:var(--neon-lime);font-weight:700;">Trending Leaner</span>
+      <div class="two-col-grid" style="margin-bottom:1.5rem;">
+        <!-- Weight Progression Bar Graph -->
+        <div class="fitme-card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa fa-chart-line" style="color:var(--neon-lime);"></i> Weight Progression (kg)</div>
+            <span style="font-size:0.75rem;color:var(--neon-lime);font-weight:700;">Trending Leaner</span>
+          </div>
+          <div class="card-body">
+            <div style="display:flex;align-items:flex-end;gap:1.5rem;height:200px;padding:1rem 0;border-bottom:1px solid var(--border-color);overflow-x:auto;">
+              {% for m in measurements %}
+                <div style="flex:1;min-width:45px;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;">
+                  <div style="font-size:0.78rem;font-weight:800;color:var(--neon-lime);margin-bottom:0.4rem;">{{ m.weight_kg }}kg</div>
+                  <div style="width:100%;max-width:40px;background:var(--neon-lime);border-radius:6px 6px 0 0;height:{{ m.weight_kg|floatformat:0 }}%;"></div>
+                  <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem;">{{ m.date|date:"d M" }}</div>
+                </div>
+              {% empty %}
+                <div style="color:var(--text-muted);width:100%;text-align:center;">Log measurements below to view dynamic weight bar graph.</div>
+              {% endfor %}
+            </div>
+          </div>
         </div>
-        <div class="card-body">
-          <div style="display:flex;align-items:flex-end;gap:1.5rem;height:200px;padding:1rem 0;border-bottom:1px solid var(--border-color);margin-bottom:1.5rem;overflow-x:auto;">
-            {% for m in measurements %}
-              <div style="flex:1;min-width:45px;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:flex-end;">
-                <div style="font-size:0.78rem;font-weight:800;color:var(--neon-lime);margin-bottom:0.4rem;">{{ m.weight_kg }}kg</div>
-                <div style="width:100%;max-width:40px;background:var(--neon-lime);border-radius:6px 6px 0 0;height:{{ m.weight_kg|floatformat:0 }}%;"></div>
-                <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem;">{{ m.date|date:"d M" }}</div>
+
+        <!-- 3D Morph Comparison Slider -->
+        <div class="fitme-card">
+          <div class="card-header">
+            <div class="card-title"><i class="fa fa-sliders-h" style="color:var(--neon-lime);"></i> 3D Physique Morph Comparison</div>
+            <span style="font-size:0.75rem;color:var(--text-muted);">Drag handle horizontally</span>
+          </div>
+          <div class="card-body">
+            <div class="morph-slider-container" id="morphContainer">
+              <div class="morph-img-layer morph-img-before" id="beforeLayer"
+                   style="{% if before_checkin and before_checkin.photo_front %}background-image:url('{{ before_checkin.photo_front.url }}');{% else %}background:linear-gradient(135deg,#1E2428 0%,#111417 100%);{% endif %}">
+                {% if not before_checkin or not before_checkin.photo_front %}
+                  <div style="width:50%;text-align:center;color:var(--text-muted);padding:1rem;">
+                    <i class="fa fa-camera" style="font-size:2.8rem;margin-bottom:0.75rem;opacity:0.4;"></i>
+                    <div style="font-weight:700;font-size:0.9rem;">Initial Baseline Photo</div>
+                    <div style="font-size:0.75rem;opacity:0.7;">Check-in month 1</div>
+                  </div>
+                {% endif %}
               </div>
-            {% empty %}
-              <div style="color:var(--text-muted);width:100%;text-align:center;">Log measurements to view dynamic weight bar graph.</div>
-            {% endfor %}
+
+              <div class="morph-img-layer morph-img-after" id="afterLayer"
+                   style="{% if after_checkin and after_checkin.photo_front %}background-image:url('{{ after_checkin.photo_front.url }}');{% else %}background:linear-gradient(135deg,#142312 0%,#0B130A 100%);{% endif %}">
+                {% if not after_checkin or not after_checkin.photo_front %}
+                  <div style="width:50%;text-align:center;color:var(--neon-lime);padding:1rem;">
+                    <i class="fa fa-trophy" style="font-size:2.8rem;margin-bottom:0.75rem;filter:drop-shadow(0 0 10px var(--neon-glow));"></i>
+                    <div style="font-weight:800;font-size:0.95rem;">Current Lean Physique</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);">Latest check-in</div>
+                  </div>
+                {% endif %}
+              </div>
+
+              <div class="morph-label before">Before (Day 1)</div>
+              <div class="morph-label after">After (Current)</div>
+
+              <div class="morph-divider-line" id="morphLine"></div>
+              <div class="morph-handle" id="morphHandle"><i class="fa fa-arrows-alt-h"></i></div>
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 6. MEASUREMENTS TAB -->
-    <div id="tab-measurements" class="tab-pane">
-      <div class="hero-header">
-        <h1 class="welcome-title">Body Measurements Tracker</h1>
-        <p class="welcome-sub">Circumference and body composition logging</p>
-      </div>
-
-      <div class="two-col-grid">
+      <!-- Measurements Form & History Table -->
+      <div class="two-col-grid" style="margin-bottom:1.5rem;">
         <!-- Form -->
         <div class="fitme-card">
           <div class="card-header">
@@ -1080,24 +1621,17 @@
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- 7. TRANSFORMATION TIMELINE TAB -->
-    <div id="tab-timeline" class="tab-pane">
-      <div class="hero-header">
-        <h1 class="welcome-title">Transformation Timeline</h1>
-        <p class="welcome-sub">Visual month-by-month physique transformation log</p>
-      </div>
-
+      <!-- Check-in Photo Log / Transformation Timeline -->
       <div class="fitme-card">
         <div class="card-header">
-          <div class="card-title"><i class="fa fa-camera-retro" style="color:var(--neon-lime);"></i> Check-in Photo Log</div>
+          <div class="card-title"><i class="fa fa-camera-retro" style="color:var(--neon-lime);"></i> Physique Check-in Photos &amp; Timeline</div>
         </div>
         <div class="card-body">
-          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(240px, 1fr));gap:1.5rem;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(220px, 1fr));gap:1.25rem;">
             {% for c in checkins %}
               <div style="background:var(--card-surface);border:1px solid var(--border-color);border-radius:12px;overflow:hidden;padding:1rem;">
-                <div style="height:220px;background:#000;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:0.75rem;">
+                <div style="height:200px;background:#000;border-radius:8px;overflow:hidden;display:flex;align-items:center;justify-content:center;margin-bottom:0.75rem;">
                   {% if c.photo_front %}
                     <img src="{{ c.photo_front.url }}" alt="Check-in Photo" style="width:100%;height:100%;object-fit:cover;">
                   {% else %}
@@ -1109,9 +1643,9 @@
                 {% if c.notes %}<p style="font-size:0.75rem;color:var(--text-muted);margin-top:0.4rem;">{{ c.notes }}</p>{% endif %}
               </div>
             {% empty %}
-              <div style="grid-column:1/-1;text-align:center;padding:3rem;color:var(--text-muted);">
-                <i class="fa fa-camera" style="font-size:2.5rem;margin-bottom:0.75rem;opacity:0.4;display:block;"></i>
-                Monthly physique check-in photos will appear along your timeline here.
+              <div style="grid-column:1/-1;text-align:center;padding:2.5rem;color:var(--text-muted);">
+                <i class="fa fa-camera" style="font-size:2.2rem;margin-bottom:0.75rem;opacity:0.4;display:block;"></i>
+                Monthly physique check-in photos from your coach reviews will appear here.
               </div>
             {% endfor %}
           </div>
@@ -1216,6 +1750,989 @@
       </div>
     </div>
 
+    <!-- 9. ASSESSMENTS & COACH PLAN TAB -->
+    <div id="tab-assessment" class="tab-pane">
+      <div class="hero-header">
+        <h1 class="welcome-title">Fitness &amp; Nutrition Intake Assessments 📋</h1>
+        <p class="welcome-sub">⚡ Official assessment forms by Coach Dhananjaya • Fill once for your customized workout split &amp; fuel plan</p>
+      </div>
+
+      <!-- Coach Personalized Prescription Card (Shown when coach creates plan) -->
+      <div id="coachPrescriptionCard" class="fitme-card" style="display:none;border:2px solid var(--neon-lime);box-shadow:0 8px 30px var(--neon-glow);background:linear-gradient(145deg, #13171A 0%, #0F1215 100%);">
+        <div class="card-header" style="background:rgba(118,192,67,0.12);border-bottom:1px solid rgba(118,192,67,0.3);">
+          <div class="card-title" style="color:var(--neon-lime);font-size:1.05rem;">
+            <i class="fa fa-award" style="color:var(--neon-lime);font-size:1.25rem;"></i>
+            <span>Personalized Plan Prescribed by Coach <span id="coachPrescriptionAuthor">Dhananjaya</span></span>
+          </div>
+          <span id="coachPrescriptionDate" style="font-size:0.75rem;color:var(--text-muted);font-weight:700;">--</span>
+        </div>
+        <div class="card-body">
+          <div class="form-grid-2">
+            <!-- Workout Prescription -->
+            <div style="background:#171C20;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.25rem;">
+              <div style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;font-size:0.95rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;">
+                <i class="fa fa-dumbbell" style="color:var(--neon-lime);"></i> Training &amp; Workout Split
+              </div>
+              <div style="margin-bottom:0.6rem;">
+                <span class="form-label">Assigned Program</span>
+                <div id="cpProgramTitle" style="font-weight:800;color:var(--neon-lime);font-size:1.05rem;">Customized Routine</div>
+              </div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem;margin-bottom:0.6rem;">
+                <div>
+                  <span class="form-label">Frequency</span>
+                  <div id="cpFrequency" style="font-weight:700;color:#fff;font-size:0.9rem;">--</div>
+                </div>
+                <div>
+                  <span class="form-label">Session Duration</span>
+                  <div id="cpDuration" style="font-weight:700;color:#fff;font-size:0.9rem;">--</div>
+                </div>
+              </div>
+              <div style="margin-bottom:0.6rem;">
+                <span class="form-label">Cardio Protocol</span>
+                <div id="cpCardio" style="font-size:0.85rem;color:#ddd;">--</div>
+              </div>
+              <div>
+                <span class="form-label">Coach Instructions &amp; Notes</span>
+                <div id="cpWorkoutNotes" style="font-size:0.85rem;color:#ccc;background:#101315;padding:0.65rem 0.85rem;border-radius:8px;line-height:1.45;border-left:3px solid var(--neon-lime);">No notes provided.</div>
+              </div>
+            </div>
+
+            <!-- Nutrition Fuel Prescription -->
+            <div style="background:#171C20;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1.25rem;">
+              <div style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;font-size:0.95rem;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.5rem;">
+                <i class="fa fa-utensils" style="color:var(--amber);"></i> Daily Nutrition &amp; Fuel Target
+              </div>
+              <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(90px, 1fr));gap:0.5rem;margin-bottom:0.85rem;">
+                <div style="background:#101315;padding:0.6rem;border-radius:8px;text-align:center;border-top:2px solid var(--amber);">
+                  <div style="font-size:0.65rem;color:var(--text-muted);font-weight:700;">CALORIES</div>
+                  <div id="cpCalories" style="font-size:1.15rem;font-weight:900;color:var(--amber);">--</div>
+                  <div style="font-size:0.6rem;color:var(--text-muted);">kcal/day</div>
+                </div>
+                <div style="background:#101315;padding:0.6rem;border-radius:8px;text-align:center;border-top:2px solid var(--cyan);">
+                  <div style="font-size:0.65rem;color:var(--text-muted);font-weight:700;">PROTEIN</div>
+                  <div id="cpProtein" style="font-size:1.15rem;font-weight:900;color:var(--cyan);">--</div>
+                  <div style="font-size:0.6rem;color:var(--text-muted);">grams</div>
+                </div>
+                <div style="background:#101315;padding:0.6rem;border-radius:8px;text-align:center;border-top:2px solid var(--neon-lime);">
+                  <div style="font-size:0.65rem;color:var(--text-muted);font-weight:700;">CARBS</div>
+                  <div id="cpCarbs" style="font-size:1.15rem;font-weight:900;color:var(--neon-lime);">--</div>
+                  <div style="font-size:0.6rem;color:var(--text-muted);">grams</div>
+                </div>
+                <div style="background:#101315;padding:0.6rem;border-radius:8px;text-align:center;border-top:2px solid #E63946;">
+                  <div style="font-size:0.65rem;color:var(--text-muted);font-weight:700;">FATS</div>
+                  <div id="cpFats" style="font-size:1.15rem;font-weight:900;color:#E63946;">--</div>
+                  <div style="font-size:0.6rem;color:var(--text-muted);">grams</div>
+                </div>
+                <div style="background:#101315;padding:0.6rem;border-radius:8px;text-align:center;border-top:2px solid #38BDF8;">
+                  <div style="font-size:0.65rem;color:var(--text-muted);font-weight:700;">WATER</div>
+                  <div id="cpWater" style="font-size:1.15rem;font-weight:900;color:#38BDF8;">--</div>
+                  <div style="font-size:0.6rem;color:var(--text-muted);">ml/day</div>
+                </div>
+              </div>
+              <div>
+                <span class="form-label">Coach Dietary Guidelines</span>
+                <div id="cpNutritionNotes" style="font-size:0.85rem;color:#ccc;background:#101315;padding:0.65rem 0.85rem;border-radius:8px;line-height:1.45;border-left:3px solid var(--amber);">No dietary notes provided.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Status Badges -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;margin-bottom:1.5rem;">
+        <div class="fitme-card" style="margin-bottom:0;padding:1.25rem;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:0.85rem;">
+            <div style="width:42px;height:42px;border-radius:10px;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;color:var(--amber);font-size:1.2rem;">
+              <i class="fa fa-utensils"></i>
+            </div>
+            <div>
+              <div style="font-weight:800;color:#fff;font-size:0.95rem;">Nutrition Assessment Form</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);" id="nutLastSubmittedText">Not submitted yet</div>
+            </div>
+          </div>
+          <span id="nutStatusBadge" style="padding:0.35rem 0.75rem;border-radius:20px;font-size:0.75rem;font-weight:800;background:rgba(255,255,255,0.06);color:var(--text-muted);">NOT SUBMITTED</span>
+        </div>
+
+        <div class="fitme-card" style="margin-bottom:0;padding:1.25rem;display:flex;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:0.85rem;">
+            <div style="width:42px;height:42px;border-radius:10px;background:rgba(118,192,67,0.15);display:flex;align-items:center;justify-content:center;color:var(--neon-lime);font-size:1.2rem;">
+              <i class="fa fa-dumbbell"></i>
+            </div>
+            <div>
+              <div style="font-weight:800;color:#fff;font-size:0.95rem;">Workout Assessment Form</div>
+              <div style="font-size:0.75rem;color:var(--text-muted);" id="wrkLastSubmittedText">Not submitted yet</div>
+            </div>
+          </div>
+          <span id="wrkStatusBadge" style="padding:0.35rem 0.75rem;border-radius:20px;font-size:0.75rem;font-weight:800;background:rgba(255,255,255,0.06);color:var(--text-muted);">NOT SUBMITTED</span>
+        </div>
+      </div>
+
+      <!-- Form Switcher Buttons -->
+      <div style="display:flex;gap:0.75rem;margin-bottom:1.5rem;flex-wrap:wrap;">
+        <button type="button" id="btnToggleNutrition" onclick="showAssessmentForm('nutrition')" class="btn-fitme" style="font-size:0.9rem;padding:0.7rem 1.4rem;">
+          <i class="fa fa-apple-alt"></i> 1. Nutrition Assessment Form
+        </button>
+        <button type="button" id="btnToggleWorkout" onclick="showAssessmentForm('workout')" class="btn-fitme" style="background:#1B2024;border:1px solid rgba(255,255,255,0.15);color:#fff;font-size:0.9rem;padding:0.7rem 1.4rem;">
+          <i class="fa fa-running"></i> 2. Workout Assessment Form
+        </button>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════════════ -->
+      <!-- FORM 1: NUTRITION ASSESSMENT (Fitness with Dhananjaya)                  -->
+      <!-- ═══════════════════════════════════════════════════════════════════════ -->
+      <div id="nutritionFormWrapper">
+        <form id="formNutritionAssessment" onsubmit="handleNutritionSubmit(event)">
+          <div class="fitme-card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa fa-clipboard-list" style="color:var(--amber);"></i>
+                <span>Fitness with Dhananjaya — Nutrition Assessment Form</span>
+              </div>
+              <span style="font-size:0.75rem;color:var(--text-muted);">All confidential information used strictly for custom meal formulation</span>
+            </div>
+            <div class="card-body">
+
+              <!-- Section 1: Basic Personal Info (Auto-Linked from Registration Profile) -->
+              <div class="assessment-section" id="nutritionSection1Card">
+                <div class="assessment-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+                  <span><i class="fa fa-id-card" style="color:var(--neon-lime);"></i> Section 1: Personal &amp; Contact Info</span>
+                  <span style="background:rgba(118,192,67,0.15);color:var(--neon-lime);border:1px solid rgba(118,192,67,0.4);padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+                    <i class="fa fa-shield-alt"></i> Auto-Linked from Registration
+                  </span>
+                </div>
+
+                <!-- Registration Profile Summary Badge -->
+                <div style="background:rgba(18,21,23,0.85);border:1px solid rgba(118,192,67,0.25);border-radius:12px;padding:1.15rem;margin-bottom:1.25rem;">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;font-size:0.85rem;">
+                    <div>
+                      <div style="color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;font-weight:700;margin-bottom:2px;">Full Name</div>
+                      <div style="color:#fff;font-weight:700;font-size:0.95rem;">
+                        <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:0.85rem;margin-right:4px;"></i>
+                        <span id="nutDispFullName">{{ request.user.get_full_name|default:request.user.username }}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;font-weight:700;margin-bottom:2px;">Phone / WhatsApp</div>
+                      <div style="color:#fff;font-weight:600;"><span id="nutDispPhone">{{ profile.phone|default:'—' }}</span></div>
+                    </div>
+                    <div>
+                      <div style="color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;font-weight:700;margin-bottom:2px;">Email Address</div>
+                      <div style="color:#fff;font-weight:600;"><span id="nutDispEmail">{{ request.user.email|default:'—' }}</span></div>
+                    </div>
+                    <div>
+                      <div style="color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;font-weight:700;margin-bottom:2px;">Date of Birth &amp; Gender</div>
+                      <div style="color:#fff;font-weight:600;">
+                        <span id="nutDispDob">{{ profile.date_of_birth|date:"Y-m-d"|default:'—' }}</span>
+                        {% if profile.gender %}<span style="color:var(--text-muted);"> • </span><span id="nutDispGender" style="text-transform:capitalize;">{{ profile.get_gender_display|default:profile.gender }}</span>{% endif %}
+                      </div>
+                    </div>
+                    <div style="grid-column: 1 / -1;padding-top:0.6rem;border-top:1px dashed rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+                      <div>
+                        <span style="color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;font-weight:700;">Emergency Contact: </span>
+                        <span style="color:#eee;font-weight:600;font-size:0.85rem;" id="nutDispEmergency">
+                          {% if profile.emergency_contact_name %}{{ profile.emergency_contact_name }} ({{ profile.emergency_relationship|default:'Contact' }}) — {{ profile.emergency_contact_phone }}{% else %}—{% endif %}
+                        </span>
+                      </div>
+                      <button type="button" onclick="toggleEditSection1('nutrition')" style="background:transparent;border:1px solid rgba(255,255,255,0.2);color:var(--text-muted);font-size:0.75rem;padding:3px 10px;border-radius:6px;cursor:pointer;">
+                        <i class="fa fa-pencil-alt"></i> Edit Contact Info
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Hidden inputs so registration data is submitted seamlessly -->
+                <input type="hidden" name="full_name" id="nut_full_name" value="{{ request.user.get_full_name|default:request.user.username }}">
+                <input type="hidden" name="phone" id="nut_phone" value="{{ profile.phone|default:'' }}">
+                <input type="hidden" name="email" id="nut_email" value="{{ request.user.email }}">
+                <input type="hidden" name="date_of_birth" id="nut_date_of_birth" value="{{ profile.date_of_birth|date:'Y-m-d'|default:'' }}">
+                <input type="hidden" name="age" id="nut_age" value="">
+                <input type="hidden" name="gender" id="nut_gender" value="{{ profile.gender|default:'' }}">
+                <input type="hidden" name="emergency_contact" id="nut_emergency_contact" value="{% if profile.emergency_contact_name %}{{ profile.emergency_contact_name }} ({{ profile.emergency_relationship|default:'Contact' }}) — {{ profile.emergency_contact_phone }}{% endif %}">
+
+                <!-- Optional override section (revealed when clicked) -->
+                <div id="nutEditSection1" style="display:none;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.15);border-radius:10px;padding:1rem;margin-bottom:1.25rem;">
+                  <div style="font-size:0.78rem;color:var(--neon-lime);font-weight:700;margin-bottom:0.75rem;"><i class="fa fa-edit"></i> Edit Contact Details for This Assessment</div>
+                  <div class="form-grid-3">
+                    <div>
+                      <label class="form-label">Full Name</label>
+                      <input type="text" class="form-control" value="{{ request.user.get_full_name|default:request.user.username }}" oninput="syncField('nut_full_name', this.value, 'nutDispFullName')">
+                    </div>
+                    <div>
+                      <label class="form-label">Phone / WhatsApp</label>
+                      <input type="text" class="form-control" value="{{ profile.phone|default:'' }}" oninput="syncField('nut_phone', this.value, 'nutDispPhone')">
+                    </div>
+                    <div>
+                      <label class="form-label">Emergency Contact</label>
+                      <input type="text" class="form-control" value="{% if profile.emergency_contact_name %}{{ profile.emergency_contact_name }} ({{ profile.emergency_relationship|default:'Contact' }}) — {{ profile.emergency_contact_phone }}{% endif %}" oninput="syncField('nut_emergency_contact', this.value, 'nutDispEmergency')">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Assessment-Specific Input Fields -->
+                <div style="font-size:0.78rem;color:var(--amber);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.6rem;">
+                  <i class="fa fa-ruler-combined"></i> Current Body Specs &amp; Daily Routine
+                </div>
+                <div class="form-grid-4">
+                  <div>
+                    <label class="form-label">Assessment Date</label>
+                    <input type="date" name="assessment_date" class="form-control" value="{% now 'Y-m-d' %}">
+                  </div>
+                  <div>
+                    <label class="form-label">Height (cm)</label>
+                    <input type="number" step="0.1" name="height_cm" class="form-control" value="{{ profile.height_cm|default:'' }}" placeholder="e.g. 175.0">
+                  </div>
+                  <div>
+                    <label class="form-label">Waist Circumference (cm)</label>
+                    <input type="number" step="0.1" name="waist_cm" class="form-control" placeholder="e.g. 82.5">
+                  </div>
+                  <div>
+                    <label class="form-label">Occupation / Activity Style</label>
+                    <input type="text" name="occupation" class="form-control" placeholder="e.g. Software Engineer, Doctor, Student">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 2: Goals -->
+              <div class="assessment-section">
+                <div class="assessment-section-title"><i class="fa fa-bullseye"></i> Section 2: Primary Fitness &amp; Body Goals</div>
+                <div class="form-grid-4">
+                  <div>
+                    <label class="form-label">Current Weight (kg) *</label>
+                    <input type="number" step="0.1" name="current_weight_kg" class="form-control" placeholder="e.g. 74.5" required>
+                  </div>
+                  <div>
+                    <label class="form-label">Target Goal Weight (kg)</label>
+                    <input type="number" step="0.1" name="target_weight_kg" class="form-control" placeholder="e.g. 68.0">
+                  </div>
+                  <div>
+                    <label class="form-label">Goal Timeline (Weeks)</label>
+                    <input type="number" name="goal_timeline_weeks" class="form-control" placeholder="e.g. 12">
+                  </div>
+                  <div>
+                    <label class="form-label">Importance to You (0 to 10)</label>
+                    <input type="number" name="goal_importance" class="form-control" min="0" max="10" placeholder="10">
+                  </div>
+                </div>
+                <div style="margin-top:1rem;">
+                  <label class="form-label">Primary Goals (Select all that apply)</label>
+                  <div class="form-grid-4" id="nutPrimaryGoalsGrid">
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="fat_loss"> Fat Loss</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="muscle_gain"> Muscle Gain</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="lean_muscle"> Build Lean Muscle</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="body_recomposition"> Body Recomposition</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="weight_gain"> Weight Gain</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="general_health"> General Health / Longevity</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="maintenance"> Weight Maintenance</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="strength"> Increase Strength</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="athletic_perf"> Athletic Performance</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="diet_habits"> Improve Diet Habits</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="blood_sugar"> Blood Sugar Control</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="cholesterol"> Cholesterol Management</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="fitness_endurance"> Fitness &amp; Endurance</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="daily_energy"> Daily Energy Boost</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="other"> Other Goal</label>
+                  </div>
+                  <input type="text" name="primary_goals_other" class="form-control" style="margin-top:0.6rem;" placeholder="If other goal selected, describe here...">
+                </div>
+              </div>
+
+              <!-- Section 3: Weight & Diet History -->
+              <div class="assessment-section">
+                <div class="assessment-section-title"><i class="fa fa-history"></i> Section 3: Weight &amp; Diet History</div>
+                <div class="form-grid-3">
+                  <div>
+                    <label class="form-label">Highest Adult Weight (kg)</label>
+                    <input type="number" step="0.1" name="highest_adult_weight_kg" class="form-control" placeholder="e.g. 85.0">
+                  </div>
+                  <div>
+                    <label class="form-label">Lowest Adult Weight (kg)</label>
+                    <input type="number" step="0.1" name="lowest_adult_weight_kg" class="form-control" placeholder="e.g. 60.0">
+                  </div>
+                  <div>
+                    <label class="form-label">Have You Followed a Diet Before?</label>
+                    <label class="checkbox-pill" style="width:100%;"><input type="checkbox" name="previous_diet_plan" value="true"> Yes, followed a planned diet</label>
+                  </div>
+                </div>
+                <div style="margin-top:1rem;">
+                  <label class="form-label">Diet Types Tried in the Past</label>
+                  <div class="form-grid-4">
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_diet_types" value="calorie_restrict"> Calorie Deficit / Restriction</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_diet_types" value="intermittent_fasting"> Intermittent Fasting</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_diet_types" value="low_carb"> Low Carb</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_diet_types" value="keto"> Ketogenic Diet</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_diet_types" value="high_protein"> High Protein</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_diet_types" value="meal_replacement"> Meal Replacement Shakes</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_diet_types" value="vegetarian"> Strict Vegetarian</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_diet_types" value="coach_plan"> Nutritionist / Coach Plan</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_diet_types" value="online_plan"> Online Generic Plan</label>
+                  </div>
+                  <input type="text" name="previous_diet_types_other" class="form-control" style="margin-top:0.6rem;" placeholder="Other past diet methods...">
+                </div>
+                <div style="margin-top:1rem;">
+                  <label class="form-label">Why Did You Stop Past Diets? (Key challenges)</label>
+                  <div class="form-grid-4">
+                    <label class="checkbox-pill"><input type="checkbox" name="diet_stop_reasons" value="hunger"> Extreme Hunger</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="diet_stop_reasons" value="too_restrictive"> Too Restrictive</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="diet_stop_reasons" value="cravings"> Cravings &amp; Snacking</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="diet_stop_reasons" value="tea_sugar"> Couldn't Stop Tea/Sugar</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="diet_stop_reasons" value="meal_prep_time"> Lack of Time to Meal Prep</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="diet_stop_reasons" value="work_schedule"> Busy Work Schedule</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="diet_stop_reasons" value="social_meals"> Social Gatherings &amp; Events</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="diet_stop_reasons" value="slow_results"> Slow or Disappointing Results</label>
+                  </div>
+                  <input type="text" name="diet_stop_reasons_other" class="form-control" style="margin-top:0.6rem;" placeholder="Other reasons for stopping...">
+                </div>
+              </div>
+
+              <!-- Section 4: Daily Activity & Exercise -->
+              <div class="assessment-section">
+                <div class="assessment-section-title"><i class="fa fa-walking"></i> Section 4: Daily Activity &amp; Lifestyle</div>
+                <div class="form-grid-3">
+                  <div>
+                    <label class="form-label">Activity Level</label>
+                    <select name="activity_level" class="form-control">
+                      <option value="">Select Level</option>
+                      <option value="sedentary">Sedentary (Desk job / minimal movement)</option>
+                      <option value="lightly_active">Lightly Active (Light walking / housework)</option>
+                      <option value="moderately_active">Moderately Active (Moderate daily movement)</option>
+                      <option value="very_active">Very Active (On feet most of the day)</option>
+                      <option value="extra_active">Extra Active (Heavy physical labor / sport)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">Working Hours per Day</label>
+                    <input type="number" name="work_hours_per_day" class="form-control" placeholder="e.g. 8">
+                  </div>
+                  <div>
+                    <label class="form-label">Sitting / Desk Hours per Day</label>
+                    <input type="number" name="sitting_hours_per_day" class="form-control" placeholder="e.g. 6">
+                  </div>
+                </div>
+                <div class="form-grid-3" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Daily Commute (Minutes)</label>
+                    <input type="number" name="daily_commute_minutes" class="form-control" placeholder="e.g. 45">
+                  </div>
+                  <div>
+                    <label class="form-label">Work Shift Type</label>
+                    <select name="shift_type" class="form-control">
+                      <option value="">Select Shift</option>
+                      <option value="day">Standard Day Shift</option>
+                      <option value="night">Night Shift</option>
+                      <option value="rotating">Rotating Shift</option>
+                      <option value="none">None / Flexible</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">Average Daily Steps</label>
+                    <select name="daily_steps" class="form-control">
+                      <option value="">Select Range</option>
+                      <option value="under_3000">&lt; 3,000 steps</option>
+                      <option value="3000_5000">3,000 – 5,000 steps</option>
+                      <option value="5000_7500">5,000 – 7,500 steps</option>
+                      <option value="7500_10000">7,500 – 10,000 steps</option>
+                      <option value="over_10000">10,000+ steps</option>
+                      <option value="unknown">Not sure</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-grid-4" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Currently Exercising?</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="currently_exercising" value="true"> Yes, active at gym/home</label>
+                  </div>
+                  <div>
+                    <label class="form-label">Exercise Days / Week</label>
+                    <input type="number" name="exercise_days_per_week" class="form-control" placeholder="e.g. 4">
+                  </div>
+                  <div>
+                    <label class="form-label">Session Duration (Min)</label>
+                    <input type="number" name="session_duration_minutes" class="form-control" placeholder="e.g. 60">
+                  </div>
+                  <div>
+                    <label class="form-label">Usual Workout Time</label>
+                    <input type="text" name="usual_workout_time" class="form-control" placeholder="e.g. 6:30 AM / 6:00 PM">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 5: Food Preferences & Habits -->
+              <div class="assessment-section">
+                <div class="assessment-section-title"><i class="fa fa-utensils"></i> Section 5: Food Preferences &amp; Daily Eating</div>
+                <div class="form-grid-3">
+                  <div>
+                    <label class="form-label">Dietary Preference</label>
+                    <select name="dietary_preference" class="form-control">
+                      <option value="omnivore">Omnivore (Chicken, Fish, Beef, Eggs, Veg)</option>
+                      <option value="vegetarian">Vegetarian (No meat / fish)</option>
+                      <option value="vegan">Vegan (Strictly plant-based)</option>
+                      <option value="pescatarian">Pescatarian (Fish &amp; Veg only)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">Daily Meals Count</label>
+                    <input type="number" name="meals_per_day" class="form-control" placeholder="e.g. 3">
+                  </div>
+                  <div>
+                    <label class="form-label">Daily Water Intake (ml)</label>
+                    <input type="number" name="daily_water_ml" class="form-control" placeholder="e.g. 2500">
+                  </div>
+                </div>
+                <div class="form-grid-2" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Disliked / Hated Foods</label>
+                    <textarea name="disliked_foods" rows="2" class="form-control" placeholder="e.g. Bitter gourd, mutton, oats..."></textarea>
+                  </div>
+                  <div>
+                    <label class="form-label">Food Allergies or Intolerances</label>
+                    <textarea name="allergies" rows="2" class="form-control" placeholder="e.g. Shellfish, dairy / lactose, peanuts..."></textarea>
+                  </div>
+                </div>
+                <div style="margin-top:1rem;">
+                  <label class="form-label">Meal Timing Structure</label>
+                  <div class="form-grid-4">
+                    <label class="checkbox-pill"><input type="checkbox" name="meal_pattern" value="breakfast"> Breakfast</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="meal_pattern" value="mid_morning"> Mid-Morning Snack</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="meal_pattern" value="lunch"> Lunch</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="meal_pattern" value="afternoon"> Afternoon Tea/Snack</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="meal_pattern" value="dinner"> Dinner</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="meal_pattern" value="before_bed"> Before Bed</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="meal_pattern" value="pre_workout"> Pre-Workout Meal</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="meal_pattern" value="post_workout"> Post-Workout Shake</label>
+                  </div>
+                </div>
+                <div class="form-grid-2" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Typical Breakfast Description</label>
+                    <textarea name="typical_breakfast" rows="2" class="form-control" placeholder="e.g. 2 eggs, 2 slices brown bread, black coffee with 1 sugar"></textarea>
+                  </div>
+                  <div>
+                    <label class="form-label">Typical Lunch Description</label>
+                    <textarea name="typical_lunch" rows="2" class="form-control" placeholder="e.g. 1.5 cups red rice, dhal, chicken curry, gotukola sambol"></textarea>
+                  </div>
+                </div>
+                <div class="form-grid-2" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Typical Dinner Description</label>
+                    <textarea name="typical_dinner" rows="2" class="form-control" placeholder="e.g. 3 rotti with curry / chicken salad / soup"></textarea>
+                  </div>
+                  <div>
+                    <label class="form-label">Typical Snacks &amp; Drinks</label>
+                    <textarea name="typical_snacks" rows="2" class="form-control" placeholder="e.g. Biscuits with milk tea, peanuts, fruit..."></textarea>
+                  </div>
+                </div>
+                <div class="form-grid-4" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Daily Tea / Coffee (Cups)</label>
+                    <input type="number" name="daily_tea_coffee_cups" class="form-control" placeholder="e.g. 3">
+                  </div>
+                  <div>
+                    <label class="form-label">Add Sugar in Tea/Coffee?</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="sugar_in_tea" value="true"> Yes, add sugar / milk</label>
+                  </div>
+                  <div>
+                    <label class="form-label">Alcohol Consumption</label>
+                    <select name="alcohol_frequency" class="form-control">
+                      <option value="none">None / Abstain</option>
+                      <option value="rare">Rarely (Special occasions)</option>
+                      <option value="weekly">Weekly (1-2 times)</option>
+                      <option value="daily">Daily / Heavy</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">Outside Food Frequency</label>
+                    <select name="outside_food_frequency" class="form-control">
+                      <option value="never">Never / Rare</option>
+                      <option value="once_week">1x per week</option>
+                      <option value="2_3_week">2-3x per week</option>
+                      <option value="daily">Daily / Office canteen</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="margin-top:1rem;">
+                  <label class="form-label">Eating Habit Challenges (Check what you struggle with)</label>
+                  <div class="form-grid-4">
+                    <label class="checkbox-pill"><input type="checkbox" name="stress_eating" value="true"> Stress Eating</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="night_eating" value="true"> Late Night Eating</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="emotional_eating" value="true"> Emotional Eating</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="binge_eating" value="true"> Binge Eating Tendencies</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="skip_meals_often" value="true"> Frequently Skip Meals</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 6: Medical, Health & Stress -->
+              <div class="assessment-section">
+                <div class="assessment-section-title"><i class="fa fa-heartbeat"></i> Section 6: Medical, Health, Sleep &amp; Stress</div>
+                <div class="form-grid-4">
+                  <label class="checkbox-pill"><input type="checkbox" name="digestive_issues" value="true"> Digestive / Bloating Issues</label>
+                  <label class="checkbox-pill"><input type="checkbox" name="hormonal_issues" value="true"> Hormonal Imbalance</label>
+                  <label class="checkbox-pill"><input type="checkbox" name="thyroid_issues" value="true"> Thyroid Condition</label>
+                  <label class="checkbox-pill"><input type="checkbox" name="pcos" value="true"> PCOS / PCOD</label>
+                  <label class="checkbox-pill"><input type="checkbox" name="diabetes" value="true"> Diabetes / Pre-diabetic</label>
+                  <label class="checkbox-pill"><input type="checkbox" name="blood_pressure_issues" value="true"> Blood Pressure Issues</label>
+                  <label class="checkbox-pill"><input type="checkbox" name="vitamin_d_tested" value="true"> Vitamin D Tested</label>
+                  <label class="checkbox-pill"><input type="checkbox" name="iron_tested" value="true"> Iron / Ferritin Tested</label>
+                </div>
+                <div class="form-grid-3" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Other Medical Conditions</label>
+                    <textarea name="medical_conditions" rows="2" class="form-control" placeholder="e.g. Asthma, cholesterol, fatty liver..."></textarea>
+                  </div>
+                  <div>
+                    <label class="form-label">Current Supplements</label>
+                    <textarea name="current_supplements" rows="2" class="form-control" placeholder="e.g. Whey, Creatine, Omega 3, Multivitamin..."></textarea>
+                  </div>
+                  <div>
+                    <label class="form-label">Current Medications</label>
+                    <textarea name="current_medications" rows="2" class="form-control" placeholder="e.g. Metformin, Thyroxine, BP medication..."></textarea>
+                  </div>
+                </div>
+                <div class="form-grid-3" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Sleep Hours / Night</label>
+                    <input type="number" step="0.5" name="sleep_hours_per_night" class="form-control" placeholder="e.g. 7.0">
+                  </div>
+                  <div>
+                    <label class="form-label">Sleep Quality</label>
+                    <select name="sleep_quality" class="form-control">
+                      <option value="">Select Quality</option>
+                      <option value="poor">Poor (Wake up tired / restless)</option>
+                      <option value="average">Average</option>
+                      <option value="good">Good (Deep sleep)</option>
+                      <option value="excellent">Excellent</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">Daily Stress Level (1 to 10)</label>
+                    <input type="number" name="stress_level" class="form-control" min="1" max="10" placeholder="e.g. 5">
+                  </div>
+                </div>
+                <div style="margin-top:1rem;">
+                  <label class="form-label">Additional Notes to Coach Dhananjaya</label>
+                  <textarea name="member_notes" rows="2" class="form-control" placeholder="Any specific requirements, budget preferences, or comments you'd like your coach to know..."></textarea>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <div style="display:flex;justify-content:flex-end;gap:1rem;margin-top:1.5rem;">
+                <button type="submit" id="btnSubmitNutrition" class="btn-fitme" style="padding:0.75rem 2rem;font-size:0.95rem;">
+                  <i class="fa fa-check-circle"></i> Save &amp; Submit Nutrition Assessment
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </form>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════════════════ -->
+      <!-- FORM 2: WORKOUT ASSESSMENT (Fitness with Dhananjaya)                    -->
+      <!-- ═══════════════════════════════════════════════════════════════════════ -->
+      <div id="workoutFormWrapper" style="display:none;">
+        <form id="formWorkoutAssessment" onsubmit="handleWorkoutSubmit(event)">
+          <div class="fitme-card">
+            <div class="card-header">
+              <div class="card-title">
+                <i class="fa fa-dumbbell" style="color:var(--neon-lime);"></i>
+                <span>Fitness with Dhananjaya — Workout Assessment Form</span>
+              </div>
+              <span style="font-size:0.75rem;color:var(--text-muted);">Provides your coach complete biomechanical &amp; training history</span>
+            </div>
+            <div class="card-body">
+
+              <!-- Section 1: Basic Personal & Contact Info (Auto-Linked from Registration Profile) -->
+              <div class="assessment-section" id="workoutSection1Card">
+                <div class="assessment-section-title" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+                  <span><i class="fa fa-id-card" style="color:var(--neon-lime);"></i> Section 1: Personal &amp; Contact Info</span>
+                  <span style="background:rgba(118,192,67,0.15);color:var(--neon-lime);border:1px solid rgba(118,192,67,0.4);padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:700;display:inline-flex;align-items:center;gap:6px;">
+                    <i class="fa fa-shield-alt"></i> Auto-Linked from Registration
+                  </span>
+                </div>
+
+                <!-- Registration Profile Summary Badge -->
+                <div style="background:rgba(18,21,23,0.85);border:1px solid rgba(118,192,67,0.25);border-radius:12px;padding:1.15rem;margin-bottom:1.25rem;">
+                  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:1rem;font-size:0.85rem;">
+                    <div>
+                      <div style="color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;font-weight:700;margin-bottom:2px;">Full Name</div>
+                      <div style="color:#fff;font-weight:700;font-size:0.95rem;">
+                        <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:0.85rem;margin-right:4px;"></i>
+                        <span id="wrkDispFullName">{{ request.user.get_full_name|default:request.user.username }}</span>
+                      </div>
+                    </div>
+                    <div>
+                      <div style="color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;font-weight:700;margin-bottom:2px;">Phone / WhatsApp</div>
+                      <div style="color:#fff;font-weight:600;"><span id="wrkDispPhone">{{ profile.phone|default:'—' }}</span></div>
+                    </div>
+                    <div>
+                      <div style="color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;font-weight:700;margin-bottom:2px;">Email Address</div>
+                      <div style="color:#fff;font-weight:600;"><span id="wrkDispEmail">{{ request.user.email|default:'—' }}</span></div>
+                    </div>
+                    <div>
+                      <div style="color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;font-weight:700;margin-bottom:2px;">Date of Birth &amp; Gender</div>
+                      <div style="color:#fff;font-weight:600;">
+                        <span id="wrkDispDob">{{ profile.date_of_birth|date:"Y-m-d"|default:'—' }}</span>
+                        {% if profile.gender %}<span style="color:var(--text-muted);"> • </span><span id="wrkDispGender" style="text-transform:capitalize;">{{ profile.get_gender_display|default:profile.gender }}</span>{% endif %}
+                      </div>
+                    </div>
+                    <div style="grid-column: 1 / -1;padding-top:0.6rem;border-top:1px dashed rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:0.5rem;">
+                      <div>
+                        <span style="color:var(--text-muted);font-size:0.72rem;text-transform:uppercase;font-weight:700;">Emergency Contact: </span>
+                        <span style="color:#eee;font-weight:600;font-size:0.85rem;" id="wrkDispEmergency">
+                          {% if profile.emergency_contact_name %}{{ profile.emergency_contact_name }} ({{ profile.emergency_relationship|default:'Contact' }}) — {{ profile.emergency_contact_phone }}{% else %}—{% endif %}
+                        </span>
+                      </div>
+                      <button type="button" onclick="toggleEditSection1('workout')" style="background:transparent;border:1px solid rgba(255,255,255,0.2);color:var(--text-muted);font-size:0.75rem;padding:3px 10px;border-radius:6px;cursor:pointer;">
+                        <i class="fa fa-pencil-alt"></i> Edit Contact Info
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Hidden inputs so registration data is submitted seamlessly -->
+                <input type="hidden" name="full_name" id="wrk_full_name" value="{{ request.user.get_full_name|default:request.user.username }}">
+                <input type="hidden" name="phone" id="wrk_phone" value="{{ profile.phone|default:'' }}">
+                <input type="hidden" name="email" id="wrk_email" value="{{ request.user.email }}">
+                <input type="hidden" name="date_of_birth" id="wrk_date_of_birth" value="{{ profile.date_of_birth|date:'Y-m-d'|default:'' }}">
+                <input type="hidden" name="age" id="wrk_age" value="">
+                <input type="hidden" name="gender" id="wrk_gender" value="{{ profile.gender|default:'' }}">
+                <input type="hidden" name="emergency_contact" id="wrk_emergency_contact" value="{% if profile.emergency_contact_name %}{{ profile.emergency_contact_name }} ({{ profile.emergency_relationship|default:'Contact' }}) — {{ profile.emergency_contact_phone }}{% endif %}">
+
+                <!-- Optional override section (revealed when clicked) -->
+                <div id="wrkEditSection1" style="display:none;background:rgba(255,255,255,0.02);border:1px dashed rgba(255,255,255,0.15);border-radius:10px;padding:1rem;margin-bottom:1.25rem;">
+                  <div style="font-size:0.78rem;color:var(--neon-lime);font-weight:700;margin-bottom:0.75rem;"><i class="fa fa-edit"></i> Edit Contact Details for This Assessment</div>
+                  <div class="form-grid-3">
+                    <div>
+                      <label class="form-label">Full Name</label>
+                      <input type="text" class="form-control" value="{{ request.user.get_full_name|default:request.user.username }}" oninput="syncField('wrk_full_name', this.value, 'wrkDispFullName')">
+                    </div>
+                    <div>
+                      <label class="form-label">Phone / WhatsApp</label>
+                      <input type="text" class="form-control" value="{{ profile.phone|default:'' }}" oninput="syncField('wrk_phone', this.value, 'wrkDispPhone')">
+                    </div>
+                    <div>
+                      <label class="form-label">Emergency Contact</label>
+                      <input type="text" class="form-control" value="{% if profile.emergency_contact_name %}{{ profile.emergency_contact_name }} ({{ profile.emergency_relationship|default:'Contact' }}) — {{ profile.emergency_contact_phone }}{% endif %}" oninput="syncField('wrk_emergency_contact', this.value, 'wrkDispEmergency')">
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Assessment-Specific Input Fields -->
+                <div style="font-size:0.78rem;color:var(--neon-lime);font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:0.6rem;">
+                  <i class="fa fa-ruler-combined"></i> Current Biometrics &amp; Daily Activity
+                </div>
+                <div class="form-grid-4">
+                  <div>
+                    <label class="form-label">Assessment Date</label>
+                    <input type="date" name="assessment_date" class="form-control" value="{% now 'Y-m-d' %}">
+                  </div>
+                  <div>
+                    <label class="form-label">Height (cm)</label>
+                    <input type="number" step="0.1" name="height_cm" class="form-control" value="{{ profile.height_cm|default:'' }}" placeholder="e.g. 175.0">
+                  </div>
+                  <div>
+                    <label class="form-label">Current Weight (kg) *</label>
+                    <input type="number" step="0.1" name="current_weight_kg" class="form-control" value="{{ profile.starting_weight_kg|default:'' }}" placeholder="e.g. 74.0" required>
+                  </div>
+                  <div>
+                    <label class="form-label">Occupation / Activity Style</label>
+                    <input type="text" name="occupation" class="form-control" placeholder="e.g. Bank Manager, Software Eng">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 2: Goals & Motivation -->
+              <div class="assessment-section">
+                <div class="assessment-section-title"><i class="fa fa-medal"></i> Section 2: Primary Goals &amp; Motivation</div>
+                <div class="form-grid-3">
+                  <div>
+                    <label class="form-label">Target Weight (kg)</label>
+                    <input type="number" step="0.1" name="target_weight_kg" class="form-control" placeholder="e.g. 70.0">
+                  </div>
+                  <div>
+                    <label class="form-label">Goal Timeline (Weeks)</label>
+                    <input type="number" name="goal_timeline_weeks" class="form-control" placeholder="e.g. 16">
+                  </div>
+                  <div>
+                    <label class="form-label">Motivation Level (1 to 10)</label>
+                    <input type="number" name="motivation_level" class="form-control" min="1" max="10" placeholder="e.g. 9">
+                  </div>
+                </div>
+                <div style="margin-top:1rem;">
+                  <label class="form-label">Primary Training Goals</label>
+                  <div class="form-grid-4">
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="fat_loss"> Fat Loss / Shred</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="muscle_gain"> Muscle Hypertrophy</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="lean_muscle"> Lean Tone &amp; Definition</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="strength"> Maximum Strength</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="endurance"> Cardiovascular Endurance</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="flexibility"> Mobility &amp; Flexibility</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="sports_performance"> Sports Conditioning</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="rehabilitation"> Injury Rehabilitation</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="general_fitness"> General Fitness &amp; Longevity</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="primary_goals" value="body_recomposition"> Body Recomposition</label>
+                  </div>
+                  <input type="text" name="primary_goals_other" class="form-control" style="margin-top:0.6rem;" placeholder="Other specific goal...">
+                </div>
+              </div>
+
+              <!-- Section 3: Training Experience -->
+              <div class="assessment-section">
+                <div class="assessment-section-title"><i class="fa fa-dumbbell"></i> Section 3: Training Experience &amp; History</div>
+                <div class="form-grid-3">
+                  <div>
+                    <label class="form-label">Experience Level</label>
+                    <select name="training_experience" class="form-control">
+                      <option value="">Select Level</option>
+                      <option value="none">No Prior Experience (First time)</option>
+                      <option value="beginner">Beginner (&lt; 6 months)</option>
+                      <option value="intermediate">Intermediate (6 months – 2 years)</option>
+                      <option value="advanced">Advanced (2+ years dedicated)</option>
+                      <option value="athlete">Competitive Athlete / Powerlifter</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">Currently Training?</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="currently_training" value="true"> Yes, currently active</label>
+                  </div>
+                  <div>
+                    <label class="form-label">Available Training Days / Wk</label>
+                    <input type="number" name="training_days_per_week" class="form-control" min="1" max="7" placeholder="e.g. 4">
+                  </div>
+                </div>
+                <div class="form-grid-3" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Session Duration (Min)</label>
+                    <input type="number" name="session_duration_minutes" class="form-control" placeholder="e.g. 60">
+                  </div>
+                  <div>
+                    <label class="form-label">Preferred Training Time</label>
+                    <input type="text" name="preferred_training_time" class="form-control" placeholder="e.g. 06:00 - 07:30 AM">
+                  </div>
+                  <div>
+                    <label class="form-label">Longest Training Streak (Months)</label>
+                    <input type="number" name="longest_training_streak_months" class="form-control" placeholder="e.g. 8">
+                  </div>
+                </div>
+                <div style="margin-top:1rem;">
+                  <label class="form-label">Past Training Methodologies</label>
+                  <div class="form-grid-4">
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_training_types" value="weight_training"> Weight / Gym Training</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_training_types" value="cardio"> Running / Cardio</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_training_types" value="crossfit"> CrossFit / HIIT</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_training_types" value="yoga"> Yoga / Stretching</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_training_types" value="pilates"> Pilates / Core</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_training_types" value="martial_arts"> Martial Arts / Boxing</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="previous_training_types" value="team_sport"> Cricket / Team Sport</label>
+                  </div>
+                  <input type="text" name="previous_training_other" class="form-control" style="margin-top:0.6rem;" placeholder="Other past training types...">
+                </div>
+                <div style="margin-top:1rem;">
+                  <label class="form-label">Why Did You Stop Training in the Past?</label>
+                  <textarea name="reason_stopped_training" rows="2" class="form-control" placeholder="e.g. Exam period, work overtime, injury, loss of motivation..."></textarea>
+                </div>
+              </div>
+
+              <!-- Section 4: Physical Measurements & Functional Rating -->
+              <div class="assessment-section">
+                <div class="assessment-section-title"><i class="fa fa-ruler"></i> Section 4: Physical Circumferences &amp; Fitness Ratings</div>
+                <div class="form-grid-3">
+                  <div>
+                    <label class="form-label">Estimated Body Fat %</label>
+                    <input type="number" step="0.1" name="body_fat_pct" class="form-control" placeholder="e.g. 18.5">
+                  </div>
+                  <div>
+                    <label class="form-label">Waist (cm)</label>
+                    <input type="number" step="0.1" name="waist_cm" class="form-control" placeholder="e.g. 82.0">
+                  </div>
+                  <div>
+                    <label class="form-label">Hips (cm)</label>
+                    <input type="number" step="0.1" name="hip_cm" class="form-control" placeholder="e.g. 96.0">
+                  </div>
+                </div>
+                <div class="form-grid-3" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Chest (cm)</label>
+                    <input type="number" step="0.1" name="chest_cm" class="form-control" placeholder="e.g. 98.0">
+                  </div>
+                  <div>
+                    <label class="form-label">Biceps (cm)</label>
+                    <input type="number" step="0.1" name="bicep_cm" class="form-control" placeholder="e.g. 33.5">
+                  </div>
+                  <div>
+                    <label class="form-label">Thighs (cm)</label>
+                    <input type="number" step="0.1" name="thigh_cm" class="form-control" placeholder="e.g. 54.0">
+                  </div>
+                </div>
+                <div class="form-grid-3" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Self Strength Rating (1 to 5)</label>
+                    <select name="strength_self_rating" class="form-control">
+                      <option value="">Select (1-5)</option>
+                      <option value="1">1 - Very Low</option>
+                      <option value="2">2 - Below Average</option>
+                      <option value="3">3 - Moderate</option>
+                      <option value="4">4 - Strong</option>
+                      <option value="5">5 - Very Strong</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">Self Endurance Rating (1 to 5)</label>
+                    <select name="endurance_self_rating" class="form-control">
+                      <option value="">Select (1-5)</option>
+                      <option value="1">1 - Very Low</option>
+                      <option value="2">2 - Below Average</option>
+                      <option value="3">3 - Moderate</option>
+                      <option value="4">4 - Good Stamina</option>
+                      <option value="5">5 - High Stamina</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">Self Flexibility Rating (1 to 5)</label>
+                    <select name="flexibility_self_rating" class="form-control">
+                      <option value="">Select (1-5)</option>
+                      <option value="1">1 - Very Stiff</option>
+                      <option value="2">2 - Tight</option>
+                      <option value="3">3 - Moderate</option>
+                      <option value="4">4 - Flexible</option>
+                      <option value="5">5 - Highly Mobile</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-grid-3" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Push-ups in 1 Set (Reps)</label>
+                    <input type="number" name="pushups_reps" class="form-control" placeholder="e.g. 20">
+                  </div>
+                  <div>
+                    <label class="form-label">Bodyweight Squats in 1 Set (Reps)</label>
+                    <input type="number" name="squats_reps" class="form-control" placeholder="e.g. 30">
+                  </div>
+                  <div>
+                    <label class="form-label">Plank Hold Time (Seconds)</label>
+                    <input type="number" name="plank_seconds" class="form-control" placeholder="e.g. 60">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 5: Gym Access & Equipment -->
+              <div class="assessment-section">
+                <div class="assessment-section-title"><i class="fa fa-warehouse"></i> Section 5: Equipment &amp; Gym Access</div>
+                <div class="form-grid-2">
+                  <div>
+                    <label class="form-label">Gym Access</label>
+                    <label class="checkbox-pill" style="width:100%;"><input type="checkbox" name="gym_access" value="true" checked> Full Access to Fit Me Pitigala Gym</label>
+                  </div>
+                  <div>
+                    <label class="form-label">Preferred Gym Training Area</label>
+                    <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                      <label class="checkbox-pill"><input type="checkbox" name="preferred_gym_area" value="free_weights"> Free Weights</label>
+                      <label class="checkbox-pill"><input type="checkbox" name="preferred_gym_area" value="machines"> Machines</label>
+                      <label class="checkbox-pill"><input type="checkbox" name="preferred_gym_area" value="cardio_zone"> Cardio</label>
+                      <label class="checkbox-pill"><input type="checkbox" name="preferred_gym_area" value="functional_area"> Functional / Turf</label>
+                    </div>
+                  </div>
+                </div>
+                <div style="margin-top:1rem;">
+                  <label class="form-label">Available Home Equipment (If training at home)</label>
+                  <div class="form-grid-4">
+                    <label class="checkbox-pill"><input type="checkbox" name="home_equipment" value="dumbbells"> Dumbbells</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="home_equipment" value="barbell"> Barbell &amp; Plates</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="home_equipment" value="resistance_bands"> Resistance Bands</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="home_equipment" value="pull_up_bar"> Pull-up Bar</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="home_equipment" value="bench"> Adjustable Bench</label>
+                    <label class="checkbox-pill"><input type="checkbox" name="home_equipment" value="none"> None (Gym only)</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 6: Medical & Injuries -->
+              <div class="assessment-section">
+                <div class="assessment-section-title"><i class="fa fa-notes-medical"></i> Section 6: Injuries &amp; Medical Conditions</div>
+                <div class="form-grid-2">
+                  <div>
+                    <label class="form-label">Current Injuries or Pain Areas</label>
+                    <textarea name="current_injuries" rows="2" class="form-control" placeholder="e.g. Lower back stiffness, right shoulder clicking, knee pain when squatting..."></textarea>
+                  </div>
+                  <div>
+                    <label class="form-label">Past Injuries or Surgeries</label>
+                    <textarea name="past_injuries" rows="2" class="form-control" placeholder="e.g. Ankle sprain 2023, ACL surgery 2020..."></textarea>
+                  </div>
+                </div>
+                <div class="form-grid-2" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Chronic Conditions / Health Flags</label>
+                    <textarea name="chronic_conditions" rows="2" class="form-control" placeholder="e.g. High blood pressure, asthma, slipped disc..."></textarea>
+                  </div>
+                  <div>
+                    <label class="form-label">Physical Limitations</label>
+                    <textarea name="physical_limitations" rows="2" class="form-control" placeholder="e.g. Cannot perform overhead presses, limited knee flexion..."></textarea>
+                  </div>
+                </div>
+                <div class="form-grid-3" style="margin-top:1rem;">
+                  <label class="checkbox-pill"><input type="checkbox" name="cleared_by_doctor" value="true" checked> Medically Cleared for Exercise</label>
+                  <label class="checkbox-pill"><input type="checkbox" name="is_under_medication" value="true"> Currently Under Medication</label>
+                  <div>
+                    <input type="text" name="medication_details" class="form-control" placeholder="Medication details if any...">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Section 7: Preferences & Constraints -->
+              <div class="assessment-section">
+                <div class="assessment-section-title"><i class="fa fa-sliders-h"></i> Section 7: Workout Preferences &amp; Training Splits</div>
+                <div class="form-grid-2">
+                  <div>
+                    <label class="form-label">Exercises You Want to Avoid</label>
+                    <textarea name="exercises_to_avoid" rows="2" class="form-control" placeholder="e.g. Behind-the-neck presses, barbell deadlifts..."></textarea>
+                  </div>
+                  <div>
+                    <label class="form-label">Favorite / Preferred Exercises</label>
+                    <textarea name="preferred_exercises" rows="2" class="form-control" placeholder="e.g. Incline dumbbell press, pull-ups, leg press..."></textarea>
+                  </div>
+                </div>
+                <div class="form-grid-2" style="margin-top:1rem;">
+                  <div>
+                    <label class="form-label">Preferred Training Split</label>
+                    <select name="training_split_preference" class="form-control">
+                      <option value="no_preference">Coach Recommended (No Preference)</option>
+                      <option value="full_body">Full Body (3 Days/Wk)</option>
+                      <option value="upper_lower">Upper / Lower Split (4 Days/Wk)</option>
+                      <option value="push_pull_legs">Push / Pull / Legs (PPL - 5-6 Days/Wk)</option>
+                      <option value="body_part_split">Body Part "Bro" Split (Chest, Back, Shoulders, Legs, Arms)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="form-label">Cardio Preference</label>
+                    <select name="cardio_preference" class="form-control">
+                      <option value="no_preference">Coach Recommended (No Preference)</option>
+                      <option value="liss">LISS (Incline treadmill walk / Stairmaster)</option>
+                      <option value="hiit">HIIT (Sprint intervals / Assault bike)</option>
+                      <option value="moderate">Moderate Outdoor Jogging</option>
+                      <option value="none">Prefer No Cardio (Lifting only)</option>
+                    </select>
+                  </div>
+                </div>
+                <div style="margin-top:1rem;">
+                  <label class="form-label">Special Notes to Coach Dhananjaya</label>
+                  <textarea name="member_notes" rows="2" class="form-control" placeholder="Anything else you'd like your coach to consider before writing your program..."></textarea>
+                </div>
+              </div>
+
+              <!-- Submit Button -->
+              <div style="display:flex;justify-content:flex-end;gap:1rem;margin-top:1.5rem;">
+                <button type="submit" id="btnSubmitWorkout" class="btn-fitme" style="padding:0.75rem 2rem;font-size:0.95rem;">
+                  <i class="fa fa-check-circle"></i> Save &amp; Submit Workout Assessment
+                </button>
+              </div>
+
+            </div>
+          </div>
+        </form>
+      </div>
+
+    </div>
+
   </main>
 </div>
 
@@ -1290,8 +2807,8 @@
         <label>Select Membership Package</label>
         <select id="selfRenewPlanSelect" class="form-control" onchange="updateRenewSummary()">
           {% for p in membership_plans %}
-            <option value="{{ p.id }}" data-price="{{ p.price_monthly }}" data-days="{{ p.duration_days }}">
-              {{ p.name }} — LKR {{ p.price_monthly }} ({{ p.duration_days }} Days)
+            <option value="{{ p.id }}" data-price="{{ p.price_monthly|stringformat:'.2f' }}" data-days="{{ p.duration_days }}">
+              {{ p.name }} — LKR {{ p.price_monthly|floatformat:0 }} ({{ p.duration_days }} Days)
             </option>
           {% empty %}
             <option value="">No active membership plans found</option>
@@ -1303,7 +2820,6 @@
         <label>Payment Method</label>
         <select id="selfRenewPaymentMethod" class="form-control">
           <option value="online_card">Credit / Debit Card (Visa / Mastercard Online)</option>
-          <option value="koko">Koko (Buy Now, Pay in 3 Installments)</option>
           <option value="bank_transfer">Bank Transfer / Front Desk Deposit</option>
         </select>
       </div>
@@ -1351,42 +2867,10 @@
         <a id="renewReceiptLink" href="#" target="_blank" class="btn-fitme" style="background:#2A3138;border-color:#3E4851;color:#fff;text-decoration:none;">
           <i class="fa fa-print"></i> View / Print Receipt
         </a>
-        <button type="button" class="btn-fitme" onclick="closeSelfRenewModal(); testFaceUnlock();">
-          <i class="fa fa-door-open"></i> Test Face Unlock Now
+        <button type="button" class="btn-fitme" onclick="closeSelfRenewModal();">
+          <i class="fa fa-check"></i> Done
         </button>
       </div>
-    </div>
-  </div>
-</div>
-
-<!-- Modal 3: Face Unlock Door Access Test -->
-<div class="modal-overlay" id="faceUnlockModal">
-  <div class="modal-box" style="max-width:480px;text-align:center;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;">
-      <h3 style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;display:flex;align-items:center;gap:0.55rem;margin:0;font-size:1.05rem;">
-        <i class="fa fa-door-open" style="color:var(--neon-lime);"></i>
-        Pitigala Turnstile Gate Access
-      </h3>
-      <button type="button" class="modal-close-btn" onclick="closeFaceUnlockModal()">✕</button>
-    </div>
-
-    <!-- Status Box -->
-    <div id="faceUnlockStatusBox" style="padding:1.5rem;border-radius:14px;border:2px solid var(--neon-lime);background:rgba(118,192,67,0.08);margin-bottom:1.25rem;transition:all 0.3s;">
-      <div id="faceUnlockMsg" style="font-size:1.1rem;font-weight:800;margin-bottom:0.75rem;">
-        <i class="fa fa-spinner fa-spin" style="color:var(--neon-lime);"></i> Contacting Turnstile Face Camera...
-      </div>
-      <div id="faceUnlockDetails" style="font-size:0.85rem;color:var(--text-muted);line-height:1.4;">
-        Verifying facial signature and active subscription...
-      </div>
-    </div>
-
-    <div style="display:flex;gap:0.75rem;justify-content:center;">
-      <button type="button" class="btn-fitme" onclick="closeFaceUnlockModal()" style="background:#2A3138;color:#fff;border-color:#3E4851;font-size:0.85rem;">
-        Close
-      </button>
-      <button type="button" class="btn-fitme" onclick="testFaceUnlock()" style="font-size:0.85rem;">
-        <i class="fa fa-redo"></i> Re-test Gate Punch
-      </button>
     </div>
   </div>
 </div>
@@ -1400,10 +2884,28 @@
   }
 
   function switchTab(tabId, btn) {
+    if (!tabId) return;
+    tabId = tabId.replace('#', '').trim();
+    const pane = document.getElementById(tabId);
+    if (!pane) return;
+
     document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
     document.querySelectorAll('.nav-tab-btn').forEach(b => b.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
-    if (btn) btn.classList.add('active');
+    pane.classList.add('active');
+
+    let match = btn;
+    if (!match) {
+      match = document.querySelector(`.nav-tab-btn[onclick*="${tabId}"]`);
+    }
+    if (match) match.classList.add('active');
+
+    // Persist active tab across reloads, actions, and browser history
+    try {
+      localStorage.setItem('fitme_member_active_tab', tabId);
+      if (window.location.hash !== '#' + tabId) {
+        history.replaceState(null, null, '#' + tabId);
+      }
+    } catch(e) {}
   }
 
   // Submit Workout Log
@@ -1764,52 +3266,6 @@
     }
   }
 
-  // ═══════════════════════════════════════════════════════════════════
-  // FACE UNLOCK TURNSTILE GATE ACCESS TEST
-  // ═══════════════════════════════════════════════════════════════════
-  async function testFaceUnlock() {
-    document.getElementById('faceUnlockModal').style.display = 'flex';
-    const statusBox = document.getElementById('faceUnlockStatusBox');
-    const msgEl = document.getElementById('faceUnlockMsg');
-    const detailsEl = document.getElementById('faceUnlockDetails');
-
-    statusBox.style.borderColor = 'var(--neon-lime)';
-    statusBox.style.background = 'rgba(118, 192, 67, 0.08)';
-    msgEl.innerHTML = '<i class="fa fa-spinner fa-spin" style="color:var(--neon-lime);"></i> Scanning Face ID on Turnstile Camera (192.168.1.23)...';
-    detailsEl.textContent = 'Verifying biometric signature against active membership records...';
-
-    try {
-      const res = await fetch('/api/zkbio/face-unlock/', {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': '{{ csrf_token }}',
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await res.json();
-
-      if (data.unlocked) {
-        statusBox.style.borderColor = 'var(--neon-lime)';
-        statusBox.style.background = 'rgba(118, 192, 67, 0.15)';
-        msgEl.innerHTML = `<span style="color:var(--neon-lime);"><i class="fa fa-check-circle"></i> TURNSTILE UNLOCKED - ACCESS GRANTED</span>`;
-        detailsEl.innerHTML = `<strong>${data.message}</strong><br><span style="color:var(--text-muted);font-size:0.8rem;">Terminal: MAIN_TURNSTILE_FACE_CAM (192.168.1.23) • Time: ${data.timestamp} • PIN: ${data.pin}</span>`;
-        showToast("Gate Unlocked via Face ID! Enjoy your workout! 💪");
-      } else {
-        statusBox.style.borderColor = 'var(--danger)';
-        statusBox.style.background = 'rgba(230, 57, 70, 0.15)';
-        msgEl.innerHTML = `<span style="color:var(--danger);"><i class="fa fa-times-circle"></i> ACCESS DENIED</span>`;
-        detailsEl.innerHTML = `<strong>${data.error || 'Turnstile barrier locked.'}</strong><br><span style="color:var(--text-muted);font-size:0.8rem;">Please register Face ID or renew your subscription.</span>`;
-      }
-    } catch(err) {
-      statusBox.style.borderColor = 'var(--danger)';
-      msgEl.innerHTML = `<span style="color:var(--danger);">Face Unlock Error</span>`;
-      detailsEl.textContent = err.toString();
-    }
-  }
-
-  function closeFaceUnlockModal() {
-    document.getElementById('faceUnlockModal').style.display = 'none';
-  }
 
   // ═══════════════════════════════════════════════════════════════════
   // SELF-SERVICE RENEWAL & DOOR UNLOCK
@@ -1823,13 +3279,21 @@
     document.getElementById('selfRenewModal').style.display = 'none';
   }
 
+  function parseCleanRenewPrice(val) {
+    if (val === null || val === undefined) return 0;
+    const cleaned = String(val).replace(/[^0-9.-]+/g, '');
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
+  }
+
   function updateRenewSummary() {
     const sel = document.getElementById('selfRenewPlanSelect');
     if (!sel || !sel.selectedOptions.length) return;
     const opt = sel.selectedOptions[0];
-    const price = opt.getAttribute('data-price') || '0';
+    const rawPrice = opt.getAttribute('data-price') || '0';
+    const numPrice = parseCleanRenewPrice(rawPrice);
     const disp = document.getElementById('renewPriceDisplay');
-    if (disp) disp.textContent = `LKR ${Number(price).toLocaleString()}`;
+    if (disp) disp.textContent = `LKR ${numPrice.toLocaleString()}`;
   }
 
   async function submitSelfRenew(e) {
@@ -1872,7 +3336,7 @@
         const badge = document.querySelector('.biometric-status-badge');
         if (badge) {
           badge.classList.remove('inactive');
-          badge.innerHTML = '<span class="pulse-dot"></span> DOOR &amp; FACE ACCESS ACTIVE';
+          badge.innerHTML = '<span class="pulse-dot"></span> <span>DOOR &amp; FACE ACCESS ACTIVE</span>';
         }
         const passCard = document.querySelector('.id-pass-card');
         if (passCard) passCard.classList.remove('inactive');
@@ -1880,9 +3344,18 @@
         if (lockedBanner) lockedBanner.style.display = 'none';
         const passPin = document.getElementById('idPassPin');
         if (passPin) {
-          passPin.style.color = 'var(--neon-lime)';
-          const lockedText = passPin.querySelector('span');
-          if (lockedText) lockedText.remove();
+          const pinNum = passPin.querySelector('span');
+          if (pinNum) pinNum.style.color = 'var(--neon-lime)';
+          const lockedTag = passPin.querySelector('.id-tag-locked');
+          if (lockedTag) {
+            lockedTag.className = 'id-tag-active';
+            lockedTag.textContent = 'ARMED';
+          }
+        }
+        const planPill = document.querySelector('.id-plan-pill');
+        if (planPill) {
+          planPill.className = 'id-plan-pill active';
+          planPill.innerHTML = '<i class="fa fa-crown"></i> Active Access';
         }
       } else {
         alert("Renewal failed: " + (data.error || "Unknown error"));
@@ -1894,6 +3367,586 @@
       btn.innerHTML = '<i class="fa fa-lock-open"></i> Pay &amp; Unlock Gate Access';
     }
   }
+
+  // ─── Assessment Forms Logic (Dhananjaya Assessments) ─────────────────────
+  function showAssessmentForm(type) {
+    const nutWrapper = document.getElementById('nutritionFormWrapper');
+    const wrkWrapper = document.getElementById('workoutFormWrapper');
+    const btnNut = document.getElementById('btnToggleNutrition');
+    const btnWrk = document.getElementById('btnToggleWorkout');
+
+    if (type === 'nutrition') {
+      nutWrapper.style.display = 'block';
+      wrkWrapper.style.display = 'none';
+      btnNut.style.background = 'var(--neon-lime)';
+      btnNut.style.color = '#000';
+      btnNut.style.border = 'none';
+      btnWrk.style.background = '#1B2024';
+      btnWrk.style.color = '#fff';
+      btnWrk.style.border = '1px solid rgba(255,255,255,0.15)';
+    } else {
+      nutWrapper.style.display = 'none';
+      wrkWrapper.style.display = 'block';
+      btnWrk.style.background = 'var(--neon-lime)';
+      btnWrk.style.color = '#000';
+      btnWrk.style.border = 'none';
+      btnNut.style.background = '#1B2024';
+      btnNut.style.color = '#fff';
+      btnNut.style.border = '1px solid rgba(255,255,255,0.15)';
+    }
+  }
+
+  function _prefillForm(form, data) {
+    if (!data) return;
+    for (const [key, val] of Object.entries(data)) {
+      if (val === null || val === undefined || val === '') continue;
+      const elements = form.elements[key];
+      if (!elements) continue;
+
+      if (elements instanceof RadioNodeList || (elements.length && elements[0].type === 'checkbox')) {
+        const selected = typeof val === 'string' ? val.split(',') : (Array.isArray(val) ? val : [val]);
+        for (let i = 0; i < elements.length; i++) {
+          elements[i].checked = selected.includes(elements[i].value);
+        }
+      } else if (elements.type === 'checkbox') {
+        elements.checked = Boolean(val);
+      } else {
+        elements.value = val;
+      }
+    }
+  }
+
+  function _extractFormData(form) {
+    const payload = {};
+    const formData = new FormData(form);
+    for (const [key, val] of formData.entries()) {
+      if (payload[key] !== undefined) {
+        if (!Array.isArray(payload[key])) {
+          payload[key] = [payload[key]];
+        }
+        payload[key].push(val);
+      } else {
+        payload[key] = val;
+      }
+    }
+    // Also include unchecked booleans if relevant
+    const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+    checkboxes.forEach(cb => {
+      if (!cb.name) return;
+      if (!form.querySelectorAll(`input[name="${cb.name}"]`).length > 1) {
+        if (!cb.checked && payload[cb.name] === undefined) {
+          payload[cb.name] = false;
+        }
+      }
+    });
+    return payload;
+  }
+
+  function toggleEditSection1(type) {
+    const el = document.getElementById(type === 'nutrition' ? 'nutEditSection1' : 'wrkEditSection1');
+    if (el) {
+      el.style.display = (el.style.display === 'none' || !el.style.display) ? 'block' : 'none';
+    }
+  }
+
+  function syncField(hiddenInputId, value, dispId) {
+    const hidden = document.getElementById(hiddenInputId);
+    if (hidden) hidden.value = value;
+    const disp = document.getElementById(dispId);
+    if (disp) disp.textContent = value || '—';
+  }
+
+  async function loadMyAssessmentData() {
+    try {
+      const res = await fetch('/api/assessments/my/');
+      if (!res.ok) return;
+      const data = await res.json();
+      if (!data.success) return;
+
+      const nut = data.nutrition_assessment;
+      const wrk = data.workout_assessment;
+      const defs = data.profile_defaults || {};
+
+      // Auto-populate badges and summary from registration profile defaults
+      if (defs.full_name) {
+        const nutName = document.getElementById('nutDispFullName');
+        if (nutName) nutName.textContent = defs.full_name;
+        const wrkName = document.getElementById('wrkDispFullName');
+        if (wrkName) wrkName.textContent = defs.full_name;
+      }
+      if (defs.phone) {
+        const nutPhone = document.getElementById('nutDispPhone');
+        if (nutPhone) nutPhone.textContent = defs.phone;
+        const wrkPhone = document.getElementById('wrkDispPhone');
+        if (wrkPhone) wrkPhone.textContent = defs.phone;
+      }
+      if (defs.email) {
+        const nutEmail = document.getElementById('nutDispEmail');
+        if (nutEmail) nutEmail.textContent = defs.email;
+        const wrkEmail = document.getElementById('wrkDispEmail');
+        if (wrkEmail) wrkEmail.textContent = defs.email;
+      }
+      if (defs.date_of_birth) {
+        const dobStr = defs.date_of_birth + (defs.age ? ` (${defs.age} yrs)` : '');
+        const nutDob = document.getElementById('nutDispDob');
+        if (nutDob) nutDob.textContent = dobStr;
+        const wrkDob = document.getElementById('wrkDispDob');
+        if (wrkDob) wrkDob.textContent = dobStr;
+      }
+      if (defs.emergency_contact) {
+        const nutEm = document.getElementById('nutDispEmergency');
+        if (nutEm) nutEm.textContent = defs.emergency_contact;
+        const wrkEm = document.getElementById('wrkDispEmergency');
+        if (wrkEm) wrkEm.textContent = defs.emergency_contact;
+      }
+
+      // If assessments have not been submitted yet, auto-prefill from registration profile
+      if (!nut && defs) {
+        _prefillForm(document.getElementById('formNutritionAssessment'), defs);
+      }
+      if (!wrk && defs) {
+        _prefillForm(document.getElementById('formWorkoutAssessment'), defs);
+        // Pre-fill medical history from registration if available
+        const wrkForm = document.getElementById('formWorkoutAssessment');
+        if (wrkForm) {
+          if (defs.medical_conditions && !wrkForm.elements['chronic_conditions']?.value) {
+            wrkForm.elements['chronic_conditions'].value = defs.medical_conditions;
+          }
+          if (defs.under_medication && !wrkForm.elements['medication_details']?.value) {
+            wrkForm.elements['medication_details'].value = defs.under_medication;
+            if (wrkForm.elements['is_under_medication']) wrkForm.elements['is_under_medication'].checked = true;
+          }
+        }
+      }
+
+      // Status pill updates
+      const nutBadge = document.getElementById('nutStatusBadge');
+      const nutDate = document.getElementById('nutLastSubmittedText');
+      if (nut) {
+        _prefillForm(document.getElementById('formNutritionAssessment'), nut);
+        if (nut.status === 'reviewed') {
+          nutBadge.textContent = 'PLAN READY';
+          nutBadge.style.background = 'rgba(118,192,67,0.15)';
+          nutBadge.style.color = 'var(--neon-lime)';
+        } else {
+          nutBadge.textContent = 'PENDING COACH REVIEW';
+          nutBadge.style.background = 'rgba(245,158,11,0.15)';
+          nutBadge.style.color = 'var(--amber)';
+        }
+        nutDate.textContent = `Submitted: ${new Date(nut.submitted_at).toLocaleDateString()}`;
+      }
+
+      const wrkBadge = document.getElementById('wrkStatusBadge');
+      const wrkDate = document.getElementById('wrkLastSubmittedText');
+      if (wrk) {
+        _prefillForm(document.getElementById('formWorkoutAssessment'), wrk);
+        if (wrk.status === 'reviewed') {
+          wrkBadge.textContent = 'PLAN READY';
+          wrkBadge.style.background = 'rgba(118,192,67,0.15)';
+          wrkBadge.style.color = 'var(--neon-lime)';
+        } else {
+          wrkBadge.textContent = 'PENDING COACH REVIEW';
+          wrkBadge.style.background = 'rgba(245,158,11,0.15)';
+          wrkBadge.style.color = 'var(--amber)';
+        }
+        wrkDate.textContent = `Submitted: ${new Date(wrk.submitted_at).toLocaleDateString()}`;
+      }
+
+      // Check if coach plan exists on either
+      const hasPlan = (wrk && wrk.status === 'reviewed') || (nut && nut.status === 'reviewed');
+      if (hasPlan) {
+        const card = document.getElementById('coachPrescriptionCard');
+        card.style.display = 'block';
+        const navBadge = document.getElementById('assessmentNavBadge');
+        if (navBadge) navBadge.style.display = 'inline-block';
+
+        const coachName = (wrk && wrk.reviewed_by) || (nut && nut.reviewed_by) || 'Coach Dhananjaya';
+        document.getElementById('coachPrescriptionAuthor').textContent = coachName;
+
+        const revDate = (wrk && wrk.reviewed_at) || (nut && nut.reviewed_at);
+        if (revDate) {
+          document.getElementById('coachPrescriptionDate').textContent = `Reviewed on ${new Date(revDate).toLocaleDateString()}`;
+        }
+
+        if (wrk) {
+          if (wrk.assigned_program) {
+            document.getElementById('cpProgramTitle').textContent = wrk.assigned_program.title || wrk.assigned_program;
+          }
+          if (wrk.coach_training_days_per_week) {
+            document.getElementById('cpFrequency').textContent = `${wrk.coach_training_days_per_week} Days / Week`;
+          }
+          if (wrk.coach_session_duration_minutes) {
+            document.getElementById('cpDuration').textContent = `${wrk.coach_session_duration_minutes} Minutes`;
+          }
+          if (wrk.coach_cardio_recommendation) {
+            document.getElementById('cpCardio').textContent = wrk.coach_cardio_recommendation;
+          }
+          if (wrk.coach_plan_notes) {
+            document.getElementById('cpWorkoutNotes').textContent = wrk.coach_plan_notes;
+          }
+        }
+
+        if (nut) {
+          if (nut.coach_calorie_target) document.getElementById('cpCalories').textContent = nut.coach_calorie_target;
+          if (nut.coach_protein_target_g) document.getElementById('cpProtein').textContent = nut.coach_protein_target_g;
+          if (nut.coach_carbs_target_g) document.getElementById('cpCarbs').textContent = nut.coach_carbs_target_g;
+          if (nut.coach_fat_target_g) document.getElementById('cpFats').textContent = nut.coach_fat_target_g;
+          if (nut.coach_water_target_ml) document.getElementById('cpWater').textContent = nut.coach_water_target_ml;
+          if (nut.coach_plan_notes) document.getElementById('cpNutritionNotes').textContent = nut.coach_plan_notes;
+        }
+      }
+
+    } catch (err) {
+      console.error('Failed loading assessment data:', err);
+    }
+  }
+
+  async function handleNutritionSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitNutrition');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving Assessment...';
+
+    const payload = _extractFormData(document.getElementById('formNutritionAssessment'));
+
+    try {
+      const res = await fetch('/api/assessments/nutrition/submit/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message || 'Nutrition Assessment saved successfully!');
+        const nutBadge = document.getElementById('nutStatusBadge');
+        if (nutBadge) {
+          nutBadge.textContent = 'PENDING COACH REVIEW';
+          nutBadge.style.background = 'rgba(245,158,11,0.15)';
+          nutBadge.style.color = 'var(--amber)';
+        }
+        loadMyAssessmentData();
+      } else {
+        alert('Error: ' + (data.error || 'Failed to submit form'));
+      }
+    } catch (err) {
+      alert('Submission error: ' + err);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check-circle"></i> Save &amp; Submit Nutrition Assessment';
+    }
+  }
+
+  async function handleWorkoutSubmit(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitWorkout');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving Assessment...';
+
+    const payload = _extractFormData(document.getElementById('formWorkoutAssessment'));
+
+    try {
+      const res = await fetch('/api/assessments/workout/submit/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message || 'Workout Assessment saved successfully!');
+        const wrkBadge = document.getElementById('wrkStatusBadge');
+        if (wrkBadge) {
+          wrkBadge.textContent = 'PENDING COACH REVIEW';
+          wrkBadge.style.background = 'rgba(245,158,11,0.15)';
+          wrkBadge.style.color = 'var(--amber)';
+        }
+        loadMyAssessmentData();
+      } else {
+        alert('Error: ' + (data.error || 'Failed to submit form'));
+      }
+    } catch (err) {
+      alert('Submission error: ' + err);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check-circle"></i> Save &amp; Submit Workout Assessment';
+    }
+  }
+
+  // ── Member Profile Photo Update Modal & Logic ──
+  let memCameraStream = null;
+  let memCapturedBase64 = null;
+
+  function openMemberPhotoModal() {
+    const modal = document.getElementById('memberPhotoModal');
+    if (modal) modal.style.display = 'flex';
+  }
+
+  function closeMemberPhotoModal() {
+    stopMemberCamera();
+    const modal = document.getElementById('memberPhotoModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function startMemberCamera() {
+    try {
+      memCameraStream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 640 }, height: { ideal: 640 }, facingMode: 'user' }
+      });
+      const video = document.getElementById('memWebcamVideo');
+      video.srcObject = memCameraStream;
+      video.style.display = 'block';
+      document.getElementById('memPhotoPreview').style.display = 'none';
+      document.getElementById('memPhotoPlaceholder').style.display = 'none';
+      document.getElementById('btnMemStartCam').style.display = 'none';
+      document.getElementById('btnMemSnap').style.display = 'inline-flex';
+      document.getElementById('btnMemRetake').style.display = 'none';
+    } catch (err) {
+      alert('Camera access denied or unavailable: ' + err.message + '\nPlease choose an image file instead.');
+    }
+  }
+
+  function stopMemberCamera() {
+    if (memCameraStream) {
+      memCameraStream.getTracks().forEach(t => t.stop());
+      memCameraStream = null;
+    }
+    const video = document.getElementById('memWebcamVideo');
+    if (video) video.style.display = 'none';
+    const btnStart = document.getElementById('btnMemStartCam');
+    if (btnStart) btnStart.style.display = 'inline-flex';
+    const btnSnap = document.getElementById('btnMemSnap');
+    if (btnSnap) btnSnap.style.display = 'none';
+  }
+
+  function snapMemberPhoto() {
+    const video = document.getElementById('memWebcamVideo');
+    const canvas = document.getElementById('memWebcamCanvas');
+    canvas.width = video.videoWidth || 480;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    memCapturedBase64 = canvas.toDataURL('image/jpeg', 0.9);
+
+    stopMemberCamera();
+    const prev = document.getElementById('memPhotoPreview');
+    prev.src = memCapturedBase64;
+    prev.style.display = 'block';
+    document.getElementById('memPhotoPlaceholder').style.display = 'none';
+    document.getElementById('btnMemStartCam').style.display = 'none';
+    document.getElementById('btnMemRetake').style.display = 'inline-flex';
+  }
+
+  function retakeMemberPhoto() {
+    memCapturedBase64 = null;
+    startMemberCamera();
+  }
+
+  function handleMemberFileSelected(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    stopMemberCamera();
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+      memCapturedBase64 = evt.target.result;
+      const prev = document.getElementById('memPhotoPreview');
+      prev.src = memCapturedBase64;
+      prev.style.display = 'block';
+      document.getElementById('memPhotoPlaceholder').style.display = 'none';
+      document.getElementById('btnMemRetake').style.display = 'none';
+      document.getElementById('btnMemStartCam').style.display = 'inline-flex';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function saveMemberProfilePhoto() {
+    const fileInput = document.getElementById('memPhotoFileInput');
+    const hasFile = fileInput && fileInput.files && fileInput.files[0];
+
+    if (!memCapturedBase64 && !hasFile) {
+      alert('Please select an image file or take a camera snapshot first.');
+      return;
+    }
+
+    const btn = document.getElementById('btnSaveMemberPhoto');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
+
+    try {
+      let res;
+      if (hasFile && !memCapturedBase64) {
+        const formData = new FormData();
+        formData.append('photo', fileInput.files[0]);
+        res = await fetch('/api/profile/update-photo/', {
+          method: 'POST',
+          headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+          body: formData
+        });
+      } else {
+        res = await fetch('/api/profile/update-photo/', {
+          method: 'POST',
+          headers: {
+            'X-CSRFToken': '{{ csrf_token }}',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ photo_base64: memCapturedBase64 })
+        });
+      }
+
+      const data = await res.json();
+      if (data.success) {
+        if (typeof showToast === 'function') {
+          showToast(data.message || 'Profile photo updated successfully!');
+        } else {
+          alert('Profile photo updated successfully!');
+        }
+        if (data.photo_url) {
+          const passPhoto = document.getElementById('memberPassPhoto');
+          const passIcon = document.getElementById('memberPassIcon');
+          if (passPhoto) {
+            passPhoto.src = data.photo_url;
+            passPhoto.style.display = 'block';
+          } else if (passIcon && passIcon.parentElement) {
+            passIcon.parentElement.innerHTML = `<img src="${data.photo_url}" alt="Member Photo" id="memberPassPhoto" style="width:100%;height:100%;object-fit:cover;">`;
+          }
+        }
+        closeMemberPhotoModal();
+        setTimeout(() => location.reload(), 1200);
+      } else {
+        alert('Failed to update photo: ' + (data.error || 'Server error'));
+      }
+    } catch (err) {
+      alert('Error updating profile photo: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-save"></i> Save Photo';
+    }
+  }
+
+  function toggleMemberSidebarCollapse() {
+    const sb = document.getElementById('memberSidebar');
+    if (!sb) return;
+    const isCollapsed = sb.classList.toggle('collapsed');
+    try {
+      localStorage.setItem('fitme_member_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+    } catch(e) {}
+    const icon = document.getElementById('memberSidebarToggleIcon');
+    if (icon) {
+      icon.className = isCollapsed ? 'fa fa-angles-right' : 'fa fa-angles-left';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    let targetTab = null;
+    if (window.location.hash) {
+      const h = window.location.hash.replace('#', '').trim();
+      if (document.getElementById(h)) targetTab = h;
+    }
+    if (!targetTab) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const q = urlParams.get('tab');
+      if (q && document.getElementById(q)) targetTab = q;
+    }
+    if (!targetTab) {
+      const saved = localStorage.getItem('fitme_member_active_tab');
+      if (saved && document.getElementById(saved)) targetTab = saved;
+    }
+    if (targetTab) {
+      switchTab(targetTab);
+    }
+
+    // Restore scroll position
+    try {
+      const savedScroll = sessionStorage.getItem('fitme_member_scroll_pos');
+      if (savedScroll !== null) {
+        sessionStorage.removeItem('fitme_member_scroll_pos');
+        window.scrollTo({ top: parseInt(savedScroll, 10), behavior: 'instant' });
+      }
+    } catch(e) {}
+
+    try {
+      if (localStorage.getItem('fitme_member_sidebar_collapsed') === 'true') {
+        const sb = document.getElementById('memberSidebar');
+        if (sb) {
+          sb.classList.add('collapsed');
+          const icon = document.getElementById('memberSidebarToggleIcon');
+          if (icon) icon.className = 'fa fa-angles-right';
+        }
+      }
+    } catch(e) {}
+    loadMyAssessmentData();
+  });
+
+  window.addEventListener('hashchange', () => {
+    if (window.location.hash) {
+      const h = window.location.hash.replace('#', '').trim();
+      if (document.getElementById(h)) switchTab(h);
+    }
+  });
+
+  window.addEventListener('beforeunload', () => {
+    try {
+      sessionStorage.setItem('fitme_member_scroll_pos', window.scrollY.toString());
+    } catch(e) {}
+  });
 </script>
+
+<!-- Member Profile Photo Update Modal -->
+<div class="modal-overlay" id="memberPhotoModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:9999;align-items:center;justify-content:center;padding:1rem;">
+  <div style="background:#14181B;border:1px solid var(--border-color);border-radius:14px;max-width:480px;width:100%;padding:1.5rem;box-shadow:0 12px 40px rgba(0,0,0,0.85);color:#fff;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:0.75rem;">
+      <h3 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:1.15rem;margin:0;display:flex;align-items:center;gap:0.5rem;">
+        <i class="fa fa-camera" style="color:var(--neon-lime);"></i> Update Profile Photo
+      </h3>
+      <button type="button" onclick="closeMemberPhotoModal()" style="background:none;border:none;color:#888;font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+
+    <p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:1rem;">
+      Upload a portrait photo or snap a selfie with your camera. This will also update your turnstile biometric Face ID badge.
+    </p>
+
+    <!-- Camera / Preview Box -->
+    <div style="position:relative;width:100%;height:260px;background:#000;border-radius:10px;overflow:hidden;border:2px solid var(--border-color);margin-bottom:1rem;display:flex;align-items:center;justify-content:center;">
+      <video id="memWebcamVideo" autoplay playsinline style="width:100%;height:100%;object-fit:cover;display:none;"></video>
+      <canvas id="memWebcamCanvas" style="display:none;"></canvas>
+      <img id="memPhotoPreview" src="{% if profile and profile.profile_photo %}{{ profile.profile_photo.url }}{% endif %}" style="{% if profile and profile.profile_photo %}display:block;{% else %}display:none;{% endif %}width:100%;height:100%;object-fit:cover;">
+      <div id="memPhotoPlaceholder" style="{% if profile and profile.profile_photo %}display:none;{% else %}display:flex;{% endif %}flex-direction:column;align-items:center;color:var(--text-muted);">
+        <i class="fa fa-user-circle" style="font-size:3.5rem;margin-bottom:0.5rem;color:#444;"></i>
+        <span>No photo selected yet</span>
+      </div>
+    </div>
+
+    <!-- Camera Controls -->
+    <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
+      <button type="button" id="btnMemStartCam" onclick="startMemberCamera()" style="flex:1;background:#1E252B;border:1px solid rgba(255,255,255,0.15);color:#fff;padding:0.55rem;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:0.35rem;">
+        <i class="fa fa-video" style="color:var(--cyan);"></i> Use Camera
+      </button>
+      <button type="button" id="btnMemSnap" onclick="snapMemberPhoto()" style="display:none;flex:1;background:var(--neon-lime);color:#000;border:none;padding:0.55rem;border-radius:8px;font-size:0.8rem;font-weight:800;cursor:pointer;align-items:center;justify-content:center;gap:0.35rem;">
+        <i class="fa fa-camera"></i> Snap Photo
+      </button>
+      <button type="button" id="btnMemRetake" onclick="retakeMemberPhoto()" style="display:none;flex:1;background:#2A3138;color:#fff;border:none;padding:0.55rem;border-radius:8px;font-size:0.8rem;font-weight:700;cursor:pointer;align-items:center;justify-content:center;gap:0.35rem;">
+        <i class="fa fa-redo"></i> Retake
+      </button>
+    </div>
+
+    <!-- File selector -->
+    <div style="margin-bottom:1.25rem;">
+      <label style="font-size:0.75rem;color:var(--text-muted);display:block;margin-bottom:0.35rem;">Or Choose File from Device</label>
+      <input type="file" id="memPhotoFileInput" accept="image/*" onchange="handleMemberFileSelected(event)" style="width:100%;font-size:0.8rem;color:#ccc;background:#101315;border:1px solid rgba(255,255,255,0.15);border-radius:6px;padding:0.4rem;">
+    </div>
+
+    <!-- Action buttons -->
+    <div style="display:flex;justify-content:flex-end;gap:0.6rem;border-top:1px solid rgba(255,255,255,0.1);padding-top:0.85rem;">
+      <button type="button" onclick="closeMemberPhotoModal()" style="background:#22282D;color:#ccc;border:none;padding:0.5rem 1rem;border-radius:6px;font-size:0.82rem;cursor:pointer;">Cancel</button>
+      <button type="button" id="btnSaveMemberPhoto" onclick="saveMemberProfilePhoto()" style="background:var(--neon-lime);color:#000;font-weight:800;border:none;padding:0.5rem 1.25rem;border-radius:6px;font-size:0.82rem;cursor:pointer;display:inline-flex;align-items:center;gap:0.4rem;">
+        <i class="fa fa-save"></i> Save Photo
+      </button>
+    </div>
+  </div>
+</div>
 </body>
 </html>

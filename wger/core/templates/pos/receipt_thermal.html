@@ -1,8 +1,10 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <title>Receipt #{{ sale.receipt_number }} — Fit Me Gym Bar POS</title>
+  <link rel="icon" href="{% static 'images/logos/fitme-official-logo.jpg' %}">
   <style>
     @page {
       margin: 0;
@@ -30,6 +32,20 @@
     .text-right { text-align: right; }
     .text-left { text-align: left; }
     .bold { font-weight: bold; }
+    .logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .receipt-logo-img {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1.5px solid #000;
+      object-fit: cover;
+      margin-bottom: 4px;
+    }
     .header-logo {
       font-size: 20px;
       font-weight: 900;
@@ -99,7 +115,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    .btn-print { background: #CCFF00; color: #000; }
+    .btn-print { background: #88D82D; color: #000; }
     .btn-close { background: #333; color: #fff; text-decoration: none; display: inline-flex; align-items: center; }
 
     @media print {
@@ -125,11 +141,14 @@
 
 <div class="receipt-box">
   <div class="text-center">
-    <div class="header-logo">FIT ME</div>
+    <div class="logo-container">
+      <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me" class="receipt-logo-img">
+    </div>
+    <div class="header-logo"><span style="color:#000;">FIT</span> <span style="color:#555;">ME</span></div>
     <div class="tagline">{{ club_info.tagline }}</div>
     <div class="info-line">{{ club_info.address }}</div>
     <div class="info-line">Hotline: {{ club_info.phone }}</div>
-    <div class="info-line bold" style="margin-top:4px;">GYM DRINKS &amp; SUPPLEMENTS POS</div>
+    <div class="info-line bold" style="margin-top:4px;">GYM BAR &amp; SUPPLEMENTS POS</div>
   </div>
 
   <div class="divider"></div>

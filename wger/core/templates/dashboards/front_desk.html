@@ -5,7 +5,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Front Desk &amp; Biometric Ops — Fit Me</title>
-<link rel="icon" href="{% static 'images/logos/fitme-logo.png' %}">
+<link rel="icon" href="{% static 'images/logos/fitme-official-logo.jpg' %}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@300;400;500;600&family=Bebas+Neue&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="{% static 'fontawesomefree/css/all.min.css' %}">
@@ -14,9 +14,10 @@
     --bg-dark: #0B0D0E;
     --card-bg: #121517;
     --card-surface: #1F2428;
-    --neon-lime: #76C043;
-    --neon-glow: rgba(118, 192, 67, 0.25);
-    --neon-glow-high: rgba(118, 192, 67, 0.55);
+    --neon-lime: #88D82D;
+    --neon-hover: #9EF040;
+    --neon-glow: rgba(136, 216, 45, 0.28);
+    --neon-glow-high: rgba(136, 216, 45, 0.6);
     --danger: #E63946;
     --danger-glow: rgba(230, 57, 70, 0.35);
     --warning: #F59E0B;
@@ -48,25 +49,113 @@
     box-shadow: 0 0 10px rgba(118, 192, 67, 0.3);
     object-fit: cover;
   }
-  .brand-name { font-family: 'Bebas Neue', sans-serif; font-size: 1.7rem; color: var(--neon-lime); letter-spacing: 2px; }
+  .brand-name { font-family: 'Montserrat', sans-serif; font-size: 1.35rem; font-weight: 900; color: #C5CBD3; letter-spacing: 1px; }
   .role-badge { background: var(--neon-lime); color: #000; padding: 0.2rem 0.65rem; border-radius: 4px; font-size: 0.68rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 
-  /* ── Layout ── */
+  /* ── Layout & Collapsible Sidebar ── */
   .layout { display: flex; min-height: calc(100vh - 65px); }
-  .sidebar { width: 230px; background: #101315; border-right: 1px solid var(--border-color); padding: 1.5rem 0; flex-shrink: 0; }
-  .sidebar-section { padding: 0.5rem 1.25rem 0.25rem; font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 800; }
-  .sidebar a {
-    display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 1.25rem; color: #ccc; text-decoration: none; font-size: 0.88rem;
-    border-left: 3px solid transparent; transition: all 0.18s;
+  .sidebar {
+    width: 235px;
+    background: #101315;
+    border-right: 1px solid var(--border-color);
+    padding: 1rem 0 1.5rem;
+    flex-shrink: 0;
+    transition: width 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+    overflow-x: hidden;
   }
-  .sidebar a:hover, .sidebar a.active { color: var(--neon-lime); border-left-color: var(--neon-lime); background: rgba(118, 192, 67, 0.08); }
-  .sidebar a i { width: 18px; text-align: center; }
+  .sidebar.collapsed {
+    width: 66px;
+  }
+  .sidebar-section {
+    padding: 0.5rem 1.15rem 0.25rem;
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    font-weight: 800;
+    white-space: nowrap;
+  }
+  .sidebar.collapsed .sidebar-section {
+    display: none;
+  }
+  .sidebar-toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1rem 0.75rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+    margin-bottom: 0.5rem;
+  }
+  .sidebar.collapsed .sidebar-toggle-row {
+    justify-content: center;
+    padding: 0 0 0.75rem;
+  }
+  .sidebar.collapsed .sidebar-toggle-row span {
+    display: none;
+  }
+  .btn-sidebar-toggle {
+    background: #181D20;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    color: var(--neon-lime);
+    border-radius: 6px;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 0.8rem;
+    transition: all 0.2s;
+  }
+  .btn-sidebar-toggle:hover {
+    background: var(--neon-lime);
+    color: #000;
+  }
+  .sidebar a {
+    display: flex;
+    align-items: center;
+    gap: 0.7rem;
+    padding: 0.6rem 1.15rem;
+    color: #ccc;
+    text-decoration: none;
+    font-size: 0.82rem;
+    font-weight: 600;
+    border-left: 3px solid transparent;
+    transition: all 0.18s;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .sidebar a:hover, .sidebar a.active {
+    color: var(--neon-lime);
+    border-left-color: var(--neon-lime);
+    background: rgba(118, 192, 67, 0.08);
+  }
+  .sidebar a i {
+    width: 18px;
+    min-width: 18px;
+    text-align: center;
+    font-size: 0.95rem;
+    flex-shrink: 0;
+  }
+  .sidebar.collapsed a {
+    justify-content: center;
+    padding: 0.7rem 0;
+    border-left: none;
+    border-right: 3px solid transparent;
+  }
+  .sidebar.collapsed a:hover, .sidebar.collapsed a.active {
+    border-right-color: var(--neon-lime);
+  }
+  .sidebar.collapsed a span.link-label {
+    display: none;
+  }
 
   /* ── Responsive Overrides ── */
   @media(max-width: 900px) {
     .layout { flex-direction: column; }
     .sidebar {
-      width: 100%;
+      width: 100% !important;
       border-right: none;
       border-bottom: 2px solid var(--border-color);
       display: flex;
@@ -79,7 +168,7 @@
       -webkit-overflow-scrolling: touch;
       gap: 0.35rem;
     }
-    .sidebar-section { display: none; }
+    .sidebar-section, .sidebar-toggle-row { display: none; }
     .sidebar a {
       width: auto;
       flex-shrink: 0;
@@ -90,6 +179,7 @@
       border-radius: 6px;
       white-space: nowrap;
     }
+    .sidebar.collapsed a span.link-label { display: inline; }
     .sidebar a:hover, .sidebar a.active {
       border-left-color: transparent;
       border-bottom-color: var(--neon-lime);
@@ -148,9 +238,284 @@
   }
   .btn-buzz-pulse:hover { background: #8AE04F; transform: scale(1.03); }
 
+  /* ── Quick Action Command Hub ── */
+  .quick-hub-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    margin-top: 0.85rem;
+    margin-bottom: 1.75rem;
+  }
+  .btn-hub {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.62rem 1.15rem;
+    border-radius: 9px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    text-decoration: none;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    background: #15191D;
+    color: #F8FAFC;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+  .btn-hub:hover {
+    transform: translateY(-2px);
+    border-color: var(--neon-lime);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.45);
+    color: #fff;
+  }
+  .btn-hub-primary {
+    background: var(--neon-lime);
+    color: #0B0D0E;
+    border: none;
+    box-shadow: 0 0 16px var(--neon-glow);
+  }
+  .btn-hub-primary:hover {
+    background: var(--neon-hover);
+    color: #0B0D0E;
+    box-shadow: 0 0 24px var(--neon-glow-high);
+  }
+  .btn-hub-buzz {
+    background: #181E15;
+    border: 1.5px solid var(--neon-lime);
+    color: var(--neon-lime);
+    box-shadow: 0 0 14px var(--neon-glow);
+    animation: livePulse 2.2s infinite;
+  }
+  .btn-hub-buzz:hover {
+    background: var(--neon-lime);
+    color: #0B0D0E;
+  }
+  .btn-hub-payment {
+    background: #121E28;
+    border: 1.5px solid #38BDF8;
+    color: #38BDF8;
+  }
+  .btn-hub-payment:hover {
+    background: #38BDF8;
+    color: #0B0D0E;
+  }
+
   /* ── Grids & Tables ── */
   .grid-2 { display: grid; grid-template-columns: 1.15fr 1.15fr; gap: 1.5rem; margin-bottom: 2rem; }
   @media(max-width: 1080px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  /* ── Ergonomic Desk Workspace with Supporting Sidebar ── */
+  .desk-workspace {
+    display: grid;
+    gap: 1.5rem;
+    align-items: start;
+    margin-bottom: 2rem;
+    transition: all 0.25s ease;
+  }
+  .desk-workspace.mode-split {
+    grid-template-columns: 1.12fr 0.88fr;
+  }
+  @media (max-width: 1200px) {
+    .desk-workspace.mode-split {
+      grid-template-columns: 1fr;
+    }
+  }
+
+  .desk-main-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 0;
+  }
+  .desk-supporting-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    min-width: 0;
+  }
+
+  /* Supporting sidebar scrollable heights in Split Mode */
+  .desk-workspace.mode-split .desk-supporting-sidebar .fitme-card {
+    margin-bottom: 0;
+  }
+  .desk-workspace.mode-split .desk-supporting-sidebar .card-scroll-box {
+    max-height: 380px;
+    overflow-y: auto;
+  }
+
+  /* Custom Slim Scrollbar */
+  .monitor-scroll-box::-webkit-scrollbar,
+  .card-scroll-box::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .monitor-scroll-box::-webkit-scrollbar-thumb,
+  .card-scroll-box::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+  }
+  .monitor-scroll-box::-webkit-scrollbar-thumb:hover,
+  .card-scroll-box::-webkit-scrollbar-thumb:hover {
+    background: var(--neon-lime);
+  }
+
+  /* ── Live Turnstile Biometrics Access Monitor (Bottom Section) ── */
+  #section-monitor {
+    background: linear-gradient(145deg, #161A1D 0%, #0F1214 100%);
+    border: 1.5px solid var(--neon-lime);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-top: 1rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 0 35px var(--neon-glow);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  #section-monitor .monitor-scroll-box {
+    max-height: 420px;
+    overflow-y: auto;
+  }
+
+  /* Fullscreen Mode for Live Turnstile Access Monitor */
+  #section-monitor.fullscreen-mode {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    max-width: 100vw !important;
+    max-height: 100vh !important;
+    z-index: 99999 !important;
+    margin: 0 !important;
+    border-radius: 0 !important;
+    border: none !important;
+    padding: 2.25rem 3rem !important;
+    background: radial-gradient(circle at 85% 15%, #182818 0%, #080B0D 75%) !important;
+    box-shadow: none !important;
+    overflow-y: auto !important;
+    box-sizing: border-box !important;
+  }
+  #section-monitor.fullscreen-mode .monitor-header {
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.75rem;
+    border-bottom: 1.5px solid rgba(136, 216, 45, 0.28);
+  }
+  #section-monitor.fullscreen-mode .monitor-header h3 {
+    font-size: 1.6rem !important;
+  }
+  #section-monitor.fullscreen-mode .monitor-scroll-box {
+    max-height: calc(100vh - 190px) !important;
+  }
+  #section-monitor.fullscreen-mode table th {
+    font-size: 0.95rem !important;
+    padding: 1rem 1.25rem !important;
+    letter-spacing: 0.5px;
+  }
+  #section-monitor.fullscreen-mode table td {
+    padding: 1rem 1.25rem !important;
+    font-size: 0.95rem !important;
+  }
+  #section-monitor.fullscreen-mode #btnMonitorFullscreen {
+    background: rgba(239, 68, 68, 0.2) !important;
+    border-color: #ef4444 !important;
+    color: #f87171 !important;
+  }
+
+  /* Single-section Focus Modes */
+  .desk-workspace.mode-directory .desk-supporting-sidebar { display: none !important; }
+  .desk-workspace.mode-directory { grid-template-columns: 1fr !important; }
+
+  .desk-workspace.mode-intake .desk-main-column,
+  .desk-workspace.mode-intake #section-receipts { display: none !important; }
+  .desk-workspace.mode-intake { grid-template-columns: 1fr !important; }
+  .desk-workspace.mode-intake .desk-supporting-sidebar { width: 100% !important; }
+
+  .desk-workspace.mode-receipts .desk-main-column,
+  .desk-workspace.mode-receipts #section-intake { display: none !important; }
+  .desk-workspace.mode-receipts { grid-template-columns: 1fr !important; }
+  .desk-workspace.mode-receipts .desk-supporting-sidebar { width: 100% !important; }
+
+  /* ── View Switcher Pill-bar ── */
+  .desk-view-tabs-bar {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem;
+    background: #111518;
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  .view-tab-pill {
+    background: none;
+    border: 1px solid transparent;
+    color: #94A3B8;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    padding: 0.55rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+    transition: all 0.2s ease;
+  }
+  .view-tab-pill:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .view-tab-pill.active {
+    background: #192025;
+    color: #fff;
+    border-color: var(--neon-lime);
+    box-shadow: 0 0 14px rgba(136, 216, 45, 0.2);
+  }
+  .pill-badge {
+    font-size: 0.65rem;
+    padding: 0.12rem 0.45rem;
+    border-radius: 999px;
+    font-weight: 800;
+    background: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+  }
+  .pill-badge-live {
+    background: rgba(136, 216, 45, 0.2);
+    color: var(--neon-lime);
+    border: 1px solid rgba(136, 216, 45, 0.4);
+  }
+  .pill-badge-count {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fbbf24;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+  }
+
+  .nav-tab-btn-desk {
+    width: 100%; display: flex; align-items: center; gap: 0.7rem; padding: 0.62rem 1.15rem;
+    color: #ccc; background: none; border: none; border-left: 3px solid transparent;
+    text-align: left; font-size: 0.84rem; font-family: 'Inter', sans-serif; font-weight: 600;
+    cursor: pointer; transition: all 0.18s; white-space: nowrap;
+    overflow: hidden; text-overflow: ellipsis;
+  }
+  .nav-tab-btn-desk:hover, .nav-tab-btn-desk.active {
+    color: var(--neon-lime); border-left-color: var(--neon-lime); background: rgba(118, 192, 67, 0.08);
+  }
+  .nav-tab-btn-desk i { width: 18px; min-width: 18px; text-align: center; font-size: 0.95rem; flex-shrink: 0; }
+  .sidebar.collapsed .nav-tab-btn-desk {
+    justify-content: center; padding: 0.7rem 0;
+    border-left: none; border-right: 3px solid transparent;
+  }
+  .sidebar.collapsed .nav-tab-btn-desk:hover, .sidebar.collapsed .nav-tab-btn-desk.active {
+    border-right-color: var(--neon-lime);
+  }
+  .sidebar.collapsed .nav-tab-btn-desk span.tab-label,
+  .sidebar.collapsed .nav-tab-btn-desk span.badge-pill { display: none; }
 
   .fitme-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 14px; overflow: hidden; }
   .card-header {
@@ -182,11 +547,23 @@
   /* Modal */
   .modal-overlay {
     display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8); z-index: 500; align-items: center; justify-content: center;
+    background: rgba(0,0,0,0.85); z-index: 500; align-items: center; justify-content: center;
+    padding: 1.5rem 1rem; overflow-y: auto; backdrop-filter: blur(4px);
   }
   .modal-box {
     background: var(--card-bg); border: 2px solid var(--neon-lime); border-radius: 16px;
     padding: 2rem; max-width: 480px; width: 90%; box-shadow: 0 10px 40px var(--neon-glow);
+  }
+  .modal-box-wide {
+    max-width: 960px !important; width: 95% !important; max-height: 92vh !important;
+    overflow-y: auto; padding: 1.6rem 2rem !important;
+  }
+  .payment-modal-grid {
+    display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 1.75rem; align-items: start;
+  }
+  @media (max-width: 840px) {
+    .payment-modal-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+    .modal-box-wide { padding: 1.25rem 1rem !important; }
   }
   .form-group { margin-bottom: 1.25rem; }
   .form-group label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; font-weight: 600; }
@@ -207,12 +584,15 @@
 <body>
 
 <header class="topbar">
-  <div class="brand">
-    <img src="{% static 'images/logos/fitme-logo.png' %}" alt="Fit Me">
-    <span class="brand-name">Fit Me</span>
+  <a href="/" class="brand" style="text-decoration:none;" title="Click to open Fit Me Club Homepage">
+    <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me">
+    <span class="brand-name" style="font-family:'Montserrat',sans-serif;font-weight:900;letter-spacing:1px;font-size:1.35rem;"><span style="color:var(--neon-lime);">FIT</span> <span style="color:#C5CBD3;">ME</span></span>
     <span class="role-badge">Front Desk &amp; Biometrics</span>
-  </div>
-  <div style="display:flex;align-items:center;gap:1.25rem;color:var(--text-muted);font-size:0.88rem;">
+  </a>
+  <div style="display:flex;align-items:center;gap:1rem;color:var(--text-muted);font-size:0.88rem;flex-wrap:wrap;">
+    <a href="/" class="btn-action" style="background:#181D20;border:1px solid rgba(255,255,255,0.2);color:#fff;text-decoration:none;padding:0.42rem 0.85rem;border-radius:8px;font-size:0.82rem;font-weight:700;display:inline-flex;align-items:center;gap:0.45rem;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--neon-lime)';this.style.color='var(--neon-lime)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)';this.style.color='#fff'">
+      <i class="fa fa-home" style="color:var(--neon-lime);"></i> Club Home
+    </a>
     <span><i class="fa fa-user-circle"></i> {{ request.user.username }}</span>
     <a href="/dashboard/admin/" style="color:var(--text-muted);text-decoration:none;"><i class="fa fa-shield-alt"></i> Super Admin</a>
     <form method="post" action="/account/logout/" style="display:inline;">{% csrf_token %}
@@ -222,63 +602,427 @@
 </header>
 
 <div class="layout">
-  <aside class="sidebar">
-    <div class="sidebar-section">Front Desk Ops</div>
-    <a href="#section-monitor" class="active"><i class="fa fa-tachometer-alt"></i> Turnstile Monitor</a>
-    <a href="#section-intake"><i class="fa fa-inbox"></i> Intake Queue</a>
-    <a href="#section-biometrics"><i class="fa fa-fingerprint"></i> Biometrics &amp; Members</a>
-    <a href="#section-receipts"><i class="fa fa-receipt"></i> Receipts</a>
-    <div class="sidebar-section" style="margin-top:1rem;">Quick Actions</div>
-    <a href="/pos/" target="_blank" style="color:var(--neon-lime);font-weight:700;"><i class="fa fa-cash-register"></i> POS Bar Register</a>
-    <a href="#" onclick="openPaymentModal(); return false;"><i class="fa fa-credit-card"></i> Record Payment</a>
-    <a href="#" onclick="openIntakeModal(); return false;"><i class="fa fa-user-plus"></i> Walk-in Intake</a>
-    <div class="sidebar-section" style="margin-top:1rem;">System Links</div>
-    <a href="/dashboard/admin/"><i class="fa fa-chart-line"></i> Super Admin</a>
-    <a href="/dashboard/member/"><i class="fa fa-id-badge"></i> Member Portal View</a>
-    <a href="/admin/"><i class="fa fa-cog"></i> Django Backend</a>
+  <aside class="sidebar" id="dashboardSidebar">
+    <div class="sidebar-toggle-row">
+      <span style="font-size:0.68rem;font-weight:800;color:var(--text-muted);letter-spacing:1px;text-transform:uppercase;">Navigation</span>
+      <button type="button" class="btn-sidebar-toggle" onclick="toggleSidebarCollapse()" id="btnSidebarToggle" title="Minimize / Expand Sidebar">
+        <i class="fa fa-angles-left" id="sidebarToggleIcon"></i>
+      </button>
+    </div>
+
+    <div class="sidebar-section">Workspace</div>
+    <button type="button" class="nav-tab-btn-desk active" id="deskNavSplit" onclick="switchDeskView('split')" title="Split Operations Hub">
+      <i class="fa fa-columns"></i> <span class="tab-label">1. Split Hub</span>
+    </button>
+    <button type="button" class="nav-tab-btn-desk" id="deskNavDirectory" onclick="switchDeskView('directory')" title="Member Directory & Biometrics">
+      <i class="fa fa-fingerprint"></i> <span class="tab-label">2. Directory &amp; Bio</span>
+    </button>
+    <button type="button" class="nav-tab-btn-desk" id="deskNavMonitor" onclick="switchDeskView('monitor')" title="Live Gate Monitor">
+      <i class="fa fa-tachometer-alt"></i> <span class="tab-label">3. Gate Monitor</span> <span class="badge-pill" style="margin-left:auto;background:rgba(136,216,45,0.2);color:var(--neon-lime);font-size:0.62rem;padding:2px 6px;border-radius:10px;font-weight:800;">LIVE</span>
+    </button>
+    <button type="button" class="nav-tab-btn-desk" id="deskNavIntake" onclick="switchDeskView('intake')" title="Member Application Queue">
+      <i class="fa fa-inbox"></i> <span class="tab-label">4. Intake Queue</span> <span class="badge-pill" id="sidebarAppBadge" style="margin-left:auto;background:rgba(245,158,11,0.2);color:#fbbf24;font-size:0.62rem;padding:2px 6px;border-radius:10px;font-weight:800;">{{ pending_applications.count }}</span>
+    </button>
+    <button type="button" class="nav-tab-btn-desk" id="deskNavReceipts" onclick="switchDeskView('receipts')" title="Payments & Receipts">
+      <i class="fa fa-receipt"></i> <span class="tab-label">5. Receipts &amp; Dues</span> <span class="badge-pill" id="sidebarReceiptBadge" style="margin-left:auto;background:rgba(255,255,255,0.1);color:#cbd5e1;font-size:0.62rem;padding:2px 6px;border-radius:10px;font-weight:800;">{{ recent_receipts|length }}</span>
+    </button>
+
+    <div class="sidebar-section" style="margin-top:0.75rem;">Desk Tools</div>
+    <a href="/" style="color:#fff;font-weight:700;" title="Club Home"><i class="fa fa-home" style="color:var(--neon-lime);"></i> <span class="link-label">Club Home</span></a>
+    <a href="#" onclick="openPaymentModal(); return false;" title="Record Payment"><i class="fa fa-credit-card"></i> <span class="link-label">Record Payment</span></a>
+    <a href="#" onclick="openIntakeModal(); return false;" title="Intake Walk-in"><i class="fa fa-user-plus"></i> <span class="link-label">+ Intake Walk-in</span></a>
+    <a href="/pos/" target="_blank" style="color:var(--neon-lime);" title="POS Bar Register"><i class="fa fa-cash-register"></i> <span class="link-label">POS Register</span></a>
+    <a href="/register/" target="_blank" style="color:#CBD5E1;" title="Tablet Registration"><i class="fa fa-tablet-alt"></i> <span class="link-label">Tablet Form</span></a>
+    <a href="#" onclick="pingGate(); return false;" title="Ping Turnstile Gate"><i class="fa fa-network-wired"></i> <span class="link-label">Ping Gate</span></a>
+
+    <div class="sidebar-section" style="margin-top:0.75rem;">Switch View</div>
+    <a href="/dashboard/admin/" title="Super Admin Dashboard"><i class="fa fa-shield-alt"></i> <span class="link-label">Super Admin</span></a>
+    <a href="/dashboard/coach/" title="Coach Dashboard"><i class="fa fa-dumbbell"></i> <span class="link-label">Coach View</span></a>
+    <a href="/dashboard/member/" title="Member Dashboard"><i class="fa fa-id-badge"></i> <span class="link-label">Member View</span></a>
   </aside>
 
   <main class="main">
-    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;">
-      <div>
-        <h1 class="page-title">Front Desk Operations</h1>
-        <p class="subtitle" style="margin-bottom:0;">Biometric enrollment (Face ID &amp; Fingerprint), live turnstile monitor, and payments.</p>
+    <!-- Unified Top Action Bar & Fast Function Command Hub -->
+    <div style="margin-bottom:1.5rem;">
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:1rem;margin-bottom:0.75rem;">
+        <div>
+          <h1 class="page-title">Front Desk Operations</h1>
+          <p class="subtitle" style="margin-bottom:0;">Live turnstile biometrics (SpeedFace &bull; Face ID &amp; Optical Fingerprint), quick member search, payments, and gate controls.</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
+          <!-- Real-Time Live Occupancy Status Badges (Top Staff Dashboard Headcount) -->
+          <div class="stat-pill" style="padding:0.4rem 0.85rem;background:#14181B;border:1px solid rgba(136,216,45,0.35);border-radius:8px;box-shadow:0 0 12px rgba(136,216,45,0.08);" title="Athletes currently checked into gym floor">
+            <i class="fa fa-users" style="color:var(--neon-lime);font-size:0.92rem;"></i>
+            <span style="color:#aaa;font-size:0.82rem;">Floor:</span>
+            <strong style="color:#fff;font-size:0.98rem;font-family:'Montserrat',sans-serif;" id="floorMembersCount">0</strong>
+            <span style="color:var(--neon-lime);font-size:0.68rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">MEMBERS</span>
+          </div>
+
+          <div class="stat-pill" style="padding:0.4rem 0.85rem;background:#14181B;border:1px solid rgba(0,240,255,0.3);border-radius:8px;box-shadow:0 0 12px rgba(0,240,255,0.06);" title="Gym staff and coaches currently clocked in">
+            <i class="fa fa-id-badge" style="color:var(--cyan);font-size:0.92rem;"></i>
+            <span style="color:#aaa;font-size:0.82rem;">Staff:</span>
+            <strong style="color:#fff;font-size:0.98rem;font-family:'Montserrat',sans-serif;" id="floorStaffCount">0</strong>
+            <span style="color:var(--cyan);font-size:0.68rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;">ACTIVE</span>
+          </div>
+
+          <span style="display:inline-flex;align-items:center;gap:0.45rem;background:#14181B;border:1px solid var(--border-color);padding:0.4rem 0.8rem;border-radius:8px;font-size:0.8rem;color:var(--text-muted);" title="ZKTeco SpeedFace turnstile hardware status">
+            <span style="width:8px;height:8px;border-radius:50%;background:var(--neon-lime);box-shadow:0 0 8px var(--neon-lime);"></span>
+            192.168.1.23:4370 ONLINE
+          </span>
+        </div>
       </div>
-      <div style="display:flex;align-items:center;gap:0.75rem;">
-        <a href="/pos/" target="_blank" class="btn-action btn-approve" style="text-decoration:none;display:inline-flex;align-items:center;gap:0.5rem;font-size:0.85rem;padding:0.75rem 1.1rem;font-weight:800;border-radius:8px;">
-          <i class="fa fa-cash-register"></i>
+
+      <!-- High-Frequency Operational Command Buttons (The Essential Front Desk Toolkit) -->
+      <div class="quick-hub-bar">
+        <a href="/" class="btn-hub" title="Go to Fit Me Club Homepage">
+          <i class="fa fa-home" style="color:var(--neon-lime);"></i>
+          <span>HOME</span>
+        </a>
+
+        <button type="button" class="btn-hub btn-hub-payment" onclick="openPaymentModal()" title="Record member payment or renew active plan">
+          <i class="fa fa-credit-card"></i>
+          <span>RECORD PAYMENT</span>
+        </button>
+
+        <button type="button" class="btn-hub btn-hub-primary" onclick="openIntakeModal()" title="Register new walk-in athlete to intake queue">
+          <i class="fa fa-user-plus"></i>
+          <span>+ NEW WALK-IN INTAKE</span>
+        </button>
+
+        <a href="/pos/" target="_blank" class="btn-hub" title="Open POS Register for Shake Bar &amp; Supplements">
+          <i class="fa fa-cash-register" style="color:var(--neon-lime);"></i>
           <span>POS BAR REGISTER</span>
         </a>
-        <button class="btn-buzz-pulse" id="btnFrontBuzzer" onclick="buzzTurnstile()">
-          <i class="fa fa-door-open"></i>
-          <span>BUZZ DOOR OPEN (5s)</span>
+
+        <a href="/register/" target="_blank" class="btn-hub" title="Open digital registration form on counter tablet / iPad">
+          <i class="fa fa-tablet-alt" style="color:#A78BFA;"></i>
+          <span>TABLET REG FORM</span>
+        </a>
+
+        {% if recent_receipts %}
+          <button type="button" class="btn-hub" onclick="printReceipt({{ recent_receipts.0.id }})" title="Reprint 80mm Thermal Slip for #{{ recent_receipts.0.receipt_number }}">
+            <i class="fa fa-print" style="color:var(--neon-lime);"></i>
+            <span>REPRINT LAST SLIP</span>
+          </button>
+        {% endif %}
+
+        <button type="button" class="btn-hub" onclick="openSalaryAdvanceModalDesk()" title="Disburse Staff Salary Advance from till and print signed receipt">
+          <i class="fa fa-hand-holding-usd" style="color:#F59E0B;"></i>
+          <span>STAFF ADVANCE</span>
+        </button>
+
+        <button type="button" class="btn-hub" onclick="pingGate()" title="Diagnostic ping to ZKTeco hardware controller">
+          <i class="fa fa-network-wired" style="color:var(--cyan);"></i>
+          <span>PING GATE</span>
         </button>
       </div>
     </div>
 
-    <!-- Live Turnstile Biometrics Monitor -->
-    <div class="monitor-card" id="section-monitor">
-      <div class="monitor-header">
-        <div style="display:flex;align-items:center;gap:0.75rem;">
-          <span class="pulse-dot"></span>
-          <h3 style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:1.1rem;color:#fff;">
-            Live Turnstile Access Monitor
-          </h3>
-          <span class="badge badge-green" style="font-size:0.68rem;letter-spacing:1px;">TERMINAL 192.168.1.23</span>
-        </div>
-        <div style="display:flex;align-items:center;gap:0.75rem;">
-          <div class="stat-pill">
-            <i class="fa fa-users" style="color:var(--neon-lime);"></i>
-            <span>Members on Floor: <strong style="color:#fff;" id="floorMembersCount">0</strong></span>
+    <!-- Universal Member Quick-Search (Instant Desk Lookup) -->
+    <div class="fitme-card" style="margin-bottom:2rem;background:linear-gradient(145deg, #13171A 0%, #0F1215 100%);border:1.5px solid var(--border-color);">
+      <div style="padding:1.15rem 1.5rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:0.6rem;min-width:260px;">
+          <div style="width:36px;height:36px;border-radius:50%;background:rgba(118,192,67,0.15);border:1px solid var(--neon-lime);display:flex;align-items:center;justify-content:center;color:var(--neon-lime);">
+            <i class="fa fa-search"></i>
           </div>
-          <div class="stat-pill">
-            <i class="fa fa-id-badge" style="color:var(--cyan);"></i>
-            <span>Staff on Floor: <strong style="color:#fff;" id="floorStaffCount">0</strong></span>
+          <div>
+            <div style="font-family:'Montserrat',sans-serif;font-weight:800;font-size:0.92rem;color:#fff;">Universal Member Quick-Search</div>
+            <div style="font-size:0.72rem;color:var(--text-muted);">Type Name, Phone (07X) or PIN (#100X) for instant desk status</div>
+          </div>
+        </div>
+        <div style="flex:1;min-width:280px;position:relative;">
+          <input type="text" id="universalDeskSearch" class="form-control" placeholder="Search athlete by phone, PIN, or name (e.g. 077..., #1001, Kamal)..." style="padding:0.7rem 1rem;font-size:0.9rem;border-radius:8px;" oninput="handleUniversalSearch(this.value)">
+          <div id="searchSpinner" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--neon-lime);">
+            <i class="fa fa-spinner fa-spin"></i>
+          </div>
+        </div>
+      </div>
+      <!-- Quick Result Card Container -->
+      <div id="universalSearchResults" style="display:none;padding:0 1.5rem 1.25rem;border-top:1px solid rgba(255,255,255,0.06);padding-top:1rem;">
+      </div>
+    </div>
+
+    <!-- View Switcher Tabs Bar -->
+    <div class="desk-view-tabs-bar">
+      <button type="button" class="view-tab-pill active" id="pillSplit" onclick="switchDeskView('split')">
+        <i class="fa fa-columns" style="color:var(--neon-lime);"></i> Split Operations Hub
+      </button>
+      <button type="button" class="view-tab-pill" id="pillDirectory" onclick="switchDeskView('directory')">
+        <i class="fa fa-fingerprint" style="color:var(--cyan);"></i> Member Directory &amp; Bio
+      </button>
+      <button type="button" class="view-tab-pill" id="pillMonitor" onclick="switchDeskView('monitor')">
+        <i class="fa fa-tachometer-alt" style="color:var(--neon-lime);"></i> Live Gate Monitor
+        <span class="pill-badge pill-badge-live">LIVE</span>
+      </button>
+      <button type="button" class="view-tab-pill" id="pillIntake" onclick="switchDeskView('intake')">
+        <i class="fa fa-inbox" style="color:#F59E0B;"></i> Intake Queue
+        <span class="pill-badge pill-badge-count" id="pillAppCount">{{ pending_applications.count }}</span>
+      </button>
+      <button type="button" class="view-tab-pill" id="pillReceipts" onclick="switchDeskView('receipts')">
+        <i class="fa fa-receipt" style="color:#A78BFA;"></i> Recent Receipts
+        <span class="pill-badge" id="pillReceiptCount">{{ recent_receipts|length }}</span>
+      </button>
+    </div>
+
+    <!-- Ergonomic Desk Workspace: Main Column + Supporting Sidebar -->
+    <div class="desk-workspace mode-split" id="deskWorkspace">
+      <!-- MAIN WORKSPACE COLUMN: Member Directory & Biometrics Enrollment Center -->
+      <div class="desk-main-column">
+        <!-- Active Subscriptions & Biometrics Enrollment Center -->
+        <div class="fitme-card" id="section-biometrics">
+          <div class="card-header" style="flex-wrap:wrap;gap:0.75rem;">
+            <div class="card-title">
+              <i class="fa fa-fingerprint" style="color:var(--neon-lime);"></i>
+              Member Directory &amp; Biometrics Enrollment
+            </div>
+            <div style="display:flex;align-items:center;gap:0.6rem;flex:1;max-width:380px;">
+              <input type="text" id="deskMemberSearch" placeholder="Search by name, PIN or phone..." class="form-control" style="padding:0.45rem 0.8rem;font-size:0.8rem;" oninput="filterDeskMembers(this.value)">
+            </div>
+            <button class="btn-action btn-approve" onclick="openPaymentModal()">
+              <i class="fa fa-plus"></i> Record Payment
+            </button>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <table id="deskBiometricsTable">
+              <thead>
+                <tr>
+                  <th>Member</th>
+                  <th>Plan &amp; Expiry</th>
+                  <th>Biometrics</th>
+                  <th style="text-align:right;">Enroll Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for sub in active_subscriptions %}
+                  <tr>
+                    <td>
+                      <div style="display:flex;align-items:center;gap:0.6rem;">
+                        <div onclick="openMemberProfile({{ sub.member.id }})" style="cursor:pointer;width:34px;height:34px;border-radius:50%;background:#22282D;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:0.75rem;border:1.5px solid var(--border-color);overflow:hidden;flex-shrink:0;" title="Click to view complete dossier">
+                          {% if sub.member.member_profile.profile_photo %}
+                            <img src="{{ sub.member.member_profile.profile_photo.url }}" style="width:100%;height:100%;object-fit:cover;">
+                          {% else %}
+                            {{ sub.member.get_full_name|default:sub.member.username|slice:":2"|upper }}
+                          {% endif %}
+                        </div>
+                        <div>
+                          <div style="font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:0.35rem;" onclick="openMemberProfile({{ sub.member.id }})" title="Click to view complete 360° dossier">
+                            <span>{{ sub.member.get_full_name|default:sub.member.username }}</span>
+                            <i class="fa fa-external-link-alt" style="font-size:0.65rem;color:var(--neon-lime);opacity:0.8;"></i>
+                          </div>
+                          <div style="font-size:0.75rem;color:var(--text-muted);">ID: #FM{{ sub.member.biometric_profile.zk_pin|default:sub.member.id }}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div style="font-weight:600;font-size:0.82rem;">{{ sub.plan.name }}</div>
+                      <div style="font-size:0.74rem;color:var(--text-muted);">{{ sub.end_date|date:"d M Y" }}</div>
+                    </td>
+                    <td>
+                      <div style="display:flex;flex-direction:column;gap:3px;">
+                        {% if sub.member.biometric_profile.face_enrolled %}
+                          <span class="badge badge-green" style="font-size:0.65rem;"><i class="fa fa-smile"></i> Face ID</span>
+                        {% else %}
+                          <span class="badge badge-yellow" style="font-size:0.65rem;"><i class="fa fa-exclamation-triangle"></i> Face Missing</span>
+                        {% endif %}
+
+                        {% if sub.member.biometric_profile.fingerprint_enrolled %}
+                          <span class="badge badge-green" style="font-size:0.65rem;"><i class="fa fa-fingerprint"></i> Fingerprint</span>
+                        {% else %}
+                          <span class="badge badge-yellow" style="font-size:0.65rem;"><i class="fa fa-exclamation-triangle"></i> Finger Missing</span>
+                        {% endif %}
+                      </div>
+                    </td>
+                    <td style="text-align:right;">
+                      <div style="display:inline-flex;gap:0.35rem;">
+                        <button class="btn-action" style="background:#1B252C;border:1px solid rgba(0,240,255,0.35);color:#00F0FF;font-size:0.72rem;" onclick="openMemberProfile({{ sub.member.id }})" title="View Complete Member 360° Dossier">
+                          <i class="fa fa-id-card"></i> Profile
+                        </button>
+                        <button class="btn-action" style="background:#2A3138;border:1px solid #3E4851;color:var(--neon-lime);font-size:0.72rem;" onclick="openPaymentModalWithMember({{ sub.member.id }})" title="Quick Renew Subscription">
+                          <i class="fa fa-credit-card"></i> Renew
+                        </button>
+                        <button class="btn-action" style="background:#1F2428;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:0.72rem;" onclick="openFaceModal({{ sub.member.id }}, '{{ sub.member.get_full_name|default:sub.member.username|escapejs }}', '{{ sub.member.biometric_profile.zk_pin|default:sub.member.id }}')" title="Snap WebCam Portrait for Face ID">
+                          <i class="fa fa-camera" style="color:var(--neon-lime);"></i> Face
+                        </button>
+                        <button class="btn-action btn-approve" style="font-size:0.72rem;" onclick="enrollFingerprint({{ sub.member.id }}, '{{ sub.member.get_full_name|default:sub.member.username|escapejs }}', '{{ sub.member.biometric_profile.zk_pin|default:sub.member.id }}')" title="Activate 3-tap Fingerprint Scanner on Turnstile">
+                          <i class="fa fa-fingerprint"></i> Finger
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted);">No active subscriptions found.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
 
-      <div style="overflow-x:auto;">
+      <!-- SUPPORTING SIDEBAR: Intake Queue & Recent Receipts -->
+      <div class="desk-supporting-sidebar">
+
+        <!-- Pending Applications Intake Queue Widget -->
+        <div class="fitme-card" id="section-intake">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa fa-inbox" style="color:var(--neon-lime);"></i>
+              Member Application Queue
+            </div>
+            <div style="display:flex;align-items:center;gap:0.6rem;">
+              <button class="btn-action btn-approve" onclick="openIntakeModal()" style="font-size:0.72rem;padding:0.35rem 0.65rem;">
+                <i class="fa fa-user-plus"></i> + Walk-in
+              </button>
+              <span class="badge badge-green" id="appCount">{{ pending_applications.count }} PENDING</span>
+            </div>
+          </div>
+          <div class="card-body card-scroll-box" style="padding:0;">
+            <table id="applicationsTable">
+              <thead>
+                <tr>
+                  <th>Applicant</th>
+                  <th>Desired Plan</th>
+                  <th>Goal</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for app in pending_applications %}
+                  <tr id="app-row-{{ app.id }}">
+                    <td>
+                      <div style="font-weight:700;color:var(--text-primary);">{{ app.full_name }}</div>
+                      <div style="font-size:0.75rem;color:var(--text-muted);">
+                        NIC: <span style="color:#fff;">{{ app.nic_passport|default:"-" }}</span> • {{ app.phone }}
+                      </div>
+                      {% if app.has_medical_conditions %}
+                        <span class="badge badge-red" style="font-size:0.65rem;margin-top:2px;">Medical Alert</span>
+                      {% endif %}
+                      {% if app.personal_trainer_needed %}
+                        <span class="badge badge-yellow" style="font-size:0.65rem;margin-top:2px;">Trainer Req</span>
+                      {% endif %}
+                    </td>
+                    <td><span style="color:var(--neon-lime);font-weight:700;">{{ app.desired_plan.name|default:"Individual" }}</span></td>
+                    <td>{{ app.primary_goal|default:"General Fitness"|title }}</td>
+                    <td style="text-align:right;">
+                      <div style="display:inline-flex;gap:0.45rem;">
+                        <button class="btn-action" style="background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.15);" onclick="inspectApp({{ app.id }}, '{{ app.full_name|escapejs }}', '{{ app.nic_passport|escapejs }}', '{{ app.phone|escapejs }}', '{{ app.email|escapejs }}', '{{ app.address|escapejs }}', '{{ app.gender|escapejs }}', '{{ app.blood_group|escapejs }}', '{{ app.emergency_name|escapejs }}', '{{ app.emergency_relationship|escapejs }}', '{{ app.emergency_phone|escapejs }}', '{{ app.desired_plan.name|default:"Individual"|escapejs }}', '{{ app.plan_duration|escapejs }}', '{{ app.primary_goal|escapejs }}', '{{ app.has_medical_conditions|yesno:"Yes,No" }}', '{{ app.medical_condition_details|escapejs }}', '{{ app.is_under_medication|yesno:"Yes,No" }}', '{{ app.medication_details|escapejs }}', '{{ app.personal_trainer_needed|yesno:"Yes,No" }}', '{{ app.admission_fee|floatformat:0 }}', '{{ app.monthly_fee|floatformat:0 }}', '{{ app.discount|floatformat:0 }}', '{{ app.total_paid|floatformat:0 }}', '{{ app.payment_method|escapejs }}')">
+                          <i class="fa fa-eye"></i> Inspect
+                        </button>
+                        <button class="btn-action btn-approve" onclick="approveApp({{ app.id }})">
+                          <i class="fa fa-check"></i> Approve
+                        </button>
+                        <button class="btn-action btn-reject" onclick="rejectApp({{ app.id }})">
+                          <i class="fa fa-times"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr id="noAppsRow">
+                    <td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                      <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:1.75rem;display:block;margin-bottom:0.4rem;"></i>
+                      All intake applications reviewed!
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Recent Payment Receipts Widget -->
+        <div class="fitme-card" id="section-receipts">
+          <div class="card-header">
+            <div class="card-title">
+              <i class="fa fa-print" style="color:var(--neon-lime);"></i>
+              Recent Payment Receipts
+            </div>
+            <span class="badge badge-green" id="receiptCount">{{ recent_receipts|length }} ISSUED</span>
+          </div>
+          <div class="card-body card-scroll-box" style="padding:0;">
+            <table id="receiptsTable">
+              <thead>
+                <tr>
+                  <th>Receipt #</th>
+                  <th>Member</th>
+                  <th>Plan</th>
+                  <th>Amount</th>
+                  <th>Method</th>
+                  <th>Date &amp; Time</th>
+                  <th style="text-align:right;">Slip</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for r in recent_receipts %}
+                  <tr id="receipt-row-{{ r.id }}">
+                    <td><span style="font-family:monospace;font-weight:800;color:var(--neon-lime);letter-spacing:0.5px;">{{ r.receipt_number }}</span></td>
+                    <td>
+                      <div style="font-weight:700;color:var(--text-primary);cursor:pointer;" onclick="openMemberProfile({{ r.member.id }})" title="Click to view member dossier">{{ r.member.get_full_name|default:r.member.username }}</div>
+                      <div style="font-size:0.72rem;color:var(--text-muted);">ID: #FM{{ r.member_pin }}</div>
+                    </td>
+                    <td><span style="font-weight:600;font-size:0.8rem;">{{ r.plan_name }}</span></td>
+                    <td style="font-weight:800;color:#fff;font-size:0.82rem;">LKR {{ r.amount_paid|floatformat:0 }}</td>
+                    <td><span class="badge badge-green" style="font-size:0.62rem;text-transform:uppercase;">{{ r.payment_method }}</span></td>
+                    <td style="font-size:0.72rem;color:var(--text-muted);">{{ r.issued_at|date:"d M H:i" }}</td>
+                    <td style="text-align:right;">
+                      <button class="btn-action btn-approve" onclick="printReceipt({{ r.id }})" style="font-size:0.7rem;padding:0.3rem 0.55rem;" title="1-Click Reprint 80mm Thermal Receipt Slip">
+                        <i class="fa fa-print"></i> Slip
+                      </button>
+                    </td>
+                  </tr>
+                {% empty %}
+                  <tr id="noReceiptsRow">
+                    <td colspan="7" style="text-align:center;padding:1.5rem;color:var(--text-muted);">No payment receipts recorded yet.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════════════════════════════
+         BOTTOM SECTION: LIVE TURNSTILE BIOMETRICS ACCESS MONITOR WITH FULLSCREEN DISPLAY
+         ════════════════════════════════════════════════════════════════════════════════ -->
+    <div class="monitor-card" id="section-monitor">
+      <div class="monitor-header">
+        <div style="display:flex;align-items:center;gap:0.85rem;flex-wrap:wrap;">
+          <span class="pulse-dot"></span>
+          <div>
+            <h3 style="font-family:'Montserrat',sans-serif;font-weight:900;font-size:1.15rem;color:#fff;margin:0;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+              <span>Live Turnstile Access Monitor</span>
+              <span class="badge badge-green" style="font-size:0.65rem;letter-spacing:1px;font-weight:800;">192.168.1.23:4370</span>
+            </h3>
+            <span style="font-size:0.75rem;color:var(--text-muted);">Real-time biometric scan events from ZKTeco SpeedFace turnstile gate &bull; Auto-refreshing live</span>
+          </div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:0.65rem;flex-wrap:wrap;">
+          <!-- Secondary Floor Count Badge in Monitor Header -->
+          <div class="stat-pill" style="padding:0.35rem 0.75rem;font-size:0.78rem;">
+            <i class="fa fa-users" style="color:var(--neon-lime);"></i>
+            <span>Floor: <strong style="color:#fff;" id="monitorFloorMembersCount">0</strong></span>
+            <span style="color:var(--border-color);margin:0 0.2rem;">|</span>
+            <i class="fa fa-id-badge" style="color:var(--cyan);"></i>
+            <span>Staff: <strong style="color:#fff;" id="monitorFloorStaffCount">0</strong></span>
+          </div>
+
+          <!-- Remote Gate Buzzer -->
+          <button type="button" class="btn-buzz-pulse" onclick="emergencyBuzzer()" title="Remote pulse entrance turnstile gate for 5 seconds">
+            <i class="fa fa-bolt"></i> Remote Unlock (5s)
+          </button>
+
+          <!-- Fullscreen Monitor Toggle ("fullscreen movr") -->
+          <button type="button" class="btn-action" onclick="toggleMonitorFullscreen()" id="btnMonitorFullscreen" style="background:#1C242A;border:1.5px solid var(--neon-lime);color:var(--neon-lime);font-family:'Montserrat',sans-serif;font-weight:800;font-size:0.8rem;padding:0.5rem 0.95rem;border-radius:8px;display:inline-flex;align-items:center;gap:0.5rem;box-shadow:0 0 15px rgba(136,216,45,0.18);cursor:pointer;" title="Expand to Dedicated Fullscreen Entrance Monitor Display">
+            <i class="fa fa-expand" id="iconMonitorFullscreen"></i>
+            <span id="textMonitorFullscreen">FULLSCREEN MONITOR</span>
+          </button>
+        </div>
+      </div>
+
+      <div style="overflow-x:auto;" class="monitor-scroll-box" id="monitorTableContainer">
         <table id="livePunchesTable">
           <thead>
             <tr>
@@ -302,7 +1046,7 @@
                       <div style="width:28px;height:28px;border-radius:50%;background:#1F2428;display:flex;align-items:center;justify-content:center;color:#888;font-size:0.7rem;"><i class="fa fa-user"></i></div>
                     {% endif %}
                     <div>
-                      <div style="font-weight:700;color:#fff;">{% if p.user %}{{ p.user.get_full_name|default:p.user.username }}{% else %}Walk-in / Hardware Scan{% endif %}</div>
+                      <div style="font-weight:700;color:#fff;{% if p.user %}cursor:pointer;{% endif %}" {% if p.user %}onclick="openMemberProfile({{ p.user.id }})" title="Click to view member dossier"{% endif %}>{% if p.user %}{{ p.user.get_full_name|default:p.user.username }}{% else %}Walk-in / Hardware Scan{% endif %}</div>
                       <div style="font-size:0.72rem;color:var(--text-muted);">ID: #FM{{ p.zk_pin }}</div>
                     </div>
                   </div>
@@ -335,199 +1079,6 @@
                 <td colspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted);">
                   Waiting for biometric turnstile scans...
                 </td>
-              </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
-    </div>
-
-    <div class="grid-2">
-      <!-- Pending Applications Intake Queue -->
-      <div class="fitme-card" id="section-intake">
-        <div class="card-header">
-          <div class="card-title">
-            <i class="fa fa-inbox" style="color:var(--neon-lime);"></i>
-            Member Application Queue
-          </div>
-          <div style="display:flex;align-items:center;gap:0.6rem;">
-            <button class="btn-action btn-approve" onclick="openIntakeModal()" style="font-size:0.75rem;">
-              <i class="fa fa-user-plus"></i> + Walk-in Intake
-            </button>
-            <span class="badge badge-green" id="appCount">{{ pending_applications.count }} PENDING</span>
-          </div>
-        </div>
-        <div class="card-body" style="padding:0;">
-          <table id="applicationsTable">
-            <thead>
-              <tr>
-                <th>Applicant</th>
-                <th>Desired Plan</th>
-                <th>Goal</th>
-                <th style="text-align:right;">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for app in pending_applications %}
-                <tr id="app-row-{{ app.id }}">
-                  <td>
-                    <div style="font-weight:700;color:var(--text-primary);">{{ app.full_name }}</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);">
-                      NIC: <span style="color:#fff;">{{ app.nic_passport|default:"-" }}</span> • {{ app.phone }}
-                    </div>
-                    {% if app.has_medical_conditions %}
-                      <span class="badge badge-red" style="font-size:0.65rem;margin-top:2px;">Medical Alert</span>
-                    {% endif %}
-                    {% if app.personal_trainer_needed %}
-                      <span class="badge badge-yellow" style="font-size:0.65rem;margin-top:2px;">Trainer Req</span>
-                    {% endif %}
-                  </td>
-                  <td><span style="color:var(--neon-lime);font-weight:700;">{{ app.desired_plan.name|default:"Individual" }}</span></td>
-                  <td>{{ app.primary_goal|default:"General Fitness"|title }}</td>
-                  <td style="text-align:right;">
-                    <div style="display:inline-flex;gap:0.45rem;">
-                      <button class="btn-action" style="background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.15);" onclick="inspectApp({{ app.id }}, '{{ app.full_name|escapejs }}', '{{ app.nic_passport|escapejs }}', '{{ app.phone|escapejs }}', '{{ app.email|escapejs }}', '{{ app.address|escapejs }}', '{{ app.gender|escapejs }}', '{{ app.blood_group|escapejs }}', '{{ app.emergency_name|escapejs }}', '{{ app.emergency_relationship|escapejs }}', '{{ app.emergency_phone|escapejs }}', '{{ app.desired_plan.name|default:"Individual"|escapejs }}', '{{ app.plan_duration|escapejs }}', '{{ app.primary_goal|escapejs }}', '{{ app.has_medical_conditions|yesno:"Yes,No" }}', '{{ app.medical_condition_details|escapejs }}', '{{ app.is_under_medication|yesno:"Yes,No" }}', '{{ app.medication_details|escapejs }}', '{{ app.personal_trainer_needed|yesno:"Yes,No" }}', '{{ app.admission_fee|floatformat:0 }}', '{{ app.monthly_fee|floatformat:0 }}', '{{ app.discount|floatformat:0 }}', '{{ app.total_paid|floatformat:0 }}', '{{ app.payment_method|escapejs }}')">
-                        <i class="fa fa-eye"></i> Inspect
-                      </button>
-                      <button class="btn-action btn-approve" onclick="approveApp({{ app.id }})">
-                        <i class="fa fa-check"></i> Approve &amp; Enroll
-                      </button>
-                      <button class="btn-action btn-reject" onclick="rejectApp({{ app.id }})">
-                        <i class="fa fa-times"></i>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              {% empty %}
-                <tr id="noAppsRow">
-                  <td colspan="4" style="text-align:center;padding:2.5rem;color:var(--text-muted);">
-                    <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:2rem;display:block;margin-bottom:0.5rem;"></i>
-                    All intake applications reviewed!
-                  </td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Active Subscriptions & Biometrics Enrollment Center -->
-      <div class="fitme-card" id="section-biometrics">
-        <div class="card-header">
-          <div class="card-title">
-            <i class="fa fa-fingerprint" style="color:var(--neon-lime);"></i>
-            Biometric Enrollment &amp; Subscriptions
-          </div>
-          <button class="btn-action btn-approve" onclick="openPaymentModal()">
-            <i class="fa fa-plus"></i> Record Payment
-          </button>
-        </div>
-        <div class="card-body" style="padding:0;">
-          <table>
-            <thead>
-              <tr>
-                <th>Member</th>
-                <th>Plan &amp; Expiry</th>
-                <th>Biometrics</th>
-                <th style="text-align:right;">Enroll Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for sub in active_subscriptions %}
-                <tr>
-                  <td>
-                    <div style="font-weight:700;">{{ sub.member.get_full_name|default:sub.member.username }}</div>
-                    <div style="font-size:0.75rem;color:var(--text-muted);">ID: #FM{{ sub.member.biometric_profile.zk_pin|default:sub.member.id }}</div>
-                  </td>
-                  <td>
-                    <div style="font-weight:600;font-size:0.82rem;">{{ sub.plan.name }}</div>
-                    <div style="font-size:0.74rem;color:var(--text-muted);">{{ sub.end_date|date:"d M Y" }}</div>
-                  </td>
-                  <td>
-                    <div style="display:flex;flex-direction:column;gap:3px;">
-                      {% if sub.member.biometric_profile.face_enrolled %}
-                        <span class="badge badge-green" style="font-size:0.65rem;"><i class="fa fa-smile"></i> Face ID</span>
-                      {% else %}
-                        <span class="badge badge-yellow" style="font-size:0.65rem;"><i class="fa fa-exclamation-triangle"></i> Face Missing</span>
-                      {% endif %}
-
-                      {% if sub.member.biometric_profile.fingerprint_enrolled %}
-                        <span class="badge badge-green" style="font-size:0.65rem;"><i class="fa fa-fingerprint"></i> Fingerprint</span>
-                      {% else %}
-                        <span class="badge badge-yellow" style="font-size:0.65rem;"><i class="fa fa-exclamation-triangle"></i> Finger Missing</span>
-                      {% endif %}
-                    </div>
-                  </td>
-                  <td style="text-align:right;">
-                    <div style="display:inline-flex;gap:0.35rem;">
-                      <button class="btn-action" style="background:#2A3138;border:1px solid #3E4851;color:var(--neon-lime);font-size:0.72rem;" onclick="openPaymentModalWithMember({{ sub.member.id }})" title="Quick Renew Subscription">
-                        <i class="fa fa-credit-card"></i> Renew
-                      </button>
-                      <button class="btn-action" style="background:#1F2428;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:0.72rem;" onclick="openFaceModal({{ sub.member.id }}, '{{ sub.member.get_full_name|default:sub.member.username|escapejs }}', '{{ sub.member.biometric_profile.zk_pin|default:sub.member.id }}')" title="Snap WebCam Portrait for Face ID">
-                        <i class="fa fa-camera" style="color:var(--neon-lime);"></i> Face
-                      </button>
-                      <button class="btn-action btn-approve" style="font-size:0.72rem;" onclick="enrollFingerprint({{ sub.member.id }}, '{{ sub.member.get_full_name|default:sub.member.username|escapejs }}', '{{ sub.member.biometric_profile.zk_pin|default:sub.member.id }}')" title="Activate 3-tap Fingerprint Scanner on Turnstile">
-                        <i class="fa fa-fingerprint"></i> Finger
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              {% empty %}
-                <tr>
-                  <td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted);">No active subscriptions found.</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- Recent Payment Receipts -->
-    <div class="fitme-card" id="section-receipts">
-      <div class="card-header">
-        <div class="card-title">
-          <i class="fa fa-print" style="color:var(--neon-lime);"></i>
-          Recent Payment Receipts
-        </div>
-        <span class="badge badge-green" id="receiptCount">{{ recent_receipts|length }} ISSUED</span>
-      </div>
-      <div class="card-body" style="padding:0;">
-        <table id="receiptsTable">
-          <thead>
-            <tr>
-              <th>Receipt #</th>
-              <th>Member / Biometrics</th>
-              <th>Plan</th>
-              <th>Amount</th>
-              <th>Method</th>
-              <th>Cashier</th>
-              <th>Date &amp; Time</th>
-              <th style="text-align:right;">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for r in recent_receipts %}
-              <tr id="receipt-row-{{ r.id }}">
-                <td><span style="font-family:monospace;font-weight:800;color:var(--neon-lime);letter-spacing:0.5px;">{{ r.receipt_number }}</span></td>
-                <td>
-                  <div style="font-weight:700;color:var(--text-primary);">{{ r.member.get_full_name|default:r.member.username }}</div>
-                  <div style="font-size:0.75rem;color:var(--text-muted);"><i class="fa fa-id-badge" style="color:var(--neon-lime);font-size:0.7rem;"></i> ID: #FM{{ r.member_pin }} • Face &amp; Fingerprint</div>
-                </td>
-                <td><span style="font-weight:600;">{{ r.plan_name }}</span></td>
-                <td style="font-weight:800;color:#fff;">LKR {{ r.amount_paid|floatformat:0 }}</td>
-                <td><span class="badge badge-green" style="font-size:0.65rem;text-transform:uppercase;">{{ r.payment_method }}</span></td>
-                <td>{{ r.cashier.username|default:"FrontDesk" }}</td>
-                <td style="font-size:0.75rem;color:var(--text-muted);">{{ r.issued_at|date:"d M Y H:i" }}</td>
-                <td style="text-align:right;">
-                  <button class="btn-action btn-approve" onclick="printReceipt({{ r.id }})" style="font-size:0.72rem;padding:0.35rem 0.65rem;">
-                    <i class="fa fa-print"></i> Print Receipt
-                  </button>
-                </td>
-              </tr>
-            {% empty %}
-              <tr id="noReceiptsRow">
-                <td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">No payment receipts recorded yet.</td>
               </tr>
             {% endfor %}
           </tbody>
@@ -620,53 +1171,212 @@
 
 <!-- Record Payment Modal -->
 <div class="modal-overlay" id="paymentModal">
-  <div class="modal-box">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
-      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;margin:0;font-size:1.1rem;display:flex;align-items:center;gap:0.5rem;">
+  <div class="modal-box modal-box-wide" style="max-width:960px;width:95%;max-height:92vh;overflow-y:auto;padding:1.6rem 2rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;border-bottom:1px solid rgba(255,255,255,0.08);padding-bottom:0.75rem;">
+      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;margin:0;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;">
         <i class="fa fa-cash-register" style="color:var(--neon-lime);"></i> Record Payment / Quick Renew
       </h3>
-      <button type="button" onclick="closePaymentModal()" style="background:none;border:none;color:#888;font-size:1.25rem;cursor:pointer;">✕</button>
+      <button type="button" onclick="closePaymentModal()" style="background:none;border:none;color:#888;font-size:1.4rem;cursor:pointer;line-height:1;transition:color 0.2s;" onmouseover="this.style.color='#fff'" onmouseout="this.style.color='#888'">✕</button>
     </div>
     <form id="paymentForm" onsubmit="submitPayment(event)">
-      <div class="form-group">
-        <label>Select Member</label>
-        <select class="form-control" id="payMemberId" required>
-          {% if all_members %}
-            {% for m in all_members %}
-              <option value="{{ m.id }}">{{ m.get_full_name|default:m.username }} (PIN: #{{ m.biometric_profile.zk_pin|default:m.id }})</option>
-            {% endfor %}
-          {% else %}
-            {% for sub in active_subscriptions %}
-              <option value="{{ sub.member.id }}">{{ sub.member.get_full_name|default:sub.member.username }} (#{{ sub.member.id }})</option>
-            {% endfor %}
-          {% endif %}
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Membership Package / Tier</label>
-        <select class="form-control" id="payPlanId" required onchange="updatePayAmountDisplay()">
-          {% for plan in plans %}
-            <option value="{{ plan.id }}" data-price="{{ plan.price_monthly|floatformat:0 }}">{{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }} ({{ plan.duration_days }} Days)</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="form-group">
-        <label>Amount Collected (LKR)</label>
-        <input type="number" id="payAmount" class="form-control" value="{% if plans %}{{ plans.0.price_monthly|floatformat:0 }}{% else %}4000{% endif %}" required>
-      </div>
-      <div class="form-group">
-        <label>Payment Method</label>
-        <select class="form-control" id="payMethod">
-          <option value="cash">Cash at Counter</option>
-          <option value="card">Card / POS Terminal</option>
-          <option value="bank_transfer">Bank Transfer</option>
-        </select>
-      </div>
-      <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:1.5rem;border-top:1px solid rgba(255,255,255,0.08);padding-top:1rem;">
-        <button type="button" class="btn-action btn-reject" onclick="closePaymentModal()">Cancel</button>
-        <button type="submit" class="btn-action btn-approve" id="btnSubmitPayment" style="padding:0.6rem 1.3rem;">
-          <i class="fa fa-check-circle"></i> Confirm &amp; Unlock Gate
-        </button>
+      <div class="payment-modal-grid" style="display:grid;grid-template-columns:1.05fr 0.95fr;gap:1.75rem;align-items:start;">
+        
+        <!-- LEFT COLUMN: Member, Plan & Coaching Options -->
+        <div style="display:flex;flex-direction:column;gap:0.35rem;">
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="display:flex;justify-content:space-between;align-items:center;">
+              <span>Select Member *</span>
+              <span style="font-size:0.7rem;color:var(--neon-lime);font-weight:700;"><i class="fa fa-bolt"></i> Fast Search</span>
+            </label>
+            <div style="position:relative;margin-bottom:0.45rem;">
+              <i class="fa fa-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.8rem;"></i>
+              <input type="text" id="payMemberFilterInput" onkeyup="filterPayMembersDropdown()" placeholder="Type to filter member by name, phone, PIN..." class="form-control" style="padding-left:32px;font-size:0.8rem;background:#14191C;border:1px solid rgba(255,255,255,0.15);">
+            </div>
+            <select class="form-control" id="payMemberId" required style="background:#14191C;" onchange="onPayMemberChange()">
+              {% if all_members %}
+                {% for m in all_members %}
+                  <option value="{{ m.id }}" 
+                          data-search="{{ m.get_full_name|lower }} {{ m.username|lower }} {{ m.member_profile.phone|default:'' }} {{ m.biometric_profile.zk_pin|default:m.id }}"
+                          data-coach-id="{{ m.member_profile.assigned_coach_id|default:'' }}"
+                          data-plan-id="{% with s=m.subscriptions.first %}{{ s.plan_id|default:'' }}{% endwith %}"
+                          data-active-sub="{% if m.has_active_subscription %}true{% else %}false{% endif %}"
+                          data-sub-end="{{ m.active_sub_end_str }}"
+                          data-sub-plan="{{ m.active_plan_name }}"
+                          data-latest-sub-end="{{ m.latest_sub_end_str }}"
+                          data-yearly-paid="{% if m.has_paid_yearly_this_year %}true{% else %}false{% endif %}">
+                    {{ m.get_full_name|default:m.username }} (PIN: #{{ m.biometric_profile.zk_pin|default:m.id }}){% if m.member_profile.phone %} &bull; {{ m.member_profile.phone }}{% endif %}{% if m.has_active_subscription %} &bull; [✓ Paid until {{ m.active_sub_end_str }}]{% elif m.latest_sub_end_str %} &bull; [Expired: {{ m.latest_sub_end_str }}]{% else %} &bull; [Monthly Due]{% endif %}{% if not m.has_paid_yearly_this_year %} &bull; [Yearly Due]{% endif %}
+                  </option>
+                {% endfor %}
+              {% else %}
+                {% for sub in active_subscriptions %}
+                  <option value="{{ sub.member.id }}" 
+                          data-search="{{ sub.member.get_full_name|lower }} {{ sub.member.username|lower }} {{ sub.member.id }}"
+                          data-coach-id="{{ sub.member.member_profile.assigned_coach_id|default:'' }}"
+                          data-plan-id="{{ sub.plan.id }}"
+                          data-active-sub="true"
+                          data-sub-end="{{ sub.member.active_sub_end_str|default:sub.end_date|date:'d M Y' }}"
+                          data-sub-plan="{{ sub.plan.name }}"
+                          data-latest-sub-end="{{ sub.end_date|date:'d M Y' }}"
+                          data-yearly-paid="{% if sub.member.has_paid_yearly_this_year %}true{% else %}false{% endif %}">
+                    {{ sub.member.get_full_name|default:sub.member.username }} (#{{ sub.member.id }}) &bull; [✓ Paid until {{ sub.end_date|date:'d M Y' }}]{% if not sub.member.has_paid_yearly_this_year %} &bull; [Yearly Due]{% endif %}
+                  </option>
+                {% endfor %}
+              {% endif %}
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Membership Package / Tier</label>
+            <select class="form-control" id="payPlanId" required onchange="updatePayAmountDisplay()">
+              {% for plan in plans %}
+                <option value="{{ plan.id }}" 
+                        data-price="{{ plan.price_monthly|stringformat:'.2f' }}" 
+                        data-regfee="{{ plan.registration_fee|stringformat:'.2f' }}"
+                        data-duration="{{ plan.duration_days }}"
+                        data-type="{{ plan.plan_type }}">
+                  {{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }} ({{ plan.duration_days }} Days)
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Monthly Membership Subscription: Auto-detected Status & Charge Toggle -->
+          <div class="form-group" style="margin-bottom:1rem;">
+            <div style="background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:0.75rem 0.95rem;transition:all 0.2s;" id="monthlyFeeContainer">
+              <label style="display:flex;align-items:flex-start;gap:0.75rem;cursor:pointer;margin:0;user-select:none;width:100%;">
+                <input type="checkbox" id="payChargeMonthlyFee" onchange="updatePayAmountDisplay()" style="width:20px;height:20px;margin-top:2px;accent-color:var(--neon-lime);cursor:pointer;flex-shrink:0;">
+                <div style="flex-grow:1;">
+                  <div style="font-size:0.84rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                    <span>Monthly Membership Package Fee</span>
+                    <span id="monthlyStatusBadge" style="font-size:0.72rem;font-weight:800;padding:0.18rem 0.6rem;border-radius:999px;background:rgba(239,68,68,0.18);color:#f87171;border:1px solid rgba(239,68,68,0.35);">
+                      DUE: NOT PAID
+                    </span>
+                  </div>
+                  <div style="font-size:0.73rem;color:var(--text-muted);margin-top:3px;line-height:1.35;" id="monthlyStatusDescription">
+                    No active monthly subscription (Due). Auto-ticked to collect package fee with this billing.
+                  </div>
+                </div>
+              </label>
+            </div>
+            <!-- Hidden input for backwards compatibility -->
+            <input type="checkbox" id="payCoachingOnlyFee" style="display:none;">
+          </div>
+
+          <div class="form-group" id="payCoachGroup" style="margin-bottom:1rem;">
+            <label>Assign Personal Coach (For 1-on-1 Coaching)</label>
+            <select class="form-control" id="payCoachId" onchange="updatePayAmountDisplay()">
+              <option value="">No Coach Assigned (Standard Floor)</option>
+              {% for c in coaches %}
+                <option value="{{ c.user.id }}">{{ c.user.get_full_name|default:c.user.username }} ({{ c.title }})</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Yearly Registration / Renewal Fee Option -->
+          <div class="form-group" style="margin-bottom:0.5rem;">
+            <div style="background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.1);border-radius:10px;padding:0.65rem 0.85rem;display:flex;align-items:center;justify-content:space-between;transition:all 0.2s;" id="yearlyFeeContainer">
+              <label style="display:flex;align-items:center;gap:0.65rem;cursor:pointer;margin:0;user-select:none;width:100%;">
+                <input type="checkbox" id="payIncludeYearlyFee" onchange="updatePayAmountDisplay()" style="width:19px;height:19px;accent-color:var(--neon-lime);cursor:pointer;flex-shrink:0;">
+                <div style="flex-grow:1;">
+                  <div style="font-size:0.84rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
+                    <span>Charge Annual Registration Fee</span>
+                    <span id="yearlyFeeBadge" style="font-size:0.7rem;font-weight:800;padding:0.15rem 0.5rem;border-radius:999px;background:rgba(136,216,45,0.18);color:var(--neon-lime);border:1px solid rgba(136,216,45,0.3);">+LKR 1,000</span>
+                  </div>
+                  <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;" id="yearlyFeeDescription">
+                    Annual renewal fee (LKR 0 for Student Package) &bull; Check to charge with this billing
+                  </div>
+                </div>
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT COLUMN: Real-Time Total Payable Card, Settlement & Submission -->
+        <div style="display:flex;flex-direction:column;gap:0.35rem;">
+          <!-- Real-Time Total Payable Amount Card -->
+          <div class="form-group" style="margin-bottom:1rem;">
+            <div style="background:linear-gradient(135deg, rgba(20,25,28,0.96) 0%, rgba(14,18,22,0.96) 100%);border:1.5px solid var(--neon-lime);border-radius:12px;padding:1.15rem 1.25rem;box-shadow:0 8px 24px rgba(0,0,0,0.35), 0 0 16px rgba(136,216,45,0.15);position:relative;overflow:hidden;">
+              <div style="position:absolute;top:0;right:0;width:120px;height:120px;background:radial-gradient(circle, rgba(136,216,45,0.12) 0%, transparent 70%);pointer-events:none;"></div>
+              
+              <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
+                <div>
+                  <div style="font-size:0.72rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;display:flex;align-items:center;gap:0.4rem;">
+                    <i class="fa fa-calculator" style="color:var(--neon-lime);"></i>
+                    <span>TOTAL PAYABLE AMOUNT</span>
+                  </div>
+                  <div id="payBreakdownText" style="font-size:0.88rem;color:#E6EDF3;margin-top:0.35rem;font-weight:700;">
+                    Monthly Package (Floor Access)
+                  </div>
+                  <div id="payCoachingStatusBadge" style="display:inline-block;margin-top:0.35rem;font-size:0.72rem;padding:0.2rem 0.55rem;border-radius:999px;background:rgba(255,255,255,0.06);color:var(--text-muted);">
+                    No coach assigned
+                  </div>
+                </div>
+
+                <div style="text-align:right;">
+                  <div style="font-family:'Montserrat',sans-serif;font-size:2.15rem;font-weight:900;color:var(--neon-lime);line-height:1;letter-spacing:-0.5px;text-shadow:0 0 14px rgba(136,216,45,0.4);" id="payTotalDisplay">
+                    LKR 4,000
+                  </div>
+                  <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;font-weight:600;" id="paySubText">
+                    Standard Package Rate
+                  </div>
+                </div>
+              </div>
+
+              <!-- Line Items Breakdown -->
+              <div style="margin-top:0.85rem;padding-top:0.75rem;border-top:1px dashed rgba(255,255,255,0.15);font-size:0.8rem;color:#b0b8c0;display:flex;flex-direction:column;gap:0.35rem;">
+                <div style="display:flex;justify-content:space-between;align-items:center;" id="payPackageLineItem">
+                  <span style="display:flex;align-items:center;gap:0.4rem;">
+                    <i class="fa fa-id-badge" style="color:var(--neon-lime);font-size:0.75rem;"></i>
+                    <span>Base Package (<span id="payPlanSummaryName" style="color:#fff;font-weight:700;">Monthly Package</span>):</span>
+                  </span>
+                  <span style="color:#fff;font-weight:700;" id="payBasePlanAmountDisplay">LKR 4,000</span>
+                </div>
+                <div id="payCoachingLineItem" style="display:none;justify-content:space-between;align-items:center;">
+                  <span style="display:flex;align-items:center;gap:0.4rem;">
+                    <i class="fa fa-dumbbell" style="color:#00F0FF;font-size:0.75rem;"></i>
+                    <span id="payCoachingLabel">1-on-1 Personal Coach:</span>
+                  </span>
+                  <span style="color:#00F0FF;font-weight:700;" id="payCoachingAmountDisplay">+LKR 7,000</span>
+                </div>
+                <div id="payYearlyFeeLineItem" style="display:none;justify-content:space-between;align-items:center;">
+                  <span style="display:flex;align-items:center;gap:0.4rem;">
+                    <i class="fa fa-calendar-check" style="color:var(--neon-lime);font-size:0.75rem;"></i>
+                    <span>Annual Registration / Renewal Fee:</span>
+                  </span>
+                  <span style="color:var(--neon-lime);font-weight:700;" id="payYearlyFeeLineDisplay">+LKR 1,000</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Hidden input fields to safely transmit computed amounts to backend API -->
+            <input type="hidden" id="payAmount" value="4000">
+            <input type="hidden" id="payPackageAmount" value="4000">
+            <input type="hidden" id="payCoachingAmount" value="0">
+            <input type="hidden" id="payYearlyFeeAmount" value="0">
+          </div>
+
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Payment Method</label>
+            <select class="form-control" id="payMethod">
+              <option value="cash">Cash at Counter</option>
+              <option value="card">Card / POS Terminal</option>
+              <option value="bank_transfer">Bank Transfer</option>
+            </select>
+          </div>
+
+          <div class="form-group" style="margin-bottom:1.25rem;">
+            <label>Audit Reference / Receipt Notes (Optional)</label>
+            <input type="text" id="payReferenceNote" class="form-control" placeholder="e.g. POS Slip #9842, Bank Slip Ref #TXN-1284, Cash Counter note">
+          </div>
+
+          <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:auto;border-top:1px solid rgba(255,255,255,0.08);padding-top:1rem;">
+            <button type="button" class="btn-action btn-reject" onclick="closePaymentModal()" style="padding:0.65rem 1.25rem;font-weight:700;">Cancel</button>
+            <button type="submit" class="btn-action btn-approve" id="btnSubmitPayment" style="padding:0.65rem 1.45rem;font-weight:800;background:var(--neon-lime);color:#0c0f12;border:none;border-radius:8px;box-shadow:0 0 16px rgba(136,216,45,0.35);">
+              <i class="fa fa-check-circle"></i> Confirm &amp; Unlock Gate
+            </button>
+          </div>
+        </div>
+
       </div>
     </form>
   </div>
@@ -742,6 +1452,203 @@
   </div>
 </div>
 
+<!-- Modal: Front Desk Staff Salary Advance / Till Loan -->
+<div class="modal-overlay" id="deskSalaryAdvanceModal" style="display:none;z-index:9999;">
+  <div class="modal-box" style="max-width:500px;background:#13171A;border:2px solid #F59E0B;border-radius:16px;padding:2rem;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+      <h3 style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;margin:0;">
+        <i class="fa fa-hand-holding-usd" style="color:#F59E0B;"></i> Staff Advance from Till
+      </h3>
+      <button type="button" onclick="closeSalaryAdvanceModalDesk()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+
+    <form id="deskSalaryAdvanceForm" onsubmit="submitSalaryAdvanceDesk(event)">
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Staff Member *</label>
+        <select id="deskAdvStaffId" class="form-control" required style="width:100%;padding:0.6rem;background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:8px;">
+          <option value="">-- Choose Gym Staff Member --</option>
+          {% for st in staff_users_list %}
+            <option value="{{ st.id }}">{{ st.full_name }} (@{{ st.username }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-bottom:1rem;">
+        <div>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Advance Amount (LKR) *</label>
+          <input type="number" step="100.00" id="deskAdvAmount" class="form-control" placeholder="10000.00" required style="width:100%;padding:0.6rem;background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:8px;">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Disbursement Mode *</label>
+          <select id="deskAdvPayoutMethod" class="form-control" required style="width:100%;padding:0.6rem;background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:8px;">
+            <option value="cash">Cash from Till</option>
+            <option value="bank_transfer">Bank Transfer</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Reason / Emergency Note *</label>
+        <input type="text" id="deskAdvReason" class="form-control" placeholder="e.g. Mid-month personal medical advance" required style="width:100%;padding:0.6rem;background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:8px;">
+      </div>
+
+      <div style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.3);padding:0.75rem;border-radius:8px;margin-bottom:1.25rem;font-size:0.75rem;color:#fde68a;line-height:1.4;">
+        <i class="fa fa-info-circle"></i> <strong>Till Balance Sync:</strong> Cash will be logged in Club OPEX and deducted from this staff member's next monthly payslip. A signature voucher will print automatically.
+      </div>
+
+      <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
+        <button type="button" class="btn-action" style="background:#2A3138;color:#fff;padding:0.6rem 1.2rem;border-radius:8px;cursor:pointer;" onclick="closeSalaryAdvanceModalDesk()">Cancel</button>
+        <button type="submit" id="btnSubmitSalaryAdvanceDesk" class="btn-action" style="background:#F59E0B;color:#000;font-weight:800;padding:0.6rem 1.4rem;border-radius:8px;cursor:pointer;">
+          <i class="fa fa-print"></i> Disburse &amp; Print Slip
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Member 360° Full Profile Dossier Modal -->
+<div class="modal-overlay" id="memberProfileModal" style="display:none;z-index:9999;">
+  <div class="modal-box" style="max-width:760px;max-height:90vh;overflow-y:auto;padding:1.5rem;background:#14181B;border:1px solid var(--border-color);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,0.85);">
+    
+    <!-- Modal Header -->
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:1rem;margin-bottom:1.25rem;">
+      <div style="display:flex;align-items:center;gap:1rem;">
+        <div id="mpAvatarContainer" style="position:relative;cursor:pointer;flex-shrink:0;" onclick="updatePhotoFromProfile()" title="Click to update or snap portrait photo">
+          <div id="mpAvatar" style="width:62px;height:62px;border-radius:50%;background:#22282D;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:900;font-size:1.3rem;border:2px solid var(--neon-lime);overflow:hidden;">
+            FM
+          </div>
+          <div style="position:absolute;bottom:-2px;right:-2px;background:#101315;border:1.5px solid var(--neon-lime);border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;color:var(--neon-lime);font-size:0.65rem;" title="Change Photo">
+            <i class="fa fa-camera"></i>
+          </div>
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+            <h3 id="mpFullName" style="font-family:'Montserrat',sans-serif;font-weight:900;color:#fff;margin:0;font-size:1.25rem;">Member Name</h3>
+            <span id="mpSubBadge" style="font-size:0.72rem;font-weight:800;padding:0.2rem 0.55rem;border-radius:999px;background:rgba(136,216,45,0.18);color:var(--neon-lime);border:1px solid rgba(136,216,45,0.3);">ACTIVE</span>
+            <span id="mpGateBadge" style="font-size:0.72rem;font-weight:800;padding:0.2rem 0.55rem;border-radius:999px;background:rgba(0,240,255,0.15);color:#00F0FF;border:1px solid rgba(0,240,255,0.3);">GATE UNLOCKED</span>
+            <span id="mpYearlyBadge" style="font-size:0.72rem;font-weight:800;padding:0.2rem 0.55rem;border-radius:999px;display:none;"></span>
+          </div>
+          <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;">
+            <span id="mpUsername">@username</span> &bull; 
+            Turnstile PIN: <strong style="color:var(--neon-lime);" id="mpPin">#FM1001</strong> &bull; 
+            Member Since: <span id="mpJoinedDate" style="color:#ccc;">--</span>
+          </div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <button type="button" class="btn-action" style="background:#1B2024;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:0.75rem;padding:0.35rem 0.75rem;" onclick="updatePhotoFromProfile()" title="Snap Webcam Selfie or Upload Photo">
+          <i class="fa fa-camera" style="color:var(--neon-lime);"></i> Update Photo
+        </button>
+        <button type="button" onclick="closeMemberProfile()" style="background:none;border:none;color:#888;font-size:1.4rem;cursor:pointer;padding:0.2rem 0.5rem;" title="Close Dossier">&times;</button>
+      </div>
+    </div>
+
+    <!-- Modal Body: 4 Clean Dossier Sections -->
+    <div style="display:flex;flex-direction:column;gap:1rem;">
+
+      <!-- Section 1: Personal & Identification -->
+      <div style="background:#1B2024;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1rem;">
+        <div style="font-size:0.74rem;font-weight:800;color:var(--neon-lime);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+          <i class="fa fa-user"></i> 1. Personal &amp; Identity Dossier
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:0.75rem;font-size:0.82rem;">
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">PHONE</span><strong style="color:#fff;" id="mpPhone">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">EMAIL</span><strong style="color:#fff;" id="mpEmail">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">NIC / PASSPORT</span><strong style="color:#fff;" id="mpNic">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">GENDER / AGE</span><strong style="color:#fff;" id="mpGenderAge">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">DATE OF BIRTH</span><strong style="color:#fff;" id="mpDob">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">BLOOD GROUP</span><strong style="color:#fff;" id="mpBlood">--</strong></div>
+        </div>
+        <div style="margin-top:0.6rem;font-size:0.82rem;border-top:1px dashed rgba(255,255,255,0.08);padding-top:0.5rem;">
+          <span style="color:var(--text-muted);font-size:0.72rem;">RESIDENTIAL ADDRESS: </span>
+          <strong style="color:#E6EDF3;" id="mpAddress">--</strong>
+        </div>
+      </div>
+
+      <!-- Section 2: Emergency Contact & Health Clearance -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+        <div style="background:#1B2024;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1rem;">
+          <div style="font-size:0.74rem;font-weight:800;color:#F59E0B;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+            <i class="fa fa-phone-alt"></i> 2. Emergency Contact
+          </div>
+          <div style="font-size:0.82rem;line-height:1.5;">
+            <div>Contact: <strong style="color:#fff;" id="mpEmergName">None listed</strong></div>
+            <div>Relationship: <strong style="color:#ccc;" id="mpEmergRel">--</strong></div>
+            <div>Phone: <strong style="color:var(--neon-lime);" id="mpEmergPhone">--</strong></div>
+          </div>
+        </div>
+
+        <div style="background:#1B2024;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1rem;">
+          <div style="font-size:0.74rem;font-weight:800;color:var(--danger);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+            <i class="fa fa-heartbeat"></i> 3. Medical &amp; Health Clearance
+          </div>
+          <div style="font-size:0.82rem;line-height:1.5;">
+            <div>Conditions: <strong style="color:#fff;" id="mpMedConditions">None reported</strong></div>
+            <div>Medications: <strong style="color:#fff;" id="mpMedications">None reported</strong></div>
+            <div>Primary Goal: <strong style="color:var(--cyan);" id="mpGoal">General Fitness</strong></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Training & Assigned Coach -->
+      <div style="background:#1B2024;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1rem;">
+        <div style="font-size:0.74rem;font-weight:800;color:var(--cyan);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+          <i class="fa fa-dumbbell"></i> 4. Training Split &amp; Coaching
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:0.75rem;font-size:0.82rem;">
+          <div>
+            <span style="color:var(--text-muted);display:block;font-size:0.72rem;">ASSIGNED PERSONAL COACH</span>
+            <strong style="color:var(--neon-lime);" id="mpCoach">No Coach Assigned (Standard Floor)</strong>
+          </div>
+          <div>
+            <span style="color:var(--text-muted);display:block;font-size:0.72rem;">PRESCRIBED TRAINING SPLIT</span>
+            <strong style="color:#fff;" id="mpProgram">Standard Workout Routine</strong>
+          </div>
+          <div>
+            <span style="color:var(--text-muted);display:block;font-size:0.72rem;">MONTH ATTENDANCE</span>
+            <strong style="color:#fff;" id="mpAttendance">0 Check-ins this month</strong>
+          </div>
+        </div>
+        <div id="mpNotesContainer" style="margin-top:0.6rem;font-size:0.8rem;color:#ccc;background:rgba(0,0,0,0.25);padding:0.5rem 0.75rem;border-radius:6px;">
+          Staff Notes: <span id="mpStaffNotes">None</span>
+        </div>
+      </div>
+
+      <!-- Section 4: Membership Subscription, Biometrics & Receipts -->
+      <div style="background:#1B2024;border:1px solid rgba(255,255,255,0.06);border-radius:10px;padding:1rem;">
+        <div style="font-size:0.74rem;font-weight:800;color:#fff;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:0.75rem;display:flex;align-items:center;gap:0.4rem;">
+          <i class="fa fa-receipt"></i> 5. Active Plan, Turnstile &amp; Receipts
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:0.75rem;font-size:0.82rem;margin-bottom:0.75rem;">
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">CURRENT PACKAGE</span><strong style="color:#fff;" id="mpPlan">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">VALIDITY WINDOW</span><strong style="color:#fff;" id="mpValidity">--</strong></div>
+          <div><span style="color:var(--text-muted);display:block;font-size:0.72rem;">HARDWARE CREDENTIALS</span><strong style="color:#00F0FF;" id="mpHardwareStatus">Face ID &bull; Fingerprint</strong></div>
+        </div>
+
+        <div style="font-size:0.76rem;color:var(--text-muted);margin-bottom:0.4rem;font-weight:700;">RECENT PAYMENT RECEIPTS:</div>
+        <div id="mpReceiptsList" style="display:flex;flex-direction:column;gap:0.35rem;font-size:0.78rem;">
+          <!-- Receipts injected dynamically -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer Actions -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:1.25rem;border-top:1px solid rgba(255,255,255,0.1);padding-top:1rem;">
+      <button type="button" class="btn-action" style="background:#22282D;color:#ccc;" onclick="closeMemberProfile()">Close</button>
+      <div style="display:flex;gap:0.5rem;">
+        <button type="button" class="btn-action" style="background:#1B2024;border:1px solid rgba(255,255,255,0.2);color:#fff;padding:0.45rem 1rem;" onclick="updatePhotoFromProfile()">
+          <i class="fa fa-camera" style="color:var(--neon-lime);"></i> Update Photo
+        </button>
+        <button type="button" class="btn-action btn-approve" id="mpBtnRenew" style="padding:0.45rem 1rem;">
+          <i class="fa fa-credit-card"></i> Quick Renew / Pay
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
 <!-- Toast -->
 <div class="fitme-toast" id="frontToast">
   <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:1.4rem;"></i>
@@ -773,8 +1680,18 @@
       const floorData = await floorRes.json();
 
       if (floorData) {
-        document.getElementById('floorMembersCount').textContent = floorData.members_on_floor || 0;
-        document.getElementById('floorStaffCount').textContent = floorData.staff_on_floor || 0;
+        const memCount = floorData.members_on_floor || 0;
+        const staffCount = floorData.staff_on_floor || 0;
+
+        const elMem = document.getElementById('floorMembersCount');
+        if (elMem) elMem.textContent = memCount;
+        const elStaff = document.getElementById('floorStaffCount');
+        if (elStaff) elStaff.textContent = staffCount;
+
+        const elMonMem = document.getElementById('monitorFloorMembersCount');
+        if (elMonMem) elMonMem.textContent = memCount;
+        const elMonStaff = document.getElementById('monitorFloorStaffCount');
+        if (elMonStaff) elMonStaff.textContent = staffCount;
       }
 
       if (punchData && punchData.punches) {
@@ -934,9 +1851,14 @@
       });
       const data = await res.json();
       if (data.success) {
-        showToast("Face ID template enrolled and synced to turnstile terminal!");
+        showToast("Profile photo & Face ID enrolled successfully!");
         closeFaceModal();
-        setTimeout(() => location.reload(), 1200);
+        const profModal = document.getElementById('memberProfileModal');
+        if (profModal && profModal.style.display === 'flex' && currentFaceUserId) {
+          openMemberProfile(currentFaceUserId);
+        } else {
+          setTimeout(() => location.reload(), 1200);
+        }
       } else {
         alert("Upload failed: " + (data.error || "Unknown error"));
       }
@@ -1011,30 +1933,6 @@
   function closeFingerprintModal() {
     if (fpPollingInterval) clearInterval(fpPollingInterval);
     document.getElementById('fingerprintModal').style.display = 'none';
-  }
-
-  // ── 4. Emergency Remote Buzzer ──
-  async function buzzTurnstile() {
-    const btn = document.getElementById('btnFrontBuzzer');
-    btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> BUZZING...';
-    try {
-      const res = await fetch('/api/zkbio/remote-buzzer/', {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': '{{ csrf_token }}',
-          'Content-Type': 'application/json'
-        }
-      });
-      const data = await res.json();
-      showToast(data.message || "Turnstile buzzer pulsed for 5 seconds!");
-      pollLivePunches();
-    } catch (e) {
-      alert("Buzzer failed: " + e);
-    } finally {
-      btn.disabled = false;
-      btn.innerHTML = '<i class="fa fa-door-open"></i> BUZZ DOOR OPEN (5s)';
-    }
   }
 
   // ── 5. Application Approval & Rejection ──
@@ -1144,24 +2042,363 @@
     window.open(printUrl, '_blank', 'width=380,height=650,top=50,left=100,scrollbars=yes');
   }
 
+  function parseCurrency(val) {
+    if (val === null || val === undefined) return 0;
+    const cleaned = String(val).replace(/,/g, '').trim();
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
+  }
+
   function openPaymentModal() { 
+    onPayMemberChange();
     updatePayAmountDisplay();
     document.getElementById('paymentModal').style.display = 'flex'; 
   }
   function closePaymentModal() { document.getElementById('paymentModal').style.display = 'none'; }
 
-  function openPaymentModalWithMember(memberId) {
+  function openPaymentModalWithMember(memberId, forceRenew = false) {
     const sel = document.getElementById('payMemberId');
-    if (sel) sel.value = memberId;
+    if (sel) {
+      sel.value = memberId;
+      onPayMemberChange();
+      if (forceRenew) {
+        const monthlyCheckbox = document.getElementById('payChargeMonthlyFee');
+        if (monthlyCheckbox) {
+          monthlyCheckbox.checked = true;
+          updatePayAmountDisplay();
+        }
+      }
+    }
     openPaymentModal();
+  }
+
+  function onPayMemberChange() {
+    const sel = document.getElementById('payMemberId');
+    if (!sel || !sel.selectedOptions.length) return;
+    const opt = sel.selectedOptions[0];
+    const coachId = opt.getAttribute('data-coach-id');
+    const planId = opt.getAttribute('data-plan-id');
+    const yearlyPaid = opt.getAttribute('data-yearly-paid') === 'true';
+    const activeSub = opt.getAttribute('data-active-sub') === 'true';
+    const subEnd = opt.getAttribute('data-sub-end') || '';
+    const latestSubEnd = opt.getAttribute('data-latest-sub-end') || '';
+
+    if (planId) {
+      const planSel = document.getElementById('payPlanId');
+      if (planSel) {
+        for (let i = 0; i < planSel.options.length; i++) {
+          if (planSel.options[i].value === planId) {
+            planSel.selectedIndex = i;
+            break;
+          }
+        }
+      }
+    }
+
+    const coachSel = document.getElementById('payCoachId');
+    if (coachSel) {
+      coachSel.value = coachId || '';
+    }
+
+    // Auto-detect Monthly Subscription Status:
+    // If already paid -> show as paid until date, uncheck so member is not double billed
+    // If not paid -> auto-tick to paid so front desk collects the monthly fee
+    const monthlyCheckbox = document.getElementById('payChargeMonthlyFee');
+    const monthlyBadge = document.getElementById('monthlyStatusBadge');
+    const monthlyDesc = document.getElementById('monthlyStatusDescription');
+    const monthlyContainer = document.getElementById('monthlyFeeContainer');
+
+    if (activeSub) {
+      if (monthlyCheckbox) {
+        monthlyCheckbox.checked = false;
+      }
+      if (monthlyBadge) {
+        monthlyBadge.innerHTML = `<i class="fa fa-check-circle"></i> Paid until ${subEnd}`;
+        monthlyBadge.style.background = 'rgba(136,216,45,0.18)';
+        monthlyBadge.style.color = 'var(--neon-lime)';
+        monthlyBadge.style.borderColor = 'rgba(136,216,45,0.35)';
+      }
+      if (monthlyDesc) {
+        monthlyDesc.innerHTML = `Active monthly subscription valid until <strong style="color:#fff;">${subEnd}</strong>. Package fee is waived (LKR 0). Check box only if member wants to renew ahead of time.`;
+      }
+      if (monthlyContainer) {
+        monthlyContainer.style.borderColor = 'rgba(136,216,45,0.35)';
+        monthlyContainer.style.background = 'rgba(136,216,45,0.04)';
+      }
+    } else {
+      if (monthlyCheckbox) {
+        monthlyCheckbox.checked = true;
+      }
+      if (monthlyBadge) {
+        if (latestSubEnd) {
+          monthlyBadge.innerHTML = `<i class="fa fa-clock"></i> Expired: ${latestSubEnd}`;
+        } else {
+          monthlyBadge.innerHTML = `<i class="fa fa-exclamation-circle"></i> DUE: NOT PAID`;
+        }
+        monthlyBadge.style.background = 'rgba(239,68,68,0.18)';
+        monthlyBadge.style.color = '#f87171';
+        monthlyBadge.style.borderColor = 'rgba(239,68,68,0.35)';
+      }
+      if (monthlyDesc) {
+        monthlyDesc.textContent = latestSubEnd 
+          ? `Subscription expired on ${latestSubEnd}. Auto-ticked to collect renewal package fee with this billing.`
+          : 'No active monthly subscription (Due). Auto-ticked to collect monthly package fee with this billing.';
+      }
+      if (monthlyContainer) {
+        monthlyContainer.style.borderColor = 'rgba(239,68,68,0.35)';
+        monthlyContainer.style.background = 'rgba(239,68,68,0.04)';
+      }
+    }
+
+    // Auto-toggle yearly fee:
+    // If NOT paid for this year -> automatically check it
+    // If already paid for this year -> automatically uncheck it
+    const yearlyCheckbox = document.getElementById('payIncludeYearlyFee');
+    if (yearlyCheckbox) {
+      yearlyCheckbox.checked = !yearlyPaid;
+    }
+
+    updatePayAmountDisplay();
+  }
+
+  function filterPayMembersDropdown() {
+    const q = (document.getElementById('payMemberFilterInput')?.value || '').toLowerCase().trim();
+    const select = document.getElementById('payMemberId');
+    if (!select) return;
+    let firstMatched = false;
+    Array.from(select.options).forEach(opt => {
+      const searchData = opt.getAttribute('data-search') || opt.text.toLowerCase();
+      if (!q || searchData.includes(q)) {
+        opt.style.display = '';
+        if (!firstMatched) {
+          select.value = opt.value;
+          firstMatched = true;
+        }
+      } else {
+        opt.style.display = 'none';
+      }
+    });
+    if (firstMatched) {
+      onPayMemberChange();
+    }
   }
 
   function updatePayAmountDisplay() {
     const planSel = document.getElementById('payPlanId');
-    if (!planSel || !planSel.selectedOptions.length) return;
-    const price = planSel.selectedOptions[0].getAttribute('data-price');
+    const coachSel = document.getElementById('payCoachId');
+    const memberSel = document.getElementById('payMemberId');
+    const monthlyCheckbox = document.getElementById('payChargeMonthlyFee');
+    const monthlyContainer = document.getElementById('monthlyFeeContainer');
+    const coachingOnlyCheckbox = document.getElementById('payCoachingOnlyFee');
+    const yearlyCheckbox = document.getElementById('payIncludeYearlyFee');
+    const yearlyBadge = document.getElementById('yearlyFeeBadge');
+    const yearlyDesc = document.getElementById('yearlyFeeDescription');
+    const yearlyContainer = document.getElementById('yearlyFeeContainer');
+
     const amtInput = document.getElementById('payAmount');
-    if (amtInput && price) amtInput.value = price;
+    const yearlyAmtInput = document.getElementById('payYearlyFeeAmount');
+    const totalDisplay = document.getElementById('payTotalDisplay');
+    const breakdownText = document.getElementById('payBreakdownText');
+    const statusBadge = document.getElementById('payCoachingStatusBadge');
+    const subText = document.getElementById('paySubText');
+
+    const planSummaryName = document.getElementById('payPlanSummaryName');
+    const basePlanDisplay = document.getElementById('payBasePlanAmountDisplay');
+    const coachingLineItem = document.getElementById('payCoachingLineItem');
+    const coachingDisplay = document.getElementById('payCoachingAmountDisplay');
+    const yearlyLineItem = document.getElementById('payYearlyFeeLineItem');
+    const yearlyDisplay = document.getElementById('payYearlyFeeLineDisplay');
+
+    if (!planSel || !planSel.selectedOptions.length) return;
+    const planOpt = planSel.selectedOptions[0];
+    const basePrice = parseCurrency(planOpt.getAttribute('data-price')) || 4000;
+    const planType = (planOpt.getAttribute('data-type') || '').toLowerCase();
+    const rawRegFee = planOpt.getAttribute('data-regfee');
+    const planName = (planOpt.textContent || '').split('—')[0].trim();
+
+    // Check member's active subscription status and date
+    const selectedMemberOpt = memberSel && memberSel.selectedOptions.length ? memberSel.selectedOptions[0] : null;
+    const activeSub = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-active-sub') === 'true') : false;
+    const subEnd = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-sub-end') || '') : '';
+    const memberYearlyPaid = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-yearly-paid') === 'true') : false;
+    const currentYear = new Date().getFullYear();
+    
+    // Determine configured registration/yearly fee for this plan
+    let planYearlyFee = (rawRegFee !== null && rawRegFee !== undefined && rawRegFee !== '') ? parseCurrency(rawRegFee) : 1000;
+    if (planType === 'student' || planName.toLowerCase().includes('student')) {
+      planYearlyFee = 0;
+    }
+
+    // Update Yearly Fee UI toggle text & status indicator
+    if (yearlyBadge) {
+      if (planYearlyFee === 0) {
+        yearlyBadge.textContent = 'FREE (LKR 0)';
+        yearlyBadge.style.background = 'rgba(0, 240, 255, 0.15)';
+        yearlyBadge.style.color = '#00F0FF';
+        yearlyBadge.style.borderColor = 'rgba(0, 240, 255, 0.3)';
+        if (yearlyDesc) yearlyDesc.textContent = 'Student Package: LKR 0 Annual Registration Fee';
+      } else if (memberYearlyPaid) {
+        yearlyBadge.textContent = `✓ Paid for ${currentYear}`;
+        yearlyBadge.style.background = 'rgba(0, 240, 255, 0.15)';
+        yearlyBadge.style.color = '#00F0FF';
+        yearlyBadge.style.borderColor = 'rgba(0, 240, 255, 0.3)';
+        if (yearlyDesc) yearlyDesc.textContent = `Annual fee already paid for ${currentYear} • Unchecked by default (Check to re-charge)`;
+      } else {
+        yearlyBadge.textContent = `DUE: +LKR ${planYearlyFee.toLocaleString()}`;
+        yearlyBadge.style.background = 'rgba(239, 68, 68, 0.18)';
+        yearlyBadge.style.color = '#f87171';
+        yearlyBadge.style.borderColor = 'rgba(239, 68, 68, 0.35)';
+        if (yearlyDesc) yearlyDesc.textContent = `Annual fee NOT paid for ${currentYear} • Auto-checked to collect with this billing`;
+      }
+    }
+
+    const coachVal = coachSel ? coachSel.value : '';
+    const coachText = coachSel && coachSel.selectedOptions.length && coachVal ? coachSel.selectedOptions[0].textContent : '';
+
+    // Check whether monthly package fee is ticked to be charged
+    const chargeMonthly = monthlyCheckbox ? monthlyCheckbox.checked : true;
+    if (monthlyContainer) {
+      if (chargeMonthly) {
+        monthlyContainer.style.borderColor = 'var(--neon-lime)';
+        monthlyContainer.style.background = 'rgba(136,216,45,0.06)';
+      } else {
+        monthlyContainer.style.borderColor = activeSub ? 'rgba(136,216,45,0.35)' : 'rgba(255,255,255,0.12)';
+        monthlyContainer.style.background = activeSub ? 'rgba(136,216,45,0.04)' : 'rgba(255,255,255,0.03)';
+      }
+    }
+
+    let isCoaching = false;
+    let coachingAddon = 0;
+    let effectiveBasePrice = chargeMonthly ? basePrice : 0;
+
+    if (planType === 'personal_coaching' || planName.toLowerCase().includes('coaching')) {
+      isCoaching = true;
+      coachingAddon = 0;
+      effectiveBasePrice = chargeMonthly ? basePrice : 0;
+      if (breakdownText) breakdownText.textContent = chargeMonthly ? '1-on-1 Personal Coaching Package' : 'Coaching Package (Waived: LKR 0)';
+      if (statusBadge) {
+        statusBadge.innerHTML = coachVal 
+          ? `<i class="fa fa-user-check" style="color:var(--neon-lime);"></i> Coach: ${coachText}` 
+          : `<i class="fa fa-exclamation-triangle" style="color:#f59e0b;"></i> Select a coach above`;
+        statusBadge.style.background = coachVal ? 'rgba(136,216,45,0.15)' : 'rgba(245,158,11,0.15)';
+        statusBadge.style.color = coachVal ? 'var(--neon-lime)' : '#fbbf24';
+      }
+    } else if (coachVal) {
+      isCoaching = true;
+      coachingAddon = 7000;
+      if (breakdownText) {
+        if (!chargeMonthly) {
+          breakdownText.textContent = `Personal Coaching Only (LKR 7,000)`;
+        } else {
+          breakdownText.textContent = `${planName} + Personal Coach`;
+        }
+      }
+      if (statusBadge) {
+        statusBadge.innerHTML = `<i class="fa fa-bolt" style="color:var(--neon-lime);"></i> Assigned: ${coachText}`;
+        statusBadge.style.background = 'rgba(136,216,45,0.15)';
+        statusBadge.style.color = 'var(--neon-lime)';
+      }
+    } else {
+      isCoaching = false;
+      coachingAddon = 0;
+      if (breakdownText) {
+        if (!chargeMonthly && activeSub) {
+          breakdownText.textContent = `Monthly Active (Paid until ${subEnd})`;
+        } else if (!chargeMonthly) {
+          breakdownText.textContent = `Monthly Package (Fee Waived: LKR 0)`;
+        } else {
+          breakdownText.textContent = `${planName} (Floor Access)`;
+        }
+      }
+      if (statusBadge) {
+        statusBadge.innerHTML = `<i class="fa fa-shield-alt"></i> Standard Access (No Coach)`;
+        statusBadge.style.background = 'rgba(255,255,255,0.06)';
+        statusBadge.style.color = 'var(--text-muted)';
+      }
+    }
+
+    // Keep hidden payCoachingOnlyFee in sync for legacy handlers
+    if (coachingOnlyCheckbox) {
+      coachingOnlyCheckbox.checked = (!chargeMonthly && Boolean(coachVal));
+    }
+
+    // Yearly fee calculation
+    const includeYearly = yearlyCheckbox ? yearlyCheckbox.checked : false;
+    const appliedYearlyFee = includeYearly ? planYearlyFee : 0;
+    if (yearlyContainer) {
+      yearlyContainer.style.borderColor = includeYearly ? 'var(--neon-lime)' : 'rgba(255,255,255,0.1)';
+      yearlyContainer.style.background = includeYearly ? 'rgba(136,216,45,0.06)' : 'rgba(255,255,255,0.03)';
+    }
+
+    const totalPayable = effectiveBasePrice + coachingAddon + appliedYearlyFee;
+
+    // Update displays
+    if (planSummaryName) planSummaryName.textContent = planName;
+    if (basePlanDisplay) {
+      if (!chargeMonthly) {
+        if (activeSub && subEnd) {
+          basePlanDisplay.innerHTML = `<span style="text-decoration:line-through;color:var(--text-muted);font-size:0.75rem;">LKR ${basePrice.toLocaleString()}</span> <span style="color:var(--neon-lime);font-weight:700;">(Paid until ${subEnd}: LKR 0)</span>`;
+        } else {
+          basePlanDisplay.innerHTML = `<span style="text-decoration:line-through;color:var(--text-muted);font-size:0.75rem;">LKR ${basePrice.toLocaleString()}</span> <span style="color:var(--neon-lime);font-weight:700;">(Fee Waived: LKR 0)</span>`;
+        }
+      } else {
+        basePlanDisplay.textContent = 'LKR ' + basePrice.toLocaleString();
+      }
+    }
+
+    if (coachingLineItem) {
+      if (isCoaching && coachingAddon > 0) {
+        coachingLineItem.style.display = 'flex';
+        if (coachingDisplay) coachingDisplay.textContent = `+LKR ${coachingAddon.toLocaleString()}`;
+      } else if (isCoaching && (planType === 'personal_coaching' || planName.toLowerCase().includes('coaching'))) {
+        coachingLineItem.style.display = 'flex';
+        if (coachingDisplay) coachingDisplay.textContent = 'Included in Package (LKR 7,000)';
+      } else {
+        coachingLineItem.style.display = 'none';
+      }
+    }
+
+    if (yearlyLineItem) {
+      if (includeYearly) {
+        yearlyLineItem.style.display = 'flex';
+        if (yearlyDisplay) {
+          yearlyDisplay.textContent = planYearlyFee > 0 ? `+LKR ${planYearlyFee.toLocaleString()}` : 'FREE (LKR 0)';
+          yearlyDisplay.style.color = planYearlyFee > 0 ? '#00F0FF' : 'var(--neon-lime)';
+        }
+      } else {
+        yearlyLineItem.style.display = 'none';
+      }
+    }
+
+    if (totalDisplay) totalDisplay.textContent = 'LKR ' + totalPayable.toLocaleString();
+    if (amtInput) amtInput.value = totalPayable;
+    if (yearlyAmtInput) yearlyAmtInput.value = appliedYearlyFee;
+
+    const pkgAmtInput = document.getElementById('payPackageAmount');
+    if (pkgAmtInput) pkgAmtInput.value = effectiveBasePrice;
+
+    const coachAmtInput = document.getElementById('payCoachingAmount');
+    if (coachAmtInput) coachAmtInput.value = coachingAddon;
+
+    const coachLabelEl = document.getElementById('payCoachingLabel');
+    if (coachLabelEl) {
+      coachLabelEl.textContent = coachVal ? `Personal Coach (${coachText}):` : '1-on-1 Personal Coach:';
+    }
+
+    if (subText) {
+      if (!chargeMonthly && isCoaching && includeYearly) subText.textContent = 'Personal Coaching (LKR 7,000) + Annual Registration Fee';
+      else if (!chargeMonthly && isCoaching) subText.textContent = 'Coaching Only (Monthly Package Already Paid)';
+      else if (!chargeMonthly && includeYearly) subText.textContent = 'Annual Registration Fee Only (Monthly Fee Active)';
+      else if (!chargeMonthly) subText.textContent = `Monthly Active until ${subEnd || 'Date'}`;
+      else if (isCoaching && includeYearly) subText.textContent = 'Package + 1-on-1 Coaching + Annual Fee';
+      else if (isCoaching) subText.textContent = 'Package + 1-on-1 Personal Coaching';
+      else if (includeYearly) subText.textContent = 'Includes Annual Registration Fee';
+      else subText.textContent = 'Standard Package Rate';
+    }
+  }
+
+  function updatePaySplitDisplay() {
+    updatePayAmountDisplay();
   }
 
   async function submitPayment(e) {
@@ -1174,6 +2411,14 @@
     const planId = document.getElementById('payPlanId').value;
     const paymentMethod = document.getElementById('payMethod').value;
     const amountPaid = document.getElementById('payAmount').value;
+    const coachId = document.getElementById('payCoachId').value || null;
+    const referenceNote = (document.getElementById('payReferenceNote')?.value || '').trim();
+    const includeYearlyFee = document.getElementById('payIncludeYearlyFee')?.checked || false;
+    const yearlyFeeAmount = parseFloat(document.getElementById('payYearlyFeeAmount')?.value) || 0;
+    const packageAmount = parseFloat(document.getElementById('payPackageAmount')?.value) || 0;
+    const coachingAmount = parseFloat(document.getElementById('payCoachingAmount')?.value) || 0;
+    const chargeMonthly = document.getElementById('payChargeMonthlyFee') ? document.getElementById('payChargeMonthlyFee').checked : true;
+    const coachingOnly = (!chargeMonthly && Boolean(coachId));
 
     try {
       const res = await fetch('/dashboard/api/record-payment/', {
@@ -1186,7 +2431,14 @@
           member_id: memberId, 
           plan_id: planId, 
           payment_method: paymentMethod,
-          amount_paid: amountPaid
+          amount_paid: amountPaid,
+          package_amount: packageAmount,
+          coaching_amount: coachingAmount,
+          coach_id: coachId,
+          coaching_only: coachingOnly,
+          reference_note: referenceNote,
+          include_yearly_fee: includeYearlyFee,
+          yearly_fee_amount: yearlyFeeAmount
         })
       });
       const data = await res.json();
@@ -1248,7 +2500,7 @@
       <div style="background:#161A1D;border:1px solid var(--border-color);padding:1rem;border-radius:10px;">
         <div style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;">Section 7: Payment Details &amp; Receipt</div>
         <div style="display:flex;justify-content:space-between;margin-top:4px;font-size:0.85rem;">
-          <span>Admission: LKR ${admFee} | Monthly: LKR ${monFee} | Discount: LKR ${disc}</span>
+          <span>Yearly Fee: LKR ${admFee} | Monthly: LKR ${monFee} | Discount: LKR ${disc}</span>
           <strong style="color:var(--neon-lime);font-size:1rem;">Total: LKR ${total} (${payMethod.toUpperCase()})</strong>
         </div>
       </div>
@@ -1266,6 +2518,548 @@
   function closeInspectModal() {
     document.getElementById('inspectAppModal').style.display = 'none';
   }
+
+  // ── Member 360° Profile Dossier Functions ──
+  let currentProfileMemberData = null;
+
+  function updatePhotoFromProfile() {
+    if (!currentProfileMemberData) return;
+    openFaceModal(currentProfileMemberData.id, currentProfileMemberData.name, currentProfileMemberData.pin);
+  }
+
+  async function openMemberProfile(memberId) {
+    if (!memberId) return;
+    const modal = document.getElementById('memberProfileModal');
+    if (!modal) return;
+
+    // Reset fields to loading state
+    document.getElementById('mpFullName').innerText = 'Loading Profile...';
+    document.getElementById('mpUsername').innerText = '@...';
+    document.getElementById('mpPin').innerText = '#...';
+    document.getElementById('mpJoinedDate').innerText = '...';
+    document.getElementById('mpPhone').innerText = '...';
+    document.getElementById('mpEmail').innerText = '...';
+    document.getElementById('mpNic').innerText = '...';
+    document.getElementById('mpGenderAge').innerText = '...';
+    document.getElementById('mpDob').innerText = '...';
+    document.getElementById('mpBlood').innerText = '...';
+    document.getElementById('mpAddress').innerText = '...';
+    document.getElementById('mpEmergName').innerText = '...';
+    document.getElementById('mpEmergRel').innerText = '...';
+    document.getElementById('mpEmergPhone').innerText = '...';
+    document.getElementById('mpMedConditions').innerText = '...';
+    document.getElementById('mpMedications').innerText = '...';
+    document.getElementById('mpGoal').innerText = '...';
+    document.getElementById('mpCoach').innerText = '...';
+    document.getElementById('mpProgram').innerText = '...';
+    document.getElementById('mpAttendance').innerText = '...';
+    document.getElementById('mpStaffNotes').innerText = 'None';
+    document.getElementById('mpPlan').innerText = '...';
+    document.getElementById('mpValidity').innerText = '...';
+    document.getElementById('mpHardwareStatus').innerText = '...';
+    document.getElementById('mpReceiptsList').innerHTML = '<div style="color:var(--text-muted);font-style:italic;">Fetching receipts...</div>';
+    
+    modal.style.display = 'flex';
+
+    try {
+      const res = await fetch(`/api/members/${memberId}/profile/`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      if (!data.success || !data.member) {
+        alert(data.error || 'Failed to load member profile');
+        return;
+      }
+
+      const m = data.member;
+      currentProfileMemberData = m;
+
+      // Avatar
+      const av = document.getElementById('mpAvatar');
+      if (m.photo_url) {
+        av.innerHTML = `<img src="${m.photo_url}" style="width:100%;height:100%;object-fit:cover;">`;
+      } else {
+        av.innerText = (m.name || 'M').substring(0, 2).toUpperCase();
+      }
+
+      // Header
+      document.getElementById('mpFullName').innerText = m.name;
+      document.getElementById('mpUsername').innerText = `@${m.username}`;
+      document.getElementById('mpPin').innerText = `#FM${m.pin}`;
+      document.getElementById('mpJoinedDate').innerText = m.date_joined || '--';
+
+      // Status badges
+      const subBadge = document.getElementById('mpSubBadge');
+      if (m.sub_status === 'ACTIVE') {
+        subBadge.className = 'badge badge-green';
+        subBadge.style.background = 'rgba(136,216,45,0.18)';
+        subBadge.style.color = 'var(--neon-lime)';
+        subBadge.style.border = '1px solid rgba(136,216,45,0.3)';
+        subBadge.innerHTML = `<i class="fa fa-check-circle"></i> ACTIVE (${m.days_remaining}d left)`;
+      } else if (m.sub_status === 'EXPIRED') {
+        subBadge.className = 'badge badge-red';
+        subBadge.style.background = 'rgba(239,68,68,0.18)';
+        subBadge.style.color = 'var(--danger)';
+        subBadge.style.border = '1px solid rgba(239,68,68,0.3)';
+        subBadge.innerHTML = `<i class="fa fa-times-circle"></i> EXPIRED`;
+      } else {
+        subBadge.className = 'badge badge-yellow';
+        subBadge.style.background = 'rgba(245,158,11,0.18)';
+        subBadge.style.color = 'var(--warning)';
+        subBadge.style.border = '1px solid rgba(245,158,11,0.3)';
+        subBadge.innerHTML = `<i class="fa fa-exclamation-triangle"></i> NO ACTIVE PLAN`;
+      }
+
+      const gateBadge = document.getElementById('mpGateBadge');
+      if (m.gate_access_active) {
+        gateBadge.style.background = 'rgba(0,240,255,0.15)';
+        gateBadge.style.color = '#00F0FF';
+        gateBadge.style.border = '1px solid rgba(0,240,255,0.3)';
+        gateBadge.innerHTML = '<i class="fa fa-unlock-alt"></i> GATE UNLOCKED';
+      } else {
+        gateBadge.style.background = 'rgba(239,68,68,0.15)';
+        gateBadge.style.color = 'var(--danger)';
+        gateBadge.style.border = '1px solid rgba(239,68,68,0.3)';
+        gateBadge.innerHTML = '<i class="fa fa-lock"></i> GATE BLOCKED';
+      }
+
+      const yearlyBadge = document.getElementById('mpYearlyBadge');
+      if (yearlyBadge) {
+        yearlyBadge.style.display = 'inline-block';
+        const currentYear = new Date().getFullYear();
+        if (m.yearly_fee_paid) {
+          yearlyBadge.style.background = 'rgba(0,240,255,0.15)';
+          yearlyBadge.style.color = '#00F0FF';
+          yearlyBadge.style.border = '1px solid rgba(0,240,255,0.3)';
+          yearlyBadge.innerHTML = `<i class="fa fa-check-circle"></i> YEARLY PAID (${currentYear})`;
+        } else {
+          yearlyBadge.style.background = 'rgba(239,68,68,0.15)';
+          yearlyBadge.style.color = '#f87171';
+          yearlyBadge.style.border = '1px solid rgba(239,68,68,0.3)';
+          yearlyBadge.innerHTML = `<i class="fa fa-exclamation-circle"></i> YEARLY DUE (${currentYear})`;
+        }
+      }
+
+      // Section 1
+      document.getElementById('mpPhone').innerText = m.phone || '--';
+      document.getElementById('mpEmail').innerText = m.email || '--';
+      document.getElementById('mpNic').innerText = m.nic_passport || '--';
+      document.getElementById('mpGenderAge').innerText = `${m.gender || 'N/A'} • ${m.age && m.age !== 'N/A' ? m.age + ' yrs' : '--'}`;
+      document.getElementById('mpDob').innerText = m.dob || '--';
+      document.getElementById('mpBlood').innerText = m.blood_group || '--';
+      document.getElementById('mpAddress').innerText = m.address || 'None provided';
+
+      // Section 2
+      document.getElementById('mpEmergName').innerText = m.emergency_name || 'None listed';
+      document.getElementById('mpEmergRel').innerText = m.emergency_relationship || '--';
+      document.getElementById('mpEmergPhone').innerText = m.emergency_phone || '--';
+      document.getElementById('mpMedConditions').innerText = m.medical_conditions || 'None reported (Fit)';
+      document.getElementById('mpMedications').innerText = m.under_medication || 'None';
+      document.getElementById('mpGoal').innerText = m.primary_goal || 'General Fitness';
+
+      // Section 3
+      document.getElementById('mpCoach').innerText = m.assigned_coach || (m.personal_trainer_needed ? 'Coaching Requested (Unassigned)' : 'Standard Gym Floor (No Coach)');
+      document.getElementById('mpProgram').innerText = m.assigned_program || 'Standard Training Protocol';
+      document.getElementById('mpAttendance').innerText = `${m.month_attendance_count || 0} Check-ins this month (Last: ${m.last_punch_time})`;
+      document.getElementById('mpStaffNotes').innerText = m.notes || 'None';
+
+      // Section 4
+      document.getElementById('mpPlan').innerText = m.plan_name || 'No Active Plan';
+      document.getElementById('mpValidity').innerText = m.validity_start ? `${m.validity_start} — ${m.validity_end} (${m.days_remaining}d remaining)` : 'No active validity period';
+      document.getElementById('mpHardwareStatus').innerHTML = `
+        <span style="color:${m.face_enrolled ? 'var(--neon-lime)' : 'var(--text-muted)'}">Face: ${m.face_enrolled ? '✓ Enrolled' : '✗ Pending'}</span> &bull; 
+        <span style="color:${m.fingerprint_enrolled ? 'var(--neon-lime)' : 'var(--text-muted)'}">FP: ${m.fingerprint_enrolled ? '✓ Enrolled' : '✗ Pending'}</span>
+      `;
+
+      // Receipts
+      const recList = document.getElementById('mpReceiptsList');
+      if (m.receipts && m.receipts.length > 0) {
+        let rHtml = '';
+        m.receipts.forEach(r => {
+          rHtml += `
+            <div style="display:flex;align-items:center;justify-content:space-between;background:rgba(255,255,255,0.03);padding:0.4rem 0.6rem;border-radius:6px;border:1px solid rgba(255,255,255,0.05);">
+              <div>
+                <strong style="color:var(--neon-lime);font-family:monospace;">#${r.receipt_number}</strong>
+                <span style="color:#aaa;margin-left:0.4rem;">${r.date} &bull; ${r.plan_name}</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <strong style="color:#fff;">LKR ${r.amount.toLocaleString()}</strong>
+                <span class="badge badge-green" style="font-size:0.68rem;padding:0.15rem 0.4rem;">${r.method}</span>
+                <button type="button" class="btn-action" style="font-size:0.7rem;padding:0.2rem 0.5rem;background:#2A3138;color:#fff;" onclick="printReceipt(${r.id})" title="Print 80mm Slip">
+                  <i class="fa fa-print"></i> Slip
+                </button>
+              </div>
+            </div>
+          `;
+        });
+        recList.innerHTML = rHtml;
+      } else {
+        recList.innerHTML = `<div style="color:var(--text-muted);font-style:italic;">No recorded payment receipts found for this member.</div>`;
+      }
+
+      // Renew Button
+      const btnRenew = document.getElementById('mpBtnRenew');
+      btnRenew.onclick = () => {
+        closeMemberProfile();
+        openPaymentModalWithMember(m.id);
+      };
+
+    } catch (err) {
+      console.error('Error fetching member profile:', err);
+      alert('Could not load member dossier: ' + err.message);
+      closeMemberProfile();
+    }
+  }
+
+  function closeMemberProfile() {
+    const modal = document.getElementById('memberProfileModal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  // Universal Member Quick-Search (Instant Desk Lookup)
+  let deskSearchTimer = null;
+  function handleUniversalSearch(query) {
+    const q = (query || '').trim();
+    const container = document.getElementById('universalSearchResults');
+    const spinner = document.getElementById('searchSpinner');
+
+    filterDeskMembers(q);
+
+    if (q.length < 2) {
+      container.style.display = 'none';
+      container.innerHTML = '';
+      if (spinner) spinner.style.display = 'none';
+      return;
+    }
+
+    if (spinner) spinner.style.display = 'block';
+    clearTimeout(deskSearchTimer);
+
+    deskSearchTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/desk/lookup/?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        if (spinner) spinner.style.display = 'none';
+
+        if (!data.results || data.results.length === 0) {
+          container.style.display = 'block';
+          container.innerHTML = `
+            <div style="padding:1rem;text-align:center;color:var(--text-muted);font-size:0.85rem;background:rgba(255,255,255,0.02);border-radius:8px;">
+              <i class="fa fa-user-slash" style="color:var(--warning);font-size:1.2rem;margin-bottom:0.35rem;display:block;"></i>
+              No registered member found matching "<strong>${q}</strong>". Click <strong>+ New Walk-In Intake</strong> to register them!
+            </div>
+          `;
+          return;
+        }
+
+        let html = `<div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:0.85rem;">`;
+        data.results.forEach(m => {
+          const statusBadge = m.sub_status === 'ACTIVE' 
+            ? `<span class="badge badge-green"><i class="fa fa-check-circle"></i> ACTIVE PASS (${m.days_left}d left)</span>`
+            : (m.sub_status === 'EXPIRED' 
+                ? `<span class="badge badge-red"><i class="fa fa-times-circle"></i> EXPIRED (${m.end_date || 'Past Due'})</span>`
+                : `<span class="badge badge-yellow"><i class="fa fa-exclamation-triangle"></i> NO ACTIVE PLAN</span>`);
+
+          const onFloorBadge = m.on_floor 
+            ? `<span class="badge badge-cyan" style="animation:livePulse 1.8s infinite;"><i class="fa fa-door-open"></i> IN GYM NOW (${m.last_punch_time})</span>`
+            : '';
+
+          const yearlyStatusBadge = m.yearly_fee_paid 
+            ? `<span style="color:#00F0FF;font-weight:700;"><i class="fa fa-check-circle"></i> Yearly Paid</span>` 
+            : `<span style="color:#f87171;font-weight:700;"><i class="fa fa-exclamation-circle"></i> Yearly Due</span>`;
+
+          html += `
+            <div style="background:#181D21;border:1px solid ${m.on_floor ? 'var(--cyan)' : (m.sub_status === 'ACTIVE' ? 'var(--neon-lime)' : 'var(--danger)')};border-radius:12px;padding:1rem;display:flex;flex-direction:column;gap:0.75rem;">
+              <div style="display:flex;align-items:center;justify-content:space-between;gap:0.5rem;">
+                <div style="display:flex;align-items:center;gap:0.65rem;">
+                  <div onclick="openMemberProfile(${m.id})" style="cursor:pointer;width:36px;height:36px;border-radius:50%;background:#22282D;display:flex;align-items:center;justify-content:center;color:#fff;font-weight:800;font-size:0.8rem;border:1.5px solid var(--border-color);overflow:hidden;" title="View Dossier">
+                    ${m.photo_url ? `<img src="${m.photo_url}" style="width:100%;height:100%;object-fit:cover;">` : m.name.substring(0,2).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style="font-weight:800;color:#fff;font-size:0.92rem;cursor:pointer;" onclick="openMemberProfile(${m.id})" onmouseover="this.style.color='var(--neon-lime)'" onmouseout="this.style.color='#fff'" title="View Dossier">${m.name}</div>
+                    <div style="font-size:0.75rem;color:var(--text-muted);font-family:monospace;">ID: #FM${m.pin} &bull; ${m.phone || 'No phone'}</div>
+                  </div>
+                </div>
+                <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
+                  ${statusBadge}
+                  ${onFloorBadge}
+                </div>
+              </div>
+
+              <div style="font-size:0.75rem;color:#ccc;background:rgba(0,0,0,0.25);padding:0.4rem 0.6rem;border-radius:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;">
+                <span>Plan: <strong>${m.plan_name}</strong> &bull; ${yearlyStatusBadge}</span>
+                <span>Bio: Face ${m.face_enrolled ? '✓' : '✗'} &bull; FP ${m.fingerprint_enrolled ? '✓' : '✗'}</span>
+              </div>
+
+              <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:auto;">
+                <button type="button" class="btn-action btn-approve" style="font-size:0.72rem;padding:0.35rem 0.65rem;" onclick="openPaymentModalWithMember(${m.id})">
+                  <i class="fa fa-credit-card"></i> Pay / Renew
+                </button>
+                <button type="button" class="btn-action" style="background:#22282D;color:#fff;font-size:0.72rem;padding:0.35rem 0.65rem;" onclick="openMemberProfile(${m.id})">
+                  <i class="fa fa-id-card"></i> Profile
+                </button>
+                ${m.last_receipt_id ? `
+                  <button type="button" class="btn-action" style="background:#2A3138;color:#fff;font-size:0.72rem;padding:0.35rem 0.65rem;" onclick="printReceipt(${m.last_receipt_id})" title="Reprint 80mm Slip">
+                    <i class="fa fa-print"></i> 80mm Slip
+                  </button>
+                ` : ''}
+                <button type="button" class="btn-action" style="background:#1F2428;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:0.72rem;padding:0.35rem 0.65rem;" onclick="openFaceModal(${m.id}, '${m.name.replace(/'/g, "\\'")}', '${m.pin}')">
+                  <i class="fa fa-camera" style="color:var(--neon-lime);"></i> Face ID
+                </button>
+              </div>
+            </div>
+          `;
+        });
+        html += `</div>`;
+        container.innerHTML = html;
+        container.style.display = 'block';
+      } catch (err) {
+        if (spinner) spinner.style.display = 'none';
+        console.error('Desk quick lookup error:', err);
+      }
+    }, 220);
+  }
+
+  // Instant Member Directory Search
+  function filterDeskMembers(query) {
+    const q = (query || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('#deskBiometricsTable tbody tr');
+    rows.forEach(r => {
+      const text = r.innerText.toLowerCase();
+      r.style.display = text.includes(q) ? '' : 'none';
+    });
+  }
+
+  // Fast Turnstile Gate Connectivity Diagnostic Ping
+  async function pingGate() {
+    showToast("Pinging SpeedFace Turnstile (192.168.1.23:4370)...");
+    try {
+      const res = await fetch('/api/zkbio/floor-status/');
+      if (res.ok) {
+        showToast("✓ SpeedFace Turnstile ONLINE! ~1ms latency • Relays Armed");
+      } else {
+        showToast("⚠️ Turnstile controller returned status: " + res.status);
+      }
+    } catch (err) {
+      showToast("⚠️ Gate ping error: " + err);
+    }
+  }
+
+  // ── Collapsible Sidebar Toggle & Persistence ──
+  function toggleSidebarCollapse() {
+    const sb = document.getElementById('dashboardSidebar');
+    if (!sb) return;
+    const isCollapsed = sb.classList.toggle('collapsed');
+    localStorage.setItem('fitme_frontdesk_sidebar_collapsed', isCollapsed ? 'true' : 'false');
+    const icon = document.getElementById('sidebarToggleIcon');
+    if (icon) {
+      icon.className = isCollapsed ? 'fa fa-angles-right' : 'fa fa-angles-left';
+    }
+  }
+
+  // ── Front Desk Staff Salary Advance Handlers ──
+  function openSalaryAdvanceModalDesk() {
+    const m = document.getElementById('deskSalaryAdvanceModal');
+    if (!m) return;
+    document.getElementById('deskAdvAmount').value = '';
+    document.getElementById('deskAdvReason').value = '';
+    m.style.display = 'flex';
+  }
+
+  function closeSalaryAdvanceModalDesk() {
+    const m = document.getElementById('deskSalaryAdvanceModal');
+    if (m) m.style.display = 'none';
+  }
+
+  async function submitSalaryAdvanceDesk(e) {
+    e.preventDefault();
+    const btn = document.getElementById('btnSubmitSalaryAdvanceDesk');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Disbursing...';
+
+    const payload = {
+      staff_id: document.getElementById('deskAdvStaffId').value,
+      amount: document.getElementById('deskAdvAmount').value,
+      payout_method: document.getElementById('deskAdvPayoutMethod').value,
+      reason: document.getElementById('deskAdvReason').value.trim()
+    };
+
+    try {
+      const res = await fetch('/dashboard/api/payroll/issue-advance/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        closeSalaryAdvanceModalDesk();
+        if (data.voucher_url) {
+          window.open(data.voucher_url, '_blank', 'width=420,height=750');
+        }
+        setTimeout(() => location.reload(), 900);
+      } else {
+        alert(data.error || 'Failed to disburse salary advance.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-print"></i> Disburse &amp; Print Slip';
+      }
+    } catch(err) {
+      alert('Error: ' + err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-print"></i> Disburse &amp; Print Slip';
+    }
+  }
+
+  // ── Desk Workspace View Switcher (Split Hub vs Focus Modes) ──
+  function switchDeskView(mode) {
+    const ws = document.getElementById('deskWorkspace');
+    const mon = document.getElementById('section-monitor');
+    if (!ws) return;
+
+    const allowed = ['split', 'directory', 'monitor', 'intake', 'receipts'];
+    if (!allowed.includes(mode)) mode = 'split';
+
+    allowed.forEach(m => ws.classList.remove(`mode-${m}`));
+    ws.classList.add(`mode-${mode}`);
+
+    // Manage section visibility
+    if (mode === 'split') {
+      ws.style.display = 'grid';
+      if (mon) mon.style.display = 'block';
+    } else if (mode === 'directory') {
+      ws.style.display = 'grid';
+      if (mon) mon.style.display = 'none';
+    } else if (mode === 'monitor') {
+      ws.style.display = 'none';
+      if (mon) {
+        mon.style.display = 'block';
+        mon.scrollIntoView({ behavior: 'smooth' });
+      }
+    } else if (mode === 'intake') {
+      ws.style.display = 'grid';
+      if (mon) mon.style.display = 'none';
+    } else if (mode === 'receipts') {
+      ws.style.display = 'grid';
+      if (mon) mon.style.display = 'none';
+    }
+
+    const pillMap = {
+      'split': 'pillSplit',
+      'directory': 'pillDirectory',
+      'monitor': 'pillMonitor',
+      'intake': 'pillIntake',
+      'receipts': 'pillReceipts'
+    };
+    Object.values(pillMap).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    });
+    const activePill = document.getElementById(pillMap[mode]);
+    if (activePill) activePill.classList.add('active');
+
+    const navMap = {
+      'split': 'deskNavSplit',
+      'directory': 'deskNavDirectory',
+      'monitor': 'deskNavMonitor',
+      'intake': 'deskNavIntake',
+      'receipts': 'deskNavReceipts'
+    };
+    Object.values(navMap).forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('active');
+    });
+    const activeNav = document.getElementById(navMap[mode]);
+    if (activeNav) activeNav.classList.add('active');
+
+    try {
+      localStorage.setItem('fitme_frontdesk_view_mode', mode);
+    } catch(e) {}
+  }
+
+  // ── Live Turnstile Monitor Fullscreen Mode ("fullscreen movr") ──
+  function toggleMonitorFullscreen() {
+    const card = document.getElementById('section-monitor');
+    if (!card) return;
+    const isFullscreen = card.classList.toggle('fullscreen-mode');
+    const icon = document.getElementById('iconMonitorFullscreen');
+    const text = document.getElementById('textMonitorFullscreen');
+
+    if (isFullscreen) {
+      if (icon) icon.className = 'fa fa-compress';
+      if (text) text.textContent = 'EXIT FULLSCREEN';
+      if (card.requestFullscreen) {
+        card.requestFullscreen().catch(() => {});
+      } else if (card.webkitRequestFullscreen) {
+        card.webkitRequestFullscreen();
+      }
+    } else {
+      if (icon) icon.className = 'fa fa-expand';
+      if (text) text.textContent = 'FULLSCREEN MONITOR';
+      if (document.fullscreenElement && document.exitFullscreen) {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+  }
+
+  document.addEventListener('fullscreenchange', () => {
+    const card = document.getElementById('section-monitor');
+    if (!card) return;
+    if (!document.fullscreenElement && card.classList.contains('fullscreen-mode')) {
+      card.classList.remove('fullscreen-mode');
+      const icon = document.getElementById('iconMonitorFullscreen');
+      const text = document.getElementById('textMonitorFullscreen');
+      if (icon) icon.className = 'fa fa-expand';
+      if (text) text.textContent = 'FULLSCREEN MONITOR';
+    }
+  });
+
+  // Restore sidebar preference and scroll position on load
+  document.addEventListener('DOMContentLoaded', () => {
+    // Restore Desk workspace mode
+    try {
+      const savedMode = localStorage.getItem('fitme_frontdesk_view_mode') || 'split';
+      switchDeskView(savedMode);
+    } catch(e) {}
+
+    try {
+      const savedScroll = sessionStorage.getItem('fitme_frontdesk_scroll_pos');
+      if (savedScroll !== null) {
+        sessionStorage.removeItem('fitme_frontdesk_scroll_pos');
+        window.scrollTo({ top: parseInt(savedScroll, 10), behavior: 'instant' });
+      }
+    } catch(e) {}
+
+    if (localStorage.getItem('fitme_frontdesk_sidebar_collapsed') === 'true') {
+      const sb = document.getElementById('dashboardSidebar');
+      if (sb) {
+        sb.classList.add('collapsed');
+        const icon = document.getElementById('sidebarToggleIcon');
+        if (icon) icon.className = 'fa fa-angles-right';
+      }
+    }
+  });
+
+  window.addEventListener('beforeunload', () => {
+    try {
+      sessionStorage.setItem('fitme_frontdesk_scroll_pos', window.scrollY.toString());
+    } catch(e) {}
+  });
+
+  // Keyboard Shortcuts (Escape to dismiss active modal or exit fullscreen monitor)
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const card = document.getElementById('section-monitor');
+      if (card && card.classList.contains('fullscreen-mode')) {
+        toggleMonitorFullscreen();
+        return;
+      }
+      closePaymentModal();
+      closeIntakeModal();
+      closeInspectModal();
+      closeFaceModal();
+      closeFingerprintModal();
+      closeMemberProfile();
+    }
+  });
 </script>
 </body>
 </html>

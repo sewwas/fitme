@@ -344,6 +344,8 @@ urlpatterns += [
         path('api/applications/<int:app_id>/approve/', __import__('wger.core.views.fitme_dashboards', fromlist=['approve_application_api']).approve_application_api, name='api-app-approve'),
         path('api/applications/<int:app_id>/reject/', __import__('wger.core.views.fitme_dashboards', fromlist=['reject_application_api']).reject_application_api, name='api-app-reject'),
         path('api/record-payment/', __import__('wger.core.views.fitme_dashboards', fromlist=['record_payment_api']).record_payment_api, name='api-record-payment'),
+        path('api/desk/lookup/', __import__('wger.core.views.fitme_dashboards', fromlist=['desk_member_lookup_api']).desk_member_lookup_api, name='api-desk-lookup'),
+        path('api/members/<int:member_id>/profile/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_full_profile_api']).member_full_profile_api, name='api-member-profile'),
         path('api/meals/<int:meal_id>/review/', __import__('wger.core.views.fitme_dashboards', fromlist=['review_meal_api']).review_meal_api, name='api-meal-review'),
         path('api/members/<int:member_id>/ping/', __import__('wger.core.views.fitme_dashboards', fromlist=['ping_member_api']).ping_member_api, name='api-member-ping'),
         path('api/quick-meal/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_quick_meal_api']).log_quick_meal_api, name='api-quick-meal'),
@@ -353,6 +355,7 @@ urlpatterns += [
         path('api/log-workout/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_workout_api']).log_workout_api, name='api-log-workout'),
         path('api/log-measurement/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_measurement_api']).log_measurement_api, name='api-log-measurement'),
         path('api/members/<int:member_id>/assign-plan/', __import__('wger.core.views.fitme_dashboards', fromlist=['assign_program_api']).assign_program_api, name='api-member-assign-plan'),
+        path('api/members/<int:member_id>/assign-coach/', __import__('wger.core.views.fitme_dashboards', fromlist=['assign_coach_api']).assign_coach_api, name='api-member-assign-coach'),
         path('api/members/<int:member_id>/set-nutrition/', __import__('wger.core.views.fitme_dashboards', fromlist=['set_nutrition_target_api']).set_nutrition_target_api, name='api-member-set-nutrition'),
         path('api/members/<int:member_id>/toggle-access/', __import__('wger.core.views.fitme_dashboards', fromlist=['toggle_member_access_api']).toggle_member_access_api, name='api-member-toggle-access'),
         path('api/programs/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_program_api']).admin_create_program_api, name='api-admin-create-program'),
@@ -375,15 +378,36 @@ urlpatterns += [
         path('admin/reports/export-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_financial_csv']).admin_export_financial_csv, name='admin-reports-export-csv'),
         path('admin/reports/export-members-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_members_csv']).admin_export_members_csv, name='admin-reports-export-members-csv'),
         path('admin/reports/export-expenses-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_expenses_csv']).admin_export_expenses_csv, name='admin-reports-export-expenses-csv'),
+        path('admin/reports/export-payroll-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_payroll_csv']).admin_export_payroll_csv, name='admin-reports-export-payroll-csv'),
         path('admin/reports/eod/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_daily_eod_report']).admin_daily_eod_report, name='admin-daily-eod-report'),
+        # Staff Payroll Management APIs
+        path('api/payroll/recalculate/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_recalculate_payroll_api']).admin_recalculate_payroll_api, name='api-admin-payroll-recalculate'),
+        path('api/payroll/enroll-staff/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_enroll_staff_payroll_api']).admin_enroll_staff_payroll_api, name='api-admin-payroll-enroll-staff'),
+        path('api/payroll/<int:ledger_id>/pt-breakdown/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_get_pt_breakdown_api']).admin_get_pt_breakdown_api, name='api-admin-payroll-pt-breakdown'),
+        path('api/payroll/<int:ledger_id>/adjust/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_adjust_payroll_ledger_api']).admin_adjust_payroll_ledger_api, name='api-admin-payroll-adjust'),
+        path('api/payroll/<int:ledger_id>/finalize/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_finalize_payroll_ledger_api']).admin_finalize_payroll_ledger_api, name='api-admin-payroll-finalize'),
+        path('payroll/<int:ledger_id>/thermal-slip/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_payroll_thermal_slip_view']).admin_payroll_thermal_slip_view, name='payroll-thermal-slip'),
+        # Staff Attendance & Shift Rosters
+        path('api/staff-attendance/clock/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_clock_staff_attendance_api']).admin_clock_staff_attendance_api, name='api-staff-attendance-clock'),
+        path('api/staff-shifts/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_staff_shift_api']).admin_create_staff_shift_api, name='api-staff-shifts-create'),
+        path('api/staff-shifts/bulk-generate/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_generate_bulk_roster_api']).admin_generate_bulk_roster_api, name='api-staff-shifts-bulk-generate'),
+        path('api/staff-shifts/<int:shift_id>/toggle-leave/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_shift_leave_api']).admin_toggle_shift_leave_api, name='api-staff-shifts-toggle-leave'),
+        path('api/staff-schedule/<int:staff_id>/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_get_staff_work_schedule_api']).admin_get_staff_work_schedule_api, name='api-staff-schedule-get'),
+        path('api/staff-schedule/save/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_save_staff_work_schedule_api']).admin_save_staff_work_schedule_api, name='api-staff-schedule-save'),
+        path('api/payroll/issue-advance/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_issue_salary_advance_api']).admin_issue_salary_advance_api, name='api-payroll-issue-advance'),
+        path('advances/<int:advance_id>/thermal-voucher/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_advance_thermal_voucher_view']).admin_advance_thermal_voucher_view, name='advance-thermal-voucher'),
         # Financial OPEX & Expenses APIs
         path('api/expenses/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_expense_api']).admin_create_expense_api, name='api-admin-create-expense'),
         path('api/expenses/<int:expense_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_delete_expense_api']).admin_delete_expense_api, name='api-admin-delete-expense'),
+        path('api/expenses/<int:expense_id>/upload-receipt/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_upload_expense_receipt_api']).admin_upload_expense_receipt_api, name='api-admin-upload-expense-receipt'),
         # Member Self-Service Instant Renewal & Door Unlock
         path('api/member/self-renew/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_self_renew_api']).member_self_renew_api, name='api-member-self-renew'),
     ], 'fitme'))),
 
     path('api/member/self-renew/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_self_renew_api']).member_self_renew_api, name='api-direct-member-self-renew'),
+    path('api/desk/lookup/', __import__('wger.core.views.fitme_dashboards', fromlist=['desk_member_lookup_api']).desk_member_lookup_api, name='api-direct-desk-lookup'),
+    path('api/members/<int:member_id>/profile/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_full_profile_api']).member_full_profile_api, name='api-direct-member-profile'),
+    path('api/profile/update-photo/', __import__('wger.zkbio_integration.views', fromlist=['upload_face_api']).upload_face_api, name='api-profile-update-photo'),
 
     # ── Super Admin Dedicated: Plan Builder & Subscription Overrides (direct /api/ aliases) ──
     path('api/plans/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_plan_api']).admin_create_plan_api, name='api-direct-admin-create-plan'),
@@ -396,6 +420,7 @@ urlpatterns += [
     # Direct expense API aliases
     path('api/expenses/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_expense_api']).admin_create_expense_api, name='api-direct-admin-create-expense'),
     path('api/expenses/<int:expense_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_delete_expense_api']).admin_delete_expense_api, name='api-direct-admin-delete-expense'),
+    path('api/expenses/<int:expense_id>/upload-receipt/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_upload_expense_receipt_api']).admin_upload_expense_receipt_api, name='api-direct-admin-upload-expense-receipt'),
     path('dashboard/admin/reports/export-expenses-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_expenses_csv']).admin_export_expenses_csv, name='admin-direct-reports-export-expenses-csv'),
 
     # ── Fit Me Point of Sale (POS) for Gym Drinks & Supplements ──
@@ -426,6 +451,15 @@ urlpatterns += [
     path('operations/', include(('wger.gym_operations_payroll.urls', 'gym_operations_payroll'), namespace='gym_operations_payroll')),
     path('api/nutrition-lk/', include(('wger.nutrition_lk.urls', 'nutrition_lk'), namespace='nutrition_lk')),
     path('api/habit/', include(('wger.habit.urls', 'habit'), namespace='habit')),
+
+    # ── Fit Me Assessment Forms (Digital PDF equivalents) ──
+    path('api/assessments/nutrition/submit/', __import__('wger.core.views.assessment_apis', fromlist=['submit_nutrition_assessment_api']).submit_nutrition_assessment_api, name='assessment-nutrition-submit'),
+    path('api/assessments/workout/submit/', __import__('wger.core.views.assessment_apis', fromlist=['submit_workout_assessment_api']).submit_workout_assessment_api, name='assessment-workout-submit'),
+    path('api/assessments/nutrition/<int:assessment_id>/review/', __import__('wger.core.views.assessment_apis', fromlist=['coach_review_nutrition_assessment_api']).coach_review_nutrition_assessment_api, name='assessment-nutrition-review'),
+    path('api/assessments/workout/<int:assessment_id>/review/', __import__('wger.core.views.assessment_apis', fromlist=['coach_review_workout_assessment_api']).coach_review_workout_assessment_api, name='assessment-workout-review'),
+    path('api/assessments/pending/', __import__('wger.core.views.assessment_apis', fromlist=['list_pending_assessments_api']).list_pending_assessments_api, name='assessment-pending-list'),
+    path('api/assessments/<str:assessment_type>/<int:assessment_id>/detail/', __import__('wger.core.views.assessment_apis', fromlist=['get_assessment_detail_api']).get_assessment_detail_api, name='assessment-detail'),
+    path('api/assessments/my/', __import__('wger.core.views.assessment_apis', fromlist=['get_my_assessments_api']).get_my_assessments_api, name='assessment-my'),
 
     # ── Next.js Homepage Static Assets ──
     re_path(r'^_next/(?P<path>.*)$', __import__('django.views.static', fromlist=['serve']).serve, {

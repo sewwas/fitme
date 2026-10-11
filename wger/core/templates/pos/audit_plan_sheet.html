@@ -1,0 +1,418 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ page_title }}</title>
+  <link rel="icon" href="{% static 'images/logos/fitme-official-logo.jpg' %}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @page {
+      size: A4 portrait;
+      margin: 12mm 10mm;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      color: #111;
+      background: #eef2f5;
+      padding: 20px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+    .sheet-container {
+      max-width: 210mm;
+      margin: 0 auto;
+      background: #fff;
+      padding: 24px 28px;
+      border-radius: 6px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    }
+    .no-print-toolbar {
+      max-width: 210mm;
+      margin: 0 auto 15px auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: #101315;
+      padding: 12px 20px;
+      border-radius: 8px;
+      color: #fff;
+    }
+    .btn {
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 6px;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      text-decoration: none;
+    }
+    .btn-lime { background: #88D82D; color: #000; }
+    .btn-lime:hover { background: #9EF040; }
+    .btn-secondary { background: #2A3138; color: #fff; }
+
+    /* HEADER */
+    .sheet-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 2px solid #111;
+      padding-bottom: 14px;
+      margin-bottom: 14px;
+    }
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .brand-logo-img {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid #88D82D;
+      object-fit: cover;
+    }
+    .brand-title {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 900;
+      font-size: 22px;
+      letter-spacing: 1.5px;
+      color: #000;
+    }
+    .brand-title .lime { color: #5B9E16; }
+    .brand-title .silver { color: #555; }
+    .brand-sub {
+      font-size: 11px;
+      color: #444;
+      font-weight: 600;
+    }
+    .sheet-title-badge {
+      text-align: right;
+    }
+    .sheet-title-badge h1 {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 16px;
+      font-weight: 900;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: #111;
+    }
+    .badge-doc {
+      display: inline-block;
+      background: #e9f5db;
+      color: #3b6b0c;
+      border: 1px solid #c7e59b;
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-top: 3px;
+      text-transform: uppercase;
+    }
+
+    /* METADATA GRID */
+    .meta-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+    }
+    .meta-item {
+      display: flex;
+      flex-direction: column;
+    }
+    .meta-label {
+      font-size: 9.5px;
+      color: #64748b;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .meta-val {
+      font-size: 12px;
+      font-weight: 800;
+      color: #0f172a;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* INSTRUCTIONS */
+    .instructions-box {
+      background: #fffbeb;
+      border-left: 4px solid #f59e0b;
+      padding: 8px 12px;
+      font-size: 10.5px;
+      color: #78350f;
+      margin-bottom: 16px;
+      border-radius: 0 4px 4px 0;
+    }
+
+    /* TABLE */
+    table.audit-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 20px;
+      font-size: 11px;
+    }
+    table.audit-table th {
+      background: #0f172a;
+      color: #fff;
+      font-weight: 800;
+      text-transform: uppercase;
+      font-size: 10px;
+      letter-spacing: 0.5px;
+      padding: 7px 8px;
+      border: 1px solid #0f172a;
+      text-align: left;
+    }
+    table.audit-table td {
+      padding: 6px 8px;
+      border: 1px solid #cbd5e1;
+      vertical-align: middle;
+    }
+    table.audit-table tr:nth-child(even) td {
+      background: #f8fafc;
+    }
+    .cat-heading-row td {
+      background: #e2e8f0 !important;
+      font-weight: 800;
+      font-size: 11px;
+      color: #1e293b;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 6px 8px;
+    }
+    .count-box {
+      width: 55px;
+      height: 22px;
+      border: 1.5px solid #000;
+      border-radius: 3px;
+      background: #fff;
+      margin: 0 auto;
+    }
+    .diff-box {
+      width: 45px;
+      height: 22px;
+      border: 1px dashed #64748b;
+      border-radius: 3px;
+      margin: 0 auto;
+    }
+    .mono { font-family: 'JetBrains Mono', monospace; }
+    .text-center { text-align: center; }
+    .text-right { text-align: right; }
+
+    /* SIGN-OFF FOOTER */
+    .signoff-section {
+      margin-top: 25px;
+      border-top: 1.5px dashed #94a3b8;
+      padding-top: 15px;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+    }
+    .sig-block {
+      border: 1px solid #cbd5e1;
+      border-radius: 6px;
+      padding: 10px 12px;
+      background: #f8fafc;
+    }
+    .sig-title {
+      font-size: 10px;
+      font-weight: 800;
+      color: #475569;
+      text-transform: uppercase;
+      margin-bottom: 25px;
+    }
+    .sig-line {
+      border-bottom: 1px solid #000;
+      margin-bottom: 6px;
+    }
+    .sig-caption {
+      font-size: 9.5px;
+      color: #64748b;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    @media print {
+      body {
+        background: #fff;
+        padding: 0;
+      }
+      .no-print-toolbar { display: none !important; }
+      .sheet-container {
+        box-shadow: none;
+        padding: 0;
+        max-width: 100%;
+      }
+      table.audit-table tr {
+        page-break-inside: avoid;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="no-print-toolbar">
+  <div>
+    <strong>Fit Me Official Stock Audit Plan</strong> &bull; Pitigala Gym Bar &amp; Supplements
+  </div>
+  <div style="display:flex;gap:10px;">
+    <button type="button" class="btn btn-lime" onclick="window.print()">
+      <i class="fa fa-print"></i> Print Audit Count Sheet
+    </button>
+    <a href="/pos/" class="btn btn-secondary">
+      <i class="fa fa-arrow-left"></i> Back to POS
+    </a>
+  </div>
+</div>
+
+<div class="sheet-container">
+
+  <!-- Header -->
+  <div class="sheet-header">
+    <div class="brand-block">
+      <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me Logo" class="brand-logo-img">
+      <div>
+        <div class="brand-title"><span class="lime">FIT</span> <span class="silver">ME</span> FITNESS CLUB</div>
+        <div class="brand-sub">{{ club_info.tagline }} &bull; {{ club_info.address }}</div>
+        <div class="brand-sub"><i class="fa fa-phone"></i> {{ club_info.phone }} &bull; Pitigala Smart Portal</div>
+      </div>
+    </div>
+    <div class="sheet-title-badge">
+      <h1>STOCK AUDIT COUNT PLAN</h1>
+      <span class="badge-doc">Physical Inventory Verification</span>
+      <div style="font-size:10px;color:#64748b;margin-top:3px;">Doc Ref: AUD-PLAN-{{ generated_date|date:"Ymd" }}</div>
+    </div>
+  </div>
+
+  <!-- Meta Info -->
+  <div class="meta-grid">
+    <div class="meta-item">
+      <span class="meta-label">Audit Plan Date</span>
+      <span class="meta-val">{{ generated_date|date:"d M Y • H:i" }}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Assigned Auditor</span>
+      <span class="meta-val">{{ auditor_name }}</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">Total SKUs in Catalog</span>
+      <span class="meta-val">{{ total_products }} Items</span>
+    </div>
+    <div class="meta-item">
+      <span class="meta-label">System Expected Units</span>
+      <span class="meta-val">{{ total_expected_units }} Units</span>
+    </div>
+  </div>
+
+  <!-- Instructions -->
+  <div class="instructions-box">
+    <strong><i class="fa fa-info-circle"></i> Auditor Instructions:</strong>
+    1. Physically count unopened units on gym display shelves, bar refrigerators, and backroom storage.
+    2. Inspect product seals and expiry dates.
+    3. Write counted units in <strong>Physical Count</strong> column.
+    4. Calculate <strong>Discrepancy (Counted - Expected)</strong>. Negative numbers indicate missing stock (shrinkage/theft).
+    5. Return signed sheet to Super Admin for system reconciliation.
+  </div>
+
+  <!-- Main Table -->
+  <table class="audit-table">
+    <thead>
+      <tr>
+        <th style="width:35px;" class="text-center">#</th>
+        <th style="width:85px;">SKU / Code</th>
+        <th>Product Description</th>
+        <th style="width:75px;" class="text-right">Unit Price</th>
+        <th style="width:75px;" class="text-center">Expected</th>
+        <th style="width:80px;" class="text-center">Physical Count</th>
+        <th style="width:70px;" class="text-center">Variance (+/-)</th>
+        <th style="width:140px;">Discrepancy Reason / Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% regroup products by category as category_list %}
+      {% for cat in category_list %}
+        <tr class="cat-heading-row">
+          <td colspan="8">
+            <i class="fa {{ cat.grouper.icon }}"></i> {{ cat.grouper.name }} ({{ cat.list|length }} Products)
+          </td>
+        </tr>
+        {% for prod in cat.list %}
+          <tr>
+            <td class="text-center mono" style="color:#64748b;">{{ forloop.counter }}</td>
+            <td class="mono" style="font-weight:700;">{{ prod.sku }}</td>
+            <td>
+              <div style="font-weight:700;color:#000;">{{ prod.name }}</div>
+            </td>
+            <td class="text-right mono">LKR {{ prod.price|floatformat:0 }}</td>
+            <td class="text-center mono" style="font-weight:800;color:#000;">
+              {{ prod.stock_quantity }} {{ prod.unit }}
+            </td>
+            <td class="text-center">
+              <div class="count-box"></div>
+            </td>
+            <td class="text-center">
+              <div class="diff-box"></div>
+            </td>
+            <td style="font-size:9.5px;color:#94a3b8;">
+              [&nbsp;] OK &nbsp; [&nbsp;] Missing &nbsp; [&nbsp;] Expired
+            </td>
+          </tr>
+        {% endfor %}
+      {% empty %}
+        <tr>
+          <td colspan="8" class="text-center" style="padding:20px;color:#64748b;">No active products registered in inventory catalog.</td>
+        </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  <!-- Signoff Section -->
+  <div class="signoff-section">
+    <div class="sig-block">
+      <div class="sig-title">1. Physical Count By</div>
+      <div class="sig-line"></div>
+      <div class="sig-caption">
+        <span>Auditor Signature</span>
+        <span>Date</span>
+      </div>
+    </div>
+
+    <div class="sig-block">
+      <div class="sig-title">2. Verified &amp; Witnessed By</div>
+      <div class="sig-line"></div>
+      <div class="sig-caption">
+        <span>Front Desk / Shift Lead</span>
+        <span>Date</span>
+      </div>
+    </div>
+
+    <div class="sig-block">
+      <div class="sig-title">3. Admin Approval &amp; Reconciliation</div>
+      <div class="sig-line"></div>
+      <div class="sig-caption">
+        <span>Super Admin Signature</span>
+        <span>System Adjusted [ &nbsp; ]</span>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:14px;text-align:center;font-size:9px;color:#94a3b8;">
+    Fit Me Fitness Club (Pvt) Ltd &bull; Automated Gym POS &amp; Inventory Management Telemetry &bull; Generated: {{ generated_date|date:"Y-m-d H:i:s" }}
+  </div>
+
+</div>
+
+</body>
+</html>
