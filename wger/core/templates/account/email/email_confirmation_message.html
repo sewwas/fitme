@@ -7,124 +7,92 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            margin: 0;
-            padding: 0;
-            background-color: #f5f5f5;
-        }
-        .container {
-            max-width: 600px;
-            margin: 20px auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            overflow: hidden;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-        }
-        .header {
-            background-color: #2a4e6c;
-            color: #ffffff;
-            padding: 24px 32px;
-            text-align: center;
-        }
-        .header h1 {
-            margin: 0;
-            font-size: 22px;
-            font-weight: 600;
-        }
-        .content {
-            padding: 32px;
-        }
-        .content p {
-            margin: 0 0 16px;
-        }
-        .button-wrapper {
-            text-align: center;
-            margin: 24px 0;
-        }
-        .button {
-            display: inline-block;
-            background-color: #2a4e6c;
-            color: #ffffff !important;
-            text-decoration: none;
-            padding: 12px 32px;
-            border-radius: 6px;
-            font-weight: 600;
-            font-size: 16px;
-        }
-        .note {
-            font-size: 13px;
-            color: #888;
-            margin-top: 24px;
-            padding-top: 16px;
-            border-top: 1px solid #eee;
-        }
-        .note a {
-            color: #888;
-            word-break: break-all;
-        }
-        .footer {
-            text-align: center;
-            padding: 16px 32px;
-            font-size: 12px;
-            color: #999;
-            background-color: #fafafa;
-        }
-    </style>
+    <title>Verify Your Email — Fit Me Fitness Club</title>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>{% trans "Almost there!" %}</h1>
-        </div>
-        <div class="content">
-            <p>
-                {% blocktranslate with site_name=current_site.name site_domain=current_site.domain trimmed %}
-                    You're receiving this email because the user "{{ user_display }}" has given your
-                    email address to register an account on {{ site_domain }}.
-                {% endblocktranslate %}
-            </p>
+<body style="margin:0;padding:0;background-color:#F4F6F8;font-family:'Segoe UI',Roboto,-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;color:#1F2937;">
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background-color:#F4F6F8;padding:40px 16px;">
+        <tr>
+            <td align="center">
+                <table width="100%" border="0" cellspacing="0" cellpadding="0" style="max-width:560px;background-color:#FFFFFF;border-radius:16px;border:1px solid #E5E7EB;overflow:hidden;box-shadow:0 8px 24px rgba(0,0,0,0.06);">
+                    
+                    <!-- Header with Official Logo Badge -->
+                    <tr>
+                        <td align="center" style="background-color:#FFFFFF;padding:36px 24px 28px;border-bottom:1px solid #F1F5F9;">
+                            <div style="display:inline-block;width:68px;height:68px;border-radius:16px;overflow:hidden;border:2px solid #76C043;background-color:#0B0D0E;box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+                                <img src="https://fitmefitness-murex.vercel.app/images/fitme-logo.png" 
+                                     alt="Fit Me" 
+                                     width="68" 
+                                     height="68" 
+                                     style="display:block;width:68px;height:68px;border:0;outline:none;" />
+                            </div>
+                            <div style="font-size:20px;font-weight:900;letter-spacing:1px;color:#111827;margin-top:14px;">
+                                <span style="color:#16A34A;">FIT</span> ME FITNESS CLUB
+                            </div>
+                            <div style="font-size:12px;font-weight:700;color:#6B7280;letter-spacing:1px;text-transform:uppercase;margin-top:4px;">
+                                Pitigala, Sri Lanka
+                            </div>
+                        </td>
+                    </tr>
 
-            {% if code %}
-                <p>
-                    {% blocktranslate trimmed %}
-                        Your email verification code is listed below. Please enter it in your open browser window.
-                    {% endblocktranslate %}
-                </p>
-                <p style="text-align: center; font-size: 28px; font-weight: bold; letter-spacing: 4px;">{{ code }}</p>
-            {% else %}
-                <p>
-                    {% blocktranslate trimmed %}
-                        Please click the button below to confirm your email address.
-                    {% endblocktranslate %}
-                </p>
-                <div class="button-wrapper">
-                    <a class="button" href="{{ activate_url }}">
-                        {% translate "Confirm email" %}
-                    </a>
-                </div>
-                <p class="note">
-                    {% blocktranslate with time=expire_date|time:"TIME_FORMAT" date=expire_date|date:"DATE_FORMAT" trimmed %}
-                        The link is valid for {{ expire_hours }} hours (until {{ date }}, {{ time }}).
-                        You can request a new one from your profile settings.
-                    {% endblocktranslate %}
-                    <br><br>
+                    <!-- Body Content -->
+                    <tr>
+                        <td style="padding:36px 32px;color:#374151;font-size:15px;line-height:1.6;">
+                            <h2 style="color:#111827;font-size:22px;font-weight:800;margin-top:0;margin-bottom:12px;text-align:center;">
+                                Verify Your Email Address
+                            </h2>
+                            <p style="margin:0 0 14px;text-align:center;">
+                                Hello <strong style="color:#111827;">{{ user_display }}</strong>,
+                            </p>
+                            <p style="margin:0 0 24px;color:#4B5563;text-align:center;">
+                                Thank you for joining Fit Me Fitness Club. Please confirm your email address to complete your registration:
+                            </p>
 
-                    {% blocktranslate trimmed %}
-                        If the button doesn't work, copy and paste this link into your browser:
-                    {% endblocktranslate %}
-                    <br>
-                    <a href="{{ activate_url }}">{{ activate_url }}</a>
-                </p>
-            {% endif %}
-        </div>
-        <div class="footer">
-           {% translate 'the wger Team' %}
-        </div>
-    </div>
+                            {% if code %}
+                                <div style="background-color:#F8FAFC;border:1px solid #E2E8F0;border-radius:12px;padding:24px;text-align:center;margin:28px 0;">
+                                    <div style="font-size:12px;color:#64748B;text-transform:uppercase;letter-spacing:1px;font-weight:700;margin-bottom:10px;">
+                                        Verification Code
+                                    </div>
+                                    <div style="font-size:32px;font-weight:800;color:#16A34A;letter-spacing:8px;font-family:'Courier New',monospace;background-color:#F0FDF4;display:inline-block;padding:8px 24px;border-radius:8px;border:1px solid #BBF7D0;">
+                                        {{ code }}
+                                    </div>
+                                </div>
+                            {% else %}
+                                <!-- CTA Button -->
+                                <div style="text-align:center;margin:32px 0;">
+                                    <a href="{{ activate_url }}" 
+                                       style="display:inline-block;background-color:#16A34A;color:#FFFFFF;font-weight:700;font-size:15px;padding:15px 36px;border-radius:10px;text-decoration:none;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(22,163,74,0.3);">
+                                        Confirm Email Address &rarr;
+                                    </a>
+                                </div>
+
+                                <p style="font-size:13px;color:#6B7280;line-height:1.5;margin:24px 0 0;padding-top:20px;border-top:1px solid #E5E7EB;text-align:center;">
+                                    This verification link is valid for {{ expire_hours }} hours. If you did not create this account, please ignore this email.
+                                </p>
+                                
+                                <p style="font-size:12px;color:#9CA3AF;margin-top:16px;word-break:break-all;text-align:center;">
+                                    If the button above does not work, copy and paste this URL into your browser:<br>
+                                    <a href="{{ activate_url }}" style="color:#16A34A;text-decoration:none;word-break:break-all;">{{ activate_url }}</a>
+                                </p>
+                            {% endif %}
+                        </td>
+                    </tr>
+
+                    <!-- Clean Professional Footer -->
+                    <tr>
+                        <td align="center" style="background-color:#F8FAFC;padding:24px 20px;border-top:1px solid #E5E7EB;font-size:12px;color:#6B7280;line-height:1.6;">
+                            <p style="margin:0 0 6px;color:#374151;font-weight:600;">
+                                Fit Me Fitness Club • Main Street, Pitigala, Sri Lanka
+                            </p>
+                            <p style="margin:0;color:#9CA3AF;font-size:11px;">
+                                Need help? Contact us anytime at <a href="mailto:hello@fitmefitness.lk" style="color:#16A34A;text-decoration:none;font-weight:600;">hello@fitmefitness.lk</a>
+                            </p>
+                        </td>
+                    </tr>
+
+                </table>
+            </td>
+        </tr>
+    </table>
 </body>
 </html>
 {% endautoescape %}

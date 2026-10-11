@@ -16,10 +16,10 @@
     --bg-dark: #0B0D0E;
     --card-bg: #121517;
     --card-surface: #1F2428;
-    --neon-lime: #88D82D;
-    --neon-hover: #9EF040;
-    --neon-glow: rgba(136, 216, 45, 0.28);
-    --neon-glow-high: rgba(136, 216, 45, 0.6);
+    --neon-lime: #76C043;
+    --neon-hover: #85D538;
+    --neon-glow: rgba(118, 192, 67, 0.28);
+    --neon-glow-high: rgba(118, 192, 67, 0.6);
     --danger: #E63946;
     --danger-glow: rgba(230, 57, 70, 0.35);
     --warning: #F59E0B;
@@ -326,7 +326,7 @@
     {% if is_super_admin %}
       <span class="role-badge" style="background:var(--neon-lime);color:#000;"><i class="fa fa-crown"></i> Super Admin (Master)</span>
     {% else %}
-      <span class="role-badge" style="background:#00F0FF;color:#000;"><i class="fa fa-shield-alt"></i> Club Admin</span>
+      <span class="role-badge" style="background:#00F0FF;color:#000;"><i class="fa fa-shield-alt"></i> Admin</span>
     {% endif %}
   </div>
 
@@ -395,7 +395,7 @@
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
         <div>
           <h1 class="page-title"><i class="fa fa-user-shield" style="color:var(--neon-lime);margin-right:0.5rem;"></i>Staff &amp; Role Management</h1>
-          <p class="page-sub">Provision new staff accounts, manage RBAC security roles (Super Admin, Front Desk, Coach, Member), configure biometric turnstile PINs, and control platform access.</p>
+          <p class="page-sub">Provision new staff accounts, manage RBAC security roles (Super Admin, Admin, Front Desk, Coach, Member), configure biometric turnstile PINs, and control platform access.</p>
         </div>
         <button class="btn-action btn-lime" style="padding:0.7rem 1.4rem;font-size:0.9rem;" onclick="openCreateUserModal()">
           <i class="fa fa-user-plus"></i> + Create Staff / User
@@ -411,6 +411,10 @@
         <div class="stat-card" style="border-left:3px solid var(--neon-lime);">
           <div class="stat-value" style="color:var(--neon-lime);">{{ user_stats.super_admin }}</div>
           <div class="stat-label">Super Admins</div>
+        </div>
+        <div class="stat-card" style="border-left:3px solid #00F0FF;">
+          <div class="stat-value" style="color:#00F0FF;">{{ user_stats.admin|default:0 }}</div>
+          <div class="stat-label">Admins</div>
         </div>
         <div class="stat-card" style="border-left:3px solid var(--cyan);">
           <div class="stat-value" style="color:var(--cyan);">{{ user_stats.front_desk }}</div>
@@ -442,7 +446,8 @@
 
             <div style="display:flex;gap:0.35rem;" id="roleFilterButtons">
               <button class="filter-pill active" onclick="setRoleFilter('all', this)">All</button>
-              <button class="filter-pill" onclick="setRoleFilter('super_admin', this)">Admins</button>
+              <button class="filter-pill" onclick="setRoleFilter('super_admin', this)">Super Admins</button>
+              <button class="filter-pill" onclick="setRoleFilter('admin', this)">Admins</button>
               <button class="filter-pill" onclick="setRoleFilter('front_desk', this)">Front Desk</button>
               <button class="filter-pill" onclick="setRoleFilter('coach', this)">Coaches</button>
               <button class="filter-pill" onclick="setRoleFilter('member', this)">Members</button>
@@ -493,7 +498,7 @@
                       {% if is_super_admin %}
                         <select class="role-switcher-select" onchange="changeUserRole({{ u.id }}, this.value)" title="Super Admin Override: Change Role">
                           <option value="super_admin" {% if u.primary_role == 'super_admin' %}selected{% endif %}>Super Admin</option>
-                          <option value="admin" {% if u.primary_role == 'admin' %}selected{% endif %}>Club Admin</option>
+                          <option value="admin" {% if u.primary_role == 'admin' %}selected{% endif %}>Admin</option>
                           <option value="front_desk" {% if u.primary_role == 'front_desk' %}selected{% endif %}>Front Desk</option>
                           <option value="coach" {% if u.primary_role == 'coach' %}selected{% endif %}>Coach</option>
                           <option value="member" {% if u.primary_role == 'member' %}selected{% endif %}>Member</option>
@@ -1022,20 +1027,33 @@
                           {% for bl in m.latest_sub.linked_partners %}
                             <span style="display:inline-flex;align-items:center;gap:0.25rem;background:#192025;padding:0.15rem 0.45rem;border-radius:4px;color:#fff;border:1px solid rgba(255,255,255,0.15);margin:0.1rem 0.2rem 0.1rem 0;">
                               <i class="fa fa-user-check" style="color:var(--neon-lime);"></i> {{ bl.partner_member.get_full_name|default:bl.partner_member.username }}
-                              {% if is_super_admin %}
                               <button type="button" onclick="unlinkPartner({{ bl.id }})" style="background:none;border:none;color:var(--danger);cursor:pointer;padding:0 0.15rem;font-size:0.85rem;" title="Unlink partner">&times;</button>
-                              {% endif %}
                             </span>
                           {% empty %}
-                            <span style="color:var(--text-muted);">No partner linked yet.</span>
+                            <span style="color:var(--text-muted);font-style:italic;">No partner linked yet.</span>
                           {% endfor %}
-                          {% if is_super_admin and m.latest_sub.can_add_partner %}
+                          {% if m.latest_sub.can_add_partner %}
                             <button type="button" class="btn-action" style="background:rgba(0,240,255,0.12);color:var(--cyan);border:1px solid rgba(0,240,255,0.3);padding:0.15rem 0.45rem;font-size:0.68rem;margin-top:0.15rem;" onclick="openLinkPartnerModal({{ m.latest_sub.id }}, '{{ m.user.get_full_name|default:m.user.username|escapejs }}', '{{ m.latest_sub.plan.name|escapejs }}', {{ m.latest_sub.open_slots_count }})">
                               <i class="fa fa-user-plus"></i> + Link Partner
                             </button>
                           {% endif %}
                         </div>
                       {% endif %}
+                    {% elif m.linked_as_partner %}
+                      <div style="margin-top:0.15rem;">
+                        <span class="badge" style="background:rgba(0,240,255,0.15);color:var(--cyan);border:1px solid rgba(0,240,255,0.3);font-size:0.72rem;padding:0.2rem 0.45rem;border-radius:4px;display:inline-flex;align-items:center;gap:0.3rem;">
+                          <i class="fa fa-user-friends"></i> Linked Partner
+                        </span>
+                        <div style="font-size:0.75rem;color:#fff;margin-top:0.25rem;">
+                          Under: <strong>{{ m.linked_as_partner.primary_member.get_full_name|default:m.linked_as_partner.primary_member.username }}</strong>
+                        </div>
+                        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.1rem;">
+                          {{ m.linked_as_partner.subscription.plan.name }} &bull; Expires: <strong style="color:{% if m.linked_as_partner.subscription.is_active %}var(--neon-lime){% else %}var(--danger){% endif %};">{{ m.linked_as_partner.subscription.end_date|default:"--" }}</strong>
+                        </div>
+                        <button type="button" onclick="unlinkPartner({{ m.linked_as_partner.id }})" class="btn-action" style="background:rgba(255,75,75,0.12);color:var(--danger);border:1px solid rgba(255,75,75,0.3);padding:0.15rem 0.45rem;font-size:0.68rem;margin-top:0.25rem;" title="Unlink this partner">
+                          <i class="fa fa-unlink"></i> Unlink Partner
+                        </button>
+                      </div>
                     {% else %}
                       <span style="color:var(--text-muted);font-size:0.78rem;">No active subscription</span>
                     {% endif %}
@@ -1271,7 +1289,7 @@
           <p class="page-sub" style="margin-bottom:0;">Live audit verification across club membership revenue, shake bar POS, facility OPEX reconciliation, missing annual maintenance dues, expired passes, turnstile biometrics, and missing expense bills.</p>
         </div>
         <div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;">
-          <span class="badge-role" style="background:rgba(136,216,45,0.12);color:var(--neon-lime);border:1px solid var(--neon-lime);padding:0.45rem 0.85rem;font-size:0.75rem;">
+          <span class="badge-role" style="background:rgba(118,192,67,0.12);color:var(--neon-lime);border:1px solid var(--neon-lime);padding:0.45rem 0.85rem;font-size:0.75rem;">
             <i class="fa fa-shield-alt"></i> Audit Status: Active &bull; Synced
           </span>
           <a href="/dashboard/admin/reports/export-csv/" class="btn-action" style="background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:0.4rem;text-decoration:none;">
@@ -1280,8 +1298,11 @@
           <a href="/dashboard/admin/reports/export-expenses-csv/" class="btn-action" style="background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:0.4rem;text-decoration:none;">
             <i class="fa fa-file-invoice-dollar" style="color:#EF4444;"></i> Export OPEX (CSV)
           </a>
-          <a href="/dashboard/admin/reports/daily-eod/" target="_blank" class="btn-action btn-lime" style="display:inline-flex;align-items:center;gap:0.4rem;text-decoration:none;">
-            <i class="fa fa-print"></i> EOD Audit Slip
+          <button type="button" class="btn-action btn-lime" onclick="openCreateExpenseModal()" style="display:inline-flex;align-items:center;gap:0.4rem;">
+            <i class="fa fa-plus-circle"></i> + Record OPEX
+          </button>
+          <a href="/dashboard/admin/reports/daily-eod/" target="_blank" class="btn-action" style="background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:0.4rem;text-decoration:none;">
+            <i class="fa fa-print" style="color:var(--cyan);"></i> EOD Audit Slip
           </a>
         </div>
       </div>
@@ -1547,14 +1568,14 @@
                         {% if b.face_missing %}
                           <span class="badge-role" style="background:rgba(239,68,68,0.15);color:#f87171;font-size:0.68rem;"><i class="fa fa-times"></i> Missing Face</span>
                         {% else %}
-                          <span class="badge-role" style="background:rgba(136,216,45,0.15);color:var(--neon-lime);font-size:0.68rem;"><i class="fa fa-check"></i> Enrolled</span>
+                          <span class="badge-role" style="background:rgba(118,192,67,0.15);color:var(--neon-lime);font-size:0.68rem;"><i class="fa fa-check"></i> Enrolled</span>
                         {% endif %}
                       </td>
                       <td>
                         {% if b.fp_missing %}
                           <span class="badge-role" style="background:rgba(245,158,11,0.15);color:#F59E0B;font-size:0.68rem;"><i class="fa fa-times"></i> Missing Fingerprint</span>
                         {% else %}
-                          <span class="badge-role" style="background:rgba(136,216,45,0.15);color:var(--neon-lime);font-size:0.68rem;"><i class="fa fa-check"></i> Enrolled</span>
+                          <span class="badge-role" style="background:rgba(118,192,67,0.15);color:var(--neon-lime);font-size:0.68rem;"><i class="fa fa-check"></i> Enrolled</span>
                         {% endif %}
                       </td>
                       <td style="text-align:right;">
@@ -1681,11 +1702,9 @@
           <p class="page-sub" style="margin-bottom:0;">Live revenue telemetry, club operating expenses (OPEX), billing package performance, cash drawer balancing, and net profit calculations.</p>
         </div>
         <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
-          {% if is_super_admin %}
           <button type="button" class="btn-action btn-lime" onclick="openCreateExpenseModal()" style="display:inline-flex;align-items:center;gap:0.4rem;">
             <i class="fa fa-plus-circle"></i> + Record Operating Expense
           </button>
-          {% endif %}
           <a href="/dashboard/admin/reports/export-csv/" class="btn-action" style="background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.2);display:inline-flex;align-items:center;gap:0.4rem;text-decoration:none;">
             <i class="fa fa-file-excel" style="color:#10B981;"></i> Export Inflow (CSV)
           </a>
@@ -1826,15 +1845,13 @@
       <div class="fitme-card" style="margin-bottom:1.5rem;">
         <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem;">
           <div>
-            <div class="card-title"><i class="fa fa-file-invoice-dollar" style="color:#EF4444;"></i> Club Operating Expenses (OPEX Ledger)</div>
+            <div class="card-title"><i class="fa fa-file-invoice-dollar" style="color:#EF4444;"></i> Operating Expenses (OPEX Ledger)</div>
             <span style="font-size:0.78rem;color:var(--text-muted);">Monthly facility lease, CEB power, staff payroll, sanitization, and equipment maintenance</span>
           </div>
           <div style="display:flex;gap:0.5rem;">
-            {% if is_super_admin %}
             <button type="button" class="btn-action btn-lime" onclick="openCreateExpenseModal()" style="font-size:0.78rem;padding:0.35rem 0.8rem;">
               <i class="fa fa-plus"></i> Record Expense
             </button>
-            {% endif %}
             <a href="/dashboard/admin/reports/export-expenses-csv/" class="btn-action" style="background:#192025;color:#fff;border:1px solid rgba(255,255,255,0.2);font-size:0.78rem;padding:0.35rem 0.8rem;text-decoration:none;">
               <i class="fa fa-download"></i> CSV
             </a>
@@ -2135,7 +2152,7 @@
                     {% endif %}
                   </td>
                   <td style="text-align:center;">
-                    <a href="/pos/" target="_blank" class="btn-action" style="padding:0.25rem 0.65rem;font-size:0.72rem;background:#1E252B;color:var(--neon-lime);border:1px solid rgba(136,216,45,0.3);text-decoration:none;">
+                    <a href="/pos/" target="_blank" class="btn-action" style="padding:0.25rem 0.65rem;font-size:0.72rem;background:#1E252B;color:var(--neon-lime);border:1px solid rgba(118,192,67,0.3);text-decoration:none;">
                       Reconcile in POS
                     </a>
                   </td>
@@ -2598,7 +2615,7 @@
         <div class="role-radio-card" id="card-role-admin" onclick="selectRoleInModal('admin')">
           <input type="radio" name="modal_role" value="admin">
           <i class="fa fa-shield-alt" style="color:var(--cyan);font-size:1.1rem;"></i>
-          <div class="role-card-title" style="color:var(--cyan);">Club Admin</div>
+          <div class="role-card-title" style="color:var(--cyan);">Admin</div>
           <div class="role-card-desc">Operations</div>
         </div>
         {% endif %}
@@ -2636,12 +2653,16 @@
 
       <!-- Password with generator -->
       <div style="margin-bottom:0.85rem;">
-        <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Password * (min 6 characters)</label>
+        <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Password (Optional — leave blank to email member setup link)</label>
         <div style="display:flex;gap:0.5rem;">
-          <input type="text" id="newPassword" required minlength="6" class="form-control" placeholder="Enter secure password">
+          <input type="text" id="newPassword" minlength="6" class="form-control" placeholder="Optional — or leave blank to email setup link">
           <button type="button" class="btn-action" style="background:#242A2F;color:var(--neon-lime);white-space:nowrap;" onclick="generateRandomPassword('newPassword')">
             <i class="fa fa-dice"></i> Generate
           </button>
+        </div>
+        <div style="margin-top:0.4rem;display:flex;align-items:center;gap:0.5rem;">
+          <input type="checkbox" id="newSendInvite" checked style="accent-color:var(--neon-lime);">
+          <label for="newSendInvite" style="font-size:0.75rem;color:var(--text-main);cursor:pointer;">Send Welcome &amp; Password Setup Link to Member's Email</label>
         </div>
       </div>
 
@@ -2753,19 +2774,26 @@
       <div style="margin-bottom:1rem;">
         <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Target User:</div>
         <div style="font-size:1rem;font-weight:700;color:var(--neon-lime);" id="resetTargetUsername">username</div>
-      </div>
       <div style="margin-bottom:1.25rem;">
-        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">New Password *</label>
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">New Password (Manual Override)</label>
         <div style="display:flex;gap:0.5rem;">
-          <input type="text" id="resetNewPassword" required minlength="6" class="form-control" placeholder="Enter new password">
+          <input type="text" id="resetNewPassword" minlength="6" class="form-control" placeholder="Enter new password">
           <button type="button" class="btn-action" style="background:#242A2F;color:var(--neon-lime);white-space:nowrap;" onclick="generateRandomPassword('resetNewPassword')">
             <i class="fa fa-dice"></i> Generate
           </button>
         </div>
       </div>
+
+      <div style="margin-bottom:1.25rem;padding:0.75rem;background:#181F24;border-radius:10px;border:1px dashed rgba(118,192,67,0.4);text-align:center;">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem;">Or send a secure self-service link:</div>
+        <button type="button" class="btn-action" style="background:rgba(118,192,67,0.15);border:1px solid var(--neon-lime);color:var(--neon-lime);width:100%;font-weight:700;display:flex;align-items:center;justify-content:center;gap:0.5rem;" onclick="sendSetupEmailFromModal()">
+          <i class="fa fa-paper-plane"></i> Send Password Setup Link to User's Email
+        </button>
+      </div>
+
       <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
         <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeResetPasswordModal()">Cancel</button>
-        <button type="submit" class="btn-action btn-lime">Update Password</button>
+        <button type="submit" class="btn-action btn-lime">Set Manual Password</button>
       </div>
     </form>
   </div>
@@ -2983,7 +3011,7 @@
   <div class="modal-card-box" style="border:2px solid var(--neon-lime);max-width:560px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);margin:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
       <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;">
-        <i class="fa fa-receipt" style="color:var(--neon-lime);"></i> Record Club Operating Expense (OPEX)
+        <i class="fa fa-receipt" style="color:var(--neon-lime);"></i> Record Operating Expense (OPEX)
       </h3>
       <button type="button" onclick="closeCreateExpenseModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
     </div>
@@ -3062,43 +3090,162 @@
 </div>
 
 <!-- Modal: Link Partner / Secondary User to 2-User or 3-User Plan -->
-<div id="linkPartnerModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;padding:1.5rem;">
-  <div style="background:#13171A;border:2px solid var(--cyan);border-radius:16px;padding:2rem;max-width:480px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
-      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;">
+<div id="linkPartnerModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto;">
+  <div style="background:#13171A;border:2px solid var(--cyan);border-radius:16px;padding:2rem;max-width:540px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.85);max-height:92vh;display:flex;flex-direction:column;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;margin:0;">
         <i class="fa fa-user-friends" style="color:var(--cyan);"></i> Link Partner to Subscription
       </h3>
       <button type="button" onclick="closeLinkPartnerModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
     </div>
 
-    <form id="linkPartnerForm" onsubmit="submitLinkPartner(event)">
-      <input type="hidden" id="linkSubId">
-      <div style="margin-bottom:1rem;background:#192025;padding:0.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.08);">
-        <div style="font-size:0.75rem;color:var(--text-muted);">Primary Member:</div>
-        <div style="font-size:0.95rem;font-weight:700;color:#fff;" id="linkPrimaryName">Member Name</div>
-        <div style="font-size:0.75rem;color:var(--cyan);margin-top:0.25rem;" id="linkPlanName">Couple Monthly Package</div>
+    <!-- Primary Subscription Info Card -->
+    <div style="margin-bottom:1rem;background:#192025;padding:0.75rem 1rem;border-radius:10px;border:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Primary Account Holder</div>
+        <div style="font-size:0.98rem;font-weight:700;color:#fff;" id="linkPrimaryName">Member Name</div>
       </div>
+      <div style="text-align:right;">
+        <span class="badge" style="background:rgba(0,240,255,0.15);color:var(--cyan);border:1px solid rgba(0,240,255,0.3);font-size:0.72rem;" id="linkPlanName">Multi-User Package</span>
+      </div>
+    </div>
 
-      <div style="margin-bottom:1.25rem;">
-        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Select Registered Member to Link as Partner *</label>
-        <select id="linkPartnerSelect" required class="form-control">
-          <option value="">-- Choose Member --</option>
-          {% for u in all_system_users %}
-            <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }} (@{{ u.username }})</option>
-          {% endfor %}
-        </select>
-        <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;">
-          The partner will immediately receive their own Face ID &amp; PIN access to the turnstile under this subscription without paying an extra fee.
+    <!-- Navigation Tabs: Search Existing vs Quick Register -->
+    <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;background:rgba(0,0,0,0.35);padding:4px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+      <button type="button" id="tabBtnExistingPartner" onclick="switchLinkPartnerTab('existing')" style="flex:1;padding:0.55rem 0.75rem;font-size:0.78rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;background:var(--cyan);color:#000;display:flex;align-items:center;justify-content:center;gap:0.35rem;transition:all 0.2s;">
+        <i class="fa fa-search"></i> 1. Link Existing Member
+      </button>
+      <button type="button" id="tabBtnRegisterPartner" onclick="switchLinkPartnerTab('register')" style="flex:1;padding:0.55rem 0.75rem;font-size:0.78rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;background:transparent;color:#cbd5e1;display:flex;align-items:center;justify-content:center;gap:0.35rem;transition:all 0.2s;">
+        <i class="fa fa-user-plus"></i> 2. Quick Register New Member
+      </button>
+    </div>
+
+    <!-- TAB 1: Search Existing Member -->
+    <div id="tabContentExistingPartner">
+      <form id="linkPartnerForm" onsubmit="submitLinkPartner(event)">
+        <input type="hidden" id="linkSubId">
+        <input type="hidden" id="linkPartnerSelect">
+
+        <!-- Live Search Input -->
+        <div style="margin-bottom:0.75rem;position:relative;">
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">
+            Smart Search Member (Type Name, Phone, PIN, or Username) *
+          </label>
+          <div style="position:relative;">
+            <input type="text" id="partnerLiveSearchInput" class="form-control" placeholder="Search Kamal, 077..., #1042..." autocomplete="off" oninput="searchExistingPartnerMembers(this.value)" style="padding-left:2.2rem;">
+            <i class="fa fa-search" style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;"></i>
+          </div>
+
+          <!-- Live Results Dropdown -->
+          <div id="partnerLiveSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;background:#181D21;border:1px solid rgba(0,240,255,0.4);border-radius:8px;max-height:220px;overflow-y:auto;z-index:2200;box-shadow:0 10px 30px rgba(0,0,0,0.8);margin-top:4px;">
+          </div>
         </div>
-      </div>
 
-      <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
-        <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeLinkPartnerModal()">Cancel</button>
-        <button type="submit" id="btnSubmitLinkPartner" class="btn-action" style="background:var(--cyan);color:#000;font-weight:700;padding:0.6rem 1.4rem;">
-          <i class="fa fa-link"></i> Link Partner &amp; Grant Access
-        </button>
-      </div>
-    </form>
+        <!-- Selected Partner Confirmation Card -->
+        <div id="selectedPartnerConfirmCard" style="display:none;margin-bottom:1rem;background:rgba(0,240,255,0.06);border:1px solid var(--cyan);border-radius:8px;padding:0.75rem 1rem;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:0.65rem;">
+            <div id="selectedPartnerAvatar" style="width:34px;height:34px;border-radius:50%;background:#22282D;color:#fff;font-weight:800;font-size:0.75rem;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--cyan);overflow:hidden;flex-shrink:0;">
+              FM
+            </div>
+            <div>
+              <div id="selectedPartnerName" style="font-weight:700;color:#fff;font-size:0.88rem;">Member Name</div>
+              <div id="selectedPartnerMeta" style="font-size:0.73rem;color:var(--text-muted);">@username &bull; PIN: #1000</div>
+            </div>
+          </div>
+          <button type="button" onclick="clearSelectedPartner()" class="btn-action" style="background:#2A3138;color:#f87171;font-size:0.7rem;padding:0.25rem 0.5rem;" title="Change member">
+            <i class="fa fa-times"></i> Change
+          </button>
+        </div>
+
+        <!-- Fallback Standard Dropdown Toggle -->
+        <div style="margin-bottom:1.25rem;">
+          <a href="#" onclick="togglePartnerManualDropdown(event)" style="font-size:0.73rem;color:var(--cyan);text-decoration:none;">
+            <i class="fa fa-list"></i> Or pick from all members list
+          </a>
+          <div id="partnerManualDropdownWrapper" style="display:none;margin-top:0.4rem;">
+            <select id="linkPartnerFallbackSelect" class="form-control" onchange="onFallbackPartnerSelect(this.value)">
+              <option value="">-- Choose from all members --</option>
+              {% for u in all_system_users %}
+                <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }} (@{{ u.username }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem;">
+            The partner will immediately receive their own Face ID &amp; PIN access to the turnstile under this subscription without paying an extra fee.
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
+          <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeLinkPartnerModal()">Cancel</button>
+          <button type="submit" id="btnSubmitLinkPartner" class="btn-action" style="background:var(--cyan);color:#000;font-weight:700;padding:0.6rem 1.4rem;">
+            <i class="fa fa-link"></i> Link Partner &amp; Grant Access
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- TAB 2: Quick Register New Member & Link -->
+    <div id="tabContentRegisterPartner" style="display:none;">
+      <form id="quickRegPartnerForm" onsubmit="submitQuickRegPartner(event)">
+        <div style="font-size:0.74rem;color:var(--neon-lime);background:rgba(118,192,67,0.1);padding:0.5rem 0.75rem;border-radius:6px;border:1px solid rgba(118,192,67,0.25);margin-bottom:1rem;display:flex;align-items:center;gap:0.4rem;">
+          <i class="fa fa-info-circle"></i> Creates an official Member Account + PIN &amp; Face biometric profile, and links them immediately!
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
+          <div>
+            <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">Partner Full Name *</label>
+            <input type="text" id="quickRegFullName" required class="form-control" placeholder="e.g. Kasun Silva">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">Mobile Phone *</label>
+            <input type="tel" id="quickRegPhone" required class="form-control" placeholder="e.g. 0771234567">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
+          <div>
+            <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">Email (Optional)</label>
+            <input type="email" id="quickRegEmail" class="form-control" placeholder="partner@gmail.com">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">Gender *</label>
+            <select id="quickRegGender" class="form-control">
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
+          <div>
+            <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">NIC / Passport (Optional)</label>
+            <input type="text" id="quickRegNic" class="form-control" placeholder="National ID">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">Member Portal Password</label>
+            <input type="text" id="quickRegPassword" class="form-control" value="Fitme@123" placeholder="Fitme@123">
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.25rem;">
+          <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">Fitness Goal</label>
+          <select id="quickRegGoal" class="form-control">
+            <option value="general_fitness">General Fitness &amp; Health</option>
+            <option value="fat_loss">Weight / Fat Loss</option>
+            <option value="muscle_gain">Muscle Hypertrophy &amp; Size</option>
+            <option value="strength">Strength &amp; Conditioning</option>
+          </select>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
+          <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeLinkPartnerModal()">Cancel</button>
+          <button type="submit" id="btnSubmitQuickRegPartner" class="btn-action" style="background:var(--neon-lime);color:#000;font-weight:800;padding:0.6rem 1.4rem;">
+            <i class="fa fa-user-plus"></i> Register Account &amp; Link
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </div>
 <!-- Modal: Staff Printable Payslip Voucher -->
@@ -3127,7 +3274,7 @@
         <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111;padding-bottom:1rem;margin-bottom:1.25rem;">
           <div>
             <div style="font-size:1.6rem;font-weight:900;letter-spacing:1px;color:#000;font-family:'Montserrat',sans-serif;">
-              <span style="color:#88D82D;">FIT</span> <span style="color:#8A94A6;">ME</span> FITNESS
+              <span style="color:#76C043;">FIT</span> <span style="color:#8A94A6;">ME</span> FITNESS
             </div>
             <div style="font-size:0.78rem;color:#555;margin-top:2px;">
               New Town, Elpitiya Road, Pitigala, 80420 &bull; Tel: 070 762 7878
@@ -3827,7 +3974,7 @@
       <input type="hidden" id="attachExpenseId">
       <div style="margin-bottom:1.25rem;">
         <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.4rem;font-weight:700;">Upload Voucher Document / Image *</label>
-        <input type="file" id="attachExpenseFileInput" accept="image/*,.pdf" required class="form-control" style="background:#13171A;border:1px dashed rgba(136,216,45,0.4);padding:0.75rem;">
+        <input type="file" id="attachExpenseFileInput" accept="image/*,.pdf" required class="form-control" style="background:#13171A;border:1px dashed rgba(118,192,67,0.4);padding:0.75rem;">
         <small style="color:var(--text-muted);font-size:0.72rem;margin-top:0.35rem;display:block;">Supported formats: JPG, PNG, WEBP, PDF (Max 10MB)</small>
       </div>
       <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
@@ -3972,6 +4119,38 @@
       console.warn('Error parsing financial audit data:', err);
     }
 
+    if (streamData && !Array.isArray(streamData)) {
+      streamData = [
+        { stream: 'Membership Packages', amount: Number(streamData.membership || 0), color: '#76C043' },
+        { stream: 'POS Café & Store', amount: Number(streamData.pos || 0), color: '#00F0FF' },
+        { stream: 'Annual Registration Fees', amount: Number(streamData.annual_fee || 0), color: '#F59E0B' },
+        { stream: 'Personal Coaching', amount: Number(streamData.coaching || 0), color: '#A855F7' }
+      ];
+    }
+
+    if (Array.isArray(monthlyData)) {
+      monthlyData = monthlyData.map(d => ({
+        month: d.month || d.label || '',
+        inflow: Number(d.inflow !== undefined ? d.inflow : (d.gross_rev || 0)),
+        opex: Number(d.opex || 0),
+        margin: Number(d.margin !== undefined ? d.margin : (d.net_profit || 0))
+      }));
+    }
+
+    if (Array.isArray(expenseData)) {
+      expenseData = expenseData.map(e => ({
+        category: e.label || e.category || 'OPEX',
+        amount: Number(e.amount !== undefined ? e.amount : (e.total || 0))
+      }));
+    }
+
+    if (Array.isArray(paymentData)) {
+      paymentData = paymentData.map(p => ({
+        method: p.label || p.method || 'Channel',
+        amount: Number(p.amount !== undefined ? p.amount : (p.total || 0))
+      }));
+    }
+
     Chart.defaults.font.family = "'Inter', sans-serif";
     Chart.defaults.color = '#9CA3AF';
 
@@ -4001,8 +4180,8 @@
               type: 'bar',
               label: 'Gross Inflow',
               data: monthlyData.map(d => d.inflow),
-              backgroundColor: 'rgba(136, 216, 45, 0.85)',
-              borderColor: '#88D82D',
+              backgroundColor: 'rgba(118, 192, 67, 0.85)',
+              borderColor: '#76C043',
               borderWidth: 1,
               borderRadius: 5,
               yAxisID: 'y'
@@ -4065,7 +4244,7 @@
           labels: streamData.map(s => s.stream),
           datasets: [{
             data: streamData.map(s => s.amount),
-            backgroundColor: streamData.map(s => s.color || '#88D82D'),
+            backgroundColor: streamData.map(s => s.color || '#76C043'),
             borderColor: '#13171A',
             borderWidth: 2.5
           }]
@@ -4141,7 +4320,7 @@
           datasets: [{
             label: 'Collected Total',
             data: paymentData.map(p => p.amount),
-            backgroundColor: ['#88D82D', '#00F0FF', '#F59E0B', '#A855F7', '#EC4899'],
+            backgroundColor: ['#76C043', '#00F0FF', '#F59E0B', '#A855F7', '#EC4899'],
             borderRadius: 6
           }]
         },
@@ -4188,8 +4367,8 @@
             {
               label: 'Gross Inflow',
               data: monthlyData.map(d => d.inflow),
-              borderColor: '#88D82D',
-              backgroundColor: 'rgba(136, 216, 45, 0.15)',
+              borderColor: '#76C043',
+              backgroundColor: 'rgba(118, 192, 67, 0.15)',
               fill: true,
               tension: 0.35,
               borderWidth: 2.5,
@@ -4248,7 +4427,7 @@
           labels: streamData.map(s => s.stream),
           datasets: [{
             data: streamData.map(s => s.amount),
-            backgroundColor: streamData.map(s => s.color || '#88D82D'),
+            backgroundColor: streamData.map(s => s.color || '#76C043'),
             borderColor: '#13171A',
             borderWidth: 2
           }]
@@ -4342,7 +4521,7 @@
         closeAttachExpenseModal();
         const row = document.getElementById(`audit-exp-row-${expId}`);
         if (row) {
-          row.style.background = 'rgba(136,216,45,0.1)';
+          row.style.background = 'rgba(118,192,67,0.1)';
           row.innerHTML = `<td colspan="6" style="padding:1rem;color:var(--neon-lime);font-weight:700;"><i class="fa fa-check-circle"></i> Receipt attached and verified!</td>`;
           setTimeout(() => { if (row) row.remove(); }, 1800);
         }
@@ -4417,6 +4596,7 @@
       username: document.getElementById('newUsername').value.trim(),
       email: document.getElementById('newEmail').value.trim(),
       password: document.getElementById('newPassword').value.trim(),
+      send_invite: document.getElementById('newSendInvite') ? document.getElementById('newSendInvite').checked : true,
       first_name: document.getElementById('newFirstName').value.trim(),
       last_name: document.getElementById('newLastName').value.trim(),
       phone: document.getElementById('newPhone').value.trim(),
@@ -4536,6 +4716,26 @@
       }
     } catch(err) {
       alert("Error: " + err);
+    }
+  }
+
+  async function sendSetupEmailFromModal() {
+    const userId = document.getElementById('resetTargetUserId').value;
+    if (!userId) return;
+    try {
+      const res = await fetch(`/dashboard/api/members/${userId}/resend-invite/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      if (data.success) {
+        closeResetPasswordModal();
+        showToast(data.message || "Password setup email sent to member!");
+      } else {
+        alert(data.error || "Failed to send email.");
+      }
+    } catch(err) {
+      alert("Error sending email: " + err);
     }
   }
 
@@ -5134,13 +5334,27 @@
   }
 
   // ── Multi-User (Couples & Family) Partner Linking Handlers ──
+  let partnerSearchTimer = null;
+
   function openLinkPartnerModal(subId, primaryName, planName, slotsCount) {
     const m = document.getElementById('linkPartnerModal');
     if (!m) return;
     document.getElementById('linkSubId').value = subId;
     document.getElementById('linkPrimaryName').textContent = primaryName;
-    document.getElementById('linkPlanName').textContent = `${planName} (${slotsCount} partner slot(s) open)`;
-    document.getElementById('linkPartnerSelect').value = '';
+    document.getElementById('linkPlanName').textContent = `${planName} (${slotsCount} slot(s) open)`;
+    
+    // Reset fields
+    clearSelectedPartner();
+    if (document.getElementById('partnerLiveSearchInput')) document.getElementById('partnerLiveSearchInput').value = '';
+    if (document.getElementById('partnerLiveSearchResults')) {
+      document.getElementById('partnerLiveSearchResults').style.display = 'none';
+      document.getElementById('partnerLiveSearchResults').innerHTML = '';
+    }
+    const qf = document.getElementById('quickRegPartnerForm');
+    if (qf) qf.reset();
+    if (document.getElementById('quickRegPassword')) document.getElementById('quickRegPassword').value = 'Fitme@123';
+    
+    switchLinkPartnerTab('existing');
     m.style.display = 'flex';
   }
 
@@ -5149,10 +5363,145 @@
     if (m) m.style.display = 'none';
   }
 
+  function switchLinkPartnerTab(tab) {
+    const btnExisting = document.getElementById('tabBtnExistingPartner');
+    const btnRegister = document.getElementById('tabBtnRegisterPartner');
+    const contentExisting = document.getElementById('tabContentExistingPartner');
+    const contentRegister = document.getElementById('tabContentRegisterPartner');
+
+    if (tab === 'existing') {
+      if (btnExisting) { btnExisting.style.background = 'var(--cyan)'; btnExisting.style.color = '#000'; }
+      if (btnRegister) { btnRegister.style.background = 'transparent'; btnRegister.style.color = '#cbd5e1'; }
+      if (contentExisting) contentExisting.style.display = 'block';
+      if (contentRegister) contentRegister.style.display = 'none';
+    } else {
+      if (btnExisting) { btnExisting.style.background = 'transparent'; btnExisting.style.color = '#cbd5e1'; }
+      if (btnRegister) { btnRegister.style.background = 'var(--neon-lime)'; btnRegister.style.color = '#000'; }
+      if (contentExisting) contentExisting.style.display = 'none';
+      if (contentRegister) contentRegister.style.display = 'block';
+    }
+  }
+
+  function searchExistingPartnerMembers(val) {
+    const q = (val || '').trim();
+    const box = document.getElementById('partnerLiveSearchResults');
+    if (!box) return;
+
+    if (q.length < 1) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+
+    clearTimeout(partnerSearchTimer);
+    partnerSearchTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/desk/lookup/?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        const users = data.results || [];
+        
+        if (users.length === 0) {
+          box.style.display = 'block';
+          box.innerHTML = `
+            <div style="padding:0.75rem 1rem;font-size:0.75rem;color:var(--text-muted);text-align:center;">
+              No member matching "<strong>${q}</strong>". <br>
+              <a href="#" onclick="switchLinkPartnerTab('register'); return false;" style="color:var(--neon-lime);font-weight:700;text-decoration:none;display:inline-block;margin-top:0.35rem;">
+                <i class="fa fa-user-plus"></i> Click here to Quick Register them!
+              </a>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        users.forEach(u => {
+          const avatar = u.photo_url 
+            ? `<img src="${u.photo_url}" style="width:100%;height:100%;object-fit:cover;">` 
+            : u.name.substring(0,2).toUpperCase();
+          const cleanName = u.name.replace(/'/g, "\\'");
+          const cleanUser = u.username.replace(/'/g, "\\'");
+          const cleanPhone = (u.phone || '').replace(/'/g, "\\'");
+          const cleanPin = (u.pin || '').replace(/'/g, "\\'");
+
+          html += `
+            <div onclick="selectPartnerMember(${u.id}, '${cleanName}', '${cleanUser}', '${cleanPhone}', '${cleanPin}', '${u.photo_url || ''}')" style="padding:0.6rem 0.85rem;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:0.5rem;transition:background 0.15s;" onmouseover="this.style.background='rgba(0,240,255,0.08)'" onmouseout="this.style.background='transparent'">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <div style="width:28px;height:28px;border-radius:50%;background:#22282D;color:#fff;font-weight:800;font-size:0.68rem;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,0.2);">
+                  ${avatar}
+                </div>
+                <div>
+                  <div style="font-weight:700;color:#fff;font-size:0.82rem;">${u.name}</div>
+                  <div style="font-size:0.7rem;color:var(--text-muted);font-family:monospace;">@${u.username} &bull; ${u.phone || 'No phone'}</div>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <span style="font-size:0.68rem;background:#192025;padding:0.15rem 0.45rem;border-radius:4px;color:var(--cyan);font-family:monospace;border:1px solid rgba(0,240,255,0.2);">#FM${u.pin}</span>
+              </div>
+            </div>
+          `;
+        });
+        box.style.display = 'block';
+        box.innerHTML = html;
+      } catch (err) {
+        console.error('Error searching partner members:', err);
+      }
+    }, 250);
+  }
+
+  function selectPartnerMember(userId, name, username, phone, pin, photoUrl) {
+    document.getElementById('linkPartnerSelect').value = userId;
+    const card = document.getElementById('selectedPartnerConfirmCard');
+    const avatar = document.getElementById('selectedPartnerAvatar');
+    const nameEl = document.getElementById('selectedPartnerName');
+    const metaEl = document.getElementById('selectedPartnerMeta');
+    const box = document.getElementById('partnerLiveSearchResults');
+
+    if (avatar) {
+      avatar.innerHTML = photoUrl ? `<img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;">` : name.substring(0,2).toUpperCase();
+    }
+    if (nameEl) nameEl.textContent = name;
+    if (metaEl) metaEl.textContent = `@${username} • Phone: ${phone || 'N/A'} • PIN: #FM${pin}`;
+    if (card) card.style.display = 'flex';
+    if (box) box.style.display = 'none';
+
+    // Sync fallback select if element exists
+    const fb = document.getElementById('linkPartnerFallbackSelect');
+    if (fb) fb.value = userId;
+  }
+
+  function clearSelectedPartner() {
+    document.getElementById('linkPartnerSelect').value = '';
+    const card = document.getElementById('selectedPartnerConfirmCard');
+    if (card) card.style.display = 'none';
+    const fb = document.getElementById('linkPartnerFallbackSelect');
+    if (fb) fb.value = '';
+  }
+
+  function togglePartnerManualDropdown(e) {
+    e.preventDefault();
+    const w = document.getElementById('partnerManualDropdownWrapper');
+    if (w) w.style.display = (w.style.display === 'none' || !w.style.display) ? 'block' : 'none';
+  }
+
+  function onFallbackPartnerSelect(userId) {
+    if (!userId) {
+      clearSelectedPartner();
+      return;
+    }
+    const fb = document.getElementById('linkPartnerFallbackSelect');
+    const text = fb.options[fb.selectedIndex].text;
+    selectPartnerMember(userId, text, '', '', '', '');
+  }
+
   async function submitLinkPartner(e) {
     e.preventDefault();
     const subId = document.getElementById('linkSubId').value;
     const partnerId = document.getElementById('linkPartnerSelect').value;
+    if (!partnerId) {
+      alert('Please search and select a registered member to link.');
+      return;
+    }
+
     const btn = document.getElementById('btnSubmitLinkPartner');
     btn.disabled = true;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Linking...';
@@ -5177,6 +5526,47 @@
       alert('Error: ' + err);
       btn.disabled = false;
       btn.innerHTML = '<i class="fa fa-link"></i> Link Partner &amp; Grant Access';
+    }
+  }
+
+  async function submitQuickRegPartner(e) {
+    e.preventDefault();
+    const subId = document.getElementById('linkSubId').value;
+    const btn = document.getElementById('btnSubmitQuickRegPartner');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Registering &amp; Linking...';
+
+    const payload = {
+      action: 'register_and_link',
+      full_name: document.getElementById('quickRegFullName').value.trim(),
+      phone: document.getElementById('quickRegPhone').value.trim(),
+      email: document.getElementById('quickRegEmail').value.trim(),
+      gender: document.getElementById('quickRegGender').value,
+      nic_passport: document.getElementById('quickRegNic').value.trim(),
+      password: document.getElementById('quickRegPassword').value.trim(),
+      primary_goal: document.getElementById('quickRegGoal').value
+    };
+
+    try {
+      const res = await fetch(`/api/subscriptions/${subId}/link-partner/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        closeLinkPartnerModal();
+        setTimeout(() => location.reload(), 800);
+      } else {
+        alert(data.error || 'Failed to register and link partner.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-user-plus"></i> Register Account &amp; Link';
+      }
+    } catch(err) {
+      alert('Error: ' + err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-user-plus"></i> Register Account &amp; Link';
     }
   }
 

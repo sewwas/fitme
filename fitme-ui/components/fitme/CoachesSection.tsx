@@ -23,7 +23,7 @@ const COACHES: CoachProfile[] = [
     bio: "Over 8 years of dedicated strength coaching. Obsessed with joint integrity, technical mastery, and transforming everyday lifters into resilient athletes.",
     credentials: "CSCS • Precision Nutrition L1",
     imageUrl:
-      "https://images.unsplash.com/photo-1567013127542-490d757e51fc?q=80&w=800&auto=format&fit=crop",
+      "/images/coach-sewwandi.jpg",
   },
   {
     name: "Ruchira Perera",
@@ -32,7 +32,7 @@ const COACHES: CoachProfile[] = [
     bio: "Former competitive athlete specializing in muscular hypertrophy, structural balance, and fat loss without metabolic burnout.",
     credentials: "ACSM Certified • Kettlebell Master",
     imageUrl:
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=800&auto=format&fit=crop",
+      "/images/coach-ruchira.jpg",
   },
   {
     name: "Janith Silva",
@@ -41,7 +41,7 @@ const COACHES: CoachProfile[] = [
     bio: "Focuses on rebuilding pain-free movement patterns, shoulder and lower-back health, and transitioning novices to lifelong lifters.",
     credentials: "NASM-CES • FMS Certified",
     imageUrl:
-      "https://images.unsplash.com/photo-1507398941214-572c25f4b1dc?q=80&w=800&auto=format&fit=crop",
+      "/images/coach-janith.jpg",
   },
 ];
 

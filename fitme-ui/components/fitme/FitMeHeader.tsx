@@ -49,38 +49,34 @@ export function FitMeHeader() {
       >
         <div className="max-w-[1750px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20 flex items-center justify-between">
           {/* Brand Logo & Tagline */}
+          {/* Brand Logo */}
           <Link
             href="#hero"
-            className="flex items-center gap-3.5 group focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[#76C043]"
+            className="flex items-center gap-3 group focus-visible:outline-none"
           >
-            <div className="relative h-10 w-10 overflow-hidden rounded-lg border border-[#2D3339] bg-[#121517] transition-all duration-200 group-hover:border-[#76C043]">
+            <div className="relative h-9 w-9 overflow-hidden rounded-full border border-[#76C043] shadow-[0_0_12px_rgba(118,192,67,0.35)] bg-[#0B0D0E]">
               <Image
-                src="/images/fitme-official-logo.jpg"
-                alt="Fit Me Logo"
+                src="/images/fitme-logo.png"
+                alt="Fit Me"
                 fill
                 priority
                 className="object-cover"
               />
             </div>
-            <div className="flex flex-col">
-              <span className="text-lg font-black tracking-widest transition-colors duration-200">
-                <span className="text-[#88D82D]">FIT</span> <span className="text-[#C5CBD3]">ME</span>
-              </span>
-              <span className="text-[10px] font-semibold tracking-wider text-[#88D82D] uppercase">
-                Train with Purpose
-              </span>
-            </div>
+            <span className="text-xl font-bold tracking-tight text-white group-hover:text-[#76C043] transition-colors">
+              Fit Me
+            </span>
           </Link>
 
           {/* Desktop Navigation */}
-          <nav className="hidden lg:flex items-center gap-7">
+          <nav className="hidden lg:flex items-center gap-6">
             {NAV_ITEMS.map((item) => {
               const isActive = activeSection === item.href.replace("#", "");
               return (
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`relative text-xs font-semibold uppercase tracking-widest transition-colors duration-200 py-1 ${
+                  className={`relative text-xs font-medium tracking-wide transition-colors duration-200 py-1 ${
                     isActive
                       ? "text-[#76C043]"
                       : "text-[#9CA3AF] hover:text-[#F8FAFC]"
@@ -95,22 +91,35 @@ export function FitMeHeader() {
             })}
           </nav>
 
-          {/* Desktop CTA Button */}
+          {/* Desktop Actions */}
           <div className="hidden sm:flex items-center gap-4">
-            <SecondaryButton
+            {/* Search Icon */}
+            <button
+              type="button"
+              aria-label="Search"
+              className="p-2 text-[#9CA3AF] hover:text-[#76C043] transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </button>
+
+            <Link
               href="http://localhost:8000/login/"
-              size="sm"
-              className="text-xs font-bold border-[#2D3339] text-[#9CA3AF] hover:text-[#F8FAFC]"
+              className="text-xs font-semibold text-[#9CA3AF] hover:text-[#F8FAFC] px-2 py-1 transition-colors"
             >
               Member Login
-            </SecondaryButton>
-            <PrimaryButton
-              href="#membership"
-              size="sm"
-              className="text-xs font-bold"
+            </Link>
+
+            <Link
+              href="#pricing"
+              className="inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-[#76C043] hover:bg-[#85D538] text-black text-xs font-bold shadow-[0_0_20px_rgba(118,192,67,0.35)] transition-all hover:scale-105 active:scale-95"
             >
-              Start Your Transformation
-            </PrimaryButton>
+              <span>Join Now</span>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </Link>
           </div>
 
           {/* Mobile Hamburger Button */}

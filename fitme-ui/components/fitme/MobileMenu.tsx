@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { PrimaryButton } from "../ui/PrimaryButton";
+import { SecondaryButton } from "../ui/SecondaryButton";
 
 interface NavItem {
   name: string;
@@ -68,9 +69,9 @@ export function MobileMenu({
           </div>
           <div className="flex flex-col">
             <span className="text-base font-black tracking-wider">
-              <span className="text-[#88D82D]">FIT</span> <span className="text-[#C5CBD3]">ME</span>
+              <span className="text-[#76C043]">FIT</span> <span className="text-[#C5CBD3]">ME</span>
             </span>
-            <span className="text-[9px] font-bold tracking-widest text-[#88D82D] uppercase">
+            <span className="text-[9px] font-bold tracking-widest text-[#76C043] uppercase">
               Train with Purpose
             </span>
           </div>
@@ -143,16 +144,26 @@ export function MobileMenu({
         </div>
       </nav>
 
-      {/* Primary CTA in Mobile Menu */}
-      <div className="p-6 border-t border-[#2D3339] bg-[#0E1012]">
+      {/* Primary & Portal CTAs in Mobile Menu */}
+      <div className="p-6 border-t border-[#2D3339] bg-[#0E1012] flex flex-col gap-3">
         <PrimaryButton
           href="#membership"
           onClick={onClose}
           fullWidth
           size="lg"
+          className="font-black tracking-widest uppercase text-sm"
         >
-          Start Your Transformation
+          Join Now
         </PrimaryButton>
+        <SecondaryButton
+          href="http://localhost:8000/login/"
+          onClick={onClose}
+          fullWidth
+          size="lg"
+          className="font-bold tracking-widest uppercase text-xs border-[#2D3339] text-[#9CA3AF]"
+        >
+          Member Login
+        </SecondaryButton>
       </div>
     </div>
   );

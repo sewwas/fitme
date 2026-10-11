@@ -316,9 +316,17 @@ urlpatterns += [
         name='password_reset_confirm',
     ),
     path(
+        'user/password/reset/check/<uidb64>/<token>',
+        __import__('wger.core.views.user', fromlist=['WgerPasswordResetConfirmView']).WgerPasswordResetConfirmView.as_view(),
+    ),
+    path(
         'reset/<uidb64>/<token>/',
         __import__('wger.core.views.user', fromlist=['WgerPasswordResetConfirmView']).WgerPasswordResetConfirmView.as_view(),
         name='password_reset_confirm_short',
+    ),
+    path(
+        'reset/<uidb64>/<token>',
+        __import__('wger.core.views.user', fromlist=['WgerPasswordResetConfirmView']).WgerPasswordResetConfirmView.as_view(),
     ),
     path(
         'user/password/reset/done/',
@@ -348,6 +356,7 @@ urlpatterns += [
         path('api/members/<int:member_id>/profile/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_full_profile_api']).member_full_profile_api, name='api-member-profile'),
         path('api/meals/<int:meal_id>/review/', __import__('wger.core.views.fitme_dashboards', fromlist=['review_meal_api']).review_meal_api, name='api-meal-review'),
         path('api/members/<int:member_id>/ping/', __import__('wger.core.views.fitme_dashboards', fromlist=['ping_member_api']).ping_member_api, name='api-member-ping'),
+        path('api/members/<int:member_id>/resend-invite/', __import__('wger.core.views.fitme_dashboards', fromlist=['resend_member_invite_api']).resend_member_invite_api, name='api-member-resend-invite'),
         path('api/quick-meal/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_quick_meal_api']).log_quick_meal_api, name='api-quick-meal'),
         path('api/log-water/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_water_api']).log_water_api, name='api-log-water'),
         path('api/alerts/<int:alert_id>/resolve/', __import__('wger.core.views.fitme_dashboards', fromlist=['resolve_absence_alert_api']).resolve_absence_alert_api, name='api-alert-resolve'),
@@ -461,13 +470,7 @@ urlpatterns += [
     path('api/assessments/<str:assessment_type>/<int:assessment_id>/detail/', __import__('wger.core.views.assessment_apis', fromlist=['get_assessment_detail_api']).get_assessment_detail_api, name='assessment-detail'),
     path('api/assessments/my/', __import__('wger.core.views.assessment_apis', fromlist=['get_my_assessments_api']).get_my_assessments_api, name='assessment-my'),
 
-    # ── Next.js Homepage Static Assets ──
-    re_path(r'^_next/(?P<path>.*)$', __import__('django.views.static', fromlist=['serve']).serve, {
-        'document_root': str(__import__('pathlib').Path(__file__).resolve().parents[1] / 'fitme-ui' / 'out' / '_next')
-    }),
-    re_path(r'^images/(?P<path>.*)$', __import__('django.views.static', fromlist=['serve']).serve, {
-        'document_root': str(__import__('pathlib').Path(__file__).resolve().parents[1] / 'fitme-ui' / 'out' / 'images')
-    }),
+    # ── Media Uploads (Profile photos, receipts) ──
     re_path(r'^media/(?P<path>.*)$', __import__('django.views.static', fromlist=['serve']).serve, {
         'document_root': settings.MEDIA_ROOT
     }),

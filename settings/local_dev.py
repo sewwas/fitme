@@ -26,25 +26,23 @@ ALLOWED_HOSTS = [
     '*',
 ]
 
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+ENABLE_EMAIL = os.environ.get('ENABLE_EMAIL', '').lower() in ('true', '1', 'yes')
+if ENABLE_EMAIL:
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.resend.com')
+    EMAIL_PORT = int(os.environ.get('EMAIL_PORT', 587))
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'resend')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')
+    EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True').lower() in ('true', '1', 'yes')
+    EMAIL_USE_SSL = os.environ.get('EMAIL_USE_SSL', 'False').lower() in ('true', '1', 'yes')
+    EMAIL_TIMEOUT = 60
+else:
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# WGER application
-WGER_SETTINGS['ALLOW_UPLOAD_VIDEOS'] = False
-WGER_SETTINGS['ALLOW_GUEST_USERS'] = False
-WGER_SETTINGS['ALLOW_REGISTRATION'] = False
-WGER_SETTINGS['DOWNLOAD_INGREDIENTS_FROM'] = 'WGER'
-WGER_SETTINGS['EMAIL_FROM'] = 'wger Workout Manager <wger@example.com>'
-WGER_SETTINGS['EXERCISE_CACHE_TTL'] = 500
-WGER_SETTINGS['INGREDIENT_CACHE_TTL'] = 500
-WGER_SETTINGS['SYNC_EXERCISES_CELERY'] = False
-WGER_SETTINGS['SYNC_EXERCISE_IMAGES_CELERY'] = True
-WGER_SETTINGS['SYNC_EXERCISE_VIDEOS_CELERY'] = False
-WGER_SETTINGS['SYNC_INGREDIENTS_CELERY'] = True
-WGER_SETTINGS['USE_CELERY'] = False
-WGER_SETTINGS['CACHE_API_EXERCISES_CELERY'] = True
-WGER_SETTINGS['CACHE_API_EXERCISES_CELERY_FORCE_UPDATE'] = True
-WGER_SETTINGS['ROUTINE_CACHE_TTL'] = 500
-DEFAULT_FROM_EMAIL = WGER_SETTINGS['EMAIL_FROM']
+DEFAULT_FROM_EMAIL = os.environ.get('FROM_EMAIL', 'Fit Me <hello@fitmefitness.lk>')
+WGER_SETTINGS['EMAIL_FROM'] = DEFAULT_FROM_EMAIL
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
+EMAIL_FROM_ADDRESS = DEFAULT_FROM_EMAIL
 
 
 # CELERY_BROKER_URL = "redis://localhost:6379/2"

@@ -46,11 +46,11 @@
       align-items: center;
       gap: 12px;
       background: rgba(18, 22, 25, 0.95);
-      border: 1px solid rgba(136, 216, 45, 0.35);
+      border: 1px solid rgba(118, 192, 67, 0.35);
       backdrop-filter: blur(12px);
       padding: 8px 16px;
       border-radius: 999px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.65), 0 0 20px rgba(136, 216, 45, 0.15);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.65), 0 0 20px rgba(118, 192, 67, 0.15);
     }
 
     .toolbar-title {
@@ -64,11 +64,11 @@
     }
 
     .toolbar-title span {
-      color: #88D82D;
+      color: #76C043;
     }
 
     .btn-action-print {
-      background: #88D82D;
+      background: #76C043;
       color: #0c0f12;
       border: none;
       font-family: 'Montserrat', sans-serif;
@@ -82,13 +82,13 @@
       align-items: center;
       gap: 6px;
       transition: all 0.2s;
-      box-shadow: 0 0 14px rgba(136, 216, 45, 0.4);
+      box-shadow: 0 0 14px rgba(118, 192, 67, 0.4);
     }
 
     .btn-action-print:hover {
       background: #9ef035;
       transform: translateY(-1px);
-      box-shadow: 0 0 20px rgba(136, 216, 45, 0.6);
+      box-shadow: 0 0 20px rgba(118, 192, 67, 0.6);
     }
 
     .btn-action-close {
@@ -385,11 +385,13 @@
   <div class="screen-toolbar">
     <div class="toolbar-title">
       <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" style="width:20px;height:20px;border-radius:50%;object-fit:cover;">
-      FIT ME <span>BILL #{{ receipt.receipt_number }}</span>
+      FIT ME <span>{% if is_staff_or_admin %}BILL #{{ receipt.receipt_number }}{% else %}OFFICIAL E-RECEIPT #{{ receipt.receipt_number }}{% endif %}</span>
     </div>
+    {% if is_staff_or_admin %}
     <button class="btn-action-print" onclick="window.print()">
       🖨️ PRINT 80mm SLIP
     </button>
+    {% endif %}
     <button class="btn-action-close" onclick="window.close()">
       ✕ CLOSE
     </button>
@@ -523,7 +525,8 @@
   </div>
 
   <script>
-    // Automatic thermal print triggering when opened with ?autoprint=1
+    {% if is_staff_or_admin %}
+    // Automatic thermal print triggering when opened with ?autoprint=1 (Staff/Admin only)
     window.addEventListener('DOMContentLoaded', function() {
       const params = new URLSearchParams(window.location.search);
       if (params.get('autoprint') === '1' || params.get('print') === 'true') {
@@ -532,6 +535,7 @@
         }, 350);
       }
     });
+    {% endif %}
   </script>
 </body>
 </html>

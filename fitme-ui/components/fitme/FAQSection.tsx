@@ -1,100 +1,115 @@
 "use client";
 
-import React from "react";
-import { SectionLabel } from "../ui/SectionLabel";
-import { Accordion, AccordionItemData } from "../ui/Accordion";
-import { FadeIn } from "../ui/MotionWrapper";
+import React, { useState } from "react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "motion/react";
 
-const FAQ_ITEMS: AccordionItemData[] = [
+const FAQS = [
   {
-    id: "who-is-fit-me-for",
-    question: "Who is Fit Me for?",
-    answer:
-      "Fit Me is engineered for anyone who values structure, safety, and measurable progress over chaotic gym routines. Whether you are a beginner looking to lift with confidence or an experienced athlete breaking through a plateau, our method is calibrated to your baseline.",
+    q: "What are the membership options?",
+    a: "We offer flexible monthly and annual plans ranging from Basic (gym & lockers) to Standard, Premium (with PT & nutrition), and Elite tiers. No lock-in contracts.",
   },
   {
-    id: "previous-gym-experience",
-    question: "Do I need previous gym experience?",
-    answer:
-      "No. Over 60% of our new members have never touched an Olympic barbell before joining. Our Beginner Foundations program starts from mobility, postural alignment, and movement patterns so you never feel out of place.",
+    q: "Can I try a free trial?",
+    a: "Yes! First-time visitors can book a complimentary day trial to experience our facilities, coaching atmosphere and equipment firsthand.",
   },
   {
-    id: "assessment-work",
-    question: "How does the assessment work?",
-    answer:
-      "Your day one includes a comprehensive 45-minute baseline session where we screen your joint mobility, review any previous injuries, discuss your weekly schedule, and measure baseline biometrics. This becomes the foundation of your plan.",
+    q: "What should I bring to my first session?",
+    a: "Bring clean athletic training shoes, a personal workout towel, a water bottle, and your passion to train. We provide lockable storage and showers.",
   },
   {
-    id: "program-customization",
-    question: "How are programs customized?",
-    answer:
-      "Your training program is constructed based on your assessment results, training frequency (3, 4, or 5 days/week), and specific goals (strength, hypertrophy, metabolic health, or athletic performance). Workouts are updated in 4 to 8 week progressive blocks.",
+    q: "Are personal trainers included in the membership?",
+    a: "Premium plans include 2 personal training sessions per month, while Elite plans feature dedicated coach supervision. 1-on-1 packages can also be added anytime.",
   },
   {
-    id: "change-programs",
-    question: "Can I change programs?",
-    answer:
-      "Yes. Fitness is dynamic. When your lifestyle changes or when you achieve a specific milestone (e.g. transitioning from Fat Loss to Hypertrophy), your coach will recalibrate your training block during your routine progress review.",
-  },
-  {
-    id: "nutrition-guidance",
-    question: "Do you provide nutrition guidance?",
-    answer:
-      "Yes. We offer sustainable, non-restrictive nutrition coaching tailored to local Sri Lankan whole foods and dining patterns. We calculate your daily caloric and protein targets without demanding extreme or unsustainable crash dieting.",
-  },
-  {
-    id: "membership-work",
-    question: "How does membership work?",
-    answer:
-      "Memberships are monthly, straightforward, and zero-contract. You can join online or visit our Pitigala facility directly. Every membership tier includes full access to our facility, equipment, and coach support.",
+    q: "What are the gym hours?",
+    a: "Fit Me Pitigala is open Monday through Saturday from 5:30 AM to 10:00 PM, and Sundays from 6:00 AM to 8:00 PM.",
   },
 ];
 
 export function FAQSection() {
+  const [openIdx, setOpenIdx] = useState<number | null>(0);
+
+  const toggle = (idx: number) => {
+    setOpenIdx(openIdx === idx ? null : idx);
+  };
+
   return (
-    <section
-      id="faq"
-      className="relative w-full bg-[#0B0D0E] py-24 sm:py-32 border-t border-[#2D3339]/50"
-    >
-      <div className="max-w-5xl mx-auto px-4 sm:px-8 lg:px-12">
-        {/* Header */}
-        <FadeIn direction="up" distance={20} className="flex flex-col items-start">
-          <SectionLabel label="QUESTIONS & ANSWERS" />
+    <section id="faq" className="relative w-full bg-[#08090A] py-20 lg:py-28 border-t border-white/5 overflow-hidden">
+      <div className="max-w-[1750px] mx-auto px-5 sm:px-10 lg:px-16 xl:px-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
 
-          <h2 className="mt-5 text-3xl sm:text-5xl font-black tracking-tight text-[#F8FAFC] uppercase">
-            Frequently Asked <br />
-            <span className="text-[#76C043]">Questions</span>
-          </h2>
-
-          <p className="mt-4 text-base sm:text-lg text-[#9CA3AF]">
-            Everything you need to know about getting started at Fit Me.
-          </p>
-        </FadeIn>
-
-        {/* Accordion Component with FadeIn */}
-        <FadeIn direction="up" distance={20} delay={0.15} className="mt-12 sm:mt-16">
-          <Accordion items={FAQ_ITEMS} defaultOpenIndex={0} />
-        </FadeIn>
-
-        {/* Still have questions prompt */}
-        <FadeIn direction="up" distance={16} delay={0.25} className="mt-12">
-          <div className="rounded-xl border border-[#2D3339] bg-[#121517] p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 card-hover-border">
-            <div>
-              <h4 className="text-base font-bold text-[#F8FAFC]">
-                Have a specific question not listed here?
-              </h4>
-              <p className="text-sm text-[#9CA3AF] mt-0.5">
-                Talk directly with our coaching staff in Pitigala.
-              </p>
+          {/* Left Column */}
+          <div className="lg:col-span-5">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#76C043] mb-3">
+              Frequently Asked
+            </p>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-white leading-none">
+              <span className="text-[#76C043]">Questions</span>
+            </h2>
+            <p className="mt-5 text-sm sm:text-base text-[#9CA3AF] leading-relaxed">
+              Find answers to the most common questions about memberships, training and our facilities.
+            </p>
+            <div className="mt-8">
+              <Link
+                href="#contact"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-[#76C043]/60 bg-[#0E1113] hover:bg-[#76C043]/10 text-white hover:text-[#76C043] text-xs font-bold uppercase tracking-wider transition-all"
+              >
+                <span>View All FAQs</span>
+                <svg className="w-3.5 h-3.5 text-[#76C043]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </Link>
             </div>
-            <a
-              href="tel:0707627878"
-              className="inline-flex items-center gap-2 rounded-lg border border-[#76C043]/40 bg-[#76C043]/10 px-5 py-2.5 text-xs font-mono font-bold uppercase text-[#76C043] hover:bg-[#76C043] hover:text-[#0B0D0E] hover:shadow-[0_0_18px_rgba(118,192,67,0.4)] transition-all"
-            >
-              <span>Call 070 762 7878</span>
-            </a>
           </div>
-        </FadeIn>
+
+          {/* Right Column: Accordion */}
+          <div className="lg:col-span-7 space-y-3">
+            {FAQS.map((faq, idx) => {
+              const isOpen = openIdx === idx;
+              return (
+                <div
+                  key={faq.q}
+                  className="rounded-xl bg-[#0D1012] border border-white/5 overflow-hidden transition-colors hover:border-[#76C043]/30"
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggle(idx)}
+                    className="w-full p-4 sm:p-5 text-left flex items-center justify-between gap-4 font-semibold text-sm sm:text-base text-white hover:text-[#76C043] transition-colors"
+                  >
+                    <span>{faq.q}</span>
+                    <svg
+                      className={`w-4 h-4 text-[#76C043] flex-shrink-0 transform transition-transform duration-200 ${
+                        isOpen ? "rotate-90" : ""
+                      }`}
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M9 5l7 7-7 7" />
+                    </svg>
+                  </button>
+
+                  <AnimatePresence>
+                    {isOpen && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        transition={{ duration: 0.2 }}
+                      >
+                        <div className="px-5 pb-5 pt-1 text-xs sm:text-sm text-[#9CA3AF] leading-relaxed border-t border-white/5">
+                          {faq.a}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              );
+            })}
+          </div>
+
+        </div>
       </div>
     </section>
   );

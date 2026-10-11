@@ -176,5 +176,5 @@ styleSheet.add(
     )
 )
 
-header_colour = HexColor(0x24416B)
-row_color = HexColor(0xD1DEF0)
+header_colour = HexColor(0x76C043)
+row_color = HexColor(0xF0F7EB)

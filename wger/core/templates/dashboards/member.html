@@ -15,10 +15,10 @@
     --bg-dark: #0B0D0E;
     --card-bg: #121517;
     --card-surface: #1F2428;
-    --neon-lime: #88D82D;
-    --neon-hover: #9EF040;
-    --neon-glow: rgba(136, 216, 45, 0.28);
-    --neon-glow-high: rgba(136, 216, 45, 0.6);
+    --neon-lime: #76C043;
+    --neon-hover: #85D538;
+    --neon-glow: rgba(118, 192, 67, 0.28);
+    --neon-glow-high: rgba(118, 192, 67, 0.6);
     --cyan: #06B6D4;
     --cyan-glow: rgba(6, 182, 212, 0.28);
     --amber: #F59E0B;
@@ -395,7 +395,7 @@
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 3px;
-    background: linear-gradient(90deg, var(--neon-lime), rgba(136, 216, 45, 0.2) 60%, transparent 100%);
+    background: linear-gradient(90deg, var(--neon-lime), rgba(118, 192, 67, 0.2) 60%, transparent 100%);
   }
   .id-pass-card.inactive {
     border-color: rgba(255, 77, 109, 0.35);
@@ -458,7 +458,7 @@
     font-family: 'Montserrat', sans-serif;
     font-weight: 900;
     font-size: 1.85rem;
-    text-shadow: 0 0 12px rgba(136, 216, 45, 0.4);
+    text-shadow: 0 0 12px rgba(118, 192, 67, 0.4);
     user-select: none;
   }
   .id-pass-card.inactive .id-fallback-avatar {
@@ -490,8 +490,8 @@
     display: inline-flex;
     align-items: center;
     gap: 0.5rem;
-    background: rgba(136, 216, 45, 0.12);
-    border: 1px solid rgba(136, 216, 45, 0.35);
+    background: rgba(118, 192, 67, 0.12);
+    border: 1px solid rgba(118, 192, 67, 0.35);
     padding: 0.35rem 0.8rem;
     border-radius: 999px;
     font-size: 0.72rem;
@@ -551,7 +551,7 @@
     transition: all 0.2s;
   }
   .id-btn-photo-edit:hover {
-    background: rgba(136, 216, 45, 0.15);
+    background: rgba(118, 192, 67, 0.15);
     border-color: var(--neon-lime);
     color: var(--neon-lime);
   }
@@ -567,8 +567,8 @@
     letter-spacing: 0.5px;
   }
   .id-plan-pill.active {
-    background: rgba(136, 216, 45, 0.12);
-    border: 1px solid rgba(136, 216, 45, 0.3);
+    background: rgba(118, 192, 67, 0.12);
+    border: 1px solid rgba(118, 192, 67, 0.3);
     color: var(--neon-lime);
   }
   .id-plan-pill.expired {
@@ -634,8 +634,8 @@
     font-size: 0.6rem;
     padding: 0.1rem 0.4rem;
     border-radius: 4px;
-    background: rgba(136, 216, 45, 0.15);
-    border: 1px solid rgba(136, 216, 45, 0.4);
+    background: rgba(118, 192, 67, 0.15);
+    border: 1px solid rgba(118, 192, 67, 0.4);
     color: var(--neon-lime);
     font-weight: 800;
     letter-spacing: 0.5px;
@@ -664,12 +664,12 @@
     transition: all 0.2s ease;
   }
   .btn-id-outline:hover {
-    background: rgba(136, 216, 45, 0.15);
-    box-shadow: 0 0 12px rgba(136, 216, 45, 0.25);
+    background: rgba(118, 192, 67, 0.15);
+    box-shadow: 0 0 12px rgba(118, 192, 67, 0.25);
     transform: translateY(-1px);
   }
   .btn-id-primary {
-    background: linear-gradient(135deg, #88D82D 0%, #6EBD1B 100%);
+    background: linear-gradient(135deg, #76C043 0%, #6EBD1B 100%);
     border: none;
     color: #0B0E11;
     font-weight: 900;
@@ -681,11 +681,11 @@
     align-items: center;
     justify-content: center;
     gap: 0.45rem;
-    box-shadow: 0 4px 16px rgba(136, 216, 45, 0.35);
+    box-shadow: 0 4px 16px rgba(118, 192, 67, 0.35);
     transition: all 0.2s ease;
   }
   .btn-id-primary:hover {
-    box-shadow: 0 6px 20px rgba(136, 216, 45, 0.5);
+    box-shadow: 0 6px 20px rgba(118, 192, 67, 0.5);
     transform: translateY(-1px);
     filter: brightness(1.06);
   }
@@ -704,7 +704,7 @@
     box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
   }
   .btn-renew-cta {
-    background: linear-gradient(135deg, #88D82D 0%, #6EBD1B 100%);
+    background: linear-gradient(135deg, #76C043 0%, #6EBD1B 100%);
     border: none;
     color: #0B0E11;
     font-weight: 900;
@@ -715,12 +715,12 @@
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    box-shadow: 0 4px 14px rgba(136, 216, 45, 0.35);
+    box-shadow: 0 4px 14px rgba(118, 192, 67, 0.35);
     transition: all 0.2s ease;
   }
   .btn-renew-cta:hover {
     transform: translateY(-1px);
-    box-shadow: 0 6px 20px rgba(136, 216, 45, 0.5);
+    box-shadow: 0 6px 20px rgba(118, 192, 67, 0.5);
   }
   .btn-desk-contact {
     display: inline-flex;
@@ -1157,8 +1157,8 @@
               <div class="rings-container">
                 <div class="rings-svg-wrap">
                   <svg class="rings-svg" width="190" height="190" viewBox="0 0 200 200">
-                    <circle class="ring-bg" cx="100" cy="100" r="80" stroke="#88D82D" />
-                    <circle class="ring-fill" cx="100" cy="100" r="80" stroke="#88D82D" stroke-dasharray="502.6" stroke-dashoffset="135" id="proteinRing" />
+                    <circle class="ring-bg" cx="100" cy="100" r="80" stroke="#76C043" />
+                    <circle class="ring-fill" cx="100" cy="100" r="80" stroke="#76C043" stroke-dasharray="502.6" stroke-dashoffset="135" id="proteinRing" />
 
                     <circle class="ring-bg" cx="100" cy="100" r="62" stroke="#06B6D4" />
                     <circle class="ring-fill" cx="100" cy="100" r="62" stroke="#06B6D4" stroke-dasharray="389.5" stroke-dashoffset="77" id="waterRing" />
@@ -1725,23 +1725,41 @@
           <div class="table-responsive">
             <table class="table-custom">
               <thead>
-                <tr><th>Receipt #</th><th>Date</th><th>Amount (LKR)</th><th>Payment Method</th><th>Actions</th></tr>
+                <tr>
+                  <th>Receipt #</th>
+                  <th>Plan / Package</th>
+                  <th>Date &amp; Time</th>
+                  <th>Amount Paid</th>
+                  <th>Payment Method</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Official Receipt</th>
+                </tr>
               </thead>
               <tbody>
                 {% for r in recent_receipts %}
                   <tr>
                     <td style="font-family:monospace;font-weight:700;color:var(--neon-lime);">{{ r.receipt_number }}</td>
-                    <td>{{ r.issued_at|date:"d M Y H:i" }}</td>
-                    <td style="font-weight:800;color:#fff;">LKR {{ r.total_paid }}</td>
-                    <td>{{ r.get_payment_method_display }}</td>
+                    <td><span style="font-weight:600;color:#fff;">{{ r.plan_name|default:"Gym Membership" }}</span></td>
+                    <td style="color:var(--text-muted);">{{ r.issued_at|date:"d M Y H:i" }}</td>
+                    <td style="font-weight:800;color:#fff;">LKR {{ r.amount_paid|floatformat:2 }}</td>
                     <td>
-                      <a href="/receipt/{{ r.id }}/" target="_blank" class="btn-fitme" style="padding:0.3rem 0.8rem;font-size:0.75rem;">
-                        <i class="fa fa-print"></i> Print Receipt
+                      <span class="badge" style="background:#2A3138;color:#cbd5e1;font-size:0.7rem;text-transform:uppercase;padding:0.25rem 0.6rem;border-radius:6px;">
+                        {{ r.payment_method }}
+                      </span>
+                    </td>
+                    <td>
+                      <span style="display:inline-flex;align-items:center;gap:4px;padding:0.25rem 0.65rem;border-radius:999px;font-size:0.72rem;font-weight:700;background:rgba(118,192,67,0.15);color:var(--neon-lime);border:1px solid rgba(118,192,67,0.3);">
+                        <i class="fa fa-check-circle"></i> Paid
+                      </span>
+                    </td>
+                    <td style="text-align:right;">
+                      <a href="/receipt/{{ r.id }}/" target="_blank" class="btn-fitme" style="padding:0.3rem 0.8rem;font-size:0.75rem;background:rgba(255,255,255,0.06);border-color:rgba(255,255,255,0.18);color:#fff;text-decoration:none;" title="View official digital statement / e-receipt">
+                        <i class="fa fa-file-invoice"></i> View E-Receipt
                       </a>
                     </td>
                   </tr>
                 {% empty %}
-                  <tr><td colspan="5" style="text-align:center;color:var(--text-muted);padding:2rem;">No payment receipts on file.</td></tr>
+                  <tr><td colspan="7" style="text-align:center;color:var(--text-muted);padding:2rem;">No payment receipts on file.</td></tr>
                 {% endfor %}
               </tbody>
             </table>
@@ -2848,7 +2866,7 @@
         </div>
         <div style="display:flex;justify-content:space-between;align-items:center;font-size:0.82rem;">
           <span style="color:var(--text-muted);">Official Tax Invoice:</span>
-          <span style="color:var(--cyan);font-weight:700;"><i class="fa fa-receipt"></i> Instant PDF / Print</span>
+          <span style="color:var(--cyan);font-weight:700;"><i class="fa fa-file-invoice"></i> Instant Digital E-Receipt</span>
         </div>
       </div>
 
@@ -2877,7 +2895,7 @@
 
       <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap;">
         <a id="renewReceiptLink" href="#" target="_blank" class="btn-fitme" style="background:#2A3138;border-color:#3E4851;color:#fff;text-decoration:none;">
-          <i class="fa fa-print"></i> View / Print Receipt
+          <i class="fa fa-file-invoice"></i> View E-Receipt
         </a>
         <button type="button" class="btn-fitme" onclick="closeSelfRenewModal();">
           <i class="fa fa-check"></i> Done

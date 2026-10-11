@@ -1,13 +1,15 @@
+"use client";
+
 import React from "react";
 import { FitMeHeader } from "@/components/fitme/FitMeHeader";
 import { HeroSection } from "@/components/fitme/HeroSection";
-import { ResistanceSection } from "@/components/fitme/ResistanceSection";
-import { MethodSection } from "@/components/fitme/MethodSection";
-import { TransformationSection } from "@/components/fitme/TransformationSection";
+import { WhyFitMeSection } from "@/components/fitme/WhyFitMeSection";
 import { ProgramsSection } from "@/components/fitme/ProgramsSection";
-import { ArenaSection } from "@/components/fitme/ArenaSection";
-import { ResultsSection } from "@/components/fitme/ResultsSection";
-import { CoachesSection } from "@/components/fitme/CoachesSection";
+import { TrackProgressSection } from "@/components/fitme/TrackProgressSection";
+import { ChoosePathSection } from "@/components/fitme/ChoosePathSection";
+import { FacilitiesSection } from "@/components/fitme/FacilitiesSection";
+import { TestimonialsSection } from "@/components/fitme/TestimonialsSection";
+import { TrainersSection } from "@/components/fitme/TrainersSection";
 import { MembershipSection } from "@/components/fitme/MembershipSection";
 import { FAQSection } from "@/components/fitme/FAQSection";
 import { FinalCTA } from "@/components/fitme/FinalCTA";
@@ -15,42 +17,42 @@ import { FitMeFooter } from "@/components/fitme/FitMeFooter";
 
 export default function HomePage() {
   return (
-    <div className="relative min-h-screen bg-[#0B0D0E] text-[#F8FAFC]">
-      {/* 1. Fixed Header */}
+    <div className="relative min-h-screen bg-[#070809] text-[#F8FAFC]">
+      {/* 1. Header Navigation */}
       <FitMeHeader />
 
       <main>
-        {/* 2. Chapter 01: Hero - The Choice */}
+        {/* 2. Hero Section: Transform Your Journey */}
         <HeroSection />
 
-        {/* 3. Chapter 02: The Resistance */}
-        <ResistanceSection />
+        {/* 3. Why Fit Me: More Than A Gym / It's A Lifestyle */}
+        <WhyFitMeSection />
 
-        {/* 4. The Fit Me Method */}
-        <MethodSection />
-
-        {/* 5. Chapter 03: Transformation */}
-        <TransformationSection />
-
-        {/* 6. Programs: Choose Your Path */}
+        {/* 4. Training Programs: Build The Best Version Of You */}
         <ProgramsSection />
 
-        {/* 7. Chapter 04: The Arena */}
-        <ArenaSection />
+        {/* 5. Track Your Progress: See Real Results (HUD + Phone Mockup) */}
+        <TrackProgressSection />
 
-        {/* 8. Real Results */}
-        <ResultsSection />
+        {/* 6. Choose Your Path: Your Goals. Our Support. */}
+        <ChoosePathSection />
 
-        {/* 9. Coaches */}
-        <CoachesSection />
+        {/* 7. Our Facilities: World-Class Gym Experience */}
+        <FacilitiesSection />
 
-        {/* 10. Membership */}
+        {/* 8. Member Testimonials: Real Stories */}
+        <TestimonialsSection />
+
+        {/* 9. Meet Our Trainers: Expert Guidance. Real Support. */}
+        <TrainersSection />
+
+        {/* 10. Membership Plans: Flexible Plans For Every Goal */}
         <MembershipSection />
 
-        {/* 11. FAQ */}
+        {/* 11. Frequently Asked Questions */}
         <FAQSection />
 
-        {/* 12. Final CTA */}
+        {/* 12. Final CTA: Take The First Step */}
         <FinalCTA />
       </main>
 

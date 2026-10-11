@@ -16,10 +16,10 @@
       --card-bg: #121517;
       --card-secondary: #1A1F23;
       --input-bg: #15191C;
-      --neon-lime: #88D82D;
-      --neon-hover: #9EF040;
-      --neon-glow: rgba(136, 216, 45, 0.28);
-      --neon-glow-high: rgba(136, 216, 45, 0.6);
+      --neon-lime: #76C043;
+      --neon-hover: #85D538;
+      --neon-glow: rgba(118, 192, 67, 0.28);
+      --neon-glow-high: rgba(118, 192, 67, 0.6);
       --text-primary: #FFFFFF;
       --text-muted: #8E9BA4;
       --danger: #E63946;
@@ -290,7 +290,7 @@
       <div class="club-title"><span style="color:var(--neon-lime);">FIT</span> <span style="color:#C5CBD3;">ME</span> FITNESS CLUB</div>
       <div style="font-size: 0.85rem; color: #8E9BA4; letter-spacing: 0.5px; margin-top: 0.2rem; font-weight: 600;">Train with Purpose &amp; Move with Confidence</div>
       <div style="font-size: 0.78rem; color: var(--neon-lime); margin-top: 0.35rem; font-weight: 600;">New Town, Elpitiya Road, Pitigala, 80420 • Hotline: 070 762 7878</div>
-      <div class="form-doc-title" style="margin-top:0.75rem;display:inline-block;background:rgba(136,216,45,0.12);border:1px solid var(--neon-lime);color:var(--neon-lime);padding:0.35rem 1.25rem;border-radius:50px;font-size:0.85rem;">Official Membership Registration Form</div>
+      <div class="form-doc-title" style="margin-top:0.75rem;display:inline-block;background:rgba(118,192,67,0.12);border:1px solid var(--neon-lime);color:var(--neon-lime);padding:0.35rem 1.25rem;border-radius:50px;font-size:0.85rem;">Official Membership Registration Form</div>
     </div>
 
     <!-- Success Screen (Shown after submit) -->
@@ -554,7 +554,7 @@
             </label>
             <label class="radio-card">
               <input type="radio" name="personal_trainer_needed" id="ptYes" value="yes" onclick="toggleCoachSelection(true)">
-              <span>Yes (Personal Coaching — LKR 7,000/mo)</span>
+              <span>Yes (Personal Coaching)</span>
             </label>
           </div>
         </div>
@@ -567,71 +567,14 @@
               <option value="{{ c.user.id }}">{{ c.user.get_full_name|default:c.user.username }} ({{ c.specialties }})</option>
             {% endfor %}
           </select>
-          <div style="font-size:0.78rem;color:var(--text-muted);margin-top:0.4rem;">
-            ⚡ <strong>Fee Breakdown:</strong> LKR 3,000 Gym Facility Access + LKR 4,000 Dedicated Coach Training.
-          </div>
         </div>
       </div>
 
-      <!-- 7. Payment Details -->
+      <!-- 7. Terms & Conditions -->
       <div class="section-box">
         <div class="section-title">
           <span class="section-num">7</span>
-          Payment Details
-        </div>
-
-        <!-- Official Pricing Flyer Notice -->
-        <div style="background:rgba(123,201,0,0.08);border:1px solid rgba(123,201,0,0.3);border-radius:10px;padding:0.75rem 1rem;margin-bottom:1rem;display:flex;align-items:center;gap:0.75rem;">
-          <i class="fa fa-info-circle" style="color:var(--neon-lime);font-size:1.25rem;"></i>
-          <div style="font-size:0.83rem;color:#e6edf3;">
-            <strong style="color:var(--neon-lime);">ANNUAL MEMBERSHIP DUES:</strong> 
-            A Yearly Fee of <strong>LKR 1,000</strong> applies to membership packages (Students: <strong>FREE / No Yearly Fee</strong>).
-          </div>
-        </div>
-
-        <div class="grid-4">
-          <div class="form-group">
-            <label>Yearly Fee (LKR)</label>
-            <input type="number" class="form-control" name="admission_fee" id="admissionFee" value="1000" oninput="calculateTotal()">
-          </div>
-          <div class="form-group">
-            <label>Package / Monthly Fee (LKR)</label>
-            <input type="number" class="form-control" name="monthly_fee" id="monthlyFee" value="4000" oninput="calculateTotal()">
-          </div>
-          <div class="form-group">
-            <label>Discount (LKR)</label>
-            <input type="number" class="form-control" name="discount" id="discount" value="0" oninput="calculateTotal()">
-          </div>
-          <div class="form-group">
-            <label>Total Due (LKR)</label>
-            <input type="number" class="form-control" name="total_paid" id="totalPaid" value="5000" readonly style="color:var(--neon-lime);font-weight:800;font-size:1.1rem;">
-          </div>
-        </div>
-
-        <div class="form-group" style="margin-top:0.75rem;">
-          <label>Payment Method</label>
-          <div class="radio-card-group">
-            <label class="radio-card">
-              <input type="radio" name="payment_method" value="cash" checked>
-              <span>Cash at Counter</span>
-            </label>
-            <label class="radio-card">
-              <input type="radio" name="payment_method" value="card">
-              <span>Card / POS</span>
-            </label>
-            <label class="radio-card">
-              <input type="radio" name="payment_method" value="online">
-              <span>Online Transfer</span>
-            </label>
-          </div>
-        </div>
-      </div>
-
-      <!-- 8. Terms & Conditions -->
-      <div class="section-box">
-        <div class="section-title">
-          <span class="section-num">8</span>
-          Terms & Conditions / Gym Rules
+          Terms &amp; Conditions / Gym Rules
         </div>
 
         <ul class="rules-list">
@@ -753,18 +696,6 @@
         if (r) r.checked = true;
       }
       updatePlanDates();
-
-      document.getElementById('admissionFee').value = yearlyFee;
-      document.getElementById('monthlyFee').value = price;
-      calculateTotal();
-    }
-
-    function calculateTotal() {
-      const adm = parseFloat(document.getElementById('admissionFee').value) || 0;
-      const mon = parseFloat(document.getElementById('monthlyFee').value) || 0;
-      const disc = parseFloat(document.getElementById('discount').value) || 0;
-      const total = Math.max(0, adm + mon - disc);
-      document.getElementById('totalPaid').value = total;
     }
 
     function toggleMedicalDetails(show) {

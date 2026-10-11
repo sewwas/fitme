@@ -1,115 +1,124 @@
 "use client";
 
 import React from "react";
-import { SectionLabel } from "../ui/SectionLabel";
-import { ProgramCard, ProgramItem } from "../ui/ProgramCard";
-import { FadeIn, StaggerContainer, StaggerItem } from "../ui/MotionWrapper";
+import Image from "next/image";
+import Link from "next/link";
+import { motion } from "motion/react";
 
-const FITME_PROGRAMS: ProgramItem[] = [
+const PROGRAMS = [
   {
-    id: "strength",
-    title: "STRENGTH",
-    category: "Foundation & Power",
-    description:
-      "Master the foundational compound lifts—squat, bench press, deadlift, and overhead press—with periodized progressive overload.",
-    difficulty: "Intermediate",
-    sessionsPerWeek: "4 Sessions / Week",
-    imageUrl:
-      "https://images.unsplash.com/photo-1517838277536-f5f99be501cd?q=80&w=800&auto=format&fit=crop",
-    imageAlt: "Heavy barbell strength training in dark gym",
+    title: "Strength Training",
+    description: "Build muscle, increase power. Get stronger.",
+    image: "/images/program-strength.jpg",
+    icon: (
+      <svg className="w-4 h-4 text-[#76C043]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+      </svg>
+    ),
   },
   {
-    id: "muscle-building",
-    title: "MUSCLE BUILDING",
-    category: "Hypertrophy System",
-    description:
-      "Targeted mechanical tension and volume protocols engineered for lean tissue development, symmetry, and metabolic stimulus.",
-    difficulty: "Intermediate",
-    sessionsPerWeek: "4–5 Sessions / Week",
-    imageUrl:
-      "https://images.unsplash.com/photo-1581009146145-b5ef050c2e1e?q=80&w=800&auto=format&fit=crop",
-    imageAlt: "Athlete performing controlled dumbbell press",
+    title: "Weight Loss",
+    description: "Burn fat, boost energy. Feel lighter.",
+    image: "/images/program-hiit.jpg",
+    icon: (
+      <svg className="w-4 h-4 text-[#76C043]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+      </svg>
+    ),
   },
   {
-    id: "fat-loss",
-    title: "FAT LOSS & RECOMP",
-    category: "Metabolic Density",
-    description:
-      "Calibrated resistance circuits paired with customized energy balance protocols to preserve hard-earned muscle while stripping fat.",
-    difficulty: "All Levels",
-    sessionsPerWeek: "3–4 Sessions / Week",
-    imageUrl:
-      "https://images.unsplash.com/photo-1549060279-7e168fcee0c2?q=80&w=800&auto=format&fit=crop",
-    imageAlt: "Dynamic conditioning and metabolic training",
+    title: "Functional Training",
+    description: "Move better. Perform stronger. Live healthier.",
+    image: "/images/program-functional.jpg",
+    icon: (
+      <svg className="w-4 h-4 text-[#76C043]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    ),
   },
   {
-    id: "athletic-performance",
-    title: "ATHLETIC PERFORMANCE",
-    category: "Speed & Durability",
-    description:
-      "Multi-planar power, rotational acceleration, plyometrics, and joint resilience designed for active field sport performers.",
-    difficulty: "Advanced",
-    sessionsPerWeek: "4 Sessions / Week",
-    imageUrl:
-      "https://images.unsplash.com/photo-1574680096145-d05b474e2155?q=80&w=800&auto=format&fit=crop",
-    imageAlt: "High performance athletic training",
-  },
-  {
-    id: "beginner",
-    title: "BEGINNER FOUNDATIONS",
-    category: "Movement Literacy",
-    description:
-      "Step into the gym with zero intimidation. Build movement competency, correct postural imbalances, and establish enduring training habits.",
-    difficulty: "Beginner",
-    sessionsPerWeek: "3 Sessions / Week",
-    imageUrl:
-      "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?q=80&w=800&auto=format&fit=crop",
-    imageAlt: "Trainer guiding athlete on proper posture and form",
+    title: "Athletic Performance",
+    description: "Improve speed, agility and endurance.",
+    image: "/images/program-hypertrophy.jpg",
+    icon: (
+      <svg className="w-4 h-4 text-[#76C043]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+      </svg>
+    ),
   },
 ];
 
 export function ProgramsSection() {
   return (
-    <section
-      id="programs"
-      className="relative w-full bg-[#0E1012] py-24 sm:py-32 border-t border-[#2D3339]/50"
-    >
-      <div className="max-w-[1750px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20">
-        {/* Header */}
-        <FadeIn direction="up" distance={20} className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <div className="flex flex-col items-start max-w-2xl">
-            <SectionLabel label="STRUCTURED TRAINING PATHS" />
-
-            <h2 className="mt-5 text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#F8FAFC] uppercase">
-              Choose <br />
-              <span className="text-[#76C043]">Your Path</span>
-            </h2>
-
-            <p className="mt-4 text-base sm:text-lg text-[#9CA3AF]">
-              Every body requires a distinct stimulus. Select a battle-tested
-              pathway matched precisely to your schedule, training age, and
-              aspirations.
+    <section id="programs" className="relative w-full bg-[#060708] py-20 lg:py-28 border-t border-white/5 overflow-hidden">
+      <div className="max-w-[1750px] mx-auto px-5 sm:px-10 lg:px-16 xl:px-24">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-start">
+          {/* Left Column: Heading & Copy */}
+          <div className="lg:col-span-4 lg:sticky lg:top-28">
+            <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#76C043] mb-3">
+              Training Programs
             </p>
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-white leading-[1.08]">
+              Build The Best <br />
+              <span className="text-[#76C043]">Version Of You</span>
+            </h2>
+            <p className="mt-5 text-sm sm:text-base text-[#9CA3AF] leading-relaxed">
+              Choose from a variety of programs designed to meet your fitness goals — from strength
+              and weight loss to performance and overall wellness.
+            </p>
+            <div className="mt-8">
+              <Link
+                href="#pricing"
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-[#76C043]/60 bg-[#0E1113] hover:bg-[#76C043]/10 text-white hover:text-[#76C043] text-xs font-bold uppercase tracking-wider transition-all"
+              >
+                <span>View All Programs</span>
+                <svg className="w-3.5 h-3.5 text-[#76C043]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+              </Link>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-xs text-[#76C043] bg-[#0B0D0E] border border-[#2D3339] px-3 py-1.5 rounded-full">
-              5 Calibrated Pathways
-            </span>
-          </div>
-        </FadeIn>
+          {/* Right Column: 4 Vertical Program Cards */}
+          <div className="lg:col-span-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {PROGRAMS.map((program) => (
+              <div
+                key={program.title}
+                className="group relative flex flex-col justify-end overflow-hidden rounded-2xl bg-[#0D1012] border border-white/5 hover:border-[#76C043]/40 min-h-[380px] p-5 transition-all duration-300 hover:-translate-y-1.5 shadow-[0_10px_30px_rgba(0,0,0,0.6)]"
+              >
+                {/* Background Image */}
+                <div className="absolute inset-0 z-0">
+                  <Image
+                    src={program.image}
+                    alt={program.title}
+                    fill
+                    sizes="(max-width: 768px) 100vw, 25vw"
+                    className="object-cover object-center transition-transform duration-500 group-hover:scale-105 opacity-60"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#070809] via-[#070809]/65 to-transparent" />
+                </div>
 
-        {/* 5 Program Cards with Scroll Stagger */}
-        <StaggerContainer
-          staggerDelay={0.09}
-          className="mt-14 sm:mt-20 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
-        >
-          {FITME_PROGRAMS.map((program) => (
-            <StaggerItem key={program.id}>
-              <ProgramCard program={program} />
-            </StaggerItem>
-          ))}
-        </StaggerContainer>
+                {/* Content Overlay */}
+                <div className="relative z-10 flex flex-col justify-end h-full">
+                  <div className="h-9 w-9 rounded-full bg-[#141A14]/90 backdrop-blur-sm border border-[#76C043]/40 flex items-center justify-center mb-3">
+                    {program.icon}
+                  </div>
+                  <h3 className="text-base font-black uppercase text-white tracking-wide group-hover:text-[#76C043] transition-colors leading-tight mb-1.5">
+                    {program.title}
+                  </h3>
+                  <p className="text-xs text-[#C5CBD3] leading-relaxed line-clamp-2">
+                    {program.description}
+                  </p>
+                  <div className="mt-4 flex items-center justify-end text-[#76C043]">
+                    <svg className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
     </section>
   );

@@ -87,7 +87,7 @@ def get_public_home_context():
 @login_required
 @role_required('super_admin', 'admin')
 def super_admin_dashboard(request, active_tab=None):
-    """Admin Console — Operations for Super Admin (full control + data overrides + plan builder) & Club Admin (operations & reporting)."""
+    """Admin Console — Operations for Super Admin (full control + data overrides + plan builder) & Admin (operations & reporting)."""
     from django.db.models import Count, Q, Sum
     from wger.membership.services import check_and_expire_subscriptions
     check_and_expire_subscriptions()
@@ -168,7 +168,7 @@ def super_admin_dashboard(request, active_tab=None):
             role_badge_class = 'badge-super-admin'
         elif 'admin' in groups:
             primary_role = 'admin'
-            role_label = 'Club Admin'
+            role_label = 'Admin'
             role_color = '#00F0FF'
             role_badge_class = 'badge-admin'
         elif 'front_desk' in groups:
@@ -244,11 +244,23 @@ def super_admin_dashboard(request, active_tab=None):
         for s in subs_qs:
             if s.member_id not in latest_sub_by_user:
                 latest_sub_by_user[s.member_id] = s
+
+        from wger.gym_operations_payroll.models import BuddyMembership
+        buddy_links_qs = BuddyMembership.objects.filter(
+            partner_member_id__in=member_user_ids
+        ).select_related('subscription__plan', 'subscription__member', 'primary_member').order_by('-subscription__end_date')
+        buddy_by_user = {}
+        for bl in buddy_links_qs:
+            if bl.partner_member_id not in buddy_by_user:
+                buddy_by_user[bl.partner_member_id] = bl
+
         for m in all_members:
             m.latest_sub = latest_sub_by_user.get(m.user_id)
+            m.linked_as_partner = buddy_by_user.get(m.user_id)
     else:
         for m in all_members:
             m.latest_sub = None
+            m.linked_as_partner = None
 
     coaches = CoachProfile.objects.select_related('user').all()
     programs = GymProgram.objects.all()
@@ -264,7 +276,30 @@ def super_admin_dashboard(request, active_tab=None):
     week_start = today - timezone.timedelta(days=today.weekday())
     month_start = today.replace(day=1)
 
-    from wger.gym_operations_payroll.models import ClubExpense
+    from wger.gym_operations_payroll.models import ClubExpense, PaymentReceipt
+
+    # 0. Auto-link PaymentReceipt for any subscription lacking one (ensures seamless billing auditability)
+    orphaned_subs = list(Subscription.objects.filter(receipts__isnull=True, amount_paid__gt=0).select_related('member', 'plan'))
+    for o_sub in orphaned_subs:
+        issue_dt = timezone.now()
+        if getattr(o_sub, 'payment_date', None):
+            issue_dt = o_sub.payment_date
+        elif getattr(o_sub, 'start_date', None):
+            issue_dt = timezone.datetime.combine(o_sub.start_date, timezone.datetime.min.time(), tzinfo=timezone.get_current_timezone())
+        PaymentReceipt.objects.create(
+            receipt_number=PaymentReceipt.generate_next_receipt_number(),
+            subscription=o_sub,
+            member=o_sub.member,
+            plan_name=o_sub.plan.name if o_sub.plan else 'Standard',
+            duration_days=getattr(o_sub.plan, 'duration_days', 30),
+            validity_start=o_sub.start_date,
+            validity_end=o_sub.end_date,
+            amount_paid=o_sub.amount_paid,
+            package_amount=o_sub.amount_paid,
+            payment_method=o_sub.payment_method or 'cash',
+            notes="Auto-linked receipt for membership enrollment",
+            issued_at=issue_dt
+        )
 
     # 1. Membership Revenue & Payment Breakdown in 1 query
     pr_aggs = PaymentReceipt.objects.aggregate(
@@ -329,7 +364,9 @@ def super_admin_dashboard(request, active_tab=None):
     month_net_profit = month_gross_rev - month_expenses
 
     # 6. Payment Method Breakdown (Today)
-    today_cash_total = today_cash_mem + today_cash_pos
+    today_drawer_audit = POSCashDrawerAudit.objects.filter(audit_date__date=today).order_by('-audit_date').first()
+    today_drawer_float = today_drawer_audit.opening_float if today_drawer_audit else Decimal('0.00')
+    today_cash_total = today_drawer_float + today_cash_mem + today_cash_pos
     today_card_total = today_card_mem + today_card_pos
     today_bank_total = today_bank_mem + today_bank_pos
     today_digital_total = today_card_total + today_koko_pos + today_bank_total
@@ -493,11 +530,14 @@ def super_admin_dashboard(request, active_tab=None):
 
         audit_monthly_trends.append({
             'label': m_start.strftime('%b %Y'),
+            'month': m_start.strftime('%b %Y'),
             'membership_rev': float(m_mem_rev),
             'pos_rev': float(m_pos_rev),
             'gross_rev': float(m_gross),
+            'inflow': float(m_gross),
             'opex': float(m_opex),
             'net_profit': float(m_net),
+            'margin': float(m_net),
         })
 
     audit_annual_rev = PaymentReceipt.objects.aggregate(total=Sum('annual_fee_amount'))['total'] or Decimal('0.00')
@@ -515,6 +555,13 @@ def super_admin_dashboard(request, active_tab=None):
         'coaching': float(audit_pt_rev),
     }
 
+    revenue_streams_list = [
+        {'stream': 'Membership Packages', 'amount': float(audit_pkg_rev), 'color': '#76C043'},
+        {'stream': 'POS Café & Store', 'amount': float(audit_pos_total), 'color': '#00F0FF'},
+        {'stream': 'Annual Registration Fees', 'amount': float(audit_annual_rev), 'color': '#F59E0B'},
+        {'stream': 'Personal Coaching', 'amount': float(audit_pt_rev), 'color': '#A855F7'},
+    ]
+
     exp_cats_qs = list(ClubExpense.objects.values('category').annotate(total=Sum('amount')).order_by('-total'))
     exp_cat_labels_map = dict(ClubExpense.CATEGORY_CHOICES) if hasattr(ClubExpense, 'CATEGORY_CHOICES') else {
         'rent': 'Facility Rent',
@@ -531,7 +578,8 @@ def super_admin_dashboard(request, active_tab=None):
         {
             'category': c['category'],
             'label': exp_cat_labels_map.get(c['category'], c['category'].replace('_', ' ').title()),
-            'total': float(c['total'] or 0)
+            'total': float(c['total'] or 0),
+            'amount': float(c['total'] or 0),
         }
         for c in exp_cats_qs
     ]
@@ -548,7 +596,8 @@ def super_admin_dashboard(request, active_tab=None):
         {
             'method': p['payment_method'],
             'label': pay_methods_labels_map.get(p['payment_method'], p['payment_method'].replace('_', ' ').title()),
-            'total': float(p['total'] or 0)
+            'total': float(p['total'] or 0),
+            'amount': float(p['total'] or 0),
         }
         for p in pay_methods_qs
     ]
@@ -613,8 +662,9 @@ def super_admin_dashboard(request, active_tab=None):
     financial_audit = {
         'monthly_trends': audit_monthly_trends,
         'monthly_trends_json': json.dumps(audit_monthly_trends),
-        'revenue_streams': revenue_streams_data,
-        'revenue_streams_json': json.dumps(revenue_streams_data),
+        'revenue_streams': revenue_streams_list,
+        'revenue_streams_dict': revenue_streams_data,
+        'revenue_streams_json': json.dumps(revenue_streams_list),
         'expenses_by_category': expenses_by_category_data,
         'expenses_by_category_json': json.dumps(expenses_by_category_data),
         'payments_by_method': payments_by_method_data,
@@ -798,7 +848,7 @@ def super_admin_dashboard(request, active_tab=None):
         'is_super_admin': is_super_admin,
         'role': current_role,
         'user_role': current_role,
-        'page_title': 'Super Admin Master Console' if is_super_admin else 'Club Admin Operations Console',
+        'page_title': 'Super Admin Master Console' if is_super_admin else 'Admin Operations Console',
         'active_tab': current_tab,
         'selected_payroll_month': first_of_selected_month.strftime('%Y-%m'),
         'available_months': available_months,
@@ -848,6 +898,8 @@ def super_admin_dashboard(request, active_tab=None):
         'staff_users_list': staff_users_list,
         'recent_salary_advances': recent_salary_advances,
         'financial_audit': financial_audit,
+        'is_super_admin': is_super_admin,
+        'current_role': current_role,
     }
     return render(request, 'dashboards/super_admin.html', context)
 
@@ -872,7 +924,7 @@ def front_desk_dashboard(request):
     active_subs = Subscription.objects.filter(
         status='active',
         end_date__gte=timezone.now().date()
-    ).select_related('member', 'plan', 'member__biometric_profile', 'member__member_profile').order_by('end_date')[:25]
+    ).select_related('member', 'plan', 'member__biometric_profile', 'member__member_profile').prefetch_related('buddy_links__partner_member').order_by('end_date')[:50]
     recent_receipts = PaymentReceipt.objects.select_related('member', 'cashier').order_by('-issued_at')[:20]
     recent_punches = DoorAccessLog.objects.select_related('user', 'user__member_profile').order_by('-punch_time')[:10]
 
@@ -946,6 +998,19 @@ def front_desk_dashboard(request):
             m.active_plan_name = sub.plan.name if sub.plan else 'Active Plan'
             m.latest_sub_end_str = m.active_sub_end_str
 
+    from wger.gym_operations_payroll.models import BuddyMembership
+    all_member_ids = [m.id for m in all_members]
+    buddy_links_fd = {
+        bl.partner_member_id: bl
+        for bl in BuddyMembership.objects.filter(
+            partner_member_id__in=all_member_ids
+        ).select_related('subscription__plan', 'subscription__member', 'primary_member')
+    }
+    for m in all_members:
+        m.linked_as_partner = buddy_links_fd.get(m.id)
+
+    all_sys_users = list(User.objects.filter(is_active=True).order_by('first_name', 'username'))
+
     context = {
         'role': 'front_desk',
         'page_title': 'Front Desk',
@@ -958,6 +1023,7 @@ def front_desk_dashboard(request):
         'pending_applications': pending_apps,
         'active_subscriptions': active_subs,
         'all_members': all_members,
+        'all_system_users': all_sys_users,
         'plans': MembershipPlan.objects.filter(is_active=True),
         'coaches': CoachProfile.objects.filter(is_active=True).select_related('user'),
         'recent_receipts': recent_receipts,
@@ -1183,7 +1249,7 @@ def member_dashboard(request):
     active_program = all_programs.first()
     local_foods = LocalFood.objects.all()[:40]
     today_meals = MealLog.objects.filter(member=user, logged_at__date=today).order_by('-logged_at')
-    recent_receipts = PaymentReceipt.objects.filter(member=user).order_by('-issued_at')[:5]
+    recent_receipts = PaymentReceipt.objects.filter(member=user).order_by('-issued_at')[:15]
 
     # Assessments & Coach Prescription Status
     from wger.membership.models import NutritionAssessment, WorkoutAssessment
@@ -1284,10 +1350,12 @@ def public_registration_view(request):
 
         # Yearly fee (default 1000, 0 for student)
         default_yearly = '0.00' if (plan and plan.plan_type == 'student') else '1000.00'
-        admission_fee = parse_dec(data.get('admission_fee', default_yearly))
-        monthly_fee = parse_dec(data.get('monthly_fee', '4000.00'))
-        discount = parse_dec(data.get('discount', '0.00'))
-        total_paid = parse_dec(data.get('total_paid', '5000.00'))
+        default_monthly = str(plan.price_monthly) if (plan and getattr(plan, 'price_monthly', None)) else '4000.00'
+        admission_fee = parse_dec(data.get('admission_fee', default_yearly), default_yearly)
+        monthly_fee = parse_dec(data.get('monthly_fee', default_monthly), default_monthly)
+        discount = parse_dec(data.get('discount', '0.00'), '0.00')
+        calc_total = str(max(Decimal('0.00'), admission_fee + monthly_fee - discount))
+        total_paid = parse_dec(data.get('total_paid', calc_total), calc_total)
 
         # Dates & Age
         dob = data.get('date_of_birth') or None
@@ -1399,6 +1467,30 @@ def create_application_api(request):
     })
 
 
+def generate_unique_biometric_pin():
+    """
+    Safely generates the next available unique numeric PIN across both
+    MemberProfile and BiometricProfile tables.
+    """
+    from wger.membership.models import MemberProfile
+    from wger.zkbio_integration.models import BiometricProfile
+
+    existing_pins = set()
+    for p in MemberProfile.objects.exclude(biometric_pin__isnull=True).values_list('biometric_pin', flat=True):
+        if p and str(p).isdigit():
+            existing_pins.add(int(p))
+    for p in BiometricProfile.objects.exclude(zk_pin__isnull=True).values_list('zk_pin', flat=True):
+        if p and str(p).isdigit():
+            existing_pins.add(int(p))
+
+    max_pin = max(existing_pins) if existing_pins else 1000
+    candidate = max(max_pin + 1, 1001)
+    while candidate in existing_pins:
+        candidate += 1
+
+    return str(candidate)
+
+
 @login_required
 @role_required('front_desk', 'super_admin')
 def approve_application_api(request, app_id):
@@ -1406,154 +1498,240 @@ def approve_application_api(request, app_id):
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
-    app = MemberApplication.objects.filter(id=app_id, status='pending').first()
-    if not app:
-        return JsonResponse({'error': 'Pending application not found'}, status=404)
-
-    from django.contrib.auth import get_user_model
-    from django.contrib.auth.models import Group
-    from wger.membership.models import MemberProfile
-    from wger.zkbio_integration.models import BiometricProfile
-    User = get_user_model()
-
-    # Generate unique username
-    base_username = app.email.split('@')[0].lower().replace('.', '_').replace('-', '_')
-    username = base_username
-    counter = 1
-    while User.objects.filter(username=username).exists():
-        username = f"{base_username}_{counter}"
-        counter += 1
-
-    # Create User
-    user, created = User.objects.get_or_create(
-        email=app.email,
-        defaults={
-            'username': username,
-            'first_name': app.full_name.split()[0] if app.full_name else 'Member',
-            'last_name': " ".join(app.full_name.split()[1:]) if len(app.full_name.split()) > 1 else '',
-            'is_active': True,
-        }
-    )
-    if created:
-        import secrets
-        import string
-        alphabet = string.ascii_letters + string.digits + '!@#$'
-        temp_password = ''.join(secrets.choice(alphabet) for _ in range(14))
-        user.set_password(temp_password)
-        user.save()
-    else:
-        temp_password = None  # Existing user, password unchanged
-
-    # Assign Member Group
-    member_group, _ = Group.objects.get_or_create(name='member')
-    user.groups.add(member_group)
-
-    # MemberProfile & PIN
-    profile, _ = MemberProfile.objects.get_or_create(user=user)
-    if not profile.biometric_pin:
-        last_pin = MemberProfile.objects.exclude(biometric_pin__isnull=True).order_by('-biometric_pin').first()
-        next_pin = str(int(last_pin.biometric_pin) + 1) if last_pin and last_pin.biometric_pin and last_pin.biometric_pin.isdigit() else "1001"
-        profile.biometric_pin = next_pin
-    profile.phone = app.phone
-    profile.primary_goal = app.primary_goal or 'general_fitness'
-    profile.date_of_birth = app.date_of_birth
-    profile.nic_passport = app.nic_passport or ''
-    profile.address = app.address or ''
-    profile.gender = app.gender or 'male'
-    profile.blood_group = app.blood_group or ''
-    profile.emergency_contact_name = app.emergency_name or ''
-    profile.emergency_relationship = app.emergency_relationship or ''
-    profile.emergency_contact_phone = app.emergency_phone or ''
-    profile.medical_conditions = app.medical_condition_details or ''
-    profile.under_medication = app.medication_details or ''
-    profile.personal_trainer_needed = app.personal_trainer_needed
-    profile.save()
-
-    # BiometricProfile for ZKBio Turnstile hardware / LiveU Cloud
-    bio_profile, _ = BiometricProfile.objects.get_or_create(
-        user=user,
-        defaults={
-            'zk_pin': profile.biometric_pin,
-            'sync_status': 'PENDING',
-            'disabled': False,
-        }
-    )
-    bio_profile.disabled = False
-    bio_profile.sync_status = 'PENDING'
-
-    # Auto-provision to LiveU Cloud hardware if configured
     try:
-        from wger.zkbio_integration.liveu_client import LiveUClient
-        liveu = LiveUClient()
-        if liveu.is_configured:
-            cloud_res = liveu.create_member(
-                member_id=profile.biometric_pin,
-                name=app.full_name,
-                uid=app.nic_passport or profile.phone,
-                status="Active"
+        app = MemberApplication.objects.filter(id=app_id, status='pending').first()
+        if not app:
+            return JsonResponse({'error': 'Pending application not found'}, status=404)
+
+        from django.contrib.auth import get_user_model
+        from django.contrib.auth.models import Group
+        from wger.membership.models import MemberProfile
+        from wger.zkbio_integration.models import BiometricProfile
+        User = get_user_model()
+
+        # Generate unique username
+        base_username = app.email.split('@')[0].lower().replace('.', '_').replace('-', '_')
+        username = base_username
+        counter = 1
+        while User.objects.filter(username=username).exists():
+            username = f"{base_username}_{counter}"
+            counter += 1
+
+        # Look up or create User safely
+        user = User.objects.filter(email=app.email).first()
+        created = False
+        if not user:
+            user = User.objects.create(
+                username=username,
+                email=app.email,
+                first_name=app.full_name.split()[0] if app.full_name else 'Member',
+                last_name=" ".join(app.full_name.split()[1:]) if len(app.full_name.split()) > 1 else '',
+                is_active=True,
             )
-            if cloud_res and cloud_res.get('_id'):
-                bio_profile.liveu_id = cloud_res['_id']
-                bio_profile.sync_status = 'SYNCED'
+            user.set_unusable_password()
+            user.save()
+            created = True
+
+        # Assign Member Group
+        member_group, _ = Group.objects.get_or_create(name='member')
+        user.groups.add(member_group)
+
+        # MemberProfile & PIN
+        profile, _ = MemberProfile.objects.get_or_create(user=user)
+        pin_taken = False
+        if profile.biometric_pin:
+            pin_taken = BiometricProfile.objects.filter(zk_pin=profile.biometric_pin).exclude(user=user).exists() or \
+                        MemberProfile.objects.filter(biometric_pin=profile.biometric_pin).exclude(user=user).exists()
+
+        if not profile.biometric_pin or pin_taken:
+            profile.biometric_pin = generate_unique_biometric_pin()
+
+        profile.phone = app.phone
+        profile.primary_goal = app.primary_goal or 'general_fitness'
+        profile.date_of_birth = app.date_of_birth
+        profile.nic_passport = app.nic_passport or ''
+        profile.address = app.address or ''
+        profile.gender = app.gender or 'male'
+        profile.blood_group = app.blood_group or ''
+        profile.emergency_contact_name = app.emergency_name or ''
+        profile.emergency_relationship = app.emergency_relationship or ''
+        profile.emergency_contact_phone = app.emergency_phone or ''
+        profile.medical_conditions = app.medical_condition_details or ''
+        profile.under_medication = app.medication_details or ''
+        profile.personal_trainer_needed = app.personal_trainer_needed
+        profile.save()
+
+        # BiometricProfile for ZKBio Turnstile hardware / LiveU Cloud
+        bio_profile = BiometricProfile.objects.filter(user=user).first()
+        if not bio_profile:
+            target_pin = profile.biometric_pin
+            if BiometricProfile.objects.filter(zk_pin=target_pin).exists():
+                target_pin = generate_unique_biometric_pin()
+                profile.biometric_pin = target_pin
+                profile.save(update_fields=['biometric_pin'])
+
+            bio_profile = BiometricProfile.objects.create(
+                user=user,
+                zk_pin=target_pin,
+                sync_status='PENDING',
+                disabled=False,
+            )
+        else:
+            if not bio_profile.zk_pin:
+                target_pin = profile.biometric_pin
+                if BiometricProfile.objects.filter(zk_pin=target_pin).exclude(user=user).exists():
+                    target_pin = generate_unique_biometric_pin()
+                bio_profile.zk_pin = target_pin
+                profile.biometric_pin = target_pin
+                profile.save(update_fields=['biometric_pin'])
+            else:
+                profile.biometric_pin = bio_profile.zk_pin
+                profile.save(update_fields=['biometric_pin'])
+            bio_profile.disabled = False
+            bio_profile.sync_status = 'PENDING'
+            bio_profile.save()
+
+        # Auto-provision to LiveU Cloud hardware if configured
+        try:
+            from wger.zkbio_integration.liveu_client import LiveUClient
+            liveu = LiveUClient()
+            if liveu.is_configured:
+                cloud_res = liveu.create_member(
+                    member_id=profile.biometric_pin,
+                    name=app.full_name,
+                    uid=app.nic_passport or profile.phone,
+                    status="Active"
+                )
+                if cloud_res and cloud_res.get('_id'):
+                    bio_profile.liveu_id = cloud_res['_id']
+                    bio_profile.sync_status = 'SYNCED'
+                    bio_profile.save(update_fields=['liveu_id', 'sync_status'])
+        except Exception as ex:
+            import logging
+            logging.getLogger('wger').error(f"[LiveU Cloud] Failed to register member on LiveU: {ex}")
+
+        import json
+        payload = {}
+        if request.body:
+            try:
+                payload = json.loads(request.body)
+            except Exception:
+                pass
+
+        # Determine membership plan (allow overriding desired plan upon approval)
+        from decimal import Decimal
+        def parse_dec(val, fallback):
+            try:
+                return Decimal(str(val).strip())
+            except Exception:
+                return fallback
+
+        plan_id = payload.get('plan_id')
+        plan = None
+        if plan_id:
+            plan = MembershipPlan.objects.filter(id=plan_id).first()
+        if not plan:
+            plan = app.desired_plan or MembershipPlan.objects.first()
+
+        # Fee calculations: First year fee (annual registration fee) & package fee
+        default_first_year = Decimal('0.00') if (plan and plan.plan_type == 'student') else Decimal(str(getattr(plan, 'registration_fee', 1000.00)))
+        default_pkg_fee = Decimal(str(getattr(plan, 'price_monthly', 4000.00)))
+
+        if 'package_amount' in payload:
+            package_amount = parse_dec(payload['package_amount'], default_pkg_fee)
+        elif app.monthly_fee and app.monthly_fee > 0:
+            package_amount = app.monthly_fee
+        else:
+            package_amount = default_pkg_fee
+
+        if 'first_year_fee' in payload:
+            first_year_fee = parse_dec(payload['first_year_fee'], default_first_year)
+        elif 'annual_fee_amount' in payload:
+            first_year_fee = parse_dec(payload['annual_fee_amount'], default_first_year)
+        elif app.admission_fee and app.admission_fee > 0:
+            first_year_fee = app.admission_fee
+        else:
+            first_year_fee = default_first_year
+
+        if 'total_paid' in payload:
+            total_paid = parse_dec(payload['total_paid'], package_amount + first_year_fee)
+        elif app.total_paid and app.total_paid > 0:
+            total_paid = app.total_paid
+        else:
+            total_paid = package_amount + first_year_fee
+
+        payment_method = payload.get('payment_method') or app.payment_method or 'cash'
+        receipt_notes = payload.get('notes') or f"Initial membership enrollment ({app.nic_passport or 'Walk-in'})"
+
+        today = timezone.now().date()
+        duration_days = getattr(plan, 'duration_days', 30) if plan else 30
+        end_date = app.end_date if (app.end_date and not plan_id) else (today + timezone.timedelta(days=duration_days))
+
+        # Create active subscription with fees
+        sub = Subscription.objects.create(
+            member=user,
+            plan=plan,
+            start_date=app.start_date or today,
+            end_date=end_date,
+            status='active',
+            payment_method=payment_method,
+            amount_paid=total_paid,
+            approved_by=request.user,
+            payment_date=timezone.now()
+        )
+
+        # Mark application as approved with updated plan and fees
+        app.desired_plan = plan
+        app.admission_fee = first_year_fee
+        app.monthly_fee = package_amount
+        app.total_paid = total_paid
+        app.payment_method = payment_method
+        app.status = 'approved'
+        app.reviewed_by = request.user
+        app.reviewed_at = timezone.now()
+        app.created_user = user
+        app.save()
+
+        # Issue PaymentReceipt for 80mm thermal printing with package and first year fee itemized
+        from wger.gym_operations_payroll.models import PaymentReceipt
+        receipt = PaymentReceipt.objects.create(
+            receipt_number=PaymentReceipt.generate_next_receipt_number(),
+            subscription=sub,
+            member=user,
+            plan_name=plan.name if plan else 'Standard',
+            duration_days=duration_days,
+            validity_start=sub.start_date,
+            validity_end=sub.end_date,
+            amount_paid=total_paid,
+            package_amount=package_amount,
+            annual_fee_amount=first_year_fee,
+            payment_method=payment_method,
+            cashier=request.user,
+            member_pin=profile.biometric_pin or '',
+            notes=receipt_notes
+        )
+
+        # Dispatch branded welcome email with secure password setup link
+        from wger.core.email_service import send_welcome_password_setup_email
+        email_sent, _ = send_welcome_password_setup_email(user, request=request, is_async=True)
+
+        return JsonResponse({
+            'success': True,
+            'message': f"Application approved for {app.full_name}! Password setup email sent to {user.email}.",
+            'username': user.username,
+            'email_sent': email_sent,
+            'email': user.email,
+            'pin': profile.biometric_pin,
+            'plan': plan.name if plan else 'Standard',
+            'sub_id': sub.id,
+            'receipt_id': receipt.id,
+            'receipt_number': receipt.receipt_number,
+            'receipt_url': request.build_absolute_uri(f"/receipt/{receipt.id}/?autoprint=1")
+        })
     except Exception as ex:
         import logging
-        logging.getLogger('wger').error(f"[LiveU Cloud] Failed to register member on LiveU: {ex}")
-
-    bio_profile.save()
-
-    # Create active subscription with fees
-    today = timezone.now().date()
-    plan = app.desired_plan or MembershipPlan.objects.first()
-    paid_amt = app.total_paid if app.total_paid and app.total_paid > 0 else getattr(plan, 'price_monthly', 4000)
-
-    sub = Subscription.objects.create(
-        member=user,
-        plan=plan,
-        start_date=app.start_date or today,
-        end_date=app.end_date or (today + timezone.timedelta(days=getattr(plan, 'duration_days', 30))),
-        status='active',
-        payment_method=app.payment_method or 'cash',
-        amount_paid=paid_amt,
-        approved_by=request.user,
-        payment_date=timezone.now()
-    )
-
-    # Mark application as approved
-    app.status = 'approved'
-    app.reviewed_by = request.user
-    app.reviewed_at = timezone.now()
-    app.created_user = user
-    app.save()
-
-    # Issue PaymentReceipt for 80mm thermal printing
-    from wger.gym_operations_payroll.models import PaymentReceipt
-    receipt = PaymentReceipt.objects.create(
-        receipt_number=PaymentReceipt.generate_next_receipt_number(),
-        subscription=sub,
-        member=user,
-        plan_name=plan.name if plan else 'Standard',
-        duration_days=getattr(plan, 'duration_days', 30),
-        validity_start=sub.start_date,
-        validity_end=sub.end_date,
-        amount_paid=sub.amount_paid,
-        payment_method=sub.payment_method,
-        cashier=request.user,
-        member_pin=profile.biometric_pin or '',
-        notes=f"Initial membership enrollment ({app.nic_passport or 'Walk-in'})"
-    )
-
-    return JsonResponse({
-        'success': True,
-        'message': f"Application approved for {app.full_name}!",
-        'username': user.username,
-        'temp_password': temp_password,  # Show once to front desk staff — member must change on first login
-        'pin': profile.biometric_pin,
-        'plan': plan.name if plan else 'Standard',
-        'sub_id': sub.id,
-        'receipt_id': receipt.id,
-        'receipt_number': receipt.receipt_number,
-        'receipt_url': request.build_absolute_uri(f"/receipt/{receipt.id}/?autoprint=1")
-    })
+        logging.getLogger('wger').error(f"[approve_application_api] Error approving app {app_id}: {ex}", exc_info=True)
+        return JsonResponse({'error': f"Failed to approve application: {str(ex)}"}, status=500)
 
 
 @login_required
@@ -1838,11 +2016,15 @@ def view_receipt(request, receipt_id):
         'tagline': 'TRAIN WITH PURPOSE & MOVE WITH CONFIDENCE',
         'address': 'New Town, Elpitiya Road, Pitigala, 80420',
         'phone': '070 762 7878',
-        'email': 'info@fitme.lk',
+        'email': 'hello@fitmefitness.lk',
         'web': 'www.fitmefitness.lk',
     }
 
-    return render(request, 'receipt_80mm.html', {'receipt': receipt, 'club_info': club_info})
+    return render(request, 'receipt_80mm.html', {
+        'receipt': receipt,
+        'club_info': club_info,
+        'is_staff_or_admin': is_staff_or_admin,
+    })
 
 
 @login_required
@@ -1985,12 +2167,18 @@ def desk_member_lookup_api(request):
         notes_paid_u = bool(mem_prof and mem_prof.notes and str(today.year) in mem_prof.notes and ('annual' in mem_prof.notes.lower() or 'yearly' in mem_prof.notes.lower() or 'registration' in mem_prof.notes.lower()))
         yearly_fee_paid = yearly_paid_q or notes_paid_u
 
-        sub_status = 'NO_PLAN'
-        days_left = 0
-        plan_name = 'No Active Plan'
-        end_date_str = ''
-        if sub:
-            plan_name = sub.plan.name if sub.plan else 'Standard'
+        from wger.gym_operations_payroll.models import BuddyMembership
+        is_linked_partner = False
+        partner_primary_name = ''
+        buddy_link = BuddyMembership.objects.filter(
+            partner_member=u
+        ).select_related('subscription__plan', 'subscription__member', 'primary_member').order_by('-subscription__end_date').first()
+
+        if buddy_link and (not sub or sub.status != 'active' or (sub.end_date and sub.end_date < today)):
+            sub = buddy_link.subscription
+            is_linked_partner = True
+            partner_primary_name = buddy_link.primary_member.get_full_name() or buddy_link.primary_member.username
+            plan_name = f"{sub.plan.name} (Partner of {partner_primary_name})"
             end_date_str = sub.end_date.strftime('%d %b %Y') if sub.end_date else ''
             if sub.status == 'active' and sub.end_date and sub.end_date >= today:
                 sub_status = 'ACTIVE'
@@ -1998,12 +2186,10 @@ def desk_member_lookup_api(request):
             else:
                 sub_status = 'EXPIRED'
 
-        photo_url = None
-        if mem_prof and mem_prof.profile_photo:
-            try:
-                photo_url = mem_prof.profile_photo.url
-            except Exception:
-                pass
+        linked_partners_names = []
+        if sub and sub.plan and sub.plan.max_members > 1:
+            for bl in sub.buddy_links.select_related('partner_member').all():
+                linked_partners_names.append(bl.partner_member.get_full_name() or bl.partner_member.username)
 
         results.append({
             'id': u.id,
@@ -2017,6 +2203,9 @@ def desk_member_lookup_api(request):
             'sub_status': sub_status,
             'days_left': days_left,
             'end_date': end_date_str,
+            'is_linked_partner': is_linked_partner,
+            'partner_primary_name': partner_primary_name,
+            'linked_partners_names': linked_partners_names,
             'on_floor': on_floor,
             'last_punch_time': latest_punch.punch_time.strftime('%H:%M:%S') if latest_punch else '',
             'last_receipt_id': last_receipt.id if last_receipt else None,
@@ -2049,6 +2238,19 @@ def member_full_profile_api(request, member_id):
     # Subscriptions
     active_sub = Subscription.objects.filter(member=member, status='active', end_date__gte=today).order_by('-end_date').first()
     latest_sub = active_sub or Subscription.objects.filter(member=member).order_by('-end_date').first()
+
+    from wger.gym_operations_payroll.models import BuddyMembership
+    buddy_link = BuddyMembership.objects.filter(
+        partner_member=member
+    ).select_related('subscription__plan', 'subscription__member', 'primary_member').order_by('-subscription__end_date').first()
+    is_partner = False
+    partner_primary_name = ''
+    if buddy_link and (not active_sub or not active_sub.is_active):
+        is_partner = True
+        partner_primary_name = buddy_link.primary_member.get_full_name() or buddy_link.primary_member.username
+        if buddy_link.subscription.status == 'active' and buddy_link.subscription.end_date >= today:
+            active_sub = buddy_link.subscription
+        latest_sub = latest_sub or buddy_link.subscription
 
     # Receipts
     receipts_qs = PaymentReceipt.objects.filter(member=member).order_by('-issued_at')[:6]
@@ -2129,12 +2331,23 @@ def member_full_profile_api(request, member_id):
             'assigned_program': program_title,
             'notes': prof.notes if prof else '',
             # Subscription
-            'plan_name': latest_sub.plan.name if (latest_sub and latest_sub.plan) else 'No Active Plan',
+            'plan_name': (f"{latest_sub.plan.name} (Partner of {partner_primary_name})" if is_partner else (latest_sub.plan.name if (latest_sub and latest_sub.plan) else 'No Active Plan')),
             'sub_status': 'ACTIVE' if (active_sub and active_sub.end_date >= today) else ('EXPIRED' if latest_sub else 'NONE'),
             'validity_start': latest_sub.start_date.strftime('%d %b %Y') if latest_sub else '',
             'validity_end': latest_sub.end_date.strftime('%d %b %Y') if latest_sub else '',
             'days_remaining': (latest_sub.end_date - today).days if (active_sub and latest_sub.end_date >= today) else 0,
             'amount_paid': float(latest_sub.amount_paid) if latest_sub else 0,
+            'is_partner': is_partner,
+            'partner_primary_name': partner_primary_name,
+            'linked_partners': [
+                {
+                    'id': bl.id,
+                    'name': bl.partner_member.get_full_name() or bl.partner_member.username,
+                    'username': bl.partner_member.username,
+                    'pin': getattr(getattr(bl.partner_member, 'biometric_profile', None), 'zk_pin', '')
+                }
+                for bl in (latest_sub.buddy_links.select_related('partner_member__biometric_profile').all() if latest_sub and latest_sub.plan and latest_sub.plan.max_members > 1 else [])
+            ],
             # Hardware
             'pin': bio.zk_pin if bio else str(member.id),
             'face_enrolled': bio.face_enrolled if bio else False,
@@ -2740,10 +2953,14 @@ def admin_create_user_api(request):
         return JsonResponse({'error': 'Username is required.'}, status=400)
     if not email:
         return JsonResponse({'error': 'Email address is required.'}, status=400)
-    if not password or len(password) < 6:
-        return JsonResponse({'error': 'Password must be at least 6 characters long.'}, status=400)
+    if password and len(password) < 6:
+        return JsonResponse({'error': 'Password must be at least 6 characters long if provided.'}, status=400)
     if role not in ['super_admin', 'admin', 'front_desk', 'coach', 'member']:
         return JsonResponse({'error': f'Invalid role: {role}'}, status=400)
+
+    send_invite = data.get('send_invite', True)
+    if isinstance(send_invite, str):
+        send_invite = send_invite.lower() in ('true', '1', 'yes', 'on')
 
     is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
     if role in ['super_admin', 'admin'] and not is_super_admin:
@@ -2767,13 +2984,16 @@ def admin_create_user_api(request):
     user = User.objects.create_user(
         username=username,
         email=email,
-        password=password,
+        password=password if password else None,
         first_name=first_name,
         last_name=last_name,
         is_staff=is_staff,
         is_superuser=is_superuser,
         is_active=True,
     )
+    if not password:
+        user.set_unusable_password()
+        user.save()
 
     # Assign Django Group
     group, _ = Group.objects.get_or_create(name=role)
@@ -2859,9 +3079,14 @@ def admin_create_user_api(request):
         import logging
         logging.getLogger('wger').error(f"[LiveU Cloud] Error registering {user.username}: {ex}")
 
+    email_sent = False
+    if send_invite or not password:
+        from wger.core.email_service import send_welcome_password_setup_email
+        email_sent, _ = send_welcome_password_setup_email(user, request=request, is_async=True)
+
     role_labels = {
         'super_admin': 'Super Admin',
-        'admin': 'Club Admin',
+        'admin': 'Admin',
         'front_desk': 'Front Desk',
         'coach': 'Coach',
         'member': 'Member'
@@ -2869,7 +3094,8 @@ def admin_create_user_api(request):
 
     return JsonResponse({
         'success': True,
-        'message': f"User '{username}' successfully created with role '{role_labels[role]}'.",
+        'message': f"User '{username}' successfully created with role '{role_labels[role]}'." + (" Password setup email sent." if email_sent else ""),
+        'email_sent': email_sent,
         'user': {
             'id': user.id,
             'username': user.username,
@@ -2883,6 +3109,34 @@ def admin_create_user_api(request):
             'is_active': user.is_active,
             'has_gate_access': enable_gate
         }
+    })
+
+
+@login_required
+@role_required('front_desk', 'super_admin')
+def resend_member_invite_api(request, member_id):
+    """
+    Re-sends the branded welcome email and cryptographic password setup link to a member.
+    Callable by Front Desk or Super Admin.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    member = User.objects.filter(id=member_id).first()
+    if not member:
+        return JsonResponse({'error': 'Member not found.'}, status=404)
+    if not member.email:
+        return JsonResponse({'error': f"Member '{member.username}' has no email address configured."}, status=400)
+
+    from wger.core.email_service import send_welcome_password_setup_email
+    email_sent, msg = send_welcome_password_setup_email(member, request=request, is_async=True)
+
+    return JsonResponse({
+        'success': True,
+        'email_sent': email_sent,
+        'message': f"Welcome & password setup email sent to {member.email}!"
     })
 
 
@@ -2946,7 +3200,7 @@ def admin_update_user_role_api(request, user_id):
 
     role_labels = {
         'super_admin': 'Super Admin',
-        'admin': 'Club Admin',
+        'admin': 'Admin',
         'front_desk': 'Front Desk',
         'coach': 'Coach',
         'member': 'Member'
@@ -3723,22 +3977,28 @@ def member_self_renew_api(request):
 
 
 @login_required
-@role_required('super_admin', 'admin')
+@role_required('super_admin', 'admin', 'front_desk')
 def admin_link_partner_api(request, subscription_id):
     """
     Links a secondary / partner member account to a multi-user subscription (Couples 2-User or Family 3-User).
+    Supports either linking an existing member account OR quick-registering a new member account with credentials & biometric profile.
     Automatically provisions their independent ZKBio Face ID/PIN biometric turnstile profile.
+    Accessible to Super Admin, Club Admin, and Front Desk staff.
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
     import json
+    import re
+    import logging
     from django.contrib.auth import get_user_model
+    from django.contrib.auth.models import Group
     from wger.membership.models import Subscription, MemberProfile
     from wger.gym_operations_payroll.models import BuddyMembership
     from wger.zkbio_integration.models import BiometricProfile
     from wger.membership.services import check_and_expire_subscriptions
 
+    logger = logging.getLogger(__name__)
     User = get_user_model()
     sub = Subscription.objects.filter(id=subscription_id).select_related('plan', 'member').first()
     if not sub:
@@ -3752,9 +4012,92 @@ def admin_link_partner_api(request, subscription_id):
     except Exception:
         data = request.POST
 
+    action = data.get('action', '').strip()
     partner_id = data.get('partner_id')
     partner_user = None
-    if partner_id:
+    is_new_account = False
+
+    # Mode 1: Quick Register & Link New Member
+    if action == 'register_and_link' or data.get('full_name'):
+        full_name = data.get('full_name', '').strip()
+        phone = data.get('phone', '').strip()
+        email = data.get('email', '').strip()
+        gender = data.get('gender', 'male').strip().lower()
+        nic_passport = data.get('nic_passport', '').strip()
+        password = data.get('password', '').strip()
+        primary_goal = data.get('primary_goal', 'general_fitness').strip()
+
+        if not full_name:
+            return JsonResponse({'error': 'Please provide the partner full name to register them.'}, status=400)
+
+        # Smart duplicate check: check if phone or email is already registered
+        if phone:
+            existing_prof = MemberProfile.objects.filter(phone=phone).select_related('user').first()
+            if existing_prof and existing_prof.user:
+                partner_user = existing_prof.user
+        if not partner_user and email:
+            partner_user = User.objects.filter(email__iexact=email).first()
+
+        if not partner_user:
+            # Generate clean, unique username
+            base_name = re.sub(r'[^a-zA-Z0-9]', '_', full_name.lower().strip())
+            base_name = re.sub(r'_+', '_', base_name).strip('_') or 'member'
+            username = base_name
+            counter = 1
+            while User.objects.filter(username=username).exists():
+                username = f"{base_name}_{counter}"
+                counter += 1
+
+            if not email:
+                email = f"{username}@fitmefitness.lk"
+
+            name_parts = full_name.split()
+            first_name = name_parts[0]
+            last_name = " ".join(name_parts[1:]) if len(name_parts) > 1 else ""
+
+            partner_user = User.objects.create(
+                username=username,
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                is_active=True
+            )
+            # Assign login password
+            initial_password = password if password else 'Fitme@123'
+            partner_user.set_password(initial_password)
+            partner_user.save()
+
+            # Assign to Member group
+            member_group, _ = Group.objects.get_or_create(name='member')
+            partner_user.groups.add(member_group)
+
+            # Generate unique Biometric PIN
+            new_pin = generate_unique_biometric_pin()
+            profile = MemberProfile.objects.create(
+                user=partner_user,
+                phone=phone,
+                nic_passport=nic_passport,
+                gender=gender if gender in ['male', 'female', 'other'] else 'male',
+                primary_goal=primary_goal or 'general_fitness',
+                biometric_pin=new_pin,
+                notes=f"Auto-registered & linked as partner under {sub.member.get_full_name() or sub.member.username}'s {sub.plan.name}"
+            )
+            is_new_account = True
+        else:
+            profile = getattr(partner_user, 'member_profile', None)
+            if not profile:
+                new_pin = generate_unique_biometric_pin()
+                profile = MemberProfile.objects.create(
+                    user=partner_user,
+                    phone=phone,
+                    nic_passport=nic_passport,
+                    gender=gender if gender in ['male', 'female', 'other'] else 'male',
+                    biometric_pin=new_pin,
+                    notes=f"Linked as partner under {sub.member.get_full_name() or sub.member.username}'s {sub.plan.name}"
+                )
+
+    # Mode 2: Link Existing Member
+    elif partner_id:
         partner_user = User.objects.filter(id=partner_id).first()
     else:
         partner_query = data.get('partner_username', '').strip()
@@ -3762,13 +4105,13 @@ def admin_link_partner_api(request, subscription_id):
             partner_user = User.objects.filter(username__iexact=partner_query).first() or User.objects.filter(email__iexact=partner_query).first()
 
     if not partner_user:
-        return JsonResponse({'error': 'Please select a valid member to link.'}, status=400)
+        return JsonResponse({'error': 'Please select or provide a valid member to link.'}, status=400)
 
     if partner_user.id == sub.member_id:
-        return JsonResponse({'error': 'Cannot link the primary account holder to themselves.'}, status=400)
+        return JsonResponse({'error': 'Cannot link the primary subscription holder to themselves.'}, status=400)
 
     if BuddyMembership.objects.filter(subscription=sub, partner_member=partner_user).exists():
-        return JsonResponse({'error': f"{partner_user.username} is already linked to this package."}, status=400)
+        return JsonResponse({'error': f"{partner_user.get_full_name() or partner_user.username} is already linked to this package."}, status=400)
 
     current_partners_count = BuddyMembership.objects.filter(subscription=sub).count()
     max_additional_members = sub.plan.max_members - 1
@@ -3783,36 +4126,57 @@ def admin_link_partner_api(request, subscription_id):
     )
 
     # Ensure partner has BiometricProfile and PIN
+    target_pin = getattr(getattr(partner_user, 'member_profile', None), 'biometric_pin', None) or str(1000 + partner_user.id)
     bio, _ = BiometricProfile.objects.get_or_create(
         user=partner_user,
-        defaults={'zk_pin': str(1000 + partner_user.id)}
+        defaults={'zk_pin': target_pin}
     )
+    if not bio.zk_pin:
+        bio.zk_pin = target_pin
+
     if sub.is_active:
         bio.disabled = False
         bio.sync_status = 'PENDING'
-        bio.save(update_fields=['disabled', 'sync_status'])
+        bio.save(update_fields=['zk_pin', 'disabled', 'sync_status'])
+
+    # Auto-provision to LiveU Cloud hardware if configured
+    try:
+        from wger.zkbio_integration.liveu_client import LiveUClient
+        liveu = LiveUClient()
+        if liveu.is_configured:
+            liveu.create_member(
+                member_id=bio.zk_pin,
+                name=partner_user.get_full_name() or partner_user.username,
+                phone=getattr(getattr(partner_user, 'member_profile', None), 'phone', ''),
+                pin=bio.zk_pin
+            )
+    except Exception as err:
+        logger.warning(f"LiveU sync during partner link: {err}")
 
     check_and_expire_subscriptions(force=True)
 
     partner_name = partner_user.get_full_name() or partner_user.username
+    account_note = " New member account created with login access!" if is_new_account else ""
     return JsonResponse({
         'success': True,
-        'message': f"Linked {partner_name} to {sub.member.username}'s {sub.plan.name}! Turnstile biometric access unlocked.",
+        'message': f"Linked {partner_name} to {sub.member.username}'s {sub.plan.name}!{account_note} Turnstile PIN: #FM{bio.zk_pin}",
         'link_id': buddy_link.id,
         'partner': {
             'id': partner_user.id,
             'username': partner_user.username,
             'name': partner_name,
-            'pin': bio.zk_pin
+            'pin': bio.zk_pin,
+            'is_new': is_new_account
         }
     })
 
 
 @login_required
-@role_required('super_admin', 'admin')
+@role_required('super_admin', 'admin', 'front_desk')
 def admin_unlink_partner_api(request, link_id):
     """
     Unlinks a secondary / partner member from a subscription and immediately revokes their turnstile access.
+    Accessible to Super Admin, Club Admin, and Front Desk staff.
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)

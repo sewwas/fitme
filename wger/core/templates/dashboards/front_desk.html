@@ -14,10 +14,10 @@
     --bg-dark: #0B0D0E;
     --card-bg: #121517;
     --card-surface: #1F2428;
-    --neon-lime: #88D82D;
-    --neon-hover: #9EF040;
-    --neon-glow: rgba(136, 216, 45, 0.28);
-    --neon-glow-high: rgba(136, 216, 45, 0.6);
+    --neon-lime: #76C043;
+    --neon-hover: #85D538;
+    --neon-glow: rgba(118, 192, 67, 0.28);
+    --neon-glow-high: rgba(118, 192, 67, 0.6);
     --danger: #E63946;
     --danger-glow: rgba(230, 57, 70, 0.35);
     --warning: #F59E0B;
@@ -401,7 +401,7 @@
   #section-monitor.fullscreen-mode .monitor-header {
     padding-bottom: 1.5rem;
     margin-bottom: 1.75rem;
-    border-bottom: 1.5px solid rgba(136, 216, 45, 0.28);
+    border-bottom: 1.5px solid rgba(118, 192, 67, 0.28);
   }
   #section-monitor.fullscreen-mode .monitor-header h3 {
     font-size: 1.6rem !important;
@@ -475,7 +475,7 @@
     background: #192025;
     color: #fff;
     border-color: var(--neon-lime);
-    box-shadow: 0 0 14px rgba(136, 216, 45, 0.2);
+    box-shadow: 0 0 14px rgba(118, 192, 67, 0.2);
   }
   .pill-badge {
     font-size: 0.65rem;
@@ -486,9 +486,9 @@
     color: #cbd5e1;
   }
   .pill-badge-live {
-    background: rgba(136, 216, 45, 0.2);
+    background: rgba(118, 192, 67, 0.2);
     color: var(--neon-lime);
-    border: 1px solid rgba(136, 216, 45, 0.4);
+    border: 1px solid rgba(118, 192, 67, 0.4);
   }
   .pill-badge-count {
     background: rgba(245, 158, 11, 0.2);
@@ -618,7 +618,7 @@
       <i class="fa fa-fingerprint"></i> <span class="tab-label">2. Directory &amp; Bio</span>
     </button>
     <button type="button" class="nav-tab-btn-desk" id="deskNavMonitor" onclick="switchDeskView('monitor')" title="Live Gate Monitor">
-      <i class="fa fa-tachometer-alt"></i> <span class="tab-label">3. Gate Monitor</span> <span class="badge-pill" style="margin-left:auto;background:rgba(136,216,45,0.2);color:var(--neon-lime);font-size:0.62rem;padding:2px 6px;border-radius:10px;font-weight:800;">LIVE</span>
+      <i class="fa fa-tachometer-alt"></i> <span class="tab-label">3. Gate Monitor</span> <span class="badge-pill" style="margin-left:auto;background:rgba(118,192,67,0.2);color:var(--neon-lime);font-size:0.62rem;padding:2px 6px;border-radius:10px;font-weight:800;">LIVE</span>
     </button>
     <button type="button" class="nav-tab-btn-desk" id="deskNavIntake" onclick="switchDeskView('intake')" title="Member Application Queue">
       <i class="fa fa-inbox"></i> <span class="tab-label">4. Intake Queue</span> <span class="badge-pill" id="sidebarAppBadge" style="margin-left:auto;background:rgba(245,158,11,0.2);color:#fbbf24;font-size:0.62rem;padding:2px 6px;border-radius:10px;font-weight:800;">{{ pending_applications.count }}</span>
@@ -651,7 +651,7 @@
         </div>
         <div style="display:flex;align-items:center;gap:0.6rem;flex-wrap:wrap;">
           <!-- Real-Time Live Occupancy Status Badges (Top Staff Dashboard Headcount) -->
-          <div class="stat-pill" style="padding:0.4rem 0.85rem;background:#14181B;border:1px solid rgba(136,216,45,0.35);border-radius:8px;box-shadow:0 0 12px rgba(136,216,45,0.08);" title="Athletes currently checked into gym floor">
+          <div class="stat-pill" style="padding:0.4rem 0.85rem;background:#14181B;border:1px solid rgba(118,192,67,0.35);border-radius:8px;box-shadow:0 0 12px rgba(118,192,67,0.08);" title="Athletes currently checked into gym floor">
             <i class="fa fa-users" style="color:var(--neon-lime);font-size:0.92rem;"></i>
             <span style="color:#aaa;font-size:0.82rem;">Floor:</span>
             <strong style="color:#fff;font-size:0.98rem;font-family:'Montserrat',sans-serif;" id="floorMembersCount">0</strong>
@@ -816,6 +816,24 @@
                     <td>
                       <div style="font-weight:600;font-size:0.82rem;">{{ sub.plan.name }}</div>
                       <div style="font-size:0.74rem;color:var(--text-muted);">{{ sub.end_date|date:"d M Y" }}</div>
+                      {% if sub.plan.max_members > 1 %}
+                        <div style="margin-top:0.35rem;font-size:0.73rem;">
+                          <span style="color:var(--cyan);font-weight:700;"><i class="fa fa-users"></i> {{ sub.plan.max_members }} Users Plan:</span>
+                          {% for bl in sub.linked_partners %}
+                            <span style="display:inline-flex;align-items:center;gap:0.25rem;background:#192025;padding:0.15rem 0.45rem;border-radius:4px;color:#fff;border:1px solid rgba(255,255,255,0.15);margin:0.1rem 0.2rem 0.1rem 0;">
+                              <i class="fa fa-user-check" style="color:var(--neon-lime);"></i> {{ bl.partner_member.get_full_name|default:bl.partner_member.username }}
+                              <button type="button" onclick="unlinkPartner({{ bl.id }})" style="background:none;border:none;color:var(--danger);cursor:pointer;padding:0 0.15rem;font-size:0.85rem;" title="Unlink partner">&times;</button>
+                            </span>
+                          {% empty %}
+                            <span style="color:var(--text-muted);font-style:italic;">No partner linked yet.</span>
+                          {% endfor %}
+                          {% if sub.can_add_partner %}
+                            <button type="button" class="btn-action" style="background:rgba(0,240,255,0.12);color:var(--cyan);border:1px solid rgba(0,240,255,0.3);padding:0.15rem 0.45rem;font-size:0.68rem;margin-top:0.2rem;" onclick="openLinkPartnerModal({{ sub.id }}, '{{ sub.member.get_full_name|default:sub.member.username|escapejs }}', '{{ sub.plan.name|escapejs }}', {{ sub.open_slots_count }})">
+                              <i class="fa fa-user-plus"></i> + Link Partner
+                            </button>
+                          {% endif %}
+                        </div>
+                      {% endif %}
                     </td>
                     <td>
                       <div style="display:flex;flex-direction:column;gap:3px;">
@@ -889,7 +907,17 @@
               </thead>
               <tbody>
                 {% for app in pending_applications %}
-                  <tr id="app-row-{{ app.id }}">
+                  <tr id="app-row-{{ app.id }}"
+                      data-id="{{ app.id }}"
+                      data-name="{{ app.full_name|escape }}"
+                      data-nic="{{ app.nic_passport|default:''|escape }}"
+                      data-phone="{{ app.phone|escape }}"
+                      data-email="{{ app.email|escape }}"
+                      data-plan-id="{{ app.desired_plan.id|default:'' }}"
+                      data-plan-name="{{ app.desired_plan.name|default:'Individual'|escape }}"
+                      data-adm-fee="{{ app.admission_fee|floatformat:0 }}"
+                      data-mon-fee="{{ app.monthly_fee|floatformat:0 }}"
+                      data-pay-method="{{ app.payment_method|default:'cash'|escape }}">
                     <td>
                       <div style="font-weight:700;color:var(--text-primary);">{{ app.full_name }}</div>
                       <div style="font-size:0.75rem;color:var(--text-muted);">
@@ -909,7 +937,7 @@
                         <button class="btn-action" style="background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.15);" onclick="inspectApp({{ app.id }}, '{{ app.full_name|escapejs }}', '{{ app.nic_passport|escapejs }}', '{{ app.phone|escapejs }}', '{{ app.email|escapejs }}', '{{ app.address|escapejs }}', '{{ app.gender|escapejs }}', '{{ app.blood_group|escapejs }}', '{{ app.emergency_name|escapejs }}', '{{ app.emergency_relationship|escapejs }}', '{{ app.emergency_phone|escapejs }}', '{{ app.desired_plan.name|default:"Individual"|escapejs }}', '{{ app.plan_duration|escapejs }}', '{{ app.primary_goal|escapejs }}', '{{ app.has_medical_conditions|yesno:"Yes,No" }}', '{{ app.medical_condition_details|escapejs }}', '{{ app.is_under_medication|yesno:"Yes,No" }}', '{{ app.medication_details|escapejs }}', '{{ app.personal_trainer_needed|yesno:"Yes,No" }}', '{{ app.admission_fee|floatformat:0 }}', '{{ app.monthly_fee|floatformat:0 }}', '{{ app.discount|floatformat:0 }}', '{{ app.total_paid|floatformat:0 }}', '{{ app.payment_method|escapejs }}')">
                           <i class="fa fa-eye"></i> Inspect
                         </button>
-                        <button class="btn-action btn-approve" onclick="approveApp({{ app.id }})">
+                        <button class="btn-action btn-approve" onclick="openApproveModalFromRow({{ app.id }})" title="Approve member &amp; configure first year fee with package">
                           <i class="fa fa-check"></i> Approve
                         </button>
                         <button class="btn-action btn-reject" onclick="rejectApp({{ app.id }})">
@@ -1015,7 +1043,7 @@
           </button>
 
           <!-- Fullscreen Monitor Toggle ("fullscreen movr") -->
-          <button type="button" class="btn-action" onclick="toggleMonitorFullscreen()" id="btnMonitorFullscreen" style="background:#1C242A;border:1.5px solid var(--neon-lime);color:var(--neon-lime);font-family:'Montserrat',sans-serif;font-weight:800;font-size:0.8rem;padding:0.5rem 0.95rem;border-radius:8px;display:inline-flex;align-items:center;gap:0.5rem;box-shadow:0 0 15px rgba(136,216,45,0.18);cursor:pointer;" title="Expand to Dedicated Fullscreen Entrance Monitor Display">
+          <button type="button" class="btn-action" onclick="toggleMonitorFullscreen()" id="btnMonitorFullscreen" style="background:#1C242A;border:1.5px solid var(--neon-lime);color:var(--neon-lime);font-family:'Montserrat',sans-serif;font-weight:800;font-size:0.8rem;padding:0.5rem 0.95rem;border-radius:8px;display:inline-flex;align-items:center;gap:0.5rem;box-shadow:0 0 15px rgba(118,192,67,0.18);cursor:pointer;" title="Expand to Dedicated Fullscreen Entrance Monitor Display">
             <i class="fa fa-expand" id="iconMonitorFullscreen"></i>
             <span id="textMonitorFullscreen">FULLSCREEN MONITOR</span>
           </button>
@@ -1181,6 +1209,164 @@
       Close Window
     </button>
   </div>
+<!-- Modal: Link Partner / Secondary User to 2-User or 3-User Plan -->
+<div id="linkPartnerModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto;">
+  <div style="background:#13171A;border:2px solid var(--cyan);border-radius:16px;padding:2rem;max-width:540px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.85);max-height:92vh;display:flex;flex-direction:column;overflow-y:auto;">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+      <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;margin:0;">
+        <i class="fa fa-user-friends" style="color:var(--cyan);"></i> Link Partner to Subscription
+      </h3>
+      <button type="button" onclick="closeLinkPartnerModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
+    </div>
+
+    <!-- Primary Subscription Info Card -->
+    <div style="margin-bottom:1rem;background:#192025;padding:0.75rem 1rem;border-radius:10px;border:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;">
+      <div>
+        <div style="font-size:0.72rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;">Primary Account Holder</div>
+        <div style="font-size:0.98rem;font-weight:700;color:#fff;" id="linkPrimaryName">Member Name</div>
+      </div>
+      <div style="text-align:right;">
+        <span class="badge" style="background:rgba(0,240,255,0.15);color:var(--cyan);border:1px solid rgba(0,240,255,0.3);font-size:0.72rem;" id="linkPlanName">Multi-User Package</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs: Search Existing vs Quick Register -->
+    <div style="display:flex;gap:0.5rem;margin-bottom:1.25rem;background:rgba(0,0,0,0.35);padding:4px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);">
+      <button type="button" id="tabBtnExistingPartner" onclick="switchLinkPartnerTab('existing')" style="flex:1;padding:0.55rem 0.75rem;font-size:0.78rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;background:var(--cyan);color:#000;display:flex;align-items:center;justify-content:center;gap:0.35rem;transition:all 0.2s;">
+        <i class="fa fa-search"></i> 1. Link Existing Member
+      </button>
+      <button type="button" id="tabBtnRegisterPartner" onclick="switchLinkPartnerTab('register')" style="flex:1;padding:0.55rem 0.75rem;font-size:0.78rem;font-weight:700;border:none;border-radius:6px;cursor:pointer;background:transparent;color:#cbd5e1;display:flex;align-items:center;justify-content:center;gap:0.35rem;transition:all 0.2s;">
+        <i class="fa fa-user-plus"></i> 2. Quick Register New Member
+      </button>
+    </div>
+
+    <!-- TAB 1: Search Existing Member -->
+    <div id="tabContentExistingPartner">
+      <form id="linkPartnerForm" onsubmit="submitLinkPartner(event)">
+        <input type="hidden" id="linkSubId">
+        <input type="hidden" id="linkPartnerSelect">
+
+        <!-- Live Search Input -->
+        <div style="margin-bottom:0.75rem;position:relative;">
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">
+            Smart Search Member (Type Name, Phone, PIN, or Username) *
+          </label>
+          <div style="position:relative;">
+            <input type="text" id="partnerLiveSearchInput" class="form-control" placeholder="Search Kamal, 077..., #1042..." autocomplete="off" oninput="searchExistingPartnerMembers(this.value)" style="padding-left:2.2rem;">
+            <i class="fa fa-search" style="position:absolute;left:0.75rem;top:50%;transform:translateY(-50%);color:var(--text-muted);font-size:0.85rem;"></i>
+          </div>
+
+          <!-- Live Results Dropdown -->
+          <div id="partnerLiveSearchResults" style="display:none;position:absolute;top:100%;left:0;right:0;background:#181D21;border:1px solid rgba(0,240,255,0.4);border-radius:8px;max-height:220px;overflow-y:auto;z-index:2200;box-shadow:0 10px 30px rgba(0,0,0,0.8);margin-top:4px;">
+          </div>
+        </div>
+
+        <!-- Selected Partner Confirmation Card -->
+        <div id="selectedPartnerConfirmCard" style="display:none;margin-bottom:1rem;background:rgba(0,240,255,0.06);border:1px solid var(--cyan);border-radius:8px;padding:0.75rem 1rem;align-items:center;justify-content:space-between;">
+          <div style="display:flex;align-items:center;gap:0.65rem;">
+            <div id="selectedPartnerAvatar" style="width:34px;height:34px;border-radius:50%;background:#22282D;color:#fff;font-weight:800;font-size:0.75rem;display:flex;align-items:center;justify-content:center;border:1.5px solid var(--cyan);overflow:hidden;flex-shrink:0;">
+              FM
+            </div>
+            <div>
+              <div id="selectedPartnerName" style="font-weight:700;color:#fff;font-size:0.88rem;">Member Name</div>
+              <div id="selectedPartnerMeta" style="font-size:0.73rem;color:var(--text-muted);">@username &bull; PIN: #1000</div>
+            </div>
+          </div>
+          <button type="button" onclick="clearSelectedPartner()" class="btn-action" style="background:#2A3138;color:#f87171;font-size:0.7rem;padding:0.25rem 0.5rem;" title="Change member">
+            <i class="fa fa-times"></i> Change
+          </button>
+        </div>
+
+        <!-- Fallback Standard Dropdown Toggle -->
+        <div style="margin-bottom:1.25rem;">
+          <a href="#" onclick="togglePartnerManualDropdown(event)" style="font-size:0.73rem;color:var(--cyan);text-decoration:none;">
+            <i class="fa fa-list"></i> Or pick from all members list
+          </a>
+          <div id="partnerManualDropdownWrapper" style="display:none;margin-top:0.4rem;">
+            <select id="linkPartnerFallbackSelect" class="form-control" onchange="onFallbackPartnerSelect(this.value)">
+              <option value="">-- Choose from all members --</option>
+              {% for u in all_system_users %}
+                <option value="{{ u.id }}">{{ u.get_full_name|default:u.username }} (@{{ u.username }})</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.4rem;">
+            The partner will immediately receive their own Face ID &amp; PIN access to the turnstile under this subscription without paying an extra fee.
+          </div>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
+          <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeLinkPartnerModal()">Cancel</button>
+          <button type="submit" id="btnSubmitLinkPartner" class="btn-action" style="background:var(--cyan);color:#000;font-weight:700;padding:0.6rem 1.4rem;">
+            <i class="fa fa-link"></i> Link Partner &amp; Grant Access
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- TAB 2: Quick Register New Member & Link -->
+    <div id="tabContentRegisterPartner" style="display:none;">
+      <form id="quickRegPartnerForm" onsubmit="submitQuickRegPartner(event)">
+        <div style="font-size:0.74rem;color:var(--neon-lime);background:rgba(118,192,67,0.1);padding:0.5rem 0.75rem;border-radius:6px;border:1px solid rgba(118,192,67,0.25);margin-bottom:1rem;display:flex;align-items:center;gap:0.4rem;">
+          <i class="fa fa-info-circle"></i> Creates an official Member Account + PIN &amp; Face biometric profile, and links them immediately!
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
+          <div>
+            <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">Partner Full Name *</label>
+            <input type="text" id="quickRegFullName" required class="form-control" placeholder="e.g. Kasun Silva">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">Mobile Phone *</label>
+            <input type="tel" id="quickRegPhone" required class="form-control" placeholder="e.g. 0771234567">
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
+          <div>
+            <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">Email (Optional)</label>
+            <input type="email" id="quickRegEmail" class="form-control" placeholder="partner@gmail.com">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">Gender *</label>
+            <select id="quickRegGender" class="form-control">
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:0.75rem;">
+          <div>
+            <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">NIC / Passport (Optional)</label>
+            <input type="text" id="quickRegNic" class="form-control" placeholder="National ID">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">Member Portal Password</label>
+            <input type="text" id="quickRegPassword" class="form-control" value="Fitme@123" placeholder="Fitme@123">
+          </div>
+        </div>
+
+        <div style="margin-bottom:1.25rem;">
+          <label style="display:block;font-size:0.74rem;color:var(--text-muted);margin-bottom:0.25rem;">Fitness Goal</label>
+          <select id="quickRegGoal" class="form-control">
+            <option value="general_fitness">General Fitness &amp; Health</option>
+            <option value="fat_loss">Weight / Fat Loss</option>
+            <option value="muscle_gain">Muscle Hypertrophy &amp; Size</option>
+            <option value="strength">Strength &amp; Conditioning</option>
+          </select>
+        </div>
+
+        <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
+          <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeLinkPartnerModal()">Cancel</button>
+          <button type="submit" id="btnSubmitQuickRegPartner" class="btn-action" style="background:var(--neon-lime);color:#000;font-weight:800;padding:0.6rem 1.4rem;">
+            <i class="fa fa-user-plus"></i> Register Account &amp; Link
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
 <!-- Record Payment Modal -->
@@ -1294,7 +1480,7 @@
                 <div style="flex-grow:1;">
                   <div style="font-size:0.84rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
                     <span>Charge Annual Registration Fee</span>
-                    <span id="yearlyFeeBadge" style="font-size:0.7rem;font-weight:800;padding:0.15rem 0.5rem;border-radius:999px;background:rgba(136,216,45,0.18);color:var(--neon-lime);border:1px solid rgba(136,216,45,0.3);">+LKR 1,000</span>
+                    <span id="yearlyFeeBadge" style="font-size:0.7rem;font-weight:800;padding:0.15rem 0.5rem;border-radius:999px;background:rgba(118,192,67,0.18);color:var(--neon-lime);border:1px solid rgba(118,192,67,0.3);">+LKR 1,000</span>
                   </div>
                   <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;" id="yearlyFeeDescription">
                     Annual renewal fee (LKR 0 for Student Package) &bull; Check to charge with this billing
@@ -1309,8 +1495,8 @@
         <div style="display:flex;flex-direction:column;gap:0.35rem;">
           <!-- Real-Time Total Payable Amount Card -->
           <div class="form-group" style="margin-bottom:1rem;">
-            <div style="background:linear-gradient(135deg, rgba(20,25,28,0.96) 0%, rgba(14,18,22,0.96) 100%);border:1.5px solid var(--neon-lime);border-radius:12px;padding:1.15rem 1.25rem;box-shadow:0 8px 24px rgba(0,0,0,0.35), 0 0 16px rgba(136,216,45,0.15);position:relative;overflow:hidden;">
-              <div style="position:absolute;top:0;right:0;width:120px;height:120px;background:radial-gradient(circle, rgba(136,216,45,0.12) 0%, transparent 70%);pointer-events:none;"></div>
+            <div style="background:linear-gradient(135deg, rgba(20,25,28,0.96) 0%, rgba(14,18,22,0.96) 100%);border:1.5px solid var(--neon-lime);border-radius:12px;padding:1.15rem 1.25rem;box-shadow:0 8px 24px rgba(0,0,0,0.35), 0 0 16px rgba(118,192,67,0.15);position:relative;overflow:hidden;">
+              <div style="position:absolute;top:0;right:0;width:120px;height:120px;background:radial-gradient(circle, rgba(118,192,67,0.12) 0%, transparent 70%);pointer-events:none;"></div>
               
               <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
                 <div>
@@ -1327,7 +1513,7 @@
                 </div>
 
                 <div style="text-align:right;">
-                  <div style="font-family:'Montserrat',sans-serif;font-size:2.15rem;font-weight:900;color:var(--neon-lime);line-height:1;letter-spacing:-0.5px;text-shadow:0 0 14px rgba(136,216,45,0.4);" id="payTotalDisplay">
+                  <div style="font-family:'Montserrat',sans-serif;font-size:2.15rem;font-weight:900;color:var(--neon-lime);line-height:1;letter-spacing:-0.5px;text-shadow:0 0 14px rgba(118,192,67,0.4);" id="payTotalDisplay">
                     LKR 4,000
                   </div>
                   <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.35rem;font-weight:600;" id="paySubText">
@@ -1385,7 +1571,7 @@
 
           <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:auto;border-top:1px solid rgba(255,255,255,0.08);padding-top:1rem;">
             <button type="button" class="btn-action btn-reject" onclick="closePaymentModal()" style="padding:0.65rem 1.25rem;font-weight:700;">Cancel</button>
-            <button type="submit" class="btn-action btn-approve" id="btnSubmitPayment" style="padding:0.65rem 1.45rem;font-weight:800;background:var(--neon-lime);color:#0c0f12;border:none;border-radius:8px;box-shadow:0 0 16px rgba(136,216,45,0.35);">
+            <button type="submit" class="btn-action btn-approve" id="btnSubmitPayment" style="padding:0.65rem 1.45rem;font-weight:800;background:var(--neon-lime);color:#0c0f12;border:none;border-radius:8px;box-shadow:0 0 16px rgba(118,192,67,0.35);">
               <i class="fa fa-check-circle"></i> Confirm &amp; Unlock Gate
             </button>
           </div>
@@ -1466,6 +1652,124 @@
   </div>
 </div>
 
+<!-- Modal: Member Application Queue Approval & Fee Configuration -->
+<div class="modal-overlay" id="approveAppModal" style="display:none;z-index:9999;">
+  <div class="modal-box" style="max-width:540px;background:#14181B;border:1.5px solid var(--neon-lime);border-radius:16px;padding:1.75rem;box-shadow:0 12px 40px rgba(0,0,0,0.6), 0 0 25px rgba(118,192,67,0.15);">
+    <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:0.85rem;margin-bottom:1.25rem;">
+      <h3 style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;font-size:1.15rem;display:flex;align-items:center;gap:0.55rem;margin:0;">
+        <i class="fa fa-user-check" style="color:var(--neon-lime);"></i>
+        Approve Member Enrollment
+      </h3>
+      <button type="button" onclick="closeApproveModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.35rem;cursor:pointer;">✕</button>
+    </div>
+
+    <!-- Applicant Summary Card -->
+    <div style="background:#1B2126;border:1px solid rgba(255,255,255,0.08);border-left:3px solid var(--neon-lime);border-radius:10px;padding:0.75rem 1rem;margin-bottom:1.25rem;">
+      <div style="font-weight:800;color:#fff;font-size:0.95rem;" id="approveAppMemberName">Applicant Name</div>
+      <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">
+        NIC: <span style="color:#fff;" id="approveAppNIC">-</span> • Phone: <span style="color:#fff;" id="approveAppPhone">-</span> • Email: <span style="color:#fff;" id="approveAppEmail">-</span>
+      </div>
+    </div>
+
+    <form id="approveAppForm" onsubmit="submitApproveApplication(event)">
+      <input type="hidden" id="approveAppId" value="">
+
+      <!-- Membership Package Selection -->
+      <div class="form-group" style="margin-bottom:1rem;">
+        <label style="display:block;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.35rem;">
+          Membership Package / Tier *
+        </label>
+        <select class="form-control" id="approveAppPlanId" onchange="onApprovePlanChange()" required style="width:100%;padding:0.65rem 0.85rem;background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:8px;font-size:0.88rem;">
+          {% for plan in plans %}
+            <option value="{{ plan.id }}" 
+                    data-price="{{ plan.price_monthly|stringformat:'.2f' }}" 
+                    data-regfee="{{ plan.registration_fee|stringformat:'.2f' }}"
+                    data-duration="{{ plan.duration_days }}"
+                    data-type="{{ plan.plan_type }}">
+              {{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }} ({{ plan.duration_days }} Days)
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- First Year Fee (New Member Annual Registration Fee) Toggle & Amount -->
+      <div class="form-group" style="margin-bottom:1rem;">
+        <div style="background:rgba(255,255,255,0.03);border:1.5px solid rgba(255,255,255,0.12);border-radius:10px;padding:0.75rem 0.95rem;transition:all 0.2s;" id="approveFirstYearContainer">
+          <label style="display:flex;align-items:flex-start;gap:0.75rem;cursor:pointer;margin:0;user-select:none;width:100%;">
+            <input type="checkbox" id="approveIncludeFirstYearFee" onchange="updateApproveTotalCalculation()" checked style="width:20px;height:20px;margin-top:2px;accent-color:var(--neon-lime);cursor:pointer;flex-shrink:0;">
+            <div style="flex-grow:1;">
+              <div style="font-size:0.84rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
+                <span>New Member First Year Fee (Annual Fee)</span>
+                <span id="approveFirstYearBadge" style="font-size:0.7rem;font-weight:800;padding:0.15rem 0.5rem;border-radius:999px;background:rgba(118,192,67,0.18);color:var(--neon-lime);border:1px solid rgba(118,192,67,0.3);">
+                  +LKR 1,000
+                </span>
+              </div>
+              <div style="font-size:0.72rem;color:var(--text-muted);margin-top:2px;" id="approveFirstYearDesc">
+                Annual registration fee collected with first year membership package. (LKR 0 for Students).
+              </div>
+            </div>
+          </label>
+          <div id="approveFirstYearInputRow" style="margin-top:0.65rem;display:flex;align-items:center;gap:0.5rem;padding-top:0.55rem;border-top:1px dashed rgba(255,255,255,0.1);">
+            <span style="font-size:0.75rem;color:var(--text-muted);">First Year Fee Amount (LKR):</span>
+            <input type="number" step="100.00" min="0" id="approveFirstYearFeeAmount" oninput="updateApproveTotalCalculation()" style="width:130px;padding:0.35rem 0.6rem;background:#192025;color:var(--neon-lime);border:1px solid rgba(118,192,67,0.4);border-radius:6px;font-size:0.85rem;font-weight:700;" value="1000">
+          </div>
+        </div>
+      </div>
+
+      <!-- Hidden or Editable Package Fee -->
+      <input type="hidden" id="approvePackageFeeAmount" value="4000">
+
+      <!-- Real-Time Total Payable Summary Card -->
+      <div style="background:linear-gradient(135deg, rgba(20,25,28,0.96) 0%, rgba(14,18,22,0.96) 100%);border:1.5px solid var(--neon-lime);border-radius:12px;padding:1rem 1.15rem;margin-bottom:1rem;box-shadow:0 4px 16px rgba(0,0,0,0.3);">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <div style="font-size:0.7rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:1px;">TOTAL ENROLLMENT PAYMENT</div>
+            <div style="font-size:0.8rem;color:#b0b8c0;margin-top:2px;" id="approveBreakdownText">Package + First Year Fee</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'Montserrat',sans-serif;font-size:1.8rem;font-weight:900;color:var(--neon-lime);line-height:1;" id="approveTotalDisplay">LKR 5,000</div>
+          </div>
+        </div>
+        <div style="margin-top:0.65rem;padding-top:0.55rem;border-top:1px dashed rgba(255,255,255,0.15);font-size:0.78rem;color:#b0b8c0;display:flex;flex-direction:column;gap:0.25rem;">
+          <div style="display:flex;justify-content:space-between;">
+            <span>Package Fee (<span id="approvePlanNameDisplay" style="color:#fff;">Monthly</span>):</span>
+            <span style="color:#fff;font-weight:700;" id="approvePackageFeeDisplay">LKR 4,000</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;" id="approveFirstYearLineDisplayRow">
+            <span>First Year Annual Fee:</span>
+            <span style="color:var(--neon-lime);font-weight:700;" id="approveFirstYearFeeDisplay">+LKR 1,000</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Payment Method & Receipt Notes -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.85rem;margin-bottom:1.25rem;">
+        <div>
+          <label style="display:block;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.35rem;">Payment Method</label>
+          <select id="approvePaymentMethod" style="width:100%;padding:0.6rem;background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:8px;font-size:0.85rem;">
+            <option value="cash">Cash at Counter</option>
+            <option value="card">Card / POS Terminal</option>
+            <option value="bank_transfer">Bank Transfer</option>
+            <option value="online">Online Payment</option>
+          </select>
+        </div>
+        <div>
+          <label style="display:block;font-size:0.75rem;font-weight:700;color:var(--text-muted);text-transform:uppercase;margin-bottom:0.35rem;">Notes / POS Ref</label>
+          <input type="text" id="approveNotes" placeholder="e.g. Counter Cash / POS Ref" style="width:100%;padding:0.6rem;background:#1F2428;color:#fff;border:1px solid rgba(255,255,255,0.15);border-radius:8px;font-size:0.85rem;">
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div style="display:flex;gap:0.75rem;justify-content:flex-end;border-top:1px solid rgba(255,255,255,0.1);padding-top:1rem;">
+        <button type="button" class="btn-action btn-reject" onclick="closeApproveModal()" style="padding:0.55rem 1.25rem;font-weight:700;">Cancel</button>
+        <button type="submit" class="btn-action btn-approve" id="btnConfirmApproveApp" style="padding:0.6rem 1.5rem;font-weight:800;background:var(--neon-lime);color:#0c0f12;border:none;border-radius:8px;box-shadow:0 0 16px rgba(118,192,67,0.35);">
+          <i class="fa fa-check-circle"></i> Approve &amp; Issue Receipt
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- Modal: Front Desk Staff Salary Advance / Till Loan -->
 <div class="modal-overlay" id="deskSalaryAdvanceModal" style="display:none;z-index:9999;">
   <div class="modal-box" style="max-width:500px;background:#13171A;border:2px solid #F59E0B;border-radius:16px;padding:2rem;">
@@ -1538,7 +1842,7 @@
         <div>
           <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
             <h3 id="mpFullName" style="font-family:'Montserrat',sans-serif;font-weight:900;color:#fff;margin:0;font-size:1.25rem;">Member Name</h3>
-            <span id="mpSubBadge" style="font-size:0.72rem;font-weight:800;padding:0.2rem 0.55rem;border-radius:999px;background:rgba(136,216,45,0.18);color:var(--neon-lime);border:1px solid rgba(136,216,45,0.3);">ACTIVE</span>
+            <span id="mpSubBadge" style="font-size:0.72rem;font-weight:800;padding:0.2rem 0.55rem;border-radius:999px;background:rgba(118,192,67,0.18);color:var(--neon-lime);border:1px solid rgba(118,192,67,0.3);">ACTIVE</span>
             <span id="mpGateBadge" style="font-size:0.72rem;font-weight:800;padding:0.2rem 0.55rem;border-radius:999px;background:rgba(0,240,255,0.15);color:#00F0FF;border:1px solid rgba(0,240,255,0.3);">GATE UNLOCKED</span>
             <span id="mpYearlyBadge" style="font-size:0.72rem;font-weight:800;padding:0.2rem 0.55rem;border-radius:999px;display:none;"></span>
           </div>
@@ -2158,23 +2462,229 @@
   }
 
   // ── 5. Application Approval & Rejection ──
-  async function approveApp(appId) {
-    if (!confirm("Approve application, create member login, and assign biometric credentials?")) return;
+  function approveApp(appId) {
+    openApproveModalFromRow(appId);
+  }
+
+  function openApproveModalFromRow(appId) {
+    const row = document.getElementById(`app-row-${appId}`);
+    if (!row) {
+      alert("Application record not found.");
+      return;
+    }
+    const name = row.getAttribute('data-name') || '';
+    const nic = row.getAttribute('data-nic') || '';
+    const phone = row.getAttribute('data-phone') || '';
+    const email = row.getAttribute('data-email') || '';
+    const planId = row.getAttribute('data-plan-id') || '';
+    const admFee = row.getAttribute('data-adm-fee') || '';
+    const monFee = row.getAttribute('data-mon-fee') || '';
+    const payMethod = row.getAttribute('data-pay-method') || 'cash';
+    openApproveModal(appId, name, nic, phone, email, planId, admFee, monFee, payMethod);
+  }
+
+  function openApproveModal(appId, name, nic, phone, email, planId, admFee, monFee, payMethod) {
+    document.getElementById('approveAppId').value = appId;
+    document.getElementById('approveAppMemberName').textContent = name || 'Applicant';
+    document.getElementById('approveAppNIC').textContent = nic || 'Not provided';
+    document.getElementById('approveAppPhone').textContent = phone || '-';
+    document.getElementById('approveAppEmail').textContent = email || '-';
+    if (payMethod && document.getElementById('approvePaymentMethod')) {
+      document.getElementById('approvePaymentMethod').value = payMethod;
+    }
+    const notesInput = document.getElementById('approveNotes');
+    if (notesInput) notesInput.value = '';
+
+    const planSelect = document.getElementById('approveAppPlanId');
+    if (planSelect) {
+      let matched = false;
+      if (planId) {
+        for (let i = 0; i < planSelect.options.length; i++) {
+          if (planSelect.options[i].value === String(planId)) {
+            planSelect.selectedIndex = i;
+            matched = true;
+            break;
+          }
+        }
+      }
+      if (!matched && planSelect.options.length) {
+        planSelect.selectedIndex = 0;
+      }
+    }
+
+    onApprovePlanChange(admFee, monFee);
+    document.getElementById('approveAppModal').style.display = 'flex';
+  }
+
+  function closeApproveModal() {
+    document.getElementById('approveAppModal').style.display = 'none';
+  }
+
+  function onApprovePlanChange(initialAdmFee, initialMonFee) {
+    const planSel = document.getElementById('approveAppPlanId');
+    if (!planSel || !planSel.selectedOptions.length) return;
+    const planOpt = planSel.selectedOptions[0];
+    const planType = (planOpt.getAttribute('data-type') || '').toLowerCase();
+    const planName = (planOpt.textContent || '').toLowerCase();
+    const rawPrice = planOpt.getAttribute('data-price');
+    const rawReg = planOpt.getAttribute('data-regfee');
+
+    let packagePrice = (initialMonFee !== undefined && initialMonFee !== '') ? (parseFloat(initialMonFee) || 4000) : (parseFloat(rawPrice) || 4000);
+    const pkgInput = document.getElementById('approvePackageFeeAmount');
+    if (pkgInput) pkgInput.value = packagePrice;
+
+    const yearlyInput = document.getElementById('approveFirstYearFeeAmount');
+    const yearlyCheckbox = document.getElementById('approveIncludeFirstYearFee');
+    const badge = document.getElementById('approveFirstYearBadge');
+    const desc = document.getElementById('approveFirstYearDesc');
+
+    const isStudent = planType === 'student' || planName.includes('student');
+
+    if (isStudent) {
+      if (yearlyInput) yearlyInput.value = '0';
+      if (yearlyCheckbox) yearlyCheckbox.checked = false;
+      if (badge) {
+        badge.textContent = 'FREE (LKR 0)';
+        badge.style.background = 'rgba(0, 240, 255, 0.15)';
+        badge.style.color = '#00F0FF';
+        badge.style.borderColor = 'rgba(0, 240, 255, 0.3)';
+      }
+      if (desc) desc.textContent = 'Student Package: LKR 0 Annual Registration Fee';
+    } else {
+      let regFee = (initialAdmFee !== undefined && initialAdmFee !== '') ? parseFloat(initialAdmFee) : (parseFloat(rawReg) || 1000);
+      if (isNaN(regFee)) regFee = 1000;
+      if (yearlyInput) yearlyInput.value = regFee;
+      if (yearlyCheckbox) yearlyCheckbox.checked = (regFee > 0);
+      if (badge) {
+        badge.textContent = `+LKR ${regFee.toLocaleString()}`;
+        badge.style.background = 'rgba(118, 192, 67, 0.18)';
+        badge.style.color = 'var(--neon-lime)';
+        badge.style.borderColor = 'rgba(118, 192, 67, 0.3)';
+      }
+      if (desc) desc.textContent = 'New member annual registration fee collected with package.';
+    }
+
+    updateApproveTotalCalculation();
+  }
+
+  function updateApproveTotalCalculation() {
+    const planSel = document.getElementById('approveAppPlanId');
+    if (!planSel || !planSel.selectedOptions.length) return;
+    const planOpt = planSel.selectedOptions[0];
+    const planName = (planOpt.textContent || '').split('—')[0].trim();
+    const pkgInput = document.getElementById('approvePackageFeeAmount');
+    const packagePrice = parseFloat(pkgInput?.value) || (parseFloat(planOpt.getAttribute('data-price')) || 4000);
+
+    const includeYearly = document.getElementById('approveIncludeFirstYearFee')?.checked || false;
+    const yearlyInput = document.getElementById('approveFirstYearFeeAmount');
+    const yearlyAmount = includeYearly ? (parseFloat(yearlyInput?.value) || 0) : 0;
+
+    const inputRow = document.getElementById('approveFirstYearInputRow');
+    if (inputRow) {
+      inputRow.style.display = includeYearly ? 'flex' : 'none';
+    }
+
+    const container = document.getElementById('approveFirstYearContainer');
+    if (container) {
+      container.style.borderColor = includeYearly ? 'var(--neon-lime)' : 'rgba(255,255,255,0.12)';
+      container.style.background = includeYearly ? 'rgba(118,192,67,0.06)' : 'rgba(255,255,255,0.03)';
+    }
+
+    const total = packagePrice + yearlyAmount;
+
+    const totalDisp = document.getElementById('approveTotalDisplay');
+    if (totalDisp) totalDisp.textContent = `LKR ${total.toLocaleString()}`;
+
+    const planNameDisp = document.getElementById('approvePlanNameDisplay');
+    if (planNameDisp) planNameDisp.textContent = planName;
+
+    const pkgDisp = document.getElementById('approvePackageFeeDisplay');
+    if (pkgDisp) pkgDisp.textContent = `LKR ${packagePrice.toLocaleString()}`;
+
+    const yearlyDisp = document.getElementById('approveFirstYearFeeDisplay');
+    if (yearlyDisp) {
+      yearlyDisp.textContent = includeYearly ? `+LKR ${yearlyAmount.toLocaleString()}` : 'Waived (LKR 0)';
+      yearlyDisp.style.color = includeYearly ? 'var(--neon-lime)' : 'var(--text-muted)';
+    }
+
+    const breakdownText = document.getElementById('approveBreakdownText');
+    if (breakdownText) {
+      breakdownText.textContent = includeYearly ? `${planName} + First Year Fee` : `${planName} (First Year Fee Waived)`;
+    }
+  }
+
+  async function submitApproveApplication(e) {
+    if (e) e.preventDefault();
+    const appId = document.getElementById('approveAppId').value;
+    if (!appId) return;
+
+    const btn = document.getElementById('btnConfirmApproveApp');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Enrolling...';
+
+    const planSel = document.getElementById('approveAppPlanId');
+    const planOpt = planSel?.selectedOptions[0];
+    const packagePrice = parseFloat(document.getElementById('approvePackageFeeAmount')?.value) || (parseFloat(planOpt?.getAttribute('data-price')) || 4000);
+    const includeYearly = document.getElementById('approveIncludeFirstYearFee')?.checked || false;
+    const firstYearFee = includeYearly ? (parseFloat(document.getElementById('approveFirstYearFeeAmount')?.value) || 0) : 0;
+    const totalPaid = packagePrice + firstYearFee;
+
+    const payload = {
+      plan_id: planSel ? planSel.value : null,
+      package_amount: packagePrice,
+      first_year_fee: firstYearFee,
+      total_paid: totalPaid,
+      payment_method: document.getElementById('approvePaymentMethod')?.value || 'cash',
+      notes: document.getElementById('approveNotes')?.value.trim() || ''
+    };
+
     try {
       const res = await fetch(`/dashboard/api/applications/${appId}/approve/`, {
         method: 'POST',
         headers: {
           'X-CSRFToken': '{{ csrf_token }}',
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify(payload)
       });
-      const data = await res.json();
-      if (data.success) {
-        showToast(`Approved! User '${data.username}' created. Member ID: #FM${data.pin}`);
+      let data;
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        alert(`Server error (${res.status}): Please check server logs.`);
+        return;
+      }
+      if (data && data.success) {
+        closeApproveModal();
+        const emailNotice = data.email_sent ? ` ✉️ Setup email sent to ${data.email || 'member'}` : '';
+        showToast(`Approved! User '${data.username}' created. Member ID: #FM${data.pin}.${emailNotice}`);
         const row = document.getElementById(`app-row-${appId}`);
         if (row) {
           row.style.background = 'rgba(118,192,67,0.15)';
-          setTimeout(() => { row.remove(); }, 600);
+          setTimeout(() => {
+            row.remove();
+            // Update counter badges
+            const table = document.getElementById('applicationsTable');
+            const remaining = table ? table.querySelectorAll('tbody tr[id^="app-row-"]').length : 0;
+            const appCount = document.getElementById('appCount');
+            if (appCount) appCount.textContent = `${remaining} PENDING`;
+            const sidebarBadge = document.getElementById('sidebarAppBadge');
+            if (sidebarBadge) sidebarBadge.textContent = remaining;
+            const pillBadge = document.getElementById('pillAppCount');
+            if (pillBadge) pillBadge.textContent = remaining;
+            if (remaining === 0 && table) {
+              const tbody = table.querySelector('tbody');
+              if (tbody && !document.getElementById('noAppsRow')) {
+                tbody.innerHTML = `
+                  <tr id="noAppsRow">
+                    <td colspan="4" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                      <i class="fa fa-check-circle" style="color:var(--neon-lime);font-size:1.75rem;display:block;margin-bottom:0.4rem;"></i>
+                      All intake applications reviewed!
+                    </td>
+                  </tr>`;
+              }
+            }
+          }, 450);
         }
         if (data.receipt_id) {
           setTimeout(() => {
@@ -2184,10 +2694,13 @@
           }, 350);
         }
       } else {
-        alert("Error: " + data.error);
+        alert("Error: " + (data.error || 'Failed to approve application'));
       }
     } catch (e) {
       alert("Request failed: " + e);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check-circle"></i> Approve &amp; Issue Receipt';
     }
   }
 
@@ -2336,16 +2849,16 @@
       }
       if (monthlyBadge) {
         monthlyBadge.innerHTML = `<i class="fa fa-check-circle"></i> Paid until ${subEnd}`;
-        monthlyBadge.style.background = 'rgba(136,216,45,0.18)';
+        monthlyBadge.style.background = 'rgba(118,192,67,0.18)';
         monthlyBadge.style.color = 'var(--neon-lime)';
-        monthlyBadge.style.borderColor = 'rgba(136,216,45,0.35)';
+        monthlyBadge.style.borderColor = 'rgba(118,192,67,0.35)';
       }
       if (monthlyDesc) {
         monthlyDesc.innerHTML = `Active monthly subscription valid until <strong style="color:#fff;">${subEnd}</strong>. Package fee is waived (LKR 0). Check box only if member wants to renew ahead of time.`;
       }
       if (monthlyContainer) {
-        monthlyContainer.style.borderColor = 'rgba(136,216,45,0.35)';
-        monthlyContainer.style.background = 'rgba(136,216,45,0.04)';
+        monthlyContainer.style.borderColor = 'rgba(118,192,67,0.35)';
+        monthlyContainer.style.background = 'rgba(118,192,67,0.04)';
       }
     } else {
       if (monthlyCheckbox) {
@@ -2482,10 +2995,10 @@
     if (monthlyContainer) {
       if (chargeMonthly) {
         monthlyContainer.style.borderColor = 'var(--neon-lime)';
-        monthlyContainer.style.background = 'rgba(136,216,45,0.06)';
+        monthlyContainer.style.background = 'rgba(118,192,67,0.06)';
       } else {
-        monthlyContainer.style.borderColor = activeSub ? 'rgba(136,216,45,0.35)' : 'rgba(255,255,255,0.12)';
-        monthlyContainer.style.background = activeSub ? 'rgba(136,216,45,0.04)' : 'rgba(255,255,255,0.03)';
+        monthlyContainer.style.borderColor = activeSub ? 'rgba(118,192,67,0.35)' : 'rgba(255,255,255,0.12)';
+        monthlyContainer.style.background = activeSub ? 'rgba(118,192,67,0.04)' : 'rgba(255,255,255,0.03)';
       }
     }
 
@@ -2502,7 +3015,7 @@
         statusBadge.innerHTML = coachVal 
           ? `<i class="fa fa-user-check" style="color:var(--neon-lime);"></i> Coach: ${coachText}` 
           : `<i class="fa fa-exclamation-triangle" style="color:#f59e0b;"></i> Select a coach above`;
-        statusBadge.style.background = coachVal ? 'rgba(136,216,45,0.15)' : 'rgba(245,158,11,0.15)';
+        statusBadge.style.background = coachVal ? 'rgba(118,192,67,0.15)' : 'rgba(245,158,11,0.15)';
         statusBadge.style.color = coachVal ? 'var(--neon-lime)' : '#fbbf24';
       }
     } else if (coachVal) {
@@ -2517,7 +3030,7 @@
       }
       if (statusBadge) {
         statusBadge.innerHTML = `<i class="fa fa-bolt" style="color:var(--neon-lime);"></i> Assigned: ${coachText}`;
-        statusBadge.style.background = 'rgba(136,216,45,0.15)';
+        statusBadge.style.background = 'rgba(118,192,67,0.15)';
         statusBadge.style.color = 'var(--neon-lime)';
       }
     } else {
@@ -2549,7 +3062,7 @@
     const appliedYearlyFee = includeYearly ? planYearlyFee : 0;
     if (yearlyContainer) {
       yearlyContainer.style.borderColor = includeYearly ? 'var(--neon-lime)' : 'rgba(255,255,255,0.1)';
-      yearlyContainer.style.background = includeYearly ? 'rgba(136,216,45,0.06)' : 'rgba(255,255,255,0.03)';
+      yearlyContainer.style.background = includeYearly ? 'rgba(118,192,67,0.06)' : 'rgba(255,255,255,0.03)';
     }
 
     const totalPayable = effectiveBasePrice + coachingAddon + appliedYearlyFee;
@@ -2813,9 +3326,9 @@
       const subBadge = document.getElementById('mpSubBadge');
       if (m.sub_status === 'ACTIVE') {
         subBadge.className = 'badge badge-green';
-        subBadge.style.background = 'rgba(136,216,45,0.18)';
+        subBadge.style.background = 'rgba(118,192,67,0.18)';
         subBadge.style.color = 'var(--neon-lime)';
-        subBadge.style.border = '1px solid rgba(136,216,45,0.3)';
+        subBadge.style.border = '1px solid rgba(118,192,67,0.3)';
         subBadge.innerHTML = `<i class="fa fa-check-circle"></i> ACTIVE (${m.days_remaining}d left)`;
       } else if (m.sub_status === 'EXPIRED') {
         subBadge.className = 'badge badge-red';
@@ -2886,6 +3399,12 @@
 
       // Section 4
       document.getElementById('mpPlan').innerText = m.plan_name || 'No Active Plan';
+      if (m.is_partner && m.partner_primary_name) {
+        document.getElementById('mpPlan').innerHTML = `<span style="color:var(--cyan);font-weight:700;"><i class="fa fa-user-friends"></i> Linked Partner</span> under <strong>${m.partner_primary_name}</strong>'s ${m.plan_name}`;
+      } else if (m.linked_partners && m.linked_partners.length > 0) {
+        const partnerNames = m.linked_partners.map(p => `${p.name} (#FM${p.pin})`).join(', ');
+        document.getElementById('mpPlan').innerHTML = `${m.plan_name} <br><small style="color:var(--cyan);font-weight:600;"><i class="fa fa-users"></i> Linked Partners: ${partnerNames}</small>`;
+      }
       document.getElementById('mpValidity').innerText = m.validity_start ? `${m.validity_start} — ${m.validity_end} (${m.days_remaining}d remaining)` : 'No active validity period';
       document.getElementById('mpHardwareStatus').innerHTML = `
         <span style="color:${m.face_enrolled ? 'var(--neon-lime)' : 'var(--text-muted)'}">Face: ${m.face_enrolled ? '✓ Enrolled' : '✗ Pending'}</span> &bull; 
@@ -3003,6 +3522,7 @@
                 </div>
                 <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;">
                   ${statusBadge}
+                  ${m.is_linked_partner ? `<span class="badge" style="background:rgba(0,240,255,0.15);color:var(--cyan);border:1px solid rgba(0,240,255,0.3);font-size:0.65rem;"><i class="fa fa-user-friends"></i> PARTNER OF ${(m.partner_primary_name || '').toUpperCase()}</span>` : ''}
                   ${onFloorBadge}
                 </div>
               </div>
@@ -3010,6 +3530,7 @@
               <div style="font-size:0.75rem;color:#ccc;background:rgba(0,0,0,0.25);padding:0.4rem 0.6rem;border-radius:6px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:4px;">
                 <span>Plan: <strong>${m.plan_name}</strong> &bull; ${yearlyStatusBadge}</span>
                 <span>Bio: Face ${m.face_enrolled ? '✓' : '✗'} &bull; FP ${m.fingerprint_enrolled ? '✓' : '✗'}</span>
+                ${m.linked_partners_names && m.linked_partners_names.length > 0 ? `<div style="width:100%;font-size:0.72rem;color:var(--cyan);margin-top:2px;"><i class="fa fa-users"></i> Linked Partners: ${m.linked_partners_names.join(', ')}</div>` : ''}
               </div>
 
               <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:auto;">
@@ -3266,6 +3787,262 @@
     } catch(e) {}
   });
 
+  // ── Multi-User (Couples & Family) Partner Linking Handlers ──
+  let partnerSearchTimer = null;
+
+  function openLinkPartnerModal(subId, primaryName, planName, slotsCount) {
+    const m = document.getElementById('linkPartnerModal');
+    if (!m) return;
+    document.getElementById('linkSubId').value = subId;
+    document.getElementById('linkPrimaryName').textContent = primaryName;
+    document.getElementById('linkPlanName').textContent = `${planName} (${slotsCount} slot(s) open)`;
+    
+    // Reset fields
+    clearSelectedPartner();
+    if (document.getElementById('partnerLiveSearchInput')) document.getElementById('partnerLiveSearchInput').value = '';
+    if (document.getElementById('partnerLiveSearchResults')) {
+      document.getElementById('partnerLiveSearchResults').style.display = 'none';
+      document.getElementById('partnerLiveSearchResults').innerHTML = '';
+    }
+    const qf = document.getElementById('quickRegPartnerForm');
+    if (qf) qf.reset();
+    if (document.getElementById('quickRegPassword')) document.getElementById('quickRegPassword').value = 'Fitme@123';
+    
+    switchLinkPartnerTab('existing');
+    m.style.display = 'flex';
+  }
+
+  function closeLinkPartnerModal() {
+    const m = document.getElementById('linkPartnerModal');
+    if (m) m.style.display = 'none';
+  }
+
+  function switchLinkPartnerTab(tab) {
+    const btnExisting = document.getElementById('tabBtnExistingPartner');
+    const btnRegister = document.getElementById('tabBtnRegisterPartner');
+    const contentExisting = document.getElementById('tabContentExistingPartner');
+    const contentRegister = document.getElementById('tabContentRegisterPartner');
+
+    if (tab === 'existing') {
+      if (btnExisting) { btnExisting.style.background = 'var(--cyan)'; btnExisting.style.color = '#000'; }
+      if (btnRegister) { btnRegister.style.background = 'transparent'; btnRegister.style.color = '#cbd5e1'; }
+      if (contentExisting) contentExisting.style.display = 'block';
+      if (contentRegister) contentRegister.style.display = 'none';
+    } else {
+      if (btnExisting) { btnExisting.style.background = 'transparent'; btnExisting.style.color = '#cbd5e1'; }
+      if (btnRegister) { btnRegister.style.background = 'var(--neon-lime)'; btnRegister.style.color = '#000'; }
+      if (contentExisting) contentExisting.style.display = 'none';
+      if (contentRegister) contentRegister.style.display = 'block';
+    }
+  }
+
+  function searchExistingPartnerMembers(val) {
+    const q = (val || '').trim();
+    const box = document.getElementById('partnerLiveSearchResults');
+    if (!box) return;
+
+    if (q.length < 1) {
+      box.style.display = 'none';
+      box.innerHTML = '';
+      return;
+    }
+
+    clearTimeout(partnerSearchTimer);
+    partnerSearchTimer = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/desk/lookup/?q=${encodeURIComponent(q)}`);
+        const data = await res.json();
+        const users = data.results || [];
+        
+        if (users.length === 0) {
+          box.style.display = 'block';
+          box.innerHTML = `
+            <div style="padding:0.75rem 1rem;font-size:0.75rem;color:var(--text-muted);text-align:center;">
+              No member matching "<strong>${q}</strong>". <br>
+              <a href="#" onclick="switchLinkPartnerTab('register'); return false;" style="color:var(--neon-lime);font-weight:700;text-decoration:none;display:inline-block;margin-top:0.35rem;">
+                <i class="fa fa-user-plus"></i> Click here to Quick Register them!
+              </a>
+            </div>
+          `;
+          return;
+        }
+
+        let html = '';
+        users.forEach(u => {
+          const avatar = u.photo_url 
+            ? `<img src="${u.photo_url}" style="width:100%;height:100%;object-fit:cover;">` 
+            : u.name.substring(0,2).toUpperCase();
+          const cleanName = u.name.replace(/'/g, "\\'");
+          const cleanUser = u.username.replace(/'/g, "\\'");
+          const cleanPhone = (u.phone || '').replace(/'/g, "\\'");
+          const cleanPin = (u.pin || '').replace(/'/g, "\\'");
+
+          html += `
+            <div onclick="selectPartnerMember(${u.id}, '${cleanName}', '${cleanUser}', '${cleanPhone}', '${cleanPin}', '${u.photo_url || ''}')" style="padding:0.6rem 0.85rem;border-bottom:1px solid rgba(255,255,255,0.06);display:flex;align-items:center;justify-content:space-between;cursor:pointer;gap:0.5rem;transition:background 0.15s;" onmouseover="this.style.background='rgba(0,240,255,0.08)'" onmouseout="this.style.background='transparent'">
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <div style="width:28px;height:28px;border-radius:50%;background:#22282D;color:#fff;font-weight:800;font-size:0.68rem;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;border:1px solid rgba(255,255,255,0.2);">
+                  ${avatar}
+                </div>
+                <div>
+                  <div style="font-weight:700;color:#fff;font-size:0.82rem;">${u.name}</div>
+                  <div style="font-size:0.7rem;color:var(--text-muted);font-family:monospace;">@${u.username} &bull; ${u.phone || 'No phone'}</div>
+                </div>
+              </div>
+              <div style="text-align:right;">
+                <span style="font-size:0.68rem;background:#192025;padding:0.15rem 0.45rem;border-radius:4px;color:var(--cyan);font-family:monospace;border:1px solid rgba(0,240,255,0.2);">#FM${u.pin}</span>
+              </div>
+            </div>
+          `;
+        });
+        box.style.display = 'block';
+        box.innerHTML = html;
+      } catch (err) {
+        console.error('Error searching partner members:', err);
+      }
+    }, 250);
+  }
+
+  function selectPartnerMember(userId, name, username, phone, pin, photoUrl) {
+    document.getElementById('linkPartnerSelect').value = userId;
+    const card = document.getElementById('selectedPartnerConfirmCard');
+    const avatar = document.getElementById('selectedPartnerAvatar');
+    const nameEl = document.getElementById('selectedPartnerName');
+    const metaEl = document.getElementById('selectedPartnerMeta');
+    const box = document.getElementById('partnerLiveSearchResults');
+
+    if (avatar) {
+      avatar.innerHTML = photoUrl ? `<img src="${photoUrl}" style="width:100%;height:100%;object-fit:cover;">` : name.substring(0,2).toUpperCase();
+    }
+    if (nameEl) nameEl.textContent = name;
+    if (metaEl) metaEl.textContent = `@${username} • Phone: ${phone || 'N/A'} • PIN: #FM${pin}`;
+    if (card) card.style.display = 'flex';
+    if (box) box.style.display = 'none';
+
+    // Sync fallback select if element exists
+    const fb = document.getElementById('linkPartnerFallbackSelect');
+    if (fb) fb.value = userId;
+  }
+
+  function clearSelectedPartner() {
+    document.getElementById('linkPartnerSelect').value = '';
+    const card = document.getElementById('selectedPartnerConfirmCard');
+    if (card) card.style.display = 'none';
+    const fb = document.getElementById('linkPartnerFallbackSelect');
+    if (fb) fb.value = '';
+  }
+
+  function togglePartnerManualDropdown(e) {
+    e.preventDefault();
+    const w = document.getElementById('partnerManualDropdownWrapper');
+    if (w) w.style.display = (w.style.display === 'none' || !w.style.display) ? 'block' : 'none';
+  }
+
+  function onFallbackPartnerSelect(userId) {
+    if (!userId) {
+      clearSelectedPartner();
+      return;
+    }
+    const fb = document.getElementById('linkPartnerFallbackSelect');
+    const text = fb.options[fb.selectedIndex].text;
+    selectPartnerMember(userId, text, '', '', '', '');
+  }
+
+  async function submitLinkPartner(e) {
+    e.preventDefault();
+    const subId = document.getElementById('linkSubId').value;
+    const partnerId = document.getElementById('linkPartnerSelect').value;
+    if (!partnerId) {
+      alert('Please search and select a registered member to link.');
+      return;
+    }
+
+    const btn = document.getElementById('btnSubmitLinkPartner');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Linking...';
+
+    try {
+      const res = await fetch(`/api/subscriptions/${subId}/link-partner/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ partner_id: partnerId })
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        closeLinkPartnerModal();
+        setTimeout(() => location.reload(), 700);
+      } else {
+        alert(data.error || 'Failed to link partner.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-link"></i> Link Partner &amp; Grant Access';
+      }
+    } catch(err) {
+      alert('Error: ' + err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-link"></i> Link Partner &amp; Grant Access';
+    }
+  }
+
+  async function submitQuickRegPartner(e) {
+    e.preventDefault();
+    const subId = document.getElementById('linkSubId').value;
+    const btn = document.getElementById('btnSubmitQuickRegPartner');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Registering &amp; Linking...';
+
+    const payload = {
+      action: 'register_and_link',
+      full_name: document.getElementById('quickRegFullName').value.trim(),
+      phone: document.getElementById('quickRegPhone').value.trim(),
+      email: document.getElementById('quickRegEmail').value.trim(),
+      gender: document.getElementById('quickRegGender').value,
+      nic_passport: document.getElementById('quickRegNic').value.trim(),
+      password: document.getElementById('quickRegPassword').value.trim(),
+      primary_goal: document.getElementById('quickRegGoal').value
+    };
+
+    try {
+      const res = await fetch(`/api/subscriptions/${subId}/link-partner/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        closeLinkPartnerModal();
+        setTimeout(() => location.reload(), 800);
+      } else {
+        alert(data.error || 'Failed to register and link partner.');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-user-plus"></i> Register Account &amp; Link';
+      }
+    } catch(err) {
+      alert('Error: ' + err);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-user-plus"></i> Register Account &amp; Link';
+    }
+  }
+
+  async function unlinkPartner(linkId) {
+    if (!confirm('Are you sure you want to unlink this partner? Their biometric turnstile access will be revoked.')) return;
+    try {
+      const res = await fetch(`/api/buddy-links/${linkId}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message);
+        setTimeout(() => location.reload(), 700);
+      } else {
+        alert(data.error || 'Failed to unlink partner.');
+      }
+    } catch(err) {
+      alert('Error: ' + err);
+    }
+  }
+
   // Keyboard Shortcuts (Escape to dismiss active modal or exit fullscreen monitor)
   document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') {
@@ -3280,6 +4057,7 @@
       closeFaceModal();
       closeFingerprintModal();
       closeMemberProfile();
+      closeLinkPartnerModal();
     }
   });
 </script>

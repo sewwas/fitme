@@ -1,175 +1,401 @@
 {% extends "base.html" %}
 {% load static i18n wger_extras %}
 
-
-{% block title %}{% translate "Support & Get Involved" %}{% endblock %}
+{% block title %}{% translate "Staff PC & Desktop Application Guide — Fit Me OS" %}{% endblock %}
 
 {% block content %}
-    <p>
-        {% blocktranslate trimmed %}
-            wger helps you track your workouts, manage your nutrition, and reach
-            your fitness goals. We offer it as free, open-source software you can
-            host yourself, and also provide a convenient, free, and hosted version
-            for easy access.
-        {% endblocktranslate %}
+<style>
+.fitme-guide-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(118, 192, 67, 0.15);
+    color: #76C043;
+    border: 1px solid rgba(118, 192, 67, 0.35);
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin-bottom: 0.85rem;
+}
+
+.fitme-guide-card {
+    background: #14181B;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 14px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+    transition: transform 0.2s, border-color 0.2s;
+}
+.fitme-guide-card:hover {
+    border-color: rgba(118, 192, 67, 0.3);
+}
+
+.fitme-guide-card h4 {
+    color: #fff;
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 800;
+    font-size: 1.2rem;
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    margin-bottom: 0.85rem;
+}
+
+.fitme-step-box {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1.25rem;
+    background: rgba(0, 0, 0, 0.3);
+    padding: 1rem 1.15rem;
+    border-radius: 10px;
+    border-left: 3px solid #76C043;
+}
+.fitme-step-num {
+    background: #76C043;
+    color: #000;
+    font-weight: 900;
+    font-size: 0.95rem;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.fitme-step-text {
+    color: #C5CBD3;
+    font-size: 0.92rem;
+    line-height: 1.5;
+}
+.fitme-step-text strong {
+    color: #fff;
+    display: block;
+    margin-bottom: 0.2rem;
+}
+
+.fitme-app-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+}
+
+.fitme-app-tile {
+    background: #0E1113;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    padding: 1.1rem;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+}
+.fitme-app-tile:hover {
+    border-color: #76C043;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(118, 192, 67, 0.15);
+    color: inherit;
+}
+.fitme-app-tile .tile-icon {
+    font-size: 1.6rem;
+    margin-bottom: 0.65rem;
+}
+.fitme-app-tile .tile-title {
+    font-weight: 800;
+    font-size: 1rem;
+    color: #fff;
+    margin-bottom: 0.25rem;
+}
+.fitme-app-tile .tile-desc {
+    font-size: 0.8rem;
+    color: #8E9BA4;
+    line-height: 1.4;
+}
+
+.fitme-code-block {
+    background: #080A0C;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    color: #76C043;
+    font-family: 'Consolas', 'JetBrains Mono', monospace;
+    font-size: 0.88rem;
+    overflow-x: auto;
+    position: relative;
+    margin: 0.75rem 0;
+}
+</style>
+
+<div class="fitme-guide-badge">
+    <i class="fa fa-bolt"></i> Pitigala Smart Gym OS • Reception &amp; Staff Operations
+</div>
+
+<h2 style="font-family:'Montserrat',sans-serif;font-weight:900;color:#fff;letter-spacing:-0.5px;margin-bottom:0.4rem;">
+    Staff PC &amp; Desktop Application Deployment Guide
+</h2>
+<p style="color:#8E9BA4;font-size:1.02rem;line-height:1.6;margin-bottom:1.75rem;">
+    Comprehensive operational guide for gym reception staff, coaches, and administrators to configure, install, and run <strong>Fit Me OS</strong> on the front desk PC as a standalone desktop application with turnstile biometric hardware integration.
+</p>
+
+<!-- SECTION 1: How to install Desktop App -->
+<div class="fitme-guide-card" id="desktop-app-install">
+    <h4>
+        <i class="fa fa-desktop" style="color:#76C043;"></i>
+        1. Install Fit Me as a Native Desktop App on Windows PC
+    </h4>
+    <p style="color:#C5CBD3;font-size:0.92rem;">
+        You can run the Fit Me Portal in <strong>Standalone Desktop Window Mode</strong> without browser tabs, toolbars, or address bars for a completely focused, zero-distraction kiosk experience.
     </p>
 
-
-    <h3>{% translate "Open Source & free to use ❤️" %}</h3>
-    <p>
-        {% blocktranslate trimmed %}
-            wger is built on the principles of open source. Its code is publicly
-            available, developed by our community, ensuring transparency and giving
-            you control over your data (especially if self-hosting). The free
-            hosted service runs entirely on this open-source foundation. We believe
-            powerful fitness tools should be accessible to everyone.
-        {% endblocktranslate %}
-    </p>
-
-
-    <h3>{% translate "How you can help" %}</h3>
-    <p>
-        All types of contributions are encouraged. And if you like the project
-        but just don’t have time to contribute, that’s fine. There are other easy
-        ways to support the project and show your appreciation. Whether you're a
-        developer, a translator, or just passionate about fitness, every bit of
-        support is appreciated!
-    </p>
-
-    <h5 class="mt-4">
-        {% translate "Join the Community" %}
-    </h5>
-
-    <ul class="fa-ul">
-        <li>
-            <span class="fa-li"><i class="fa-brands fa-discord"></i></span>
-            <a href="https://discord.gg/rPWFv6W">{% translate "Join the Discord server" %}</a>:
-            {% blocktranslate trimmed %}
-                Hop on the Discord server to chat with the developers and other
-                users, ask questions, or discuss new features.
-            {% endblocktranslate %}
-        </li>
-        <li>
-            <span class="fa-li"><i class="fa-brands fa-mastodon"></i></span>
-            <a href="https://fosstodon.org/@wger">Follow @wger@fosstodon.org</a>:
-            {% blocktranslate trimmed %}
-                Get news, updates, and announcements about the project on Mastodon.
-            {% endblocktranslate %}
-        </li>
-        <li>
-            <span class="fa-li"><i class="fa-solid fa-comments"></i></span>
-            {% blocktranslate trimmed %}
-                Spread the word: Tell your friends, gym buddies, or share on social
-                media! Your enthusiasm helps us grow and reach more people.
-            {% endblocktranslate %}
-        </li>
-    </ul>
-
-
-
-    <h5 class="mt-4">
-        {% translate "Contribute your skills" %}
-    </h5>
-    <ul>
-        <li>
-            <a href="https://github.com/wger-project/wger/issues/new/choose">
-                {% translate "Report bugs or suggest features" %}:
-            </a>
-            {% translate "Have a problem or idea? Let us know!" %}
-        </li>
-        <li>
-            <a href="{% url 'exercise:exercise:overview' %}">{% translate "Improve the exercises" %}</a>:
-            {% translate "Contribute new exercises, and edit or translate the existing ones." %}
-        </li>
-        <li>
-            <a href="https://hosted.weblate.org/engage/wger/">{% translate "Translate the application" %}</a>:
-            {% translate "Help make the app accessible in more languages for users around the world." %}
-        </li>
-        <li>
-            <a href="https://github.com/wger-project">{% translate "Contribute code or documentation" %}</a>:
-            {% translate "Check out the source code and help us build the next version." %}
-        </li>
-    </ul>
-
-
-    <h5 class="mt-4">
-        {% translate "Make a donation" %}
-    </h5>
-
-    <p>
-        {% blocktranslate trimmed %}
-            While the project is free and will always remain it, running the server
-            isn’t! Providing the hosted version of wger involves real, ongoing costs
-            for server hosting, bandwidth, backups, etc. Development also takes
-            significant time and effort from volunteers.
-            Your contribution directly supports these essential costs, helping to
-            keep the service reliable, improving, and free for everyone.
-        {% endblocktranslate %}
-    </p>
-
-    <div class="row justify-content-center align-items-center"
-         style="display: flex;">
-        <div class="col-4 d-flex flex-column align-items-center">
-            <a href="https://buymeacoffee.com/wger">
-                <img src="{% static 'images/logos/buymeacoffee/bmc-full-logo-no-background.png' %}"
-                     width="160"
-                     alt="Donate"
-                     class="img-fluid">
-            </a>
-        </div>
-        <div class="col-4 d-flex flex-column align-items-center" style="text-align: center;">
-            <a href="https://liberapay.com/wger">
-                <img src="{% static 'images/logos/liberapay/liberapay_logo_black-on-yellow.svg' %}"
-                     width="60"
-                     alt="Donate" class="img-fluid">
-                <br>
-                Liberapay
-            </a>
-        </div>
-        <div class="col-4 d-flex flex-column align-items-center" style="text-align: center;">
-            <a href="https://github.com/sponsors/wger-project">
-                <img src="{% static 'images/logos/github/GitHub_Logo.png' %}"
-                     width="100"
-                     alt="Donate" class="img-fluid">
-                <br>
-                {% translate "Sponsor on GitHub" %}
-            </a>
+    <div class="fitme-step-box">
+        <div class="fitme-step-num">1</div>
+        <div class="fitme-step-text">
+            <strong>Open Fit Me Portal in Google Chrome or Microsoft Edge</strong>
+            On the Gym Reception PC, open Chrome or Edge and visit <code style="color:#76C043;">http://localhost:8000/user/login</code> (or your gym's official cloud URL).
         </div>
     </div>
 
+    <div class="fitme-step-box">
+        <div class="fitme-step-num">2</div>
+        <div class="fitme-step-text">
+            <strong>Click the "Install App" Icon in the Address Bar</strong>
+            Look at the right side of your browser URL address bar: click the <strong>Install Fit Me</strong> icon (computer monitor with down arrow) or click the three dots menu (⋮) &rarr; <em>Save and Share</em> / <em>Apps</em> &rarr; <strong>"Install this site as an app"</strong>.
+        </div>
+    </div>
 
+    <div class="fitme-step-box">
+        <div class="fitme-step-num">3</div>
+        <div class="fitme-step-text">
+            <strong>Pin to Windows Taskbar &amp; Desktop</strong>
+            When prompted by Windows, check <strong>"Pin to taskbar"</strong> and <strong>"Create Desktop shortcut"</strong>. Fit Me will now launch in its own dedicated high-performance desktop window!
+        </div>
+    </div>
 
-    <h4 class="mt-4">{% translate "Thank You!" %}</h4>
-    <p>
-        {% blocktranslate trimmed %}
-            Thank you for being part of the community! We appreciate your usage,
-            feedback, and any support you can offer.
-        {% endblocktranslate %}
+    <div class="fitme-step-box">
+        <div class="fitme-step-num">4</div>
+        <div class="fitme-step-text">
+            <strong>Configure Automatic Morning Startup (Optional)</strong>
+            Press <kbd>Win + R</kbd>, type <code style="color:#76C043;">shell:startup</code>, and press Enter. Copy the Fit Me Desktop shortcut into this Startup folder. Every morning when the reception PC boots up, Fit Me will launch automatically.
+        </div>
+    </div>
+
+    <div style="margin-top:1rem;display:flex;align-items:center;gap:1rem;">
+        <button id="pwa-install-btn" class="btn" style="background:#76C043;color:#000;font-weight:800;border-radius:8px;padding:0.6rem 1.2rem;display:none;">
+            <i class="fa fa-download me-1"></i> Install Fit Me Desktop App Now
+        </button>
+        <span id="pwa-install-note" style="color:#8E9BA4;font-size:0.85rem;">
+            <i class="fa fa-check-circle text-success me-1"></i> Desktop Progressive Web App (PWA) manifest ready.
+        </span>
+    </div>
+</div>
+
+<!-- SECTION 2: Staff Console Quick Launch -->
+<div class="fitme-guide-card" id="staff-consoles">
+    <h4>
+        <i class="fa fa-compass" style="color:#38BDF8;"></i>
+        2. Reception Staff Quick-Launch Consoles
+    </h4>
+    <p style="color:#C5CBD3;font-size:0.92rem;">
+        Direct access modules for front desk receptionists, trainers, and gym cashiers:
     </p>
-{% endblock %}
 
+    <div class="fitme-app-grid">
+        <a href="/dashboard/front-desk/" class="fitme-app-tile">
+            <div>
+                <div class="tile-icon" style="color:#38BDF8;"><i class="fa fa-id-card"></i></div>
+                <div class="tile-title">Front Desk Check-in</div>
+                <div class="tile-desc">Live door punches, member search, active attendance count, and manual turnstile override.</div>
+            </div>
+            <div style="color:#38BDF8;font-size:0.82rem;font-weight:700;margin-top:0.75rem;">Launch Console &rarr;</div>
+        </a>
+
+        <a href="/pos/" class="fitme-app-tile">
+            <div>
+                <div class="tile-icon" style="color:#F59E0B;"><i class="fa fa-cash-register"></i></div>
+                <div class="tile-title">Point of Sale (POS)</div>
+                <div class="tile-desc">Drink fridge sales, supplements, till balancing, and 80mm thermal receipt slip printer.</div>
+            </div>
+            <div style="color:#F59E0B;font-size:0.82rem;font-weight:700;margin-top:0.75rem;">Open POS Register &rarr;</div>
+        </a>
+
+        <a href="/dashboard/admin/" class="fitme-app-tile">
+            <div>
+                <div class="tile-icon" style="color:#76C043;"><i class="fa fa-chart-line"></i></div>
+                <div class="tile-title">Super Admin Console</div>
+                <div class="tile-desc">Monthly financial ledger, staff attendance rosters, salary advances, and subscription plans.</div>
+            </div>
+            <div style="color:#76C043;font-size:0.82rem;font-weight:700;margin-top:0.75rem;">Open Admin &rarr;</div>
+        </a>
+
+        <a href="/register/" class="fitme-app-tile">
+            <div>
+                <div class="tile-icon" style="color:#EC4899;"><i class="fa fa-file-signature"></i></div>
+                <div class="tile-title">Member Registration Form</div>
+                <div class="tile-desc">New member walk-in onboarding with live camera portrait capture for Face ID turnstile enrollment.</div>
+            </div>
+            <div style="color:#EC4899;font-size:0.82rem;font-weight:700;margin-top:0.75rem;">Open Form &rarr;</div>
+        </a>
+    </div>
+</div>
+
+<!-- SECTION 3: Hardware Bridge Daemon -->
+<div class="fitme-guide-card" id="hardware-bridge">
+    <h4>
+        <i class="fa fa-fingerprint" style="color:#EC4899;"></i>
+        3. ZKTeco Turnstile Biometric Hardware Bridge Daemon
+    </h4>
+    <p style="color:#C5CBD3;font-size:0.92rem;">
+        The desktop reception PC hosts the background sync bridge that connects the local ZKTeco SpeedFace biometric turnstile controller to the Fit Me cloud engine.
+    </p>
+
+    <div class="fitme-step-box">
+        <div class="fitme-step-num">A</div>
+        <div class="fitme-step-text">
+            <strong>Local Biometric Hardware Specifications</strong>
+            <ul style="margin:0.25rem 0 0 1rem;padding:0;color:#CBD5E1;">
+                <li><strong>Turnstile Controller LAN IP:</strong> <code style="color:#76C043;">192.168.1.23</code></li>
+                <li><strong>Local ZKBio CVAccess Server:</strong> <code style="color:#76C043;">http://localhost:8098/api</code></li>
+                <li><strong>Verification Modes:</strong> Face ID &amp; Optical Fingerprint (No manual keypad PINs).</li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="fitme-step-box">
+        <div class="fitme-step-num">B</div>
+        <div class="fitme-step-text">
+            <strong>Running the Daemon on Reception PC (PowerShell)</strong>
+            Run this command from the repository folder to initiate background turnstile telemetry:
+            <div class="fitme-code-block">
+python scripts/zkbio_bridge_daemon.py
+            </div>
+        </div>
+    </div>
+
+    <div class="fitme-step-box">
+        <div class="fitme-step-num">C</div>
+        <div class="fitme-step-text">
+            <strong>Offline Queue Resilience</strong>
+            If the gym's fiber/internet connection drops temporarily, the daemon automatically buffers punch events inside a local SQLite database (<code style="color:#76C043;">zkbio_offline_punches.sqlite3</code>). All records are safely pushed to the cloud once internet restores with zero lost punches!
+        </div>
+    </div>
+</div>
+
+<!-- SECTION 4: Thermal Receipt Printing -->
+<div class="fitme-guide-card" id="thermal-receipts">
+    <h4>
+        <i class="fa fa-print" style="color:#A855F7;"></i>
+        4. 80mm Thermal Receipt Printer Setup
+    </h4>
+    <p style="color:#C5CBD3;font-size:0.92rem;">
+        Fit Me includes built-in styling for standard 80mm (3-inch) POS thermal roll printers used at gym reception desks:
+    </p>
+    <ul style="color:#C5CBD3;font-size:0.92rem;line-height:1.7;">
+        <li><strong>POS Sales Slip:</strong> Automatically formatted to 80mm width with gym header, item breakdown, and QR verification.</li>
+        <li><strong>Staff Salary Advance Voucher:</strong> Direct 80mm printout with signature lines for cashier and recipient.</li>
+        <li><strong>Thermal Printer Setting:</strong> In the browser print dialog (<kbd>Ctrl + P</kbd>), select your receipt printer, set <em>Margins</em> to <strong>None</strong>, and enable <strong>Background graphics</strong>.</li>
+    </ul>
+</div>
+
+<script>
+// PWA Installation Hook for Desktop
+let deferredPrompt;
+const installBtn = document.getElementById('pwa-install-btn');
+
+window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    if (installBtn) {
+        installBtn.style.display = 'inline-flex';
+    }
+});
+
+if (installBtn) {
+    installBtn.addEventListener('click', async () => {
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const { outcome } = await deferredPrompt.userChoice;
+            if (outcome === 'accepted') {
+                installBtn.style.display = 'none';
+            }
+            deferredPrompt = null;
+        }
+    });
+}
+</script>
+{% endblock %}
 
 {% block sidebar %}
-    <div class="card text-white bg-success mb-3">
-        <div class="card-header">
-            {% translate "Our goal" %}
+<div class="card text-white mb-3" style="background:#14181B;border:1px solid rgba(118, 192, 67, 0.3);border-radius:12px;">
+    <div class="card-header d-flex align-items-center gap-2" style="background:rgba(118, 192, 67, 0.1);color:#76C043;font-weight:800;border-bottom:1px solid rgba(118,192,67,0.2);">
+        <i class="fa fa-server"></i> System Telemetry
+    </div>
+    <div class="card-body" style="font-size:0.88rem;color:#C5CBD3;">
+        <div class="d-flex justify-content-between mb-2">
+            <span>Core OS Port:</span>
+            <strong style="color:#fff;">8000 (Active)</strong>
         </div>
-        <div class="card-body">
-            {% blocktranslate trimmed %}
-                The goal is to build an awesome and flexible fitness manager, along
-                with a comprehensive and complete list of exercises and ingredients,
-                all released under a free license.
-            {% endblocktranslate %}
+        <div class="d-flex justify-content-between mb-2">
+            <span>Controller IP:</span>
+            <strong style="color:#76C043;">192.168.1.23</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+            <span>ZKBio API:</span>
+            <strong style="color:#38BDF8;">localhost:8098</strong>
+        </div>
+        <div class="d-flex justify-content-between mb-2">
+            <span>Offline Buffer:</span>
+            <strong style="color:#fff;">SQLite Enabled</strong>
+        </div>
+        <div class="d-flex justify-content-between">
+            <span>Receipt Width:</span>
+            <strong style="color:#fff;">80mm Roll</strong>
         </div>
     </div>
+</div>
 
-    <div class="alert alert-dark mt-5" role="alert">
-        {% translate "Current version" %} <strong>{{ version }}</strong>
-        {% if date %}
-            <br>
-            {% translate 'Date' %} <strong>{{ date }}</strong>
-        {% endif %}
+<div class="card text-white mb-3" style="background:#14181B;border:1px solid rgba(255, 255, 255, 0.08);border-radius:12px;">
+    <div class="card-header" style="color:#fff;font-weight:800;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <i class="fa fa-keyboard text-warning me-1"></i> Reception Hotkeys
     </div>
+    <div class="card-body p-0">
+        <ul class="list-group list-group-flush" style="background:transparent;font-size:0.85rem;">
+            <li class="list-group-item d-flex justify-content-between align-items-center" style="background:transparent;color:#C5CBD3;border-color:rgba(255,255,255,0.06);">
+                <span>Print Thermal Receipt</span>
+                <kbd style="background:#2A3138;color:#76C043;border:none;">Ctrl + P</kbd>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center" style="background:transparent;color:#C5CBD3;border-color:rgba(255,255,255,0.06);">
+                <span>Fullscreen Kiosk Mode</span>
+                <kbd style="background:#2A3138;color:#76C043;border:none;">F11</kbd>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center" style="background:transparent;color:#C5CBD3;border-color:rgba(255,255,255,0.06);">
+                <span>Switch Apps / Consoles</span>
+                <kbd style="background:#2A3138;color:#76C043;border:none;">Alt + Tab</kbd>
+            </li>
+            <li class="list-group-item d-flex justify-content-between align-items-center" style="background:transparent;color:#C5CBD3;border-color:rgba(255,255,255,0.06);">
+                <span>Refresh Telemetry</span>
+                <kbd style="background:#2A3138;color:#76C043;border:none;">F5 / Ctrl + R</kbd>
+            </li>
+        </ul>
+    </div>
+</div>
+
+<div class="card text-white mb-3" style="background:#14181B;border:1px solid rgba(255, 255, 255, 0.08);border-radius:12px;">
+    <div class="card-header" style="color:#fff;font-weight:800;border-bottom:1px solid rgba(255,255,255,0.08);">
+        <i class="fa fa-headset text-info me-1"></i> Tech Support
+    </div>
+    <div class="card-body" style="font-size:0.85rem;color:#8E9BA4;">
+        <p class="mb-2">For turnstile hardware issues, IP address conflicts, or receipt printer driver setup:</p>
+        <div style="color:#C5CBD3;">
+            <i class="fa fa-envelope text-success me-1"></i> fitmefitness.lk@gmail.com<br>
+            <i class="fa fa-map-marker-alt text-danger me-1"></i> Fit Me Fitness Club, Pitigala
+        </div>
+    </div>
+</div>
 {% endblock %}
-
-

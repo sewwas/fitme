@@ -37,28 +37,16 @@ logger = logging.getLogger(__name__)
 
 def index(request):
     """
-    Unified Fit Me Entry Point:
-    - If authenticated: redirects to role dashboard
-    - If unauthenticated: serves the unified, cinematic, full-width Next.js production homepage
+    Fit Me Portal Entry Point (Backend / Port 8000):
+    - If authenticated: redirects to the appropriate role dashboard (/dashboard/)
+    - If unauthenticated: redirects to the member/staff login page (/login/)
+    The public marketing website is hosted cleanly and exclusively on the frontend (Port 3000).
     """
     if request.user.is_authenticated:
         from wger.core.views.fitme_dashboards import get_role_dashboard
         return HttpResponseRedirect(get_role_dashboard(request.user))
-    
-    # Serve the compiled Next.js production export
-    from pathlib import Path
-    from django.http import HttpResponse
-    repo_root = Path(__file__).resolve().parents[3]
-    next_html_path = repo_root / 'fitme-ui' / 'out' / 'index.html'
-    if next_html_path.exists():
-        with open(next_html_path, 'r', encoding='utf-8') as f:
-            content = f.read()
-        return HttpResponse(content, content_type='text/html; charset=utf-8')
-    
-    # Fallback to dynamic template if export file not present
-    from django.shortcuts import render
-    from wger.core.views.fitme_dashboards import get_public_home_context
-    return render(request, 'home.html', get_public_home_context())
+
+    return HttpResponseRedirect('/login/')
 
 
 def demo_entries(request):

@@ -78,7 +78,7 @@ class WgerAccountAdapter(DefaultAccountAdapter):
             getattr(user, 'is_staff', False)
             or getattr(user, 'is_superuser', False)
             or user.username in ['admin', 'admin_ops']
-            or user.groups.filter(name__in=['super_admin', 'club_admin', 'front_desk', 'coach']).exists()
+            or user.groups.filter(name__in=['super_admin', 'admin', 'club_admin', 'front_desk', 'coach']).exists()
         ):
             from allauth.account.models import EmailAddress
 

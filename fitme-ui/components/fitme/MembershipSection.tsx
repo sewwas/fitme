@@ -1,197 +1,132 @@
 "use client";
 
 import React from "react";
-import { SectionLabel } from "../ui/SectionLabel";
-import { PrimaryButton } from "../ui/PrimaryButton";
-import { SecondaryButton } from "../ui/SecondaryButton";
-import { FadeIn, StaggerContainer, StaggerItem } from "../ui/MotionWrapper";
+import Link from "next/link";
+import { motion } from "motion/react";
 
-export interface PricingTier {
-  id: string;
-  name: string;
-  badge?: string;
-  priceFormatted: string;
-  billingPeriod: string;
-  description: string;
-  features: string[];
-  isPopular?: boolean;
-  ctaText: string;
-}
-
-export const DEFAULT_TIERS: PricingTier[] = [
+const PLANS = [
   {
-    id: "starter",
-    name: "STARTER",
-    priceFormatted: "LKR 5,500",
-    billingPeriod: "/ month",
-    description: "For independent lifters seeking top-tier facility and equipment access.",
+    name: "Basic",
+    price: "4,500",
+    popular: false,
     features: [
-      "Full Open Arena & Iron access",
-      "Standard locker & shower facilities",
-      "Initial movement screening",
-      "Access to community workshops",
-      "Fit Me mobile workout logging",
+      "Gym access",
+      "Locker room access",
     ],
-    isPopular: false,
-    ctaText: "Start Starter Plan",
   },
   {
-    id: "transform",
-    name: "TRANSFORM",
-    badge: "MOST POPULAR",
-    priceFormatted: "LKR 9,500",
-    billingPeriod: "/ month",
-    description: "Our signature coaching & periodized training pathway for committed progress.",
+    name: "Standard",
+    price: "7,500",
+    popular: true,
     features: [
-      "Everything in Starter plan",
-      "Periodized training program design",
-      "Bi-weekly coach check-ins & metric tracking",
-      "Nutrition calibration & macro guidelines",
-      "Priority equipment booking during peak hours",
-      "Direct WhatsApp coach support",
+      "All Basic features",
+      "Group classes",
+      "Progress tracking",
     ],
-    isPopular: true,
-    ctaText: "Start Your Transformation",
   },
   {
-    id: "elite",
-    name: "ELITE",
-    badge: "1-ON-1 COACHING",
-    priceFormatted: "LKR 18,500",
-    billingPeriod: "/ month",
-    description: "High-touch personal training with bespoke daily biometric optimization.",
+    name: "Premium",
+    price: "11,500",
+    popular: false,
     features: [
-      "Everything in Transform plan",
-      "8 Dedicated 1-on-1 private coaching sessions",
-      "Comprehensive monthly body composition scans",
-      "Custom supplement & recovery protocols",
-      "Tailored lifestyle & sleep architecture",
-      "24/7 dedicated coach line",
+      "All Standard features",
+      "Personal training (2x/mo)",
+      "Nutrition guidance",
     ],
-    isPopular: false,
-    ctaText: "Join Elite Mentorship",
+  },
+  {
+    name: "Elite",
+    price: "15,000",
+    popular: false,
+    features: [
+      "All Premium features",
+      "Unlimited personal training",
+      "VIP locker & perks",
+    ],
   },
 ];
 
-interface MembershipSectionProps {
-  tiers?: PricingTier[];
-}
-
-export function MembershipSection({ tiers = DEFAULT_TIERS }: MembershipSectionProps) {
+export function MembershipSection() {
   return (
-    <section
-      id="membership"
-      className="relative w-full bg-[#0E1012] py-24 sm:py-32 border-t border-[#2D3339]/50"
-    >
-      <div className="max-w-[1750px] mx-auto px-4 sm:px-8 lg:px-14 xl:px-20">
-        {/* Header */}
-        <FadeIn direction="up" distance={20} className="flex flex-col items-start max-w-3xl">
-          <SectionLabel label="INVEST IN EXCELLENCE" />
-
-          <h2 className="mt-5 text-3xl sm:text-5xl lg:text-6xl font-black tracking-tight text-[#F8FAFC] uppercase">
-            Find Your <br />
-            <span className="text-[#76C043]">Fit</span>
-          </h2>
-
-          <p className="mt-4 text-base sm:text-lg text-[#9CA3AF] max-w-2xl">
-            Transparent, zero-contract memberships built around genuine accountability.
-            Choose the tier that matches your training ambition.
+    <section id="pricing" className="relative w-full bg-[#060708] py-20 lg:py-28 border-t border-white/5 overflow-hidden">
+      <div className="max-w-[1750px] mx-auto px-5 sm:px-10 lg:px-16 xl:px-24">
+        {/* Header Block */}
+        <div className="max-w-2xl mb-14">
+          <p className="text-xs font-bold uppercase tracking-[0.25em] text-[#76C043] mb-3">
+            Membership Plans
           </p>
-        </FadeIn>
+          <h2 className="text-3xl sm:text-4xl lg:text-5xl font-black uppercase tracking-tight text-white leading-none">
+            Flexible Plans <br />
+            <span className="text-[#76C043]">For Every Goal</span>
+          </h2>
+          <p className="mt-4 text-sm sm:text-base text-[#9CA3AF]">
+            Choose a plan that fits your lifestyle and start your fitness journey today.
+          </p>
+          <div className="mt-6">
+            <Link
+              href="#membership-details"
+              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-[#76C043]/60 bg-[#0E1113] hover:bg-[#76C043]/10 text-white hover:text-[#76C043] text-xs font-bold uppercase tracking-wider transition-all"
+            >
+              <span>Get Started</span>
+              <svg className="w-3.5 h-3.5 text-[#76C043]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
+            </Link>
+          </div>
+        </div>
 
-        {/* Pricing Cards with Staggered Motion */}
-        <StaggerContainer
-          staggerDelay={0.12}
-          className="mt-14 sm:mt-20 grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch"
-        >
-          {tiers.map((tier) => (
-            <StaggerItem key={tier.id} className="h-full">
-              <div
-                className={`relative flex h-full flex-col justify-between rounded-2xl border p-8 sm:p-10 transition-all duration-300 ${
-                  tier.isPopular
-                    ? "bg-[#121517] border-[#76C043] shadow-[0_16px_50px_rgba(118,192,67,0.18)] scale-100 lg:-translate-y-2.5"
-                    : "bg-[#0B0D0E] border-[#2D3339] card-hover-border hover:bg-[#121517]/80"
+        {/* 4 Pricing Cards Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
+          {PLANS.map((plan) => (
+            <div
+              key={plan.name}
+              className={`relative flex flex-col justify-between p-6 rounded-2xl transition-all duration-300 ${
+                plan.popular
+                  ? "bg-[#0E140E] border-2 border-[#76C043] shadow-[0_0_40px_rgba(118,192,67,0.25)] -translate-y-2"
+                  : "bg-[#0D1012] border border-white/5 hover:border-white/20 hover:-translate-y-1"
+              }`}
+            >
+              {plan.popular && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-0.5 rounded-full bg-[#76C043] text-black text-[10px] font-black uppercase tracking-wider shadow-[0_0_12px_rgba(118,192,67,0.6)]">
+                  Most Popular
+                </div>
+              )}
+
+              <div>
+                <h3 className="text-lg font-bold text-white mb-2">{plan.name}</h3>
+                <div className="flex items-baseline gap-1.5 mb-6">
+                  <span className="text-xs text-[#9CA3AF] font-bold">LKR</span>
+                  <span className="text-3xl font-black text-white">{plan.price}</span>
+                  <span className="text-xs text-[#9CA3AF]">/month</span>
+                </div>
+
+                {/* Features List */}
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((feat) => (
+                    <li key={feat} className="flex items-center gap-2.5 text-xs text-[#C5CBD3]">
+                      <svg className="w-4 h-4 text-[#76C043] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>{feat}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Action Button */}
+              <Link
+                href="http://localhost:8000/register/"
+                className={`w-full py-2.5 rounded-xl text-center text-xs font-black uppercase tracking-wider transition-all block ${
+                  plan.popular
+                    ? "bg-[#76C043] hover:bg-[#85D538] text-black shadow-[0_0_20px_rgba(118,192,67,0.4)]"
+                    : "bg-[#14181B] hover:bg-[#1A2024] text-white border border-white/10 hover:border-[#76C043]"
                 }`}
               >
-                {/* Popular Badge */}
-                {tier.badge && (
-                  <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-                    <span className="rounded-full bg-[#76C043] px-3.5 py-1 text-[10px] font-mono font-black uppercase tracking-widest text-[#0B0D0E] shadow-[0_0_15px_rgba(118,192,67,0.5)]">
-                      {tier.badge}
-                    </span>
-                  </div>
-                )}
-
-                <div>
-                  {/* Header */}
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-bold tracking-tight text-[#F8FAFC]">
-                      {tier.name}
-                    </h3>
-                  </div>
-
-                  {/* Price Display */}
-                  <div className="mt-6 flex items-baseline gap-2">
-                    <span className="text-4xl sm:text-5xl font-black text-[#F8FAFC] tracking-tight">
-                      {tier.priceFormatted}
-                    </span>
-                    <span className="text-sm font-mono text-[#9CA3AF]">
-                      {tier.billingPeriod}
-                    </span>
-                  </div>
-
-                  <p className="mt-4 text-sm leading-relaxed text-[#9CA3AF]">
-                    {tier.description}
-                  </p>
-
-                  {/* Features List */}
-                  <ul className="mt-8 space-y-3.5 border-t border-[#2D3339] pt-8">
-                    {tier.features.map((feat, fIdx) => (
-                      <li key={fIdx} className="flex items-start gap-3 text-sm text-[#F8FAFC]/90">
-                        <svg
-                          className="w-5 h-5 shrink-0 text-[#76C043] mt-0.5"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2.5"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        >
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                        <span>{feat}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Bottom CTA */}
-                <div className="mt-10 pt-6 border-t border-[#2D3339]/60">
-                  {tier.isPopular ? (
-                    <PrimaryButton
-                      href="tel:0707627878"
-                      fullWidth
-                      size="md"
-                    >
-                      Start Your Transformation
-                    </PrimaryButton>
-                  ) : (
-                    <SecondaryButton
-                      href="tel:0707627878"
-                      fullWidth
-                      size="md"
-                    >
-                      {tier.ctaText}
-                    </SecondaryButton>
-                  )}
-                  <p className="text-center text-[11px] font-mono text-[#9CA3AF] mt-3">
-                    Call 070 762 7878 or visit facility to enroll
-                  </p>
-                </div>
-              </div>
-            </StaggerItem>
+                Join Now
+              </Link>
+            </div>
           ))}
-        </StaggerContainer>
+        </div>
       </div>
     </section>
   );

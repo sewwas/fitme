@@ -15,10 +15,10 @@
     --bg-dark: #0B0D0E;
     --card-bg: #121517;
     --card-surface: #1F2428;
-    --neon-lime: #88D82D;
-    --neon-hover: #9EF040;
-    --neon-glow: rgba(136, 216, 45, 0.28);
-    --neon-glow-high: rgba(136, 216, 45, 0.6);
+    --neon-lime: #76C043;
+    --neon-hover: #85D538;
+    --neon-glow: rgba(118, 192, 67, 0.28);
+    --neon-glow-high: rgba(118, 192, 67, 0.6);
     --cyan: #06B6D4;
     --amber: #F59E0B;
     --danger: #E63946;
@@ -356,7 +356,7 @@
                           <span>{{ mp.user.get_full_name|default:mp.user.username }}</span>
                           <i class="fa fa-external-link-alt" style="font-size:0.65rem;color:var(--cyan);opacity:0.8;"></i>
                           {% if mp.user_id in floor_user_ids %}
-                            <span style="font-size:0.62rem;background:rgba(136,216,45,0.2);color:var(--neon-lime);border:1px solid rgba(136,216,45,0.4);padding:1px 5px;border-radius:4px;font-weight:800;">
+                            <span style="font-size:0.62rem;background:rgba(118,192,67,0.2);color:var(--neon-lime);border:1px solid rgba(118,192,67,0.4);padding:1px 5px;border-radius:4px;font-weight:800;">
                               <i class="fa fa-door-open"></i> ON FLOOR
                             </span>
                           {% endif %}
@@ -1037,7 +1037,7 @@
         <div>
           <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;">
             <h3 id="mpFullName" style="font-family:'Montserrat',sans-serif;font-weight:900;color:#fff;margin:0;font-size:1.25rem;">Member Name</h3>
-            <span id="mpSubBadge" style="font-size:0.72rem;font-weight:800;padding:0.2rem 0.55rem;border-radius:999px;background:rgba(136,216,45,0.18);color:var(--neon-lime);border:1px solid rgba(136,216,45,0.3);">ACTIVE</span>
+            <span id="mpSubBadge" style="font-size:0.72rem;font-weight:800;padding:0.2rem 0.55rem;border-radius:999px;background:rgba(118,192,67,0.18);color:var(--neon-lime);border:1px solid rgba(118,192,67,0.3);">ACTIVE</span>
             <span id="mpFloorLiveBadge" style="font-size:0.72rem;font-weight:800;padding:0.2rem 0.55rem;border-radius:999px;background:rgba(0,240,255,0.15);color:#00F0FF;border:1px solid rgba(0,240,255,0.3);display:none;"><i class="fa fa-door-open"></i> ON FLOOR TODAY</span>
           </div>
           <div style="font-size:0.78rem;color:var(--text-muted);margin-top:4px;">
@@ -1265,9 +1265,9 @@
       const subBadge = document.getElementById('mpSubBadge');
       if (m.sub_status === 'ACTIVE') {
         subBadge.className = 'badge';
-        subBadge.style.background = 'rgba(136,216,45,0.18)';
+        subBadge.style.background = 'rgba(118,192,67,0.18)';
         subBadge.style.color = 'var(--neon-lime)';
-        subBadge.style.border = '1px solid rgba(136,216,45,0.3)';
+        subBadge.style.border = '1px solid rgba(118,192,67,0.3)';
         subBadge.innerHTML = `<i class="fa fa-check-circle"></i> ACTIVE (${m.days_remaining}d left)`;
       } else if (m.sub_status === 'EXPIRED') {
         subBadge.className = 'badge';

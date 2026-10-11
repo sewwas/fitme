@@ -345,7 +345,40 @@ class UsernameConfirmationForm(Form):
         return username
 
 
-class PasswordResetFormCaptcha(PasswordResetForm):
+class FitMePasswordResetForm(PasswordResetForm):
+    """
+    Enhanced PasswordResetForm for Fit Me Fitness.
+    Accepts either an email address or username.
+    Yields active users matching either field (case-insensitive).
+    Bypasses Django's default has_usable_password() restriction so that members
+    with newly created/pending passwords or unusable password flags can still
+    receive the cryptographic password setup link.
+    """
+    email = forms.CharField(
+        label=_("Email address or Username"),
+        max_length=254,
+        widget=forms.TextInput(attrs={'autocomplete': 'email', 'placeholder': 'Enter your email or username'})
+    )
+
+    def clean_email(self):
+        return self.cleaned_data.get('email', '').strip()
+
+    def get_users(self, email):
+        from django.db.models import Q
+        UserModel = User
+        email_field_name = UserModel.get_email_field_name()
+        clean_target = email.strip() if email else ''
+        active_users = UserModel._default_manager.filter(
+            Q(**{f"{email_field_name}__iexact": clean_target}) |
+            Q(username__iexact=clean_target),
+            is_active=True
+        ).distinct()
+        for user in active_users:
+            if user.email:
+                yield user
+
+
+class PasswordResetFormCaptcha(FitMePasswordResetForm):
     captcha = ReCaptchaField(
         widget=ReCaptchaV3(action='password_reset'),
         label='reCaptcha',

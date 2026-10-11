@@ -15,6 +15,7 @@ class Command(BaseCommand):
         self._seed_groups()
         self._seed_plans()
         self._seed_foods()
+        self._seed_financial_operations()
         self.stdout.write(self.style.SUCCESS('\n=== Fit Me seed complete ==='))
 
     def _seed_groups(self):
@@ -168,16 +169,16 @@ class Command(BaseCommand):
         admin_group, _ = Group.objects.get_or_create(name='super_admin')
         admin_user.groups.add(admin_group)
 
-        # 1.1 Club Admin (Operations - No Plan Override Authority)
+        # 1.1 Admin (Operations - No Plan Override Authority)
         admin_ops, _ = User.objects.get_or_create(
             username='admin_ops',
-            defaults={'email': 'admin_ops@fitme.com', 'first_name': 'Club', 'last_name': 'Admin', 'is_staff': True}
+            defaults={'email': 'admin_ops@fitme.com', 'first_name': 'Admin', 'last_name': '', 'is_staff': True}
         )
         admin_ops.set_password('fitme123!')
         admin_ops.is_staff = True
         admin_ops.save()
-        club_admin_group, _ = Group.objects.get_or_create(name='admin')
-        admin_ops.groups.add(club_admin_group)
+        admin_ops_group, _ = Group.objects.get_or_create(name='admin')
+        admin_ops.groups.add(admin_ops_group)
 
         # 2. Front Desk
         fd_user, _ = User.objects.get_or_create(
@@ -364,4 +365,245 @@ class Command(BaseCommand):
         )
 
         self.stdout.write('  Seeded accounts, applications, shifts, alerts, and punches successfully!')
+
+    def _seed_financial_operations(self):
+        self.stdout.write('\nSeeding POS inventory, financial receipts, club expenses, and drawer telemetry...')
+        from decimal import Decimal
+        from django.utils import timezone
+        from django.contrib.auth import get_user_model
+        from wger.membership.models import MembershipPlan, Subscription
+        from wger.pos.models import POSCategory, POSProduct, POSSale, POSSaleItem, POSCashDrawerAudit
+        from wger.gym_operations_payroll.models import PaymentReceipt, ClubExpense
+
+        User = get_user_model()
+        admin_user = User.objects.filter(username='admin').first()
+        fd_user = User.objects.filter(username='frontdesk').first() or admin_user
+        kasun = User.objects.filter(username='member_kasun').first()
+        nuwan = User.objects.filter(username='member_nuwan').first()
+        ind_plan = MembershipPlan.objects.filter(plan_type='individual').first() or MembershipPlan.objects.first()
+
+        now = timezone.now()
+        today = timezone.localdate()
+
+        # 1. POS Categories & Products
+        cat_bev, _ = POSCategory.objects.get_or_create(name='Beverages & Drinks', defaults={'slug': 'beverages', 'icon': 'fa-wine-bottle', 'display_order': 1})
+        cat_sup, _ = POSCategory.objects.get_or_create(name='Supplements & Nutrition', defaults={'slug': 'supplements', 'icon': 'fa-prescription-bottle-alt', 'display_order': 2})
+        cat_snk, _ = POSCategory.objects.get_or_create(name='Healthy Snacks & Fuel', defaults={'slug': 'snacks', 'icon': 'fa-cookie-bite', 'display_order': 3})
+        cat_gear, _ = POSCategory.objects.get_or_create(name='Gym Gear & Straps', defaults={'slug': 'gear', 'icon': 'fa-dumbbell', 'display_order': 4})
+
+        p_water, _ = POSProduct.objects.get_or_create(sku='BEV-WTR-01', defaults={
+            'category': cat_bev, 'name': 'Mineral Water (1L)', 'price': Decimal('150.00'), 'cost_price': Decimal('70.00'), 'stock_quantity': 75, 'unit': 'bottle'
+        })
+        p_whey, _ = POSProduct.objects.get_or_create(sku='SUP-WHEY-01', defaults={
+            'category': cat_sup, 'name': 'Whey Protein Shake (Chocolate)', 'price': Decimal('750.00'), 'cost_price': Decimal('420.00'), 'stock_quantity': 45, 'unit': 'shake'
+        })
+        p_pre, _ = POSProduct.objects.get_or_create(sku='SUP-PRE-01', defaults={
+            'category': cat_sup, 'name': 'Pre-Workout Shot (Blue Berry)', 'price': Decimal('600.00'), 'cost_price': Decimal('320.00'), 'stock_quantity': 35, 'unit': 'bottle'
+        })
+        p_energy, _ = POSProduct.objects.get_or_create(sku='BEV-ELE-01', defaults={
+            'category': cat_bev, 'name': 'Electrolyte Energy Drink', 'price': Decimal('350.00'), 'cost_price': Decimal('180.00'), 'stock_quantity': 55, 'unit': 'can'
+        })
+        p_bar, _ = POSProduct.objects.get_or_create(sku='SNK-BAR-01', defaults={
+            'category': cat_snk, 'name': 'Protein Bar (Choco Crunch)', 'price': Decimal('550.00'), 'cost_price': Decimal('290.00'), 'stock_quantity': 30, 'unit': 'bar'
+        })
+        p_straps, _ = POSProduct.objects.get_or_create(sku='GEAR-STRP-01', defaults={
+            'category': cat_gear, 'name': 'Fit Me Grip Lifting Straps', 'price': Decimal('1800.00'), 'cost_price': Decimal('950.00'), 'stock_quantity': 18, 'unit': 'pair'
+        })
+
+        # 2. Membership Payment Receipts (Today)
+        sub_kasun = Subscription.objects.filter(member=kasun).first() if kasun else None
+        if kasun and not PaymentReceipt.objects.filter(member=kasun, issued_at__date=today).exists():
+            PaymentReceipt.objects.create(
+                receipt_number=PaymentReceipt.generate_next_receipt_number(),
+                subscription=sub_kasun,
+                member=kasun,
+                plan_name=getattr(ind_plan, 'name', 'Monthly Package'),
+                duration_days=30,
+                validity_start=today,
+                validity_end=today + timezone.timedelta(days=30),
+                amount_paid=Decimal('4000.00'),
+                package_amount=Decimal('4000.00'),
+                payment_method='card',
+                cashier=fd_user,
+                member_pin='1001',
+                notes='Monthly membership renewal via POS card terminal',
+                issued_at=now - timezone.timedelta(minutes=15)
+            )
+
+        sub_nuwan = Subscription.objects.filter(member=nuwan).first() if nuwan else None
+        if nuwan and not PaymentReceipt.objects.filter(member=nuwan, issued_at__date=today).exists():
+            PaymentReceipt.objects.create(
+                receipt_number=PaymentReceipt.generate_next_receipt_number(),
+                subscription=sub_nuwan,
+                member=nuwan,
+                plan_name=getattr(ind_plan, 'name', 'Monthly Package'),
+                duration_days=30,
+                validity_start=today,
+                validity_end=today + timezone.timedelta(days=30),
+                amount_paid=Decimal('5000.00'),
+                package_amount=Decimal('4000.00'),
+                annual_fee_amount=Decimal('1000.00'),
+                payment_method='cash',
+                cashier=fd_user,
+                member_pin='1002',
+                notes='Monthly package renewal + Annual Registration Fee (Cash)',
+                issued_at=now - timezone.timedelta(minutes=5)
+            )
+
+        # Historical Payment Receipts (Past 5 Months so 6-Month trajectory is populated)
+        hist_users = [u for u in [kasun, nuwan, admin_user] if u]
+        if PaymentReceipt.objects.count() < 10 and hist_users:
+            monthly_sample_amounts = [
+                (5, [Decimal('12000.00'), Decimal('15000.00'), Decimal('18000.00')]),
+                (4, [Decimal('15000.00'), Decimal('22000.00'), Decimal('21000.00')]),
+                (3, [Decimal('18000.00'), Decimal('25000.00'), Decimal('25000.00')]),
+                (2, [Decimal('22000.00'), Decimal('30000.00'), Decimal('28000.00')]),
+                (1, [Decimal('28000.00'), Decimal('35000.00'), Decimal('32000.00')]),
+            ]
+            for months_ago, amounts in monthly_sample_amounts:
+                h_date = now - timezone.timedelta(days=months_ago * 30)
+                for idx, amt in enumerate(amounts):
+                    u = hist_users[idx % len(hist_users)]
+                    PaymentReceipt.objects.create(
+                        receipt_number=PaymentReceipt.generate_next_receipt_number(),
+                        member=u,
+                        plan_name='Standard Plan',
+                        duration_days=30,
+                        validity_start=h_date.date(),
+                        validity_end=(h_date + timezone.timedelta(days=30)).date(),
+                        amount_paid=amt,
+                        package_amount=amt - Decimal('1000.00'),
+                        annual_fee_amount=Decimal('1000.00'),
+                        payment_method='cash' if idx % 2 == 0 else 'card',
+                        cashier=fd_user,
+                        notes=f'Historical membership batch {months_ago} months ago',
+                        issued_at=h_date + timezone.timedelta(days=idx * 2)
+                    )
+
+        # 3. POS Completed Sales (Today)
+        if not POSSale.objects.filter(created_at__date=today).exists():
+            s1 = POSSale.objects.create(
+                receipt_number='POS-RCP-' + now.strftime('%Y%m%d') + '-0001',
+                cashier=fd_user,
+                customer_name='Kasun Jayawardena',
+                subtotal=Decimal('1650.00'),
+                total_amount=Decimal('1650.00'),
+                payment_method='CASH',
+                amount_received=Decimal('2000.00'),
+                change_returned=Decimal('350.00'),
+                status='COMPLETED',
+                notes='2x Whey Protein + 1x Mineral Water'
+            )
+            POSSaleItem.objects.create(sale=s1, product=p_whey, quantity=2, unit_price=p_whey.price, total_price=Decimal('1500.00'))
+            POSSaleItem.objects.create(sale=s1, product=p_water, quantity=1, unit_price=p_water.price, total_price=Decimal('150.00'))
+
+            s2 = POSSale.objects.create(
+                receipt_number='POS-RCP-' + now.strftime('%Y%m%d') + '-0002',
+                cashier=fd_user,
+                customer_name='Nuwan Bandara',
+                subtotal=Decimal('950.00'),
+                total_amount=Decimal('950.00'),
+                payment_method='CARD',
+                amount_received=Decimal('950.00'),
+                status='COMPLETED',
+                notes='1x Pre-Workout + 1x Energy Drink'
+            )
+            POSSaleItem.objects.create(sale=s2, product=p_pre, quantity=1, unit_price=p_pre.price, total_price=Decimal('600.00'))
+            POSSaleItem.objects.create(sale=s2, product=p_energy, quantity=1, unit_price=p_energy.price, total_price=Decimal('350.00'))
+
+            s3 = POSSale.objects.create(
+                receipt_number='POS-RCP-' + now.strftime('%Y%m%d') + '-0003',
+                cashier=fd_user,
+                customer_name='Walk-in Athlete',
+                subtotal=Decimal('1800.00'),
+                total_amount=Decimal('1800.00'),
+                payment_method='KOKO',
+                amount_received=Decimal('1800.00'),
+                status='COMPLETED',
+                notes='1x Fit Me Lifting Straps'
+            )
+            POSSaleItem.objects.create(sale=s3, product=p_straps, quantity=1, unit_price=p_straps.price, total_price=Decimal('1800.00'))
+
+            s4 = POSSale.objects.create(
+                receipt_number='POS-RCP-' + now.strftime('%Y%m%d') + '-0004',
+                cashier=fd_user,
+                customer_name='Walk-in Customer',
+                subtotal=Decimal('1400.00'),
+                total_amount=Decimal('1400.00'),
+                payment_method='CASH',
+                amount_received=Decimal('1500.00'),
+                change_returned=Decimal('100.00'),
+                status='COMPLETED',
+                notes='2x Protein Bars + 2x Water'
+            )
+            POSSaleItem.objects.create(sale=s4, product=p_bar, quantity=2, unit_price=p_bar.price, total_price=Decimal('1100.00'))
+            POSSaleItem.objects.create(sale=s4, product=p_water, quantity=2, unit_price=p_water.price, total_price=Decimal('300.00'))
+
+        # 4. Club Operating Expenses (Today & Historical)
+        if not ClubExpense.objects.filter(expense_date=today).exists():
+            ClubExpense.objects.create(
+                title='Daily Facility Hygiene & Sanitation Supplies',
+                category='cleaning',
+                amount=Decimal('3500.00'),
+                expense_date=today,
+                payment_method='cash',
+                recorded_by=admin_user,
+                receipt_ref='INV-CLN-8821',
+                notes='Floor disinfectant, microfibre mop refills, paper towels'
+            )
+            ClubExpense.objects.create(
+                title='Cable Machine Pulley & Lubrication Servicing',
+                category='maintenance',
+                amount=Decimal('4200.00'),
+                expense_date=today,
+                payment_method='bank_transfer',
+                recorded_by=admin_user,
+                receipt_ref='SVC-MNT-1049',
+                notes='High-tensile replacement cable for dual cable crossover'
+            )
+
+        if ClubExpense.objects.count() < 6:
+            for m_back in [0, 1, 2, 3, 4, 5]:
+                past_d = today - timezone.timedelta(days=m_back * 30 + 5)
+                ClubExpense.objects.get_or_create(
+                    title=f'Facility Building Rent ({past_d.strftime("%b %Y")})',
+                    expense_date=past_d,
+                    defaults={
+                        'category': 'rent',
+                        'amount': Decimal('120000.00'),
+                        'payment_method': 'bank_transfer',
+                        'recorded_by': admin_user,
+                        'receipt_ref': f'RENT-{past_d.strftime("%Y%m")}',
+                        'notes': 'Pitigala Gym premises monthly lease fee'
+                    }
+                )
+                ClubExpense.objects.get_or_create(
+                    title=f'Electricity Utility CEB ({past_d.strftime("%b %Y")})',
+                    expense_date=past_d + timezone.timedelta(days=2),
+                    defaults={
+                        'category': 'electricity',
+                        'amount': Decimal('38500.00'),
+                        'payment_method': 'bank_transfer',
+                        'recorded_by': admin_user,
+                        'receipt_ref': f'CEB-{past_d.strftime("%Y%m")}',
+                        'notes': 'AC and gym floor illumination'
+                    }
+                )
+
+        # 5. POS Cash Drawer Audit for today
+        if not POSCashDrawerAudit.objects.filter(audit_date__date=today).exists():
+            POSCashDrawerAudit.objects.create(
+                cashier=fd_user,
+                opening_float=Decimal('10000.00'),
+                cash_sales_total=Decimal('8050.00'),
+                expected_cash=Decimal('18050.00'),
+                counted_cash=Decimal('18050.00'),
+                discrepancy=Decimal('0.00'),
+                status='BALANCED',
+                notes='Shift drawer count balanced. All physical notes verified.',
+                audit_date=now
+            )
+
+        self.stdout.write('  Seeded POS inventory, membership receipts, club expenses, and balanced drawer audit successfully!')
+
 

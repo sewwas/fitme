@@ -17,9 +17,9 @@
       --card-hover: #191F24;
       --sidebar-bg: #0E1215;
       --border-color: rgba(255, 255, 255, 0.08);
-      --border-focus: rgba(136, 216, 45, 0.4);
-      --neon-lime: #88D82D;
-      --neon-glow: rgba(136, 216, 45, 0.28);
+      --border-focus: rgba(118, 192, 67, 0.4);
+      --neon-lime: #76C043;
+      --neon-glow: rgba(118, 192, 67, 0.28);
       --cyan: #00F0FF;
       --danger: #FF3366;
       --warning: #F59E0B;
@@ -781,7 +781,7 @@
 <header class="pos-topbar">
   <div class="brand-section">
     <a href="/pos/" class="brand-logo" style="display:flex;align-items:center;gap:0.65rem;">
-      <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me Logo" style="height:36px;width:36px;border-radius:50%;border:1.5px solid var(--neon-lime);object-fit:cover;box-shadow:0 0 10px rgba(136,216,45,0.35);">
+      <img src="{% static 'images/logos/fitme-official-logo.jpg' %}" alt="Fit Me Logo" style="height:36px;width:36px;border-radius:50%;border:1.5px solid var(--neon-lime);object-fit:cover;box-shadow:0 0 10px rgba(118,192,67,0.35);">
       <div style="display:flex;flex-direction:column;line-height:1.1;">
         <span style="font-family:'Montserrat',sans-serif;font-weight:900;letter-spacing:1px;font-size:1.3rem;">
           <span style="color:var(--neon-lime);">FIT</span> <span style="color:#C5CBD3;">ME</span>
@@ -815,7 +815,7 @@
   </div>
 
   <div style="display:flex;align-items:center;gap:0.4rem;flex-wrap:wrap;">
-    <button type="button" class="btn-top" onclick="openStockAuditModal()" style="background:#172228;color:var(--neon-lime);border-color:rgba(136,216,45,0.4);" title="Physical Stock Audit & Count Check">
+    <button type="button" class="btn-top" onclick="openStockAuditModal()" style="background:#172228;color:var(--neon-lime);border-color:rgba(118,192,67,0.4);" title="Physical Stock Audit & Count Check">
       <i class="fa fa-clipboard-check"></i> Stock Audit
     </button>
     <a href="/pos/audit/plan/" target="_blank" class="btn-top" style="background:#172228;color:var(--cyan);border-color:rgba(0,240,255,0.4);text-decoration:none;" title="Print Official Stock Audit Count Plan Sheet">
@@ -828,7 +828,7 @@
       <i class="fa fa-history"></i> Logs
     </button>
     {% if is_admin %}
-      <button type="button" class="btn-top" onclick="openRestockModal()" style="background:#172228;color:var(--neon-lime);border-color:rgba(136,216,45,0.4);" title="Quick Inventory Restock (Admin Authorized)">
+      <button type="button" class="btn-top" onclick="openRestockModal()" style="background:#172228;color:var(--neon-lime);border-color:rgba(118,192,67,0.4);" title="Quick Inventory Restock (Admin Authorized)">
         <i class="fa fa-boxes"></i> Restock
       </button>
     {% endif %}
@@ -1994,8 +1994,8 @@
       badge.style.background = 'rgba(255,51,102,0.1)';
     } else {
       badge.innerHTML = `<span style="color:var(--neon-lime);"><i class="fa fa-plus-circle"></i> EXCESS +${diff} unit(s) &bull; Gain: LKR ${varianceVal.toFixed(2)}</span>`;
-      badge.style.borderColor = 'rgba(136,216,45,0.6)';
-      badge.style.background = 'rgba(136,216,45,0.1)';
+      badge.style.borderColor = 'rgba(118,192,67,0.6)';
+      badge.style.background = 'rgba(118,192,67,0.1)';
     }
   }
 

@@ -13,7 +13,7 @@ const ARENA_CARDS = [
     description:
       "A distraction-free, professional athletic facility loaded with Olympic barbells, calibrated plates, racks, and specialty machinery.",
     imageUrl:
-      "https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=1000&auto=format&fit=crop",
+      "/images/arena-iron-sanctuary.jpg",
     imageAlt: "The Iron Sanctuary modern training area with barbells and racks",
   },
   {
@@ -23,7 +23,7 @@ const ARENA_CARDS = [
     description:
       "High-touch 1-on-1 and small squad coaching. Real-time bio-mechanical cues to lift injury-free with undeniable intent.",
     imageUrl:
-      "https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?q=80&w=1000&auto=format&fit=crop",
+      "/images/arena-coaching.jpg",
     imageAlt: "Personal coach guiding athlete during barbell training",
   },
   {
@@ -33,7 +33,7 @@ const ARENA_CARDS = [
     description:
       "Practical, non-dogmatic nutritional support tailored to Sri Lankan lifestyles and real-world dining habits for sustainable energy.",
     imageUrl:
-      "https://images.unsplash.com/photo-1490645935967-10de6ba17061?q=80&w=1000&auto=format&fit=crop",
+      "/images/arena-nutrition.jpg",
     imageAlt: "Wholesome nutrient-dense nutrition setup for athletes",
   },
 ];
