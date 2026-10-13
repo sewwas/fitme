@@ -23,18 +23,32 @@ def inspect_staff_punch_continuity():
     today = now.date()
     current_time = now.time()
 
+    # Gym operating hours: Morning 05:00 - 12:00, Evening 15:00 - 21:00
+    # Gym is closed between 12:00 and 15:00 (mid-day break). Do not alert during break!
+    curr_hour = current_time.hour
+    curr_min = current_time.minute
+    t_val = curr_hour + (curr_min / 60.0)
+    is_gym_open_hours = (5.0 <= t_val < 12.0) or (15.0 <= t_val < 21.0)
+    if not is_gym_open_hours:
+        return "Gym is outside active floor hours (12:00-15:00 break or night closure). Continuity check skipped."
+
     # Find shifts scheduled for today where shift has started and not finished
     active_shifts = StaffShift.objects.filter(
         shift_date=today,
-        scheduled_start__lte=current_time,
-        scheduled_end__gte=current_time,
+        is_rest_day=False,
         approved_leave=False
-    ).select_related('staff_user')
+    ).exclude(shift_type='REST_DAY').select_related('staff_user')
 
     alerts_triggered = 0
 
     for shift in active_shifts:
         user = shift.staff_user
+
+        # Filter out sessions that are not currently active
+        if shift.shift_type == 'MORNING' and t_val >= 12.0:
+            continue
+        if shift.shift_type == 'EVENING' and t_val < 15.0:
+            continue
 
         # Get latest punch for this user today
         latest_punch = DoorAccessLog.objects.filter(

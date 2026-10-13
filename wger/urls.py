@@ -426,6 +426,8 @@ urlpatterns += [
     # Multi-User (Couples & Family) Partner Linking APIs
     path('api/subscriptions/<int:subscription_id>/link-partner/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_link_partner_api']).admin_link_partner_api, name='api-link-partner'),
     path('api/buddy-links/<int:link_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_unlink_partner_api']).admin_unlink_partner_api, name='api-unlink-partner'),
+    path('api/payroll/issue-advance/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_issue_salary_advance_api']).admin_issue_salary_advance_api, name='api-direct-payroll-issue-advance'),
+    path('api/payroll/enroll-staff/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_enroll_staff_payroll_api']).admin_enroll_staff_payroll_api, name='api-direct-payroll-enroll-staff'),
     # Direct expense API aliases
     path('api/expenses/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_expense_api']).admin_create_expense_api, name='api-direct-admin-create-expense'),
     path('api/expenses/<int:expense_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_delete_expense_api']).admin_delete_expense_api, name='api-direct-admin-delete-expense'),

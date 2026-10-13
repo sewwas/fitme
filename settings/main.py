@@ -75,6 +75,7 @@ else:
             'PASSWORD': env.str('DJANGO_DB_PASSWORD', ''),
             'HOST': env.str('DJANGO_DB_HOST', ''),
             'PORT': env.int('DJANGO_DB_PORT', 5432),
+            'CONN_MAX_AGE': env.int('DJANGO_DB_CONN_MAX_AGE', 600),
         }
     }
 PS_STORAGE_PG_URI = env.str(

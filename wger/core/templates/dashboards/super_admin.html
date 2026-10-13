@@ -496,7 +496,7 @@
                         {{ u.role_label }}
                       </span>
                       {% if is_super_admin %}
-                        <select class="role-switcher-select" onchange="changeUserRole({{ u.id }}, this.value)" title="Super Admin Override: Change Role">
+                        <select class="role-switcher-select" onchange="changeUserRole({{ u.id }}, this.value)" title="Change User Role">
                           <option value="super_admin" {% if u.primary_role == 'super_admin' %}selected{% endif %}>Super Admin</option>
                           <option value="admin" {% if u.primary_role == 'admin' %}selected{% endif %}>Admin</option>
                           <option value="front_desk" {% if u.primary_role == 'front_desk' %}selected{% endif %}>Front Desk</option>
@@ -792,10 +792,10 @@
               <tr>
                 <th>Staff Member</th>
                 <th>Shift Date</th>
-                <th>Scheduled Hours</th>
-                <th>Clock In (Door)</th>
-                <th>Clock Out (Door)</th>
-                <th>Late / OT</th>
+                <th>Shift Model</th>
+                <th>Morning (05:00 &ndash; 12:00)</th>
+                <th>Evening (15:00 &ndash; 21:00)</th>
+                <th>Duty OT / Late</th>
                 <th>Status</th>
                 <th style="text-align:right;">Actions</th>
               </tr>
@@ -805,7 +805,7 @@
                 <tr id="shift-row-{{ s.id }}">
                   <td>
                     <div style="display:flex;align-items:center;gap:0.6rem;">
-                      <div class="user-avatar-circle" style="width:30px;height:30px;font-size:0.75rem;">
+                      <div class="user-avatar-circle" style="width:32px;height:32px;font-size:0.75rem;">
                         {{ s.staff_user.username|slice:":2"|upper }}
                       </div>
                       <div>
@@ -815,40 +815,107 @@
                     </div>
                   </td>
                   <td style="font-weight:700;">{{ s.shift_date|date:"D, d M Y" }}</td>
-                  <td>{{ s.scheduled_start|time:"H:i" }} &ndash; {{ s.scheduled_end|time:"H:i" }}</td>
                   <td>
-                    {% if s.actual_first_in %}
-                      <span style="color:#fff;font-weight:700;">{{ s.actual_first_in|time:"H:i:s" }}</span>
-                      {% with late=s.calculate_late_minutes %}
-                        {% if late > 0 %}
-                          <span style="color:var(--danger);font-size:0.72rem;margin-left:4px;font-weight:800;">({{ late }}m late)</span>
-                        {% else %}
-                          <span style="color:var(--neon-lime);font-size:0.72rem;margin-left:4px;">(On Time)</span>
-                        {% endif %}
-                      {% endwith %}
+                    {% if s.shift_type == 'FULL_SPLIT' %}
+                      <span class="badge" style="background:rgba(118,192,67,0.15);color:var(--neon-lime);border:1px solid rgba(118,192,67,0.4);font-size:0.7rem;padding:0.2rem 0.45rem;border-radius:4px;font-weight:700;">
+                        <i class="fa fa-columns"></i> Split (5-12 &amp; 3-9)
+                      </span>
+                    {% elif s.shift_type == 'MORNING' %}
+                      <span class="badge" style="background:rgba(245,158,11,0.15);color:#F59E0B;border:1px solid rgba(245,158,11,0.4);font-size:0.7rem;padding:0.2rem 0.45rem;border-radius:4px;font-weight:700;">
+                        <i class="fa fa-sun"></i> Morning (5-12)
+                      </span>
+                    {% elif s.shift_type == 'EVENING' %}
+                      <span class="badge" style="background:rgba(6,182,212,0.15);color:var(--cyan);border:1px solid rgba(6,182,212,0.4);font-size:0.7rem;padding:0.2rem 0.45rem;border-radius:4px;font-weight:700;">
+                        <i class="fa fa-moon"></i> Evening (3-9)
+                      </span>
+                    {% elif s.shift_type == 'REST_DAY' or s.is_rest_day %}
+                      <span class="badge" style="background:rgba(255,255,255,0.06);color:#94a3b8;font-size:0.7rem;padding:0.2rem 0.45rem;border-radius:4px;">
+                        <i class="fa fa-bed"></i> Scheduled Rest Day
+                      </span>
                     {% else %}
-                      <span style="color:var(--text-muted);">Not Clocked In</span>
+                      <span class="badge" style="background:rgba(255,255,255,0.06);color:#fff;font-size:0.7rem;padding:0.2rem 0.45rem;border-radius:4px;">
+                        {{ s.scheduled_start|time:"H:i" }} &ndash; {{ s.scheduled_end|time:"H:i" }}
+                      </span>
                     {% endif %}
                   </td>
                   <td>
-                    {% if s.actual_last_out %}
-                      <span style="color:#fff;font-weight:700;">{{ s.actual_last_out|time:"H:i:s" }}</span>
-                    {% else %}
+                    {% if s.shift_type == 'EVENING' or s.shift_type == 'REST_DAY' or s.is_rest_day %}
                       <span style="color:var(--text-muted);">&mdash;</span>
+                    {% else %}
+                      <div style="font-size:0.8rem;">
+                        {% if s.morning_in %}
+                          <span style="color:var(--neon-lime);font-weight:700;" title="Morning entry punch">
+                            <i class="fa fa-fingerprint" style="font-size:0.7rem;"></i> {{ s.morning_in|time:"H:i" }}
+                          </span>
+                        {% elif s.actual_first_in and s.actual_first_in.hour < 13 %}
+                          <span style="color:var(--neon-lime);font-weight:700;">
+                            <i class="fa fa-fingerprint" style="font-size:0.7rem;"></i> {{ s.actual_first_in|time:"H:i" }}
+                          </span>
+                        {% else %}
+                          <span style="color:#F59E0B;font-size:0.72rem;"><i class="fa fa-clock"></i> Pending In</span>
+                        {% endif %}
+                        <span style="color:var(--text-muted);margin:0 4px;">&rarr;</span>
+                        {% if s.morning_out %}
+                          <span style="color:#fff;font-weight:700;" title="Morning departure punch">
+                            {{ s.morning_out|time:"H:i" }}
+                          </span>
+                        {% elif s.actual_last_out and s.actual_last_out.hour < 15 %}
+                          <span style="color:#fff;font-weight:700;">
+                            {{ s.actual_last_out|time:"H:i" }}
+                          </span>
+                        {% else %}
+                          <span style="color:var(--text-muted);font-size:0.72rem;">&mdash;</span>
+                        {% endif %}
+                      </div>
                     {% endif %}
                   </td>
                   <td>
-                    {% if s.overtime_minutes > 0 %}
-                      <span style="color:var(--neon-lime);font-weight:800;">+{{ s.overtime_minutes }}m OT</span>
-                    {% elif s.calculate_late_minutes > 0 %}
-                      <span style="color:var(--danger);font-weight:700;">-{{ s.calculate_late_minutes }}m Late</span>
+                    {% if s.shift_type == 'MORNING' or s.shift_type == 'REST_DAY' or s.is_rest_day %}
+                      <span style="color:var(--text-muted);">&mdash;</span>
                     {% else %}
-                      <span style="color:var(--text-muted);">Standard</span>
+                      <div style="font-size:0.8rem;">
+                        {% if s.evening_in %}
+                          <span style="color:var(--cyan);font-weight:700;" title="Evening entry punch">
+                            <i class="fa fa-fingerprint" style="font-size:0.7rem;"></i> {{ s.evening_in|time:"H:i" }}
+                          </span>
+                        {% elif s.actual_first_in and s.actual_first_in.hour >= 13 %}
+                          <span style="color:var(--cyan);font-weight:700;">
+                            <i class="fa fa-fingerprint" style="font-size:0.7rem;"></i> {{ s.actual_first_in|time:"H:i" }}
+                          </span>
+                        {% else %}
+                          <span style="color:#F59E0B;font-size:0.72rem;"><i class="fa fa-clock"></i> Pending In</span>
+                        {% endif %}
+                        <span style="color:var(--text-muted);margin:0 4px;">&rarr;</span>
+                        {% if s.evening_out %}
+                          <span style="color:#fff;font-weight:700;" title="Evening departure punch">
+                            {{ s.evening_out|time:"H:i" }}
+                          </span>
+                        {% elif s.actual_last_out and s.actual_last_out.hour >= 15 %}
+                          <span style="color:#fff;font-weight:700;">
+                            {{ s.actual_last_out|time:"H:i" }}
+                          </span>
+                        {% else %}
+                          <span style="color:var(--text-muted);font-size:0.72rem;">&mdash;</span>
+                        {% endif %}
+                      </div>
                     {% endif %}
+                  </td>
+                  <td>
+                    {% with late=s.calculate_late_minutes ot=s.calculate_overtime_minutes %}
+                      {% if ot > 0 %}
+                        <span style="color:var(--neon-lime);font-weight:800;">+{{ ot }}m OT</span>
+                      {% elif late > 0 %}
+                        <span style="color:var(--danger);font-weight:700;">-{{ late }}m Late</span>
+                      {% elif s.morning_in or s.evening_in or s.actual_first_in %}
+                        <span style="color:var(--neon-lime);font-size:0.75rem;">On Time</span>
+                      {% else %}
+                        <span style="color:var(--text-muted);font-size:0.75rem;">Scheduled</span>
+                      {% endif %}
+                    {% endwith %}
                   </td>
                   <td>
                     {% if s.is_rest_day or s.status == 'REST_DAY' %}
-                      <span class="badge badge-role" style="background:rgba(255,255,255,0.06);color:#94a3b8;"><i class="fa fa-bed"></i> Scheduled Rest Day</span>
+                      <span class="badge badge-role" style="background:rgba(255,255,255,0.06);color:#94a3b8;"><i class="fa fa-bed"></i> Rest Day</span>
                     {% elif s.approved_leave %}
                       <span class="badge badge-role" style="background:rgba(0,240,255,0.15);color:var(--cyan);border:1px solid var(--cyan);"><i class="fa fa-umbrella-beach"></i> Approved Leave</span>
                     {% elif s.status == 'ON_FLOOR' %}
@@ -856,24 +923,18 @@
                     {% elif s.status == 'COMPLETED' %}
                       <span class="badge badge-role" style="background:rgba(16,185,129,0.15);color:#10B981;border:1px solid #10B981;"><i class="fa fa-check-circle"></i> Completed</span>
                     {% elif s.status == 'OFF_FLOOR' %}
-                      <span class="badge badge-role" style="background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid var(--danger);"><i class="fa fa-exclamation-triangle"></i> Off Floor</span>
+                      <span class="badge badge-role" style="background:rgba(245,158,11,0.15);color:#F59E0B;border:1px solid rgba(245,158,11,0.3);"><i class="fa fa-door-closed"></i> Off Floor</span>
                     {% else %}
                       <span class="badge badge-role" style="background:rgba(255,255,255,0.06);color:#ccc;"><i class="fa fa-clock"></i> Scheduled</span>
                     {% endif %}
                   </td>
                   <td style="text-align:right;">
                     <div style="display:inline-flex;gap:0.4rem;">
-                      {% if not s.is_rest_day %}
-                        {% if s.status == 'ON_FLOOR' %}
-                          <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="quickClockStaff({{ s.staff_user.id }}, 'OUT')" title="Clock Out Now">
-                            <i class="fa fa-sign-out-alt"></i> Out
-                          </button>
-                        {% elif not s.actual_first_in and not s.approved_leave %}
-                          <button type="button" class="btn-action" style="background:rgba(0,240,255,0.15);color:var(--cyan);border:1px solid var(--cyan);" onclick="quickClockStaff({{ s.staff_user.id }}, 'IN')" title="Clock In Now">
-                            <i class="fa fa-sign-in-alt"></i> In
-                          </button>
-                        {% endif %}
-                        <button type="button" class="btn-action" style="background:{% if s.approved_leave %}rgba(0,240,255,0.2);color:var(--cyan);{% else %}#192025;color:var(--text-muted);{% endif %}" onclick="toggleShiftLeave({{ s.id }})" title="{% if s.approved_leave %}Revoke Leave{% else %}Approve Leave{% endif %}">
+                      {% if not s.is_rest_day and s.shift_type != 'REST_DAY' %}
+                        <button type="button" class="btn-action" style="background:#192025;color:var(--cyan);border:1px solid rgba(0,240,255,0.3);padding:0.25rem 0.5rem;font-size:0.72rem;" onclick="quickClockStaffSession({{ s.staff_user.id }}, 'AUTO')" title="Quick Clock Attendance (Fingerprint/Door)">
+                          <i class="fa fa-fingerprint"></i> Clock
+                        </button>
+                        <button type="button" class="btn-action" style="background:{% if s.approved_leave %}rgba(0,240,255,0.2);color:var(--cyan);{% else %}#192025;color:var(--text-muted);{% endif %};padding:0.25rem 0.5rem;font-size:0.72rem;" onclick="toggleShiftLeave({{ s.id }})" title="{% if s.approved_leave %}Revoke Leave{% else %}Approve Leave{% endif %}">
                           <i class="fa fa-umbrella-beach"></i>
                         </button>
                       {% endif %}
@@ -997,7 +1058,7 @@
                 <th>Biometric PIN</th>
                 <th>Subscription Plan &amp; Expiry</th>
                 <th>Door Access</th>
-                <th style="text-align:right;">{% if is_super_admin %}Actions &amp; Overrides{% else %}Gate Control{% endif %}</th>
+                <th style="text-align:right;">Actions &amp; Overrides</th>
               </tr>
             </thead>
             <tbody>
@@ -1072,10 +1133,10 @@
                       <button class="btn-action btn-danger" onclick="toggleAccess({{ m.user.id }})" title="Toggle Gate Access">
                         <i class="fa fa-ban"></i> Gate
                       </button>
-                      {% if is_super_admin and m.latest_sub %}
+                      {% if m.latest_sub %}
                         <button class="btn-action" style="background:rgba(123,201,0,0.14);color:var(--neon-lime);border:1px solid rgba(123,201,0,0.4);" 
                                 onclick="openOverrideSubModal({{ m.latest_sub.id }}, '{{ m.user.get_full_name|default:m.user.username|escapejs }}', '{{ m.latest_sub.plan.id }}', '{{ m.latest_sub.start_date|date:'Y-m-d' }}', '{{ m.latest_sub.end_date|date:'Y-m-d' }}', '{{ m.latest_sub.amount_paid|floatformat:0 }}', '{{ m.latest_sub.status }}')"
-                                title="Super Admin Data Override">
+                                title="Data Override">
                           <i class="fa fa-sliders-h"></i> Data Override
                         </button>
                       {% endif %}
@@ -1214,11 +1275,9 @@
           <h1 class="page-title">Membership Plans Configurator</h1>
           <p class="page-sub">Tiered membership packages with pricing, durations, and entry window restrictions.</p>
         </div>
-        {% if is_super_admin %}
-          <button class="btn-action btn-lime" onclick="openCreatePlanModal()">
-            <i class="fa fa-plus-circle"></i> + Make New Plan
-          </button>
-        {% endif %}
+        <button class="btn-action btn-lime" onclick="openCreatePlanModal()">
+          <i class="fa fa-plus-circle"></i> + Make New Plan
+        </button>
       </div>
 
       <div class="fitme-card">
@@ -1235,7 +1294,7 @@
                 <th>Validity</th>
                 <th>Capacity</th>
                 <th>Status</th>
-                {% if is_super_admin %}<th style="text-align:right;">Actions / Overrides</th>{% endif %}
+                <th style="text-align:right;">Actions / Overrides</th>
               </tr>
             </thead>
             <tbody>
@@ -1256,7 +1315,6 @@
                       <span style="color:var(--text-muted);font-weight:600;"><i class="fa fa-pause-circle"></i> Inactive</span>
                     {% endif %}
                   </td>
-                  {% if is_super_admin %}
                   <td style="text-align:right;">
                     <div style="display:inline-flex;gap:0.4rem;">
                       <button class="btn-action" style="background:#2A3138;color:#fff;" onclick="openEditPlanModal({{ pl.id }}, '{{ pl.name|escapejs }}', '{{ pl.price_monthly|floatformat:0 }}', '{{ pl.original_price|default:pl.price_monthly|floatformat:0 }}', '{{ pl.discount|floatformat:0 }}', '{{ pl.registration_fee|floatformat:0 }}', {{ pl.duration_days }}, {{ pl.max_members }}, '{{ pl.description|escapejs }}', {{ pl.is_active|yesno:'true,false' }})" title="Override Plan Parameters">
@@ -1270,7 +1328,6 @@
                       </button>
                     </div>
                   </td>
-                  {% endif %}
                 </tr>
               {% endfor %}
             </tbody>
@@ -1778,11 +1835,9 @@
             <div class="card-title"><i class="fa fa-layer-group" style="color:var(--neon-lime);"></i> Billing Package Performance &amp; Revenue Breakdown</div>
             <span style="font-size:0.78rem;color:var(--text-muted);">Active subscribers, all-time subscription counts, package revenue, and contribution share</span>
           </div>
-          {% if is_super_admin %}
           <button class="btn-action" style="background:#192025;color:var(--neon-lime);border:1px solid rgba(118,192,67,0.3);font-size:0.78rem;" onclick="switchTab('tab-admin-memberships')">
             <i class="fa fa-sliders-h"></i> Manage Package Pricing
           </button>
-          {% endif %}
         </div>
         <div class="card-body" style="padding:0;">
           <table class="table-custom">
@@ -1869,7 +1924,7 @@
                 <th>Receipt / Invoice #</th>
                 <th style="text-align:center;">Proof / Bill</th>
                 <th style="text-align:right;">Amount (LKR)</th>
-                {% if is_super_admin %}<th style="text-align:center;">Action</th>{% endif %}
+                <th style="text-align:center;">Action</th>
               </tr>
             </thead>
             <tbody id="expensesTableBody">
@@ -1914,16 +1969,14 @@
                   <td style="text-align:right;font-family:monospace;font-weight:900;color:#EF4444;font-size:0.95rem;">
                     - LKR {{ exp.amount|floatformat:2 }}
                   </td>
-                  {% if is_super_admin %}
                   <td style="text-align:center;">
                     <button type="button" class="btn-action" style="background:rgba(230,57,70,0.15);color:var(--danger);border:1px solid rgba(230,57,70,0.3);padding:0.25rem 0.6rem;font-size:0.72rem;" onclick="deleteExpense({{ exp.id }}, '{{ exp.title|escapejs }}')" title="Delete Expense">
                       <i class="fa fa-trash"></i>
                     </button>
                   </td>
-                  {% endif %}
                 </tr>
               {% empty %}
-                <tr id="noExpensesRow"><td colspan="{% if is_super_admin %}9{% else %}8{% endif %}" style="text-align:center;padding:2rem;color:var(--text-muted);">No club expenses recorded yet.</td></tr>
+                <tr id="noExpensesRow"><td colspan="9" style="text-align:center;padding:2rem;color:var(--text-muted);">No club expenses recorded yet.</td></tr>
               {% endfor %}
             </tbody>
           </table>
@@ -2774,6 +2827,7 @@
       <div style="margin-bottom:1rem;">
         <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Target User:</div>
         <div style="font-size:1rem;font-weight:700;color:var(--neon-lime);" id="resetTargetUsername">username</div>
+      </div>
       <div style="margin-bottom:1.25rem;">
         <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">New Password (Manual Override)</label>
         <div style="display:flex;gap:0.5rem;">
@@ -2799,8 +2853,7 @@
   </div>
 </div>
 
-{% if is_super_admin %}
-<!-- Modal: Make New Membership Package (Super Admin Only) -->
+<!-- Modal: Make New Membership Package -->
 <div id="createPlanModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;overflow-y:auto;padding:1rem;">
   <div class="modal-card-box" style="border:2px solid var(--neon-lime);max-width:620px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);margin:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
@@ -2872,7 +2925,7 @@
   <div class="modal-card-box" style="border:2px solid var(--neon-lime);max-width:620px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);margin:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
       <h3 style="font-family:'Montserrat';font-weight:800;color:#fff;font-size:1.2rem;display:flex;align-items:center;gap:0.5rem;">
-        <i class="fa fa-edit" style="color:var(--neon-lime);"></i> Super Admin: Override Plan Pricing
+        <i class="fa fa-edit" style="color:var(--neon-lime);"></i> Override Plan Pricing &amp; Parameters
       </h3>
       <button type="button" onclick="closeEditPlanModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
     </div>
@@ -2993,7 +3046,7 @@
 
       <div style="margin-bottom:1.25rem;">
         <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Admin Override Reason / Audit Note</label>
-        <textarea id="overrideNotes" rows="2" class="form-control" placeholder="e.g. Free 1-month grace period granted by Super Admin for medical hiatus"></textarea>
+        <textarea id="overrideNotes" rows="2" class="form-control" placeholder="e.g. Free 1-month grace period granted for medical hiatus"></textarea>
       </div>
 
       <div style="display:flex;justify-content:flex-end;gap:0.75rem;flex-wrap:wrap;">
@@ -3633,10 +3686,10 @@
 
 <!-- Modal: Clock Staff Attendance (Door / Turnstile) -->
 <div id="clockAttendanceModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2200;align-items:center;justify-content:center;padding:1.5rem;">
-  <div style="background:#13171A;border:2px solid var(--cyan);border-radius:16px;padding:2rem;max-width:480px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);">
+  <div style="background:#13171A;border:2px solid var(--cyan);border-radius:16px;padding:2rem;max-width:500px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
       <h3 style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;margin:0;">
-        <i class="fa fa-fingerprint" style="color:var(--cyan);"></i> Clock Staff Attendance
+        <i class="fa fa-fingerprint" style="color:var(--cyan);"></i> Clock Staff Attendance (Turnstile)
       </h3>
       <button type="button" onclick="closeClockAttendanceModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
     </div>
@@ -3650,6 +3703,20 @@
             <option value="{{ st.id }}">{{ st.full_name }} (@{{ st.username }}) - {{ st.role_label }}</option>
           {% endfor %}
         </select>
+      </div>
+
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Session Window *</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
+          <label style="display:flex;align-items:center;gap:0.5rem;background:#192025;padding:0.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.08);cursor:pointer;">
+            <input type="radio" name="clockSession" value="MORNING" checked>
+            <span style="font-weight:700;color:var(--neon-lime);font-size:0.8rem;"><i class="fa fa-sun"></i> Morning (05:00-12:00)</span>
+          </label>
+          <label style="display:flex;align-items:center;gap:0.5rem;background:#192025;padding:0.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.08);cursor:pointer;">
+            <input type="radio" name="clockSession" value="EVENING">
+            <span style="font-weight:700;color:var(--cyan);font-size:0.8rem;"><i class="fa fa-moon"></i> Evening (15:00-21:00)</span>
+          </label>
+        </div>
       </div>
 
       <div style="margin-bottom:1rem;">
@@ -3668,7 +3735,7 @@
 
       <div style="margin-bottom:1.25rem;">
         <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Notes / Reason</label>
-        <input type="text" id="clockNotes" class="form-control" placeholder="Door turnstile punch, receptionist override, etc.">
+        <input type="text" id="clockNotes" class="form-control" placeholder="Biometric door turnstile punch, receptionist override, etc.">
       </div>
 
       <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
@@ -3707,14 +3774,25 @@
         <input type="date" id="newShiftDate" class="form-control" required>
       </div>
 
-      <div class="form-grid-2" style="margin-bottom:1rem;">
+      <div style="margin-bottom:1rem;">
+        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Shift Model Preset *</label>
+        <select id="newShiftType" class="form-control" onchange="onShiftTypeChange(this.value)">
+          <option value="FULL_SPLIT" selected>Split Shift (05:00-12:00 &amp; 15:00-21:00) [Gym Standard]</option>
+          <option value="MORNING">Morning Only (05:00 &ndash; 12:00)</option>
+          <option value="EVENING">Evening Only (15:00 &ndash; 21:00)</option>
+          <option value="REST_DAY">Scheduled Rest Day</option>
+          <option value="CUSTOM">Custom Hours</option>
+        </select>
+      </div>
+
+      <div id="customShiftTimesBox" class="form-grid-2" style="margin-bottom:1rem;display:none;">
         <div>
-          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Scheduled Start *</label>
-          <input type="time" id="newShiftStart" class="form-control" value="08:00" required>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Custom Start</label>
+          <input type="time" id="newShiftStart" class="form-control" value="05:00">
         </div>
         <div>
-          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Scheduled End *</label>
-          <input type="time" id="newShiftEnd" class="form-control" value="17:00" required>
+          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Custom End</label>
+          <input type="time" id="newShiftEnd" class="form-control" value="21:00">
         </div>
       </div>
 
@@ -3738,7 +3816,7 @@
   <div style="background:#13171A;border:2px solid var(--neon-lime);border-radius:16px;padding:2rem;max-width:650px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);margin:auto;">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
       <h3 style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;margin:0;">
-        <i class="fa fa-business-time" style="color:var(--neon-lime);"></i> Master Staff Working Days &amp; Schedule
+        <i class="fa fa-business-time" style="color:var(--neon-lime);"></i> Master Staff Weekly Roster Presets
       </h3>
       <button type="button" onclick="closeStaffScheduleModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
     </div>
@@ -3778,75 +3856,86 @@
       </div>
 
       <div style="font-size:0.8rem;font-weight:800;color:var(--neon-lime);margin-bottom:0.6rem;text-transform:uppercase;letter-spacing:1px;">
-        Weekly Working Days &amp; Shift Times
+        Default Shift Schedule per Day
       </div>
 
-      <!-- Monday -->
-      <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:0.5rem;align-items:center;margin-bottom:0.5rem;padding:0.4rem 0.6rem;background:#192025;border-radius:6px;">
-        <label style="margin:0;display:flex;align-items:center;gap:0.4rem;font-size:0.78rem;font-weight:700;color:#fff;cursor:pointer;">
-          <input type="checkbox" id="sched_mon_active" checked style="accent-color:var(--neon-lime);"> Mon
-        </label>
-        <input type="time" id="sched_mon_start" class="form-control" value="06:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
-        <input type="time" id="sched_mon_end" class="form-control" value="15:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
-      </div>
-
-      <!-- Tuesday -->
-      <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:0.5rem;align-items:center;margin-bottom:0.5rem;padding:0.4rem 0.6rem;background:#192025;border-radius:6px;">
-        <label style="margin:0;display:flex;align-items:center;gap:0.4rem;font-size:0.78rem;font-weight:700;color:#fff;cursor:pointer;">
-          <input type="checkbox" id="sched_tue_active" checked style="accent-color:var(--neon-lime);"> Tue
-        </label>
-        <input type="time" id="sched_tue_start" class="form-control" value="06:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
-        <input type="time" id="sched_tue_end" class="form-control" value="15:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
-      </div>
-
-      <!-- Wednesday -->
-      <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:0.5rem;align-items:center;margin-bottom:0.5rem;padding:0.4rem 0.6rem;background:#192025;border-radius:6px;">
-        <label style="margin:0;display:flex;align-items:center;gap:0.4rem;font-size:0.78rem;font-weight:700;color:#fff;cursor:pointer;">
-          <input type="checkbox" id="sched_wed_active" checked style="accent-color:var(--neon-lime);"> Wed
-        </label>
-        <input type="time" id="sched_wed_start" class="form-control" value="06:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
-        <input type="time" id="sched_wed_end" class="form-control" value="15:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
-      </div>
-
-      <!-- Thursday -->
-      <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:0.5rem;align-items:center;margin-bottom:0.5rem;padding:0.4rem 0.6rem;background:#192025;border-radius:6px;">
-        <label style="margin:0;display:flex;align-items:center;gap:0.4rem;font-size:0.78rem;font-weight:700;color:#fff;cursor:pointer;">
-          <input type="checkbox" id="sched_thu_active" checked style="accent-color:var(--neon-lime);"> Thu
-        </label>
-        <input type="time" id="sched_thu_start" class="form-control" value="06:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
-        <input type="time" id="sched_thu_end" class="form-control" value="15:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
-      </div>
-
-      <!-- Friday -->
-      <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:0.5rem;align-items:center;margin-bottom:0.5rem;padding:0.4rem 0.6rem;background:#192025;border-radius:6px;">
-        <label style="margin:0;display:flex;align-items:center;gap:0.4rem;font-size:0.78rem;font-weight:700;color:#fff;cursor:pointer;">
-          <input type="checkbox" id="sched_fri_active" checked style="accent-color:var(--neon-lime);"> Fri
-        </label>
-        <input type="time" id="sched_fri_start" class="form-control" value="06:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
-        <input type="time" id="sched_fri_end" class="form-control" value="15:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
-      </div>
-
-      <!-- Saturday -->
-      <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:0.5rem;align-items:center;margin-bottom:0.5rem;padding:0.4rem 0.6rem;background:#192025;border-radius:6px;">
-        <label style="margin:0;display:flex;align-items:center;gap:0.4rem;font-size:0.78rem;font-weight:700;color:#fff;cursor:pointer;">
-          <input type="checkbox" id="sched_sat_active" checked style="accent-color:var(--neon-lime);"> Sat
-        </label>
-        <input type="time" id="sched_sat_start" class="form-control" value="08:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
-        <input type="time" id="sched_sat_end" class="form-control" value="17:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
-      </div>
-
-      <!-- Sunday -->
-      <div style="display:grid;grid-template-columns:100px 1fr 1fr;gap:0.5rem;align-items:center;margin-bottom:1.25rem;padding:0.4rem 0.6rem;background:#192025;border-radius:6px;">
-        <label style="margin:0;display:flex;align-items:center;gap:0.4rem;font-size:0.78rem;font-weight:700;color:#94a3b8;cursor:pointer;">
-          <input type="checkbox" id="sched_sun_active" style="accent-color:var(--neon-lime);"> Sun (Rest)
-        </label>
-        <input type="time" id="sched_sun_start" class="form-control" value="08:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
-        <input type="time" id="sched_sun_end" class="form-control" value="14:00" style="padding:0.25rem 0.5rem;font-size:0.8rem;">
+      <!-- Mon to Sun simplified dropdowns -->
+      <div style="display:grid;grid-template-columns:1fr;gap:0.4rem;margin-bottom:1rem;">
+        <!-- Mon -->
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:0.75rem;align-items:center;background:#192025;padding:0.4rem 0.75rem;border-radius:6px;">
+          <span style="font-size:0.8rem;font-weight:700;color:#fff;">Monday</span>
+          <select id="sched_mon_type" class="form-control" style="font-size:0.8rem;padding:0.3rem 0.5rem;">
+            <option value="FULL_SPLIT" selected>Split Shift (05:00-12:00 &amp; 15:00-21:00)</option>
+            <option value="MORNING">Morning Only (05:00-12:00)</option>
+            <option value="EVENING">Evening Only (15:00-21:00)</option>
+            <option value="REST_DAY">Scheduled Rest Day</option>
+          </select>
+        </div>
+        <!-- Tue -->
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:0.75rem;align-items:center;background:#192025;padding:0.4rem 0.75rem;border-radius:6px;">
+          <span style="font-size:0.8rem;font-weight:700;color:#fff;">Tuesday</span>
+          <select id="sched_tue_type" class="form-control" style="font-size:0.8rem;padding:0.3rem 0.5rem;">
+            <option value="FULL_SPLIT" selected>Split Shift (05:00-12:00 &amp; 15:00-21:00)</option>
+            <option value="MORNING">Morning Only (05:00-12:00)</option>
+            <option value="EVENING">Evening Only (15:00-21:00)</option>
+            <option value="REST_DAY">Scheduled Rest Day</option>
+          </select>
+        </div>
+        <!-- Wed -->
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:0.75rem;align-items:center;background:#192025;padding:0.4rem 0.75rem;border-radius:6px;">
+          <span style="font-size:0.8rem;font-weight:700;color:#fff;">Wednesday</span>
+          <select id="sched_wed_type" class="form-control" style="font-size:0.8rem;padding:0.3rem 0.5rem;">
+            <option value="FULL_SPLIT" selected>Split Shift (05:00-12:00 &amp; 15:00-21:00)</option>
+            <option value="MORNING">Morning Only (05:00-12:00)</option>
+            <option value="EVENING">Evening Only (15:00-21:00)</option>
+            <option value="REST_DAY">Scheduled Rest Day</option>
+          </select>
+        </div>
+        <!-- Thu -->
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:0.75rem;align-items:center;background:#192025;padding:0.4rem 0.75rem;border-radius:6px;">
+          <span style="font-size:0.8rem;font-weight:700;color:#fff;">Thursday</span>
+          <select id="sched_thu_type" class="form-control" style="font-size:0.8rem;padding:0.3rem 0.5rem;">
+            <option value="FULL_SPLIT" selected>Split Shift (05:00-12:00 &amp; 15:00-21:00)</option>
+            <option value="MORNING">Morning Only (05:00-12:00)</option>
+            <option value="EVENING">Evening Only (15:00-21:00)</option>
+            <option value="REST_DAY">Scheduled Rest Day</option>
+          </select>
+        </div>
+        <!-- Fri -->
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:0.75rem;align-items:center;background:#192025;padding:0.4rem 0.75rem;border-radius:6px;">
+          <span style="font-size:0.8rem;font-weight:700;color:#fff;">Friday</span>
+          <select id="sched_fri_type" class="form-control" style="font-size:0.8rem;padding:0.3rem 0.5rem;">
+            <option value="FULL_SPLIT" selected>Split Shift (05:00-12:00 &amp; 15:00-21:00)</option>
+            <option value="MORNING">Morning Only (05:00-12:00)</option>
+            <option value="EVENING">Evening Only (15:00-21:00)</option>
+            <option value="REST_DAY">Scheduled Rest Day</option>
+          </select>
+        </div>
+        <!-- Sat -->
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:0.75rem;align-items:center;background:#192025;padding:0.4rem 0.75rem;border-radius:6px;">
+          <span style="font-size:0.8rem;font-weight:700;color:#fff;">Saturday</span>
+          <select id="sched_sat_type" class="form-control" style="font-size:0.8rem;padding:0.3rem 0.5rem;">
+            <option value="FULL_SPLIT" selected>Split Shift (05:00-12:00 &amp; 15:00-21:00)</option>
+            <option value="MORNING">Morning Only (05:00-12:00)</option>
+            <option value="EVENING">Evening Only (15:00-21:00)</option>
+            <option value="REST_DAY">Scheduled Rest Day</option>
+          </select>
+        </div>
+        <!-- Sun -->
+        <div style="display:grid;grid-template-columns:100px 1fr;gap:0.75rem;align-items:center;background:#192025;padding:0.4rem 0.75rem;border-radius:6px;">
+          <span style="font-size:0.8rem;font-weight:700;color:#94a3b8;">Sunday</span>
+          <select id="sched_sun_type" class="form-control" style="font-size:0.8rem;padding:0.3rem 0.5rem;">
+            <option value="REST_DAY" selected>Scheduled Rest Day</option>
+            <option value="FULL_SPLIT">Split Shift (05:00-12:00 &amp; 15:00-21:00)</option>
+            <option value="MORNING">Morning Only (05:00-12:00)</option>
+            <option value="EVENING">Evening Only (15:00-21:00)</option>
+          </select>
+        </div>
       </div>
 
       <div style="margin-bottom:1.25rem;">
         <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Contract &amp; Working Notes</label>
-        <input type="text" id="schedNotes" class="form-control" placeholder="e.g. Standard 45hr weekly contract with shop &amp; office rules">
+        <input type="text" id="schedNotes" class="form-control" placeholder="e.g. Standard gym operations split contract">
       </div>
 
       <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
@@ -3958,7 +4047,6 @@
     </form>
   </div>
 </div>
-{% endif %}
 
 <!-- Modal: Attach Expense Receipt Voucher -->
 <div id="modalAttachExpenseReceipt" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;padding:1rem;">
@@ -5933,14 +6021,15 @@
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Clocking...';
 
     const staffId = document.getElementById('clockStaffId').value;
-    const direction = document.querySelector('input[name="clockDirection"]:checked').value;
+    const direction = document.querySelector('input[name="clockDirection"]:checked')?.value || 'IN';
+    const session = document.querySelector('input[name="clockSession"]:checked')?.value || 'AUTO';
     const notes = document.getElementById('clockNotes').value.trim();
 
     try {
       const res = await fetch('/dashboard/api/staff-attendance/clock/', {
         method: 'POST',
         headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ staff_id: staffId, direction: direction, notes: notes })
+        body: JSON.stringify({ staff_id: staffId, direction: direction, session: session, notes: notes })
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -5959,13 +6048,22 @@
     }
   }
 
-  async function quickClockStaff(staffId, direction) {
-    if (!confirm('Confirm ' + (direction === 'IN' ? 'CLOCK IN' : 'CLOCK OUT') + ' for this staff member at turnstile door?')) return;
+  async function quickClockStaffSession(staffId, session = 'AUTO') {
+    const isMorning = (new Date()).getHours() < 14;
+    const sName = session === 'AUTO' ? (isMorning ? 'Morning Session (05:00-12:00)' : 'Evening Session (15:00-21:00)') : session;
+    const action = prompt('Record Turnstile Clock for ' + sName + ':\nType "IN" to Clock In, or "OUT" to Clock Out:', 'IN');
+    if (!action) return;
+    const dir = action.toUpperCase().trim();
+    if (dir !== 'IN' && dir !== 'OUT') {
+      alert('Please enter IN or OUT.');
+      return;
+    }
+
     try {
       const res = await fetch('/dashboard/api/staff-attendance/clock/', {
         method: 'POST',
         headers: { 'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ staff_id: staffId, direction: direction, notes: 'One-click quick turnstile action' })
+        body: JSON.stringify({ staff_id: staffId, direction: dir, session: session, notes: 'Quick table biometric clock' })
       });
       const data = await res.json();
       if (res.ok && data.success) {
@@ -5979,11 +6077,18 @@
     }
   }
 
+  function onShiftTypeChange(val) {
+    const box = document.getElementById('customShiftTimesBox');
+    if (box) box.style.display = (val === 'CUSTOM') ? 'grid' : 'none';
+  }
+
   function openCreateShiftModal() {
     const m = document.getElementById('createShiftModal');
     if (m) {
       const today = new Date().toISOString().split('T')[0];
       document.getElementById('newShiftDate').value = today;
+      document.getElementById('newShiftType').value = 'FULL_SPLIT';
+      onShiftTypeChange('FULL_SPLIT');
       m.style.display = 'flex';
     }
   }
@@ -5999,11 +6104,13 @@
     btn.disabled = true;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
 
+    const shiftType = document.getElementById('newShiftType').value;
     const payload = {
       staff_id: document.getElementById('newShiftStaffId').value,
       shift_date: document.getElementById('newShiftDate').value,
-      scheduled_start: document.getElementById('newShiftStart').value,
-      scheduled_end: document.getElementById('newShiftEnd').value,
+      shift_type: shiftType,
+      scheduled_start: document.getElementById('newShiftStart')?.value || '05:00',
+      scheduled_end: document.getElementById('newShiftEnd')?.value || '21:00',
       base_hourly_rate: document.getElementById('newShiftRate').value
     };
 
@@ -6083,12 +6190,10 @@
         const dayNames = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
         days.forEach((d, idx) => {
           const dn = dayNames[idx];
-          const chk = document.getElementById(`sched_${d}_active`);
-          const st = document.getElementById(`sched_${d}_start`);
-          const en = document.getElementById(`sched_${d}_end`);
-          if (chk) chk.checked = s[`${dn}_active`] !== undefined ? !!s[`${dn}_active`] : true;
-          if (st) st.value = s[`${dn}_start`] || '06:00';
-          if (en) en.value = s[`${dn}_end`] || '15:00';
+          const selType = document.getElementById(`sched_${d}_type`);
+          if (selType) {
+            selType.value = s[`${dn}_shift_type`] || (d === 'sun' ? 'REST_DAY' : 'FULL_SPLIT');
+          }
         });
       }
     } catch(err) {
@@ -6109,27 +6214,13 @@
       epf_etf_eligible: document.getElementById('schedEpfEligible').checked,
       epf_number: document.getElementById('schedEpfNumber').value.trim(),
       notes: document.getElementById('schedNotes').value.trim(),
-      monday_active: document.getElementById('sched_mon_active').checked,
-      monday_start: document.getElementById('sched_mon_start').value,
-      monday_end: document.getElementById('sched_mon_end').value,
-      tuesday_active: document.getElementById('sched_tue_active').checked,
-      tuesday_start: document.getElementById('sched_tue_start').value,
-      tuesday_end: document.getElementById('sched_tue_end').value,
-      wednesday_active: document.getElementById('sched_wed_active').checked,
-      wednesday_start: document.getElementById('sched_wed_start').value,
-      wednesday_end: document.getElementById('sched_wed_end').value,
-      thursday_active: document.getElementById('sched_thu_active').checked,
-      thursday_start: document.getElementById('sched_thu_start').value,
-      thursday_end: document.getElementById('sched_thu_end').value,
-      friday_active: document.getElementById('sched_fri_active').checked,
-      friday_start: document.getElementById('sched_fri_start').value,
-      friday_end: document.getElementById('sched_fri_end').value,
-      saturday_active: document.getElementById('sched_sat_active').checked,
-      saturday_start: document.getElementById('sched_sat_start').value,
-      saturday_end: document.getElementById('sched_sat_end').value,
-      sunday_active: document.getElementById('sched_sun_active').checked,
-      sunday_start: document.getElementById('sched_sun_start').value,
-      sunday_end: document.getElementById('sched_sun_end').value,
+      monday_shift_type: document.getElementById('sched_mon_type')?.value || 'FULL_SPLIT',
+      tuesday_shift_type: document.getElementById('sched_tue_type')?.value || 'FULL_SPLIT',
+      wednesday_shift_type: document.getElementById('sched_wed_type')?.value || 'FULL_SPLIT',
+      thursday_shift_type: document.getElementById('sched_thu_type')?.value || 'FULL_SPLIT',
+      friday_shift_type: document.getElementById('sched_fri_type')?.value || 'FULL_SPLIT',
+      saturday_shift_type: document.getElementById('sched_sat_type')?.value || 'FULL_SPLIT',
+      sunday_shift_type: document.getElementById('sched_sun_type')?.value || 'REST_DAY',
     };
 
     try {

@@ -46,30 +46,45 @@ class StaffWorkSchedule(models.Model):
     epf_etf_eligible = models.BooleanField(default=True, help_text="Sri Lankan EPF (8% employee, 12% employer) & ETF (3% employer)")
     epf_number = models.CharField(max_length=30, blank=True, help_text="Employee EPF Registration Number")
 
-    # Working Day Toggles & Daily Shift Times
+    # Standard Gym Shift Presets per Day
+    DEFAULT_SHIFT_CHOICES = [
+        ('FULL_SPLIT', 'Split Shift (05:00-12:00 & 15:00-21:00)'),
+        ('MORNING', 'Morning Shift (05:00-12:00)'),
+        ('EVENING', 'Evening Shift (15:00-21:00)'),
+        ('REST_DAY', 'Scheduled Rest Day'),
+    ]
+    monday_shift_type = models.CharField(max_length=20, choices=DEFAULT_SHIFT_CHOICES, default='FULL_SPLIT')
+    tuesday_shift_type = models.CharField(max_length=20, choices=DEFAULT_SHIFT_CHOICES, default='FULL_SPLIT')
+    wednesday_shift_type = models.CharField(max_length=20, choices=DEFAULT_SHIFT_CHOICES, default='FULL_SPLIT')
+    thursday_shift_type = models.CharField(max_length=20, choices=DEFAULT_SHIFT_CHOICES, default='FULL_SPLIT')
+    friday_shift_type = models.CharField(max_length=20, choices=DEFAULT_SHIFT_CHOICES, default='FULL_SPLIT')
+    saturday_shift_type = models.CharField(max_length=20, choices=DEFAULT_SHIFT_CHOICES, default='FULL_SPLIT')
+    sunday_shift_type = models.CharField(max_length=20, choices=DEFAULT_SHIFT_CHOICES, default='REST_DAY')
+
+    # Working Day Toggles & Daily Shift Times (for backwards compatibility & custom overrides)
     monday_active = models.BooleanField(default=True)
-    monday_start = models.TimeField(default='06:00')
-    monday_end = models.TimeField(default='15:00')
+    monday_start = models.TimeField(default='05:00')
+    monday_end = models.TimeField(default='21:00')
 
     tuesday_active = models.BooleanField(default=True)
-    tuesday_start = models.TimeField(default='06:00')
-    tuesday_end = models.TimeField(default='15:00')
+    tuesday_start = models.TimeField(default='05:00')
+    tuesday_end = models.TimeField(default='21:00')
 
     wednesday_active = models.BooleanField(default=True)
-    wednesday_start = models.TimeField(default='06:00')
-    wednesday_end = models.TimeField(default='15:00')
+    wednesday_start = models.TimeField(default='05:00')
+    wednesday_end = models.TimeField(default='21:00')
 
     thursday_active = models.BooleanField(default=True)
-    thursday_start = models.TimeField(default='06:00')
-    thursday_end = models.TimeField(default='15:00')
+    thursday_start = models.TimeField(default='05:00')
+    thursday_end = models.TimeField(default='21:00')
 
     friday_active = models.BooleanField(default=True)
-    friday_start = models.TimeField(default='06:00')
-    friday_end = models.TimeField(default='15:00')
+    friday_start = models.TimeField(default='05:00')
+    friday_end = models.TimeField(default='21:00')
 
     saturday_active = models.BooleanField(default=True)
-    saturday_start = models.TimeField(default='08:00')
-    saturday_end = models.TimeField(default='17:00')
+    saturday_start = models.TimeField(default='05:00')
+    saturday_end = models.TimeField(default='21:00')
 
     sunday_active = models.BooleanField(default=False)
     sunday_start = models.TimeField(default='08:00')
@@ -86,23 +101,30 @@ class StaffWorkSchedule(models.Model):
         return f"Schedule: {self.staff_user.username} (Base: LKR {self.default_base_salary:,.2f})"
 
     def get_schedule_for_weekday(self, weekday_int):
-        """weekday_int: 0=Monday, ..., 6=Sunday"""
+        """
+        weekday_int: 0=Monday, ..., 6=Sunday.
+        Returns: (is_active, shift_type, default_start, default_end)
+        """
         mapping = {
-            0: (self.monday_active, self.monday_start, self.monday_end),
-            1: (self.tuesday_active, self.tuesday_start, self.tuesday_end),
-            2: (self.wednesday_active, self.wednesday_start, self.wednesday_end),
-            3: (self.thursday_active, self.thursday_start, self.thursday_end),
-            4: (self.friday_active, self.friday_start, self.friday_end),
-            5: (self.saturday_active, self.saturday_start, self.saturday_end),
-            6: (self.sunday_active, self.sunday_start, self.sunday_end),
+            0: (self.monday_active, self.monday_shift_type, self.monday_start, self.monday_end),
+            1: (self.tuesday_active, self.tuesday_shift_type, self.tuesday_start, self.tuesday_end),
+            2: (self.wednesday_active, self.wednesday_shift_type, self.wednesday_start, self.wednesday_end),
+            3: (self.thursday_active, self.thursday_shift_type, self.thursday_start, self.thursday_end),
+            4: (self.friday_active, self.friday_shift_type, self.friday_start, self.friday_end),
+            5: (self.saturday_active, self.saturday_shift_type, self.saturday_start, self.saturday_end),
+            6: (self.sunday_active, self.sunday_shift_type, self.sunday_start, self.sunday_end),
         }
-        return mapping.get(weekday_int, (False, None, None))
+        active, s_type, s_start, s_end = mapping.get(weekday_int, (False, 'REST_DAY', None, None))
+        if s_type == 'REST_DAY':
+            active = False
+        return (active, s_type, s_start, s_end)
 
 
 class StaffShift(models.Model):
     """
     Staff Shift Roster & Attendance Tracking.
-    Monitors shift times, punch timestamps, late arrivals, overtime, and off-floor status.
+    Supports Fit Me split shift model (Morning 05:00-12:00 and Evening 15:00-21:00).
+    Monitors shift times, session punch timestamps, late arrivals, overtime, and off-floor status.
     """
     STATUS_CHOICES = [
         ('SCHEDULED', 'Scheduled'),
@@ -111,6 +133,14 @@ class StaffShift(models.Model):
         ('LEAVE', 'Approved Leave'),
         ('REST_DAY', 'Scheduled Rest Day'),
         ('COMPLETED', 'Shift Completed'),
+    ]
+
+    SHIFT_TYPE_CHOICES = [
+        ('FULL_SPLIT', 'Split Shift (05:00-12:00 & 15:00-21:00)'),
+        ('MORNING', 'Morning Shift (05:00-12:00)'),
+        ('EVENING', 'Evening Shift (15:00-21:00)'),
+        ('CUSTOM', 'Custom Hours'),
+        ('REST_DAY', 'Scheduled Rest Day'),
     ]
 
     staff_user = models.ForeignKey(
@@ -126,9 +156,23 @@ class StaffShift(models.Model):
         related_name='shifts'
     )
     shift_date = models.DateField(db_index=True)
-    scheduled_start = models.TimeField()
-    scheduled_end = models.TimeField()
+    shift_type = models.CharField(
+        max_length=20,
+        choices=SHIFT_TYPE_CHOICES,
+        default='FULL_SPLIT',
+        db_index=True,
+        help_text="Standard gym shift type (Split 5-12 & 3-9, Morning 5-12, Evening 3-9)"
+    )
+    scheduled_start = models.TimeField(default='05:00')
+    scheduled_end = models.TimeField(default='21:00')
 
+    # Granular punch timestamps for split shifts (Morning & Evening sessions)
+    morning_in = models.DateTimeField(null=True, blank=True, help_text="Morning check-in punch (05:00 session)")
+    morning_out = models.DateTimeField(null=True, blank=True, help_text="Morning departure punch (12:00 closure)")
+    evening_in = models.DateTimeField(null=True, blank=True, help_text="Evening check-in punch (15:00 session)")
+    evening_out = models.DateTimeField(null=True, blank=True, help_text="Evening departure punch (21:00 closure)")
+
+    # Legacy & aggregate timestamps (synced with morning/evening punches)
     actual_first_in = models.DateTimeField(null=True, blank=True)
     actual_last_out = models.DateTimeField(null=True, blank=True)
 
@@ -148,19 +192,72 @@ class StaffShift(models.Model):
         ordering = ['-shift_date', 'scheduled_start']
 
     def __str__(self):
-        return f"{self.staff_user.username} - {self.shift_date} ({self.scheduled_start} - {self.scheduled_end}) [{self.status}]"
+        return f"{self.staff_user.username} - {self.shift_date} ({self.get_shift_type_display()}) [{self.status}]"
+
+    def save(self, *args, **kwargs):
+        # Sync aggregate punches
+        if self.morning_in and not self.actual_first_in:
+            self.actual_first_in = self.morning_in
+        elif not self.actual_first_in and self.evening_in:
+            self.actual_first_in = self.evening_in
+
+        if self.evening_out:
+            self.actual_last_out = self.evening_out
+        elif self.morning_out and not self.actual_last_out:
+            self.actual_last_out = self.morning_out
+
+        if self.shift_type == 'REST_DAY':
+            self.is_rest_day = True
+            self.status = 'REST_DAY'
+        super().save(*args, **kwargs)
 
     def calculate_late_minutes(self):
-        """Computes minutes late based on scheduled start and actual first punch."""
-        if not self.actual_first_in or self.is_rest_day or self.approved_leave:
+        """Computes minutes late based on scheduled morning and evening session starts."""
+        if self.is_rest_day or self.approved_leave:
             return 0
-        scheduled_dt = timezone.make_aware(
-            timezone.datetime.combine(self.shift_date, self.scheduled_start)
-        )
-        if self.actual_first_in > scheduled_dt:
-            delta = self.actual_first_in - scheduled_dt
-            return int(delta.total_seconds() / 60)
-        return 0
+        total_late = 0
+
+        # Morning session late check (scheduled 05:00)
+        if self.shift_type in ['FULL_SPLIT', 'MORNING']:
+            sched_m_time = timezone.datetime.strptime('05:00', '%H:%M').time()
+            sched_m_dt = timezone.make_aware(timezone.datetime.combine(self.shift_date, sched_m_time))
+            m_punch = self.morning_in or (self.actual_first_in if self.actual_first_in and self.actual_first_in.time() < timezone.datetime.strptime('13:00', '%H:%M').time() else None)
+            if m_punch and m_punch > sched_m_dt:
+                delta = m_punch - sched_m_dt
+                total_late += int(delta.total_seconds() / 60)
+
+        # Evening session late check (scheduled 15:00)
+        if self.shift_type in ['FULL_SPLIT', 'EVENING']:
+            sched_e_time = timezone.datetime.strptime('15:00', '%H:%M').time()
+            sched_e_dt = timezone.make_aware(timezone.datetime.combine(self.shift_date, sched_e_time))
+            e_punch = self.evening_in or (self.actual_first_in if self.actual_first_in and self.actual_first_in.time() >= timezone.datetime.strptime('13:00', '%H:%M').time() else None)
+            if e_punch and e_punch > sched_e_dt:
+                delta = e_punch - sched_e_dt
+                total_late += int(delta.total_seconds() / 60)
+
+        # Fallback for CUSTOM shifts
+        if self.shift_type == 'CUSTOM' and self.actual_first_in:
+            scheduled_dt = timezone.make_aware(timezone.datetime.combine(self.shift_date, self.scheduled_start))
+            if self.actual_first_in > scheduled_dt:
+                delta = self.actual_first_in - scheduled_dt
+                total_late += int(delta.total_seconds() / 60)
+
+        return total_late
+
+    def calculate_overtime_minutes(self):
+        """Computes overtime minutes worked beyond 12:00 (morning) or 21:00 (evening)."""
+        if self.is_rest_day or self.approved_leave:
+            return 0
+        total_ot = 0
+        if self.shift_type in ['FULL_SPLIT', 'MORNING'] and self.morning_out:
+            sched_m_end = timezone.make_aware(timezone.datetime.combine(self.shift_date, timezone.datetime.strptime('12:00', '%H:%M').time()))
+            if self.morning_out > sched_m_end:
+                total_ot += int((self.morning_out - sched_m_end).total_seconds() / 60)
+        if self.shift_type in ['FULL_SPLIT', 'EVENING'] and self.evening_out:
+            sched_e_end = timezone.make_aware(timezone.datetime.combine(self.shift_date, timezone.datetime.strptime('21:00', '%H:%M').time()))
+            if self.evening_out > sched_e_end:
+                total_ot += int((self.evening_out - sched_e_end).total_seconds() / 60)
+        return max(total_ot, self.overtime_minutes or 0)
 
 
 class SuddenAbsenceAlert(models.Model):

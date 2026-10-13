@@ -3,6 +3,8 @@ Fit Me — Role-based Dashboard Views
 Each role gets its own dashboard routed here.
 """
 import functools
+import json
+import calendar
 
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
@@ -498,52 +500,67 @@ def super_admin_dashboard(request, active_tab=None):
     }
 
     # ── Financial Audit, Revenue Telemetry & Discrepancy Diagnostics ──
+    from django.core.cache import cache
     current_year = today.year
-    audit_monthly_trends = []
-    import calendar
-    import json
-    for i in range(5, -1, -1):
-        y = today.year
-        m = today.month - i
-        while m <= 0:
-            m += 12
-            y -= 1
-        d_in_m = calendar.monthrange(y, m)[1]
-        m_start = timezone.datetime(y, m, 1, 0, 0, 0, tzinfo=timezone.get_current_timezone())
-        m_end = timezone.datetime(y, m, d_in_m, 23, 59, 59, tzinfo=timezone.get_current_timezone())
+    audit_cache_key = f'fitme_audit_monthly_trends_{today.year}_{today.month}_{today.day}'
+    cached_audit = cache.get(audit_cache_key)
+    if cached_audit:
+        audit_monthly_trends = cached_audit['trends']
+        audit_annual_rev = cached_audit['annual_rev']
+        audit_pt_rev = cached_audit['pt_rev']
+        audit_pkg_rev = cached_audit['pkg_rev']
+        audit_pos_total = cached_audit['pos_total']
+    else:
+        audit_monthly_trends = []
+        for i in range(5, -1, -1):
+            y = today.year
+            m = today.month - i
+            while m <= 0:
+                m += 12
+                y -= 1
+            d_in_m = calendar.monthrange(y, m)[1]
+            m_start = timezone.datetime(y, m, 1, 0, 0, 0, tzinfo=timezone.get_current_timezone())
+            m_end = timezone.datetime(y, m, d_in_m, 23, 59, 59, tzinfo=timezone.get_current_timezone())
 
-        m_mem_rev = PaymentReceipt.objects.filter(
-            issued_at__range=[m_start, m_end]
-        ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
+            m_mem_rev = PaymentReceipt.objects.filter(
+                issued_at__range=[m_start, m_end]
+            ).aggregate(total=Sum('amount_paid'))['total'] or Decimal('0.00')
 
-        m_pos_rev = POSSale.objects.filter(
-            status='COMPLETED',
-            created_at__range=[m_start, m_end]
-        ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+            m_pos_rev = POSSale.objects.filter(
+                status='COMPLETED',
+                created_at__range=[m_start, m_end]
+            ).aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
 
-        m_opex = ClubExpense.objects.filter(
-            expense_date__range=[m_start.date(), m_end.date()]
-        ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
+            m_opex = ClubExpense.objects.filter(
+                expense_date__range=[m_start.date(), m_end.date()]
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0.00')
 
-        m_gross = m_mem_rev + m_pos_rev
-        m_net = m_gross - m_opex
+            m_gross = m_mem_rev + m_pos_rev
+            m_net = m_gross - m_opex
 
-        audit_monthly_trends.append({
-            'label': m_start.strftime('%b %Y'),
-            'month': m_start.strftime('%b %Y'),
-            'membership_rev': float(m_mem_rev),
-            'pos_rev': float(m_pos_rev),
-            'gross_rev': float(m_gross),
-            'inflow': float(m_gross),
-            'opex': float(m_opex),
-            'net_profit': float(m_net),
-            'margin': float(m_net),
-        })
+            audit_monthly_trends.append({
+                'label': m_start.strftime('%b %Y'),
+                'month': m_start.strftime('%b %Y'),
+                'membership_rev': float(m_mem_rev),
+                'pos_rev': float(m_pos_rev),
+                'gross_rev': float(m_gross),
+                'inflow': float(m_gross),
+                'opex': float(m_opex),
+                'net_profit': float(m_net),
+                'margin': float(m_net),
+            })
 
-    audit_annual_rev = PaymentReceipt.objects.aggregate(total=Sum('annual_fee_amount'))['total'] or Decimal('0.00')
-    audit_pt_rev = PaymentReceipt.objects.aggregate(total=Sum('coaching_amount'))['total'] or Decimal('0.00')
-    audit_pkg_rev = PaymentReceipt.objects.aggregate(total=Sum('package_amount'))['total'] or Decimal('0.00')
-    audit_pos_total = POSSale.objects.filter(status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+        audit_annual_rev = PaymentReceipt.objects.aggregate(total=Sum('annual_fee_amount'))['total'] or Decimal('0.00')
+        audit_pt_rev = PaymentReceipt.objects.aggregate(total=Sum('coaching_amount'))['total'] or Decimal('0.00')
+        audit_pkg_rev = PaymentReceipt.objects.aggregate(total=Sum('package_amount'))['total'] or Decimal('0.00')
+        audit_pos_total = POSSale.objects.filter(status='COMPLETED').aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
+        cache.set(audit_cache_key, {
+            'trends': audit_monthly_trends,
+            'annual_rev': audit_annual_rev,
+            'pt_rev': audit_pt_rev,
+            'pkg_rev': audit_pkg_rev,
+            'pos_total': audit_pos_total,
+        }, timeout=120)
 
     if audit_pkg_rev == 0 and total_membership_rev > 0:
         audit_pkg_rev = max(Decimal('0.00'), total_membership_rev - audit_annual_rev - audit_pt_rev)
@@ -688,8 +705,6 @@ def super_admin_dashboard(request, active_tab=None):
     # ── Monthly Staff Payroll Ledger ──
     from wger.gym_operations_payroll.models import PayrollLedger, StaffShift
     from wger.membership.models import MemberProfile
-    import calendar
-    import json
 
     now_date = timezone.now().date()
     req_month_str = request.GET.get('payroll_month')
@@ -1009,8 +1024,6 @@ def front_desk_dashboard(request):
     for m in all_members:
         m.linked_as_partner = buddy_links_fd.get(m.id)
 
-    all_sys_users = list(User.objects.filter(is_active=True).order_by('first_name', 'username'))
-
     context = {
         'role': 'front_desk',
         'page_title': 'Front Desk',
@@ -1023,7 +1036,7 @@ def front_desk_dashboard(request):
         'pending_applications': pending_apps,
         'active_subscriptions': active_subs,
         'all_members': all_members,
-        'all_system_users': all_sys_users,
+        'all_system_users': [],
         'plans': MembershipPlan.objects.filter(is_active=True),
         'coaches': CoachProfile.objects.filter(is_active=True).select_related('user'),
         'recent_receipts': recent_receipts,
@@ -2112,13 +2125,22 @@ def desk_member_lookup_api(request):
     if not q or len(q) < 2:
         return JsonResponse({'results': []})
 
-    users = User.objects.filter(
+    clean_q = q.lstrip('#').replace('FM', '').replace('fm', '').strip()
+    user_q = (
         Q(first_name__icontains=q) |
         Q(last_name__icontains=q) |
         Q(username__icontains=q) |
+        Q(email__icontains=q) |
         Q(member_profile__phone__icontains=q) |
+        Q(member_profile__nic_passport__icontains=q) |
         Q(biometric_profile__zk_pin__icontains=q)
-    ).select_related('member_profile', 'biometric_profile')[:15]
+    )
+    if clean_q and clean_q != q:
+        user_q |= Q(biometric_profile__zk_pin__icontains=clean_q)
+        if clean_q.isdigit():
+            user_q |= Q(id=int(clean_q))
+
+    users = User.objects.filter(user_q).select_related('member_profile', 'biometric_profile').distinct()[:15]
 
     today = timezone.now().date()
     results = []
@@ -2127,17 +2149,34 @@ def desk_member_lookup_api(request):
         if not sub:
             sub = Subscription.objects.filter(member=u).order_by('-end_date').first()
 
-        mem_prof = None
-        try:
-            mem_prof = u.member_profile
-        except Exception:
-            pass
+        mem_prof = getattr(u, 'member_profile', None)
+        bio_prof = getattr(u, 'biometric_profile', None)
 
-        bio_prof = None
-        try:
-            bio_prof = u.biometric_profile
-        except Exception:
-            pass
+        # Baseline plan & subscription details
+        plan_name = 'No Plan'
+        sub_status = 'NO_PLAN'
+        days_left = 0
+        end_date_str = ''
+
+        if sub:
+            plan_name = sub.plan.name if sub.plan else 'Standard Membership'
+            end_date_str = sub.end_date.strftime('%d %b %Y') if sub.end_date else ''
+            if sub.status == 'active' and sub.end_date and sub.end_date >= today:
+                sub_status = 'ACTIVE'
+                days_left = max(0, (sub.end_date - today).days)
+            elif sub.status == 'active' and sub.end_date and sub.end_date < today:
+                sub_status = 'EXPIRED'
+                days_left = 0
+            else:
+                sub_status = (sub.status or 'INACTIVE').upper()
+                days_left = 0
+
+        photo_url = ''
+        if mem_prof and getattr(mem_prof, 'profile_photo', None):
+            try:
+                photo_url = mem_prof.profile_photo.url
+            except Exception:
+                photo_url = ''
 
         latest_punch = None
         if bio_prof and bio_prof.zk_pin:
@@ -2178,13 +2217,14 @@ def desk_member_lookup_api(request):
             sub = buddy_link.subscription
             is_linked_partner = True
             partner_primary_name = buddy_link.primary_member.get_full_name() or buddy_link.primary_member.username
-            plan_name = f"{sub.plan.name} (Partner of {partner_primary_name})"
+            plan_name = f"{sub.plan.name} (Partner of {partner_primary_name})" if sub.plan else f"Partner of {partner_primary_name}"
             end_date_str = sub.end_date.strftime('%d %b %Y') if sub.end_date else ''
             if sub.status == 'active' and sub.end_date and sub.end_date >= today:
                 sub_status = 'ACTIVE'
-                days_left = (sub.end_date - today).days
+                days_left = max(0, (sub.end_date - today).days)
             else:
                 sub_status = 'EXPIRED'
+                days_left = 0
 
         linked_partners_names = []
         if sub and sub.plan and sub.plan.max_members > 1:
@@ -3287,15 +3327,15 @@ def admin_reset_user_password_api(request, user_id):
 # ─────────────────────────────────────────────────────────────
 
 @login_required
-@role_required('super_admin')
+@role_required('super_admin', 'admin')
 def admin_create_plan_api(request):
-    """Super Admin creates a new MembershipPlan (Make Plan feature)."""
+    """Admin / Super Admin creates a new MembershipPlan (Make Plan feature)."""
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
-    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
-    if not is_super_admin:
-        return JsonResponse({'error': 'Unauthorized: Only Super Admin has permission to make plans.'}, status=403)
+    is_authorized = request.user.is_superuser or request.user.groups.filter(name__in=['super_admin', 'admin']).exists() or request.user.is_staff
+    if not is_authorized:
+        return JsonResponse({'error': 'Unauthorized: Only Admin or Super Admin has permission to make plans.'}, status=403)
 
     import json
     from decimal import Decimal
@@ -3343,7 +3383,7 @@ def admin_create_plan_api(request):
     )
     return JsonResponse({
         'success': True,
-        'message': f"Plan '{name}' successfully created by Super Admin!",
+        'message': f"Plan '{name}' successfully created!",
         'plan': {
             'id': plan.id,
             'name': plan.name,
@@ -3359,15 +3399,15 @@ def admin_create_plan_api(request):
 
 
 @login_required
-@role_required('super_admin')
+@role_required('super_admin', 'admin')
 def admin_edit_plan_api(request, plan_id):
-    """Super Admin edits plan and overrides pricing / discounts (Data Override)."""
+    """Admin / Super Admin edits plan and overrides pricing / discounts (Data Override)."""
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
-    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
-    if not is_super_admin:
-        return JsonResponse({'error': 'Unauthorized: Only Super Admin can override plan data.'}, status=403)
+    is_authorized = request.user.is_superuser or request.user.groups.filter(name__in=['super_admin', 'admin']).exists() or request.user.is_staff
+    if not is_authorized:
+        return JsonResponse({'error': 'Unauthorized: Only Admin or Super Admin can override plan data.'}, status=403)
 
     import json
     from decimal import Decimal
@@ -3403,7 +3443,7 @@ def admin_edit_plan_api(request, plan_id):
     plan.save()
     return JsonResponse({
         'success': True,
-        'message': f"Plan '{plan.name}' pricing and parameters updated by Super Admin!",
+        'message': f"Plan '{plan.name}' pricing and parameters updated!",
         'plan': {
             'id': plan.id,
             'name': plan.name,
@@ -3419,15 +3459,15 @@ def admin_edit_plan_api(request, plan_id):
 
 
 @login_required
-@role_required('super_admin')
+@role_required('super_admin', 'admin')
 def admin_toggle_plan_api(request, plan_id):
-    """Super Admin toggles plan active status."""
+    """Admin / Super Admin toggles plan active status."""
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
-    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
-    if not is_super_admin:
-        return JsonResponse({'error': 'Unauthorized: Only Super Admin can toggle plan status.'}, status=403)
+    is_authorized = request.user.is_superuser or request.user.groups.filter(name__in=['super_admin', 'admin']).exists() or request.user.is_staff
+    if not is_authorized:
+        return JsonResponse({'error': 'Unauthorized: Only Admin or Super Admin can toggle plan status.'}, status=403)
 
     from wger.membership.models import MembershipPlan
     plan = MembershipPlan.objects.filter(id=plan_id).first()
@@ -3445,19 +3485,19 @@ def admin_toggle_plan_api(request, plan_id):
 
 
 @login_required
-@role_required('super_admin')
+@role_required('super_admin', 'admin')
 def admin_delete_plan_api(request, plan_id):
     """
-    Super Admin deletes or archives a MembershipPlan.
+    Admin / Super Admin deletes or archives a MembershipPlan.
     If historical subscriptions exist, archives it (is_active=False) to protect financial records.
     If no subscriptions exist, permanently deletes the record.
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
-    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
-    if not is_super_admin:
-        return JsonResponse({'error': 'Unauthorized: Only Super Admin can delete plans.'}, status=403)
+    is_authorized = request.user.is_superuser or request.user.groups.filter(name__in=['super_admin', 'admin']).exists() or request.user.is_staff
+    if not is_authorized:
+        return JsonResponse({'error': 'Unauthorized: Only Admin or Super Admin can delete plans.'}, status=403)
 
     from wger.membership.models import MembershipPlan, Subscription
     plan = MembershipPlan.objects.filter(id=plan_id).first()
@@ -3485,18 +3525,18 @@ def admin_delete_plan_api(request, plan_id):
 
 
 @login_required
-@role_required('super_admin')
+@role_required('super_admin', 'admin')
 def admin_override_subscription_api(request, sub_id):
     """
-    Super Admin Master Data Override:
+    Admin / Super Admin Master Data Override:
     Manually override subscription expiry date, amount paid, status, or plan parameters.
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
-    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
-    if not is_super_admin:
-        return JsonResponse({'error': 'Unauthorized: Only Super Admin can perform subscription data overrides.'}, status=403)
+    is_authorized = request.user.is_superuser or request.user.groups.filter(name__in=['super_admin', 'admin']).exists() or request.user.is_staff
+    if not is_authorized:
+        return JsonResponse({'error': 'Unauthorized: Only Admin or Super Admin can perform subscription data overrides.'}, status=403)
 
     import json
     from decimal import Decimal
@@ -4425,11 +4465,12 @@ def admin_payroll_thermal_slip_view(request, ledger_id):
 # ═════════════════════════════════════════════════════════════════
 
 @login_required
+@login_required
 @role_required('super_admin', 'admin', 'front_desk')
 def admin_clock_staff_attendance_api(request):
     """
     Clocks a staff member IN or OUT at the biometric door turnstile,
-    records the DoorAccessLog, and updates their active StaffShift.
+    records the DoorAccessLog, and updates their active StaffShift (Morning or Evening session).
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
@@ -4442,10 +4483,11 @@ def admin_clock_staff_attendance_api(request):
 
     staff_id = data.get('staff_id')
     direction = data.get('direction', 'IN').upper()
-    notes = data.get('notes', 'Manual turnstile clock via Console')
+    session = data.get('session', 'AUTO').upper()  # 'AUTO', 'MORNING', 'EVENING'
+    notes = data.get('notes', 'Manual console biometric check-in')
 
     from django.contrib.auth import get_user_model
-    from wger.gym_operations_payroll.models import StaffShift
+    from wger.gym_operations_payroll.models import StaffShift, StaffWorkSchedule
     from wger.zkbio_integration.models import DoorAccessLog
 
     User = get_user_model()
@@ -4459,21 +4501,28 @@ def admin_clock_staff_attendance_api(request):
     # Find or auto-provision today's shift
     shift = StaffShift.objects.filter(staff_user=staff_user, shift_date=today).first()
     if not shift:
-        hour = now.hour
-        if hour < 13:
-            s_start = timezone.datetime.strptime('06:00', '%H:%M').time()
-            s_end = timezone.datetime.strptime('15:00', '%H:%M').time()
+        work_sched = StaffWorkSchedule.objects.filter(staff_user=staff_user).first()
+        if work_sched:
+            is_active, s_type, s_start, s_end = work_sched.get_schedule_for_weekday(today.weekday())
         else:
-            s_start = timezone.datetime.strptime('13:00', '%H:%M').time()
-            s_end = timezone.datetime.strptime('22:00', '%H:%M').time()
+            is_active = True
+            s_type = 'FULL_SPLIT'
+            s_start = timezone.datetime.strptime('05:00', '%H:%M').time()
+            s_end = timezone.datetime.strptime('21:00', '%H:%M').time()
 
         shift = StaffShift.objects.create(
             staff_user=staff_user,
             shift_date=today,
-            scheduled_start=s_start,
-            scheduled_end=s_end,
-            status='SCHEDULED'
+            shift_type=s_type if is_active else 'REST_DAY',
+            scheduled_start=s_start or timezone.datetime.strptime('05:00', '%H:%M').time(),
+            scheduled_end=s_end or timezone.datetime.strptime('21:00', '%H:%M').time(),
+            is_rest_day=(not is_active),
+            status='REST_DAY' if not is_active else 'SCHEDULED'
         )
+
+    # Resolve session
+    if session == 'AUTO':
+        session = 'MORNING' if now.hour < 14 else 'EVENING'
 
     event_type = 'ENTRY' if direction == 'IN' else 'EXIT'
 
@@ -4486,33 +4535,59 @@ def admin_clock_staff_attendance_api(request):
         verify_mode='BUZZER',
         device_ip='192.168.1.23',
         terminal_name='CONSOLE_MANUAL_ATTENDANCE',
-        raw_payload={'clocked_by': request.user.username, 'notes': notes}
+        raw_payload={'clocked_by': request.user.username, 'session': session, 'notes': notes}
     )
 
-    if direction == 'IN':
-        if not shift.actual_first_in:
-            shift.actual_first_in = now
-        shift.status = 'ON_FLOOR'
-        shift.is_off_floor = False
-        shift.save(update_fields=['actual_first_in', 'status', 'is_off_floor'])
-    else:
-        shift.actual_last_out = now
-        sched_end_dt = timezone.make_aware(timezone.datetime.combine(today, shift.scheduled_end))
-        if now > sched_end_dt:
-            delta_ot = now - sched_end_dt
-            shift.overtime_minutes = int(delta_ot.total_seconds() / 60)
-        shift.status = 'COMPLETED' if now >= sched_end_dt else 'OFF_FLOOR'
-        shift.save(update_fields=['actual_last_out', 'overtime_minutes', 'status'])
+    if session == 'MORNING':
+        if direction == 'IN':
+            if not shift.morning_in:
+                shift.morning_in = now
+            shift.status = 'ON_FLOOR'
+            shift.is_off_floor = False
+        else:
+            shift.morning_out = now
+            shift.status = 'OFF_FLOOR'
+    else:  # EVENING
+        if direction == 'IN':
+            if not shift.evening_in:
+                shift.evening_in = now
+            shift.status = 'ON_FLOOR'
+            shift.is_off_floor = False
+        else:
+            shift.evening_out = now
+            shift.status = 'COMPLETED'
+
+    # Sync legacy actual_first_in / actual_last_out & overtime
+    if shift.morning_in and not shift.actual_first_in:
+        shift.actual_first_in = shift.morning_in
+    elif not shift.actual_first_in and shift.evening_in:
+        shift.actual_first_in = shift.evening_in
+
+    if shift.evening_out:
+        shift.actual_last_out = shift.evening_out
+    elif shift.morning_out and not shift.actual_last_out:
+        shift.actual_last_out = shift.morning_out
+
+    shift.overtime_minutes = shift.calculate_overtime_minutes()
+    shift.save(update_fields=[
+        'morning_in', 'morning_out', 'evening_in', 'evening_out',
+        'actual_first_in', 'actual_last_out', 'overtime_minutes',
+        'status', 'is_off_floor'
+    ])
 
     return JsonResponse({
         'success': True,
-        'message': f"Successfully clocked {direction} for {staff_user.get_full_name() or staff_user.username}.",
+        'message': f"Clocked {direction} ({session}) for {staff_user.get_full_name() or staff_user.username}.",
         'shift': {
             'id': shift.id,
             'staff': staff_user.username,
+            'shift_type': shift.shift_type,
             'status': shift.status,
-            'actual_in': shift.actual_first_in.strftime('%H:%M') if shift.actual_first_in else None,
-            'actual_out': shift.actual_last_out.strftime('%H:%M') if shift.actual_last_out else None,
+            'morning_in': shift.morning_in.strftime('%H:%M') if shift.morning_in else None,
+            'morning_out': shift.morning_out.strftime('%H:%M') if shift.morning_out else None,
+            'evening_in': shift.evening_in.strftime('%H:%M') if shift.evening_in else None,
+            'evening_out': shift.evening_out.strftime('%H:%M') if shift.evening_out else None,
+            'late_minutes': shift.calculate_late_minutes(),
             'overtime_minutes': shift.overtime_minutes
         }
     })
@@ -4521,7 +4596,7 @@ def admin_clock_staff_attendance_api(request):
 @login_required
 @role_required('super_admin', 'admin')
 def admin_create_staff_shift_api(request):
-    """Schedules a new staff shift roster record."""
+    """Schedules a new staff shift roster record with split shift support."""
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
@@ -4538,8 +4613,9 @@ def admin_create_staff_shift_api(request):
     User = get_user_model()
     staff_id = data.get('staff_id')
     shift_date_str = data.get('shift_date')
-    start_str = data.get('scheduled_start', '08:00')
-    end_str = data.get('scheduled_end', '17:00')
+    shift_type = data.get('shift_type', 'FULL_SPLIT')
+    start_str = data.get('scheduled_start', '')
+    end_str = data.get('scheduled_end', '')
     rate_str = data.get('base_hourly_rate', '500.00')
 
     staff_user = User.objects.filter(id=staff_id, is_staff=True).first()
@@ -4548,24 +4624,47 @@ def admin_create_staff_shift_api(request):
 
     try:
         shift_date = timezone.datetime.strptime(shift_date_str, '%Y-%m-%d').date()
-        s_start = timezone.datetime.strptime(start_str, '%H:%M').time()
-        s_end = timezone.datetime.strptime(end_str, '%H:%M').time()
+        if shift_type == 'FULL_SPLIT':
+            s_start = timezone.datetime.strptime('05:00', '%H:%M').time()
+            s_end = timezone.datetime.strptime('21:00', '%H:%M').time()
+            is_rest = False
+        elif shift_type == 'MORNING':
+            s_start = timezone.datetime.strptime('05:00', '%H:%M').time()
+            s_end = timezone.datetime.strptime('12:00', '%H:%M').time()
+            is_rest = False
+        elif shift_type == 'EVENING':
+            s_start = timezone.datetime.strptime('15:00', '%H:%M').time()
+            s_end = timezone.datetime.strptime('21:00', '%H:%M').time()
+            is_rest = False
+        elif shift_type == 'REST_DAY':
+            s_start = timezone.datetime.strptime('05:00', '%H:%M').time()
+            s_end = timezone.datetime.strptime('21:00', '%H:%M').time()
+            is_rest = True
+        else:
+            s_start = timezone.datetime.strptime(start_str or '05:00', '%H:%M').time()
+            s_end = timezone.datetime.strptime(end_str or '21:00', '%H:%M').time()
+            is_rest = False
+
         rate = Decimal(str(rate_str))
     except Exception as e:
         return JsonResponse({'error': f"Invalid date or time format: {e}"}, status=400)
 
-    shift = StaffShift.objects.create(
+    shift, created = StaffShift.objects.update_or_create(
         staff_user=staff_user,
         shift_date=shift_date,
-        scheduled_start=s_start,
-        scheduled_end=s_end,
-        base_hourly_rate=rate,
-        status='SCHEDULED'
+        defaults={
+            'shift_type': shift_type,
+            'scheduled_start': s_start,
+            'scheduled_end': s_end,
+            'base_hourly_rate': rate,
+            'is_rest_day': is_rest,
+            'status': 'REST_DAY' if is_rest else 'SCHEDULED'
+        }
     )
 
     return JsonResponse({
         'success': True,
-        'message': f"Shift scheduled for {staff_user.username} on {shift_date}.",
+        'message': f"Shift ({shift.get_shift_type_display()}) scheduled for {staff_user.username} on {shift_date}.",
         'shift_id': shift.id
     })
 
@@ -4734,7 +4833,7 @@ def admin_get_pt_breakdown_api(request, ledger_id):
 @login_required
 @role_required('super_admin', 'admin')
 def admin_get_staff_work_schedule_api(request, staff_id):
-    """Returns JSON of staff contract work schedule."""
+    """Returns JSON of staff contract work schedule with split shift presets."""
     from django.contrib.auth import get_user_model
     from wger.gym_operations_payroll.models import StaffWorkSchedule
     User = get_user_model()
@@ -4753,24 +4852,31 @@ def admin_get_staff_work_schedule_api(request, staff_id):
             'epf_etf_eligible': sched.epf_etf_eligible,
             'epf_number': sched.epf_number,
             'monday_active': sched.monday_active,
+            'monday_shift_type': getattr(sched, 'monday_shift_type', 'FULL_SPLIT'),
             'monday_start': sched.monday_start.strftime('%H:%M'),
             'monday_end': sched.monday_end.strftime('%H:%M'),
             'tuesday_active': sched.tuesday_active,
+            'tuesday_shift_type': getattr(sched, 'tuesday_shift_type', 'FULL_SPLIT'),
             'tuesday_start': sched.tuesday_start.strftime('%H:%M'),
             'tuesday_end': sched.tuesday_end.strftime('%H:%M'),
             'wednesday_active': sched.wednesday_active,
+            'wednesday_shift_type': getattr(sched, 'wednesday_shift_type', 'FULL_SPLIT'),
             'wednesday_start': sched.wednesday_start.strftime('%H:%M'),
             'wednesday_end': sched.wednesday_end.strftime('%H:%M'),
             'thursday_active': sched.thursday_active,
+            'thursday_shift_type': getattr(sched, 'thursday_shift_type', 'FULL_SPLIT'),
             'thursday_start': sched.thursday_start.strftime('%H:%M'),
             'thursday_end': sched.thursday_end.strftime('%H:%M'),
             'friday_active': sched.friday_active,
+            'friday_shift_type': getattr(sched, 'friday_shift_type', 'FULL_SPLIT'),
             'friday_start': sched.friday_start.strftime('%H:%M'),
             'friday_end': sched.friday_end.strftime('%H:%M'),
             'saturday_active': sched.saturday_active,
+            'saturday_shift_type': getattr(sched, 'saturday_shift_type', 'FULL_SPLIT'),
             'saturday_start': sched.saturday_start.strftime('%H:%M'),
             'saturday_end': sched.saturday_end.strftime('%H:%M'),
             'sunday_active': sched.sunday_active,
+            'sunday_shift_type': getattr(sched, 'sunday_shift_type', 'REST_DAY'),
             'sunday_start': sched.sunday_start.strftime('%H:%M'),
             'sunday_end': sched.sunday_end.strftime('%H:%M'),
             'notes': sched.notes
@@ -4785,24 +4891,31 @@ def admin_get_staff_work_schedule_api(request, staff_id):
             'epf_etf_eligible': True,
             'epf_number': '',
             'monday_active': True,
-            'monday_start': '06:00',
-            'monday_end': '15:00',
+            'monday_shift_type': 'FULL_SPLIT',
+            'monday_start': '05:00',
+            'monday_end': '21:00',
             'tuesday_active': True,
-            'tuesday_start': '06:00',
-            'tuesday_end': '15:00',
+            'tuesday_shift_type': 'FULL_SPLIT',
+            'tuesday_start': '05:00',
+            'tuesday_end': '21:00',
             'wednesday_active': True,
-            'wednesday_start': '06:00',
-            'wednesday_end': '15:00',
+            'wednesday_shift_type': 'FULL_SPLIT',
+            'wednesday_start': '05:00',
+            'wednesday_end': '21:00',
             'thursday_active': True,
-            'thursday_start': '06:00',
-            'thursday_end': '15:00',
+            'thursday_shift_type': 'FULL_SPLIT',
+            'thursday_start': '05:00',
+            'thursday_end': '21:00',
             'friday_active': True,
-            'friday_start': '06:00',
-            'friday_end': '15:00',
+            'friday_shift_type': 'FULL_SPLIT',
+            'friday_start': '05:00',
+            'friday_end': '21:00',
             'saturday_active': True,
-            'saturday_start': '08:00',
-            'saturday_end': '17:00',
+            'saturday_shift_type': 'FULL_SPLIT',
+            'saturday_start': '05:00',
+            'saturday_end': '21:00',
             'sunday_active': False,
+            'sunday_shift_type': 'REST_DAY',
             'sunday_start': '08:00',
             'sunday_end': '14:00',
             'notes': ''
@@ -4813,7 +4926,7 @@ def admin_get_staff_work_schedule_api(request, staff_id):
 @login_required
 @role_required('super_admin', 'admin')
 def admin_save_staff_work_schedule_api(request):
-    """Saves or updates master weekly schedule for a staff member."""
+    """Saves or updates master weekly schedule for a staff member with split shift presets."""
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
 
@@ -4843,11 +4956,28 @@ def admin_save_staff_work_schedule_api(request):
         # Days
         days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
         for d in days:
-            setattr(sched, f"{d}_active", bool(data.get(f"{d}_active", False)))
-            start_val = data.get(f"{d}_start", '06:00')
-            end_val = data.get(f"{d}_end", '15:00')
-            setattr(sched, f"{d}_start", timezone.datetime.strptime(start_val, '%H:%M').time())
-            setattr(sched, f"{d}_end", timezone.datetime.strptime(end_val, '%H:%M').time())
+            s_type = data.get(f"{d}_shift_type")
+            if s_type:
+                setattr(sched, f"{d}_shift_type", s_type)
+                if s_type == 'REST_DAY':
+                    setattr(sched, f"{d}_active", False)
+                else:
+                    setattr(sched, f"{d}_active", True)
+                    if s_type == 'FULL_SPLIT':
+                        setattr(sched, f"{d}_start", timezone.datetime.strptime('05:00', '%H:%M').time())
+                        setattr(sched, f"{d}_end", timezone.datetime.strptime('21:00', '%H:%M').time())
+                    elif s_type == 'MORNING':
+                        setattr(sched, f"{d}_start", timezone.datetime.strptime('05:00', '%H:%M').time())
+                        setattr(sched, f"{d}_end", timezone.datetime.strptime('12:00', '%H:%M').time())
+                    elif s_type == 'EVENING':
+                        setattr(sched, f"{d}_start", timezone.datetime.strptime('15:00', '%H:%M').time())
+                        setattr(sched, f"{d}_end", timezone.datetime.strptime('21:00', '%H:%M').time())
+            else:
+                setattr(sched, f"{d}_active", bool(data.get(f"{d}_active", False)))
+                start_val = data.get(f"{d}_start", '05:00')
+                end_val = data.get(f"{d}_end", '21:00')
+                setattr(sched, f"{d}_start", timezone.datetime.strptime(start_val, '%H:%M').time())
+                setattr(sched, f"{d}_end", timezone.datetime.strptime(end_val, '%H:%M').time())
 
         sched.notes = str(data.get('notes', '')).strip()
         sched.save()
@@ -4865,8 +4995,9 @@ def admin_save_staff_work_schedule_api(request):
 @role_required('super_admin', 'admin')
 def admin_generate_bulk_roster_api(request):
     """
-    1-Click Bulk Monthly or Date-Range Roster Generator.
-    Reads each staff member's StaffWorkSchedule and auto-provisions StaffShift records.
+    1-Click Bulk Monthly Split Roster Generator.
+    Reads each staff member's StaffWorkSchedule and auto-provisions StaffShift records
+    for Morning 05:00-12:00 and Evening 15:00-21:00 split operations.
     """
     if request.method != 'POST':
         return JsonResponse({'error': 'POST required'}, status=405)
@@ -4918,30 +5049,29 @@ def admin_generate_bulk_roster_api(request):
 
             sched = StaffWorkSchedule.objects.filter(staff_user=staff).first()
             if sched:
-                is_active, s_start, s_end = sched.get_schedule_for_weekday(weekday_idx)
+                is_active, s_type, s_start, s_end = sched.get_schedule_for_weekday(weekday_idx)
                 rate = sched.hourly_rate
             else:
-                # Default gym contract: Mon-Sat active (06:00-15:00 / Sat 08:00-17:00), Sun off
-                if weekday_idx < 5:
+                # Default gym contract: Mon-Sat Split Shift (05:00-12:00 & 15:00-21:00), Sun Rest Day
+                if weekday_idx < 6:
                     is_active = True
-                    s_start = timezone.datetime.strptime('06:00', '%H:%M').time()
-                    s_end = timezone.datetime.strptime('15:00', '%H:%M').time()
-                elif weekday_idx == 5:
-                    is_active = True
-                    s_start = timezone.datetime.strptime('08:00', '%H:%M').time()
-                    s_end = timezone.datetime.strptime('17:00', '%H:%M').time()
+                    s_type = 'FULL_SPLIT'
+                    s_start = timezone.datetime.strptime('05:00', '%H:%M').time()
+                    s_end = timezone.datetime.strptime('21:00', '%H:%M').time()
                 else:
                     is_active = False
-                    s_start = timezone.datetime.strptime('08:00', '%H:%M').time()
-                    s_end = timezone.datetime.strptime('14:00', '%H:%M').time()
+                    s_type = 'REST_DAY'
+                    s_start = timezone.datetime.strptime('05:00', '%H:%M').time()
+                    s_end = timezone.datetime.strptime('21:00', '%H:%M').time()
                 rate = Decimal('500.00')
 
-            if is_active:
+            if is_active and s_type != 'REST_DAY':
                 StaffShift.objects.create(
                     staff_user=staff,
                     shift_date=curr_date,
-                    scheduled_start=s_start,
-                    scheduled_end=s_end,
+                    shift_type=s_type,
+                    scheduled_start=s_start or timezone.datetime.strptime('05:00', '%H:%M').time(),
+                    scheduled_end=s_end or timezone.datetime.strptime('21:00', '%H:%M').time(),
                     base_hourly_rate=rate,
                     status='SCHEDULED',
                     is_rest_day=False
@@ -4951,8 +5081,9 @@ def admin_generate_bulk_roster_api(request):
                 StaffShift.objects.create(
                     staff_user=staff,
                     shift_date=curr_date,
-                    scheduled_start=s_start or timezone.datetime.strptime('08:00', '%H:%M').time(),
-                    scheduled_end=s_end or timezone.datetime.strptime('14:00', '%H:%M').time(),
+                    shift_type='REST_DAY',
+                    scheduled_start=s_start or timezone.datetime.strptime('05:00', '%H:%M').time(),
+                    scheduled_end=s_end or timezone.datetime.strptime('21:00', '%H:%M').time(),
                     base_hourly_rate=rate,
                     status='REST_DAY',
                     is_rest_day=True
@@ -4963,7 +5094,7 @@ def admin_generate_bulk_roster_api(request):
 
     return JsonResponse({
         'success': True,
-        'message': f"Bulk roster generated for {start_date.strftime('%B %Y')}: {total_shifts_created} active shifts and {total_rest_days} scheduled rest days created.",
+        'message': f"1-Click Split Roster generated for {start_date.strftime('%B %Y')}: {total_shifts_created} active split shifts and {total_rest_days} scheduled rest days created.",
         'month': start_date.strftime('%B %Y'),
         'shifts_created': total_shifts_created,
         'rest_days_created': total_rest_days

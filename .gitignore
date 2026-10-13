@@ -50,7 +50,10 @@ settings/*_extra.py
 *.sqlite
 *.sqlite3
 .env
+.env.production
+.env.*.local
 /CACHE
+scratch/
 
 
 # Sphinx documentation

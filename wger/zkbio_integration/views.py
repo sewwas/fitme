@@ -211,46 +211,77 @@ def punches_ingest(request):
         raw_payload=raw_payload,
     )
 
-    # If staff member punched, update staff attendance records
+    # If staff member punched, update staff attendance records with Morning & Evening Split Session support
     if user and user.is_staff:
         try:
-            from wger.gym_operations_payroll.models import StaffShift
+            from wger.gym_operations_payroll.models import StaffShift, StaffWorkSchedule
             today = punch_time.date()
             shift = StaffShift.objects.filter(staff_user=user, shift_date=today).first()
             if not shift:
-                # Auto-provision daily shift so attendance is never lost
-                hour = punch_time.hour
-                if hour < 13:
-                    s_start = timezone.datetime.strptime('06:00', '%H:%M').time()
-                    s_end = timezone.datetime.strptime('15:00', '%H:%M').time()
+                # Auto-provision daily shift based on staff contract or Split default
+                work_sched = StaffWorkSchedule.objects.filter(staff_user=user).first()
+                if work_sched:
+                    is_active, s_type, s_start, s_end = work_sched.get_schedule_for_weekday(today.weekday())
                 else:
-                    s_start = timezone.datetime.strptime('13:00', '%H:%M').time()
-                    s_end = timezone.datetime.strptime('22:00', '%H:%M').time()
+                    is_active = True
+                    s_type = 'FULL_SPLIT'
+                    s_start = timezone.datetime.strptime('05:00', '%H:%M').time()
+                    s_end = timezone.datetime.strptime('21:00', '%H:%M').time()
+
                 shift = StaffShift.objects.create(
                     staff_user=user,
                     shift_date=today,
-                    scheduled_start=s_start,
-                    scheduled_end=s_end,
-                    status='SCHEDULED'
+                    shift_type=s_type if is_active else 'REST_DAY',
+                    scheduled_start=s_start or timezone.datetime.strptime('05:00', '%H:%M').time(),
+                    scheduled_end=s_end or timezone.datetime.strptime('21:00', '%H:%M').time(),
+                    is_rest_day=(not is_active),
+                    status='REST_DAY' if not is_active else 'SCHEDULED'
                 )
 
-            if expected_event == 'ENTRY':
-                if not shift.actual_first_in:
-                    shift.actual_first_in = punch_time
-                shift.status = 'ON_FLOOR'
-                shift.is_off_floor = False
-                shift.save(update_fields=['actual_first_in', 'status', 'is_off_floor'])
-            elif expected_event == 'EXIT':
-                shift.actual_last_out = punch_time
-                sched_end_dt = timezone.make_aware(timezone.datetime.combine(today, shift.scheduled_end))
-                if punch_time > sched_end_dt:
-                    delta_ot = punch_time - sched_end_dt
-                    shift.overtime_minutes = int(delta_ot.total_seconds() / 60)
-                if punch_time >= sched_end_dt:
-                    shift.status = 'COMPLETED'
-                else:
+            # Determine whether punch belongs to Morning (05:00 - 12:00) or Evening (15:00 - 21:00) session
+            punch_hour = punch_time.hour
+            punch_minute = punch_time.minute
+            time_decimal = punch_hour + (punch_minute / 60.0)
+
+            if time_decimal < 13.5:
+                # ── Morning Session Window (04:00 - 13:30) ──
+                if expected_event == 'ENTRY':
+                    if not shift.morning_in:
+                        shift.morning_in = punch_time
+                    shift.status = 'ON_FLOOR'
+                    shift.is_off_floor = False
+                elif expected_event == 'EXIT':
+                    shift.morning_out = punch_time
+                    # If departure around 12:00 noon gym closure, mark off-floor without sudden absence penalty
                     shift.status = 'OFF_FLOOR'
-                shift.save(update_fields=['actual_last_out', 'overtime_minutes', 'status'])
+            else:
+                # ── Evening Session Window (13:30 - 23:00) ──
+                if expected_event == 'ENTRY':
+                    if not shift.evening_in:
+                        shift.evening_in = punch_time
+                    shift.status = 'ON_FLOOR'
+                    shift.is_off_floor = False
+                elif expected_event == 'EXIT':
+                    shift.evening_out = punch_time
+                    shift.status = 'COMPLETED'
+
+            # Sync aggregate actual punches & calculate overtime
+            if shift.morning_in and not shift.actual_first_in:
+                shift.actual_first_in = shift.morning_in
+            elif not shift.actual_first_in and shift.evening_in:
+                shift.actual_first_in = shift.evening_in
+
+            if shift.evening_out:
+                shift.actual_last_out = shift.evening_out
+            elif shift.morning_out and not shift.actual_last_out:
+                shift.actual_last_out = shift.morning_out
+
+            shift.overtime_minutes = shift.calculate_overtime_minutes()
+            shift.save(update_fields=[
+                'morning_in', 'morning_out', 'evening_in', 'evening_out',
+                'actual_first_in', 'actual_last_out', 'overtime_minutes',
+                'status', 'is_off_floor'
+            ])
         except Exception as ex:
             logger.error(f"Error linking staff punch to shift: {ex}")
 
@@ -262,6 +293,9 @@ def punches_ingest(request):
             streak.record_checkin()
         except Exception as ex:
             logger.error(f"Error updating workout streak for {pin}: {ex}")
+
+    _RECENT_PUNCHES_CACHE['ts'] = 0
+    _FLOOR_STATUS_CACHE['ts'] = 0
 
     return JsonResponse({
         'status': 'success',
@@ -700,11 +734,22 @@ def remote_buzzer_trigger(request):
     })
 
 
+# Micro-cache for high-frequency polling endpoints to eliminate SQLite locks and CPU spikes
+_FLOOR_STATUS_CACHE = {'ts': 0, 'data': None}
+_RECENT_PUNCHES_CACHE = {'ts': 0, 'data': None}
+
+
 def floor_status_api(request):
     """
     Endpoint: /api/zkbio/floor-status/
     Returns real-time floor count: active members and staff on the floor.
+    Micro-cached for 3 seconds to avoid continuous SQLite table scans.
     """
+    import time
+    now_ts = time.time()
+    if _FLOOR_STATUS_CACHE['data'] and (now_ts - _FLOOR_STATUS_CACHE['ts'] < 3.0):
+        return JsonResponse(_FLOOR_STATUS_CACHE['data'])
+
     today = timezone.now().date()
     today_logs = DoorAccessLog.objects.filter(
         punch_time__date=today,
@@ -726,36 +771,57 @@ def floor_status_api(request):
             else:
                 members_on_floor += 1
 
-    return JsonResponse({
+    payload = {
         'members_on_floor': members_on_floor,
         'staff_on_floor': staff_on_floor,
         'total_on_floor': members_on_floor + staff_on_floor,
         'timestamp': timezone.now().isoformat()
-    })
+    }
+    _FLOOR_STATUS_CACHE['ts'] = now_ts
+    _FLOOR_STATUS_CACHE['data'] = payload
+
+    return JsonResponse(payload)
 
 
 def recent_punches_api(request):
     """
     Endpoint: /api/zkbio/recent-punches/
     Returns the latest 15 door access attempts for real-time front desk monitoring.
+    Uses batch queries and a 3-second micro-cache to eliminate N+1 DB bottlenecks.
     """
-    logs = DoorAccessLog.objects.select_related('user').order_by('-punch_time')[:15]
-    items = []
+    import time
+    now_ts = time.time()
+    if _RECENT_PUNCHES_CACHE['data'] and (now_ts - _RECENT_PUNCHES_CACHE['ts'] < 3.0):
+        return JsonResponse(_RECENT_PUNCHES_CACHE['data'])
 
+    logs = list(DoorAccessLog.objects.select_related('user', 'user__member_profile').order_by('-punch_time')[:15])
+    user_ids = [l.user_id for l in logs if l.user_id]
+
+    user_plans = {}
+    if user_ids:
+        active_subs = Subscription.objects.filter(
+            member_id__in=user_ids,
+            status='active'
+        ).select_related('plan')
+        for sub in active_subs:
+            if sub.member_id not in user_plans and sub.plan:
+                user_plans[sub.member_id] = sub.plan.name
+
+    items = []
     for l in logs:
         user = l.user
         photo_url = ''
         full_name = 'Walk-in / Hardware Scan'
-        plan_name = 'Floor Access'
+        plan_name = user_plans.get(l.user_id, 'Floor Access') if l.user_id else 'Floor Access'
 
         if user:
             full_name = user.get_full_name() or user.username
             mp = getattr(user, 'member_profile', None)
             if mp and mp.profile_photo:
-                photo_url = mp.profile_photo.url
-            sub = Subscription.objects.filter(member=user, status='active').select_related('plan').first()
-            if sub and sub.plan:
-                plan_name = sub.plan.name
+                try:
+                    photo_url = mp.profile_photo.url
+                except Exception:
+                    photo_url = ''
 
         reason = ''
         if isinstance(l.raw_payload, dict):
@@ -776,4 +842,8 @@ def recent_punches_api(request):
             'terminal_name': l.terminal_name
         })
 
-    return JsonResponse({'punches': items, 'count': len(items)})
+    payload = {'punches': items, 'count': len(items)}
+    _RECENT_PUNCHES_CACHE['ts'] = now_ts
+    _RECENT_PUNCHES_CACHE['data'] = payload
+
+    return JsonResponse(payload)

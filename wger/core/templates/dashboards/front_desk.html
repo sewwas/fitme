@@ -594,7 +594,6 @@
       <i class="fa fa-home" style="color:var(--neon-lime);"></i> Club Home
     </a>
     <span><i class="fa fa-user-circle"></i> {{ request.user.username }}</span>
-    <a href="/dashboard/admin/" style="color:var(--text-muted);text-decoration:none;"><i class="fa fa-shield-alt"></i> Super Admin</a>
     <form method="post" action="/account/logout/" style="display:inline;">{% csrf_token %}
       <button type="submit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;"><i class="fa fa-sign-out-alt"></i> Logout</button>
     </form>
@@ -632,11 +631,11 @@
     <a href="#" onclick="openPaymentModal(); return false;" title="Record Payment"><i class="fa fa-credit-card"></i> <span class="link-label">Record Payment</span></a>
     <a href="#" onclick="openIntakeModal(); return false;" title="Intake Walk-in"><i class="fa fa-user-plus"></i> <span class="link-label">+ Intake Walk-in</span></a>
     <a href="/pos/" target="_blank" style="color:var(--neon-lime);" title="POS Bar Register"><i class="fa fa-cash-register"></i> <span class="link-label">POS Register</span></a>
+    <a href="/pos/audit/plan/" target="_blank" style="color:var(--cyan);" title="Official Stock Audit Count Plan Sheet"><i class="fa fa-clipboard-check"></i> <span class="link-label">Stock Audit</span></a>
     <a href="/register/" target="_blank" style="color:#CBD5E1;" title="Tablet Registration"><i class="fa fa-tablet-alt"></i> <span class="link-label">Tablet Form</span></a>
     <a href="#" onclick="pingGate(); return false;" title="Ping Turnstile Gate"><i class="fa fa-network-wired"></i> <span class="link-label">Ping Gate</span></a>
 
     <div class="sidebar-section" style="margin-top:0.75rem;">Switch View</div>
-    <a href="/dashboard/admin/" title="Super Admin Dashboard"><i class="fa fa-shield-alt"></i> <span class="link-label">Super Admin</span></a>
     <a href="/dashboard/coach/" title="Coach Dashboard"><i class="fa fa-dumbbell"></i> <span class="link-label">Coach View</span></a>
     <a href="/dashboard/member/" title="Member Dashboard"><i class="fa fa-id-badge"></i> <span class="link-label">Member View</span></a>
   </aside>
@@ -692,6 +691,11 @@
         <a href="/pos/" target="_blank" class="btn-hub" title="Open POS Register for Shake Bar &amp; Supplements">
           <i class="fa fa-cash-register" style="color:var(--neon-lime);"></i>
           <span>POS BAR REGISTER</span>
+        </a>
+
+        <a href="/pos/audit/plan/" target="_blank" class="btn-hub" title="Open Official Stock Audit Plan Sheet &amp; Till Reconciliation" style="border-color:rgba(0,240,255,0.35);">
+          <i class="fa fa-clipboard-check" style="color:var(--cyan);"></i>
+          <span>STOCK AUDIT</span>
         </a>
 
         <a href="/register/" target="_blank" class="btn-hub" title="Open digital registration form on counter tablet / iPad">
@@ -1209,6 +1213,7 @@
       Close Window
     </button>
   </div>
+</div>
 <!-- Modal: Link Partner / Secondary User to 2-User or 3-User Plan -->
 <div id="linkPartnerModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2100;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto;">
   <div style="background:#13171A;border:2px solid var(--cyan);border-radius:16px;padding:2rem;max-width:540px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.85);max-height:92vh;display:flex;flex-direction:column;overflow-y:auto;">
@@ -1987,8 +1992,18 @@
     setTimeout(() => { toast.style.display = 'none'; }, 4000);
   }
 
-  // ── 1. Real-time Live Punch Monitor & Floor Counter (Every 3.5 seconds) ──
+  // ── 1. Real-time Live Punch Monitor & Floor Counter (Intelligent, Throttled & Diffed) ──
+  let lastPunchesFingerprint = '';
+  let pollIntervalId = null;
+
   async function pollLivePunches() {
+    // Skip polling if document is hidden in background to save CPU and network
+    if (document.hidden) return;
+
+    // Skip polling if turnstile monitor is hidden in full-width single-tab views
+    const mon = document.getElementById('section-monitor');
+    if (mon && mon.style.display === 'none') return;
+
     try {
       const [punchRes, floorRes] = await Promise.all([
         fetch('/api/zkbio/recent-punches/'),
@@ -2002,25 +2017,33 @@
         const staffCount = floorData.staff_on_floor || 0;
 
         const elMem = document.getElementById('floorMembersCount');
-        if (elMem) elMem.textContent = memCount;
+        if (elMem && elMem.textContent != memCount) elMem.textContent = memCount;
         const elStaff = document.getElementById('floorStaffCount');
-        if (elStaff) elStaff.textContent = staffCount;
+        if (elStaff && elStaff.textContent != staffCount) elStaff.textContent = staffCount;
 
         const elMonMem = document.getElementById('monitorFloorMembersCount');
-        if (elMonMem) elMonMem.textContent = memCount;
+        if (elMonMem && elMonMem.textContent != memCount) elMonMem.textContent = memCount;
         const elMonStaff = document.getElementById('monitorFloorStaffCount');
-        if (elMonStaff) elMonStaff.textContent = staffCount;
+        if (elMonStaff && elMonStaff.textContent != staffCount) elMonStaff.textContent = staffCount;
       }
 
       if (punchData && punchData.punches) {
         const tbody = document.getElementById('livePunchesBody');
-        tbody.innerHTML = '';
+        if (!tbody) return;
+
+        // Create fingerprint of top punch IDs to avoid expensive DOM re-rendering if unchanged
+        const currentFingerprint = punchData.punches.map(p => `${p.id}_${p.punch_time}_${p.event_type}`).join('|');
+        if (currentFingerprint === lastPunchesFingerprint) {
+          return; // No new punches, zero DOM work!
+        }
+        lastPunchesFingerprint = currentFingerprint;
 
         if (punchData.punches.length === 0) {
           tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1.5rem;color:var(--text-muted);">Waiting for biometric turnstile scans...</td></tr>';
           return;
         }
 
+        const fragment = document.createDocumentFragment();
         punchData.punches.forEach(p => {
           let methodBadge = '<span class="badge badge-green"><i class="fa fa-smile"></i> Face ID</span>';
           if (p.verify_mode === 'FINGERPRINT') {
@@ -2057,15 +2080,23 @@
             <td>${decisionBadge}</td>
             <td style="font-size:0.75rem;color:var(--text-muted);">${p.terminal_name}</td>
           `;
-          tbody.appendChild(row);
+          fragment.appendChild(row);
         });
+        tbody.innerHTML = '';
+        tbody.appendChild(fragment);
       }
     } catch (e) {
-      console.warn("Live punch poll error:", e);
+      // Quiet fail on network hiccups
     }
   }
 
-  setInterval(pollLivePunches, 3500);
+  // Poll every 6.5s instead of 3.5s to prevent request queues, and pause when tab is inactive
+  pollIntervalId = setInterval(pollLivePunches, 6500);
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      pollLivePunches();
+    }
+  });
 
   // ── 1.1 Emergency Buzzer Remote Gate Trigger ──
   function playBuzzerAudio() {
