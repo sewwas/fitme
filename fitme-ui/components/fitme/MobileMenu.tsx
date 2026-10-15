@@ -5,6 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { PrimaryButton } from "../ui/PrimaryButton";
 import { SecondaryButton } from "../ui/SecondaryButton";
+import { PORTAL_LOGIN_URL } from "./config";
 
 interface NavItem {
   name: string;
@@ -156,7 +157,7 @@ export function MobileMenu({
           Join Now
         </PrimaryButton>
         <SecondaryButton
-          href="http://localhost:8000/login/"
+          href={PORTAL_LOGIN_URL}
           onClick={onClose}
           fullWidth
           size="lg"

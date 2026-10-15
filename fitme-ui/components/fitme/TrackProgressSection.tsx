@@ -4,6 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion } from "motion/react";
+import { PORTAL_LOGIN_URL } from "./config";
 
 export function TrackProgressSection() {
   return (
@@ -83,7 +84,7 @@ export function TrackProgressSection() {
 
             <div className="mt-8">
               <Link
-                href="http://localhost:8000/login/"
+                href={PORTAL_LOGIN_URL}
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-[#76C043]/60 bg-[#0E1113] hover:bg-[#76C043]/10 text-white hover:text-[#76C043] text-xs font-bold uppercase tracking-wider transition-all"
               >
                 <span>Start Tracking</span>

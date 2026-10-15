@@ -8,6 +8,7 @@ import { SecondaryButton } from "../ui/SecondaryButton";
 import { MobileMenu } from "./MobileMenu";
 
 import { NAV_ITEMS } from "./navigation";
+import { PORTAL_LOGIN_URL } from "./config";
 
 export function FitMeHeader() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -105,7 +106,7 @@ export function FitMeHeader() {
             </button>
 
             <Link
-              href="http://localhost:8000/login/"
+              href={PORTAL_LOGIN_URL}
               className="text-xs font-semibold text-[#9CA3AF] hover:text-[#F8FAFC] px-2 py-1 transition-colors"
             >
               Member Login

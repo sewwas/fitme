@@ -3,6 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "motion/react";
+import { PORTAL_REGISTER_URL } from "./config";
 
 const PLANS = [
   {
@@ -115,7 +116,7 @@ export function MembershipSection() {
 
               {/* Action Button */}
               <Link
-                href="http://localhost:8000/register/"
+                href={PORTAL_REGISTER_URL}
                 className={`w-full py-2.5 rounded-xl text-center text-xs font-black uppercase tracking-wider transition-all block ${
                   plan.popular
                     ? "bg-[#76C043] hover:bg-[#85D538] text-black shadow-[0_0_20px_rgba(118,192,67,0.4)]"
