@@ -377,6 +377,36 @@ class FitMePasswordResetForm(PasswordResetForm):
             if user.email:
                 yield user
 
+    def save(self, domain_override=None,
+             subject_template_name='registration/password_reset_subject.txt',
+             email_template_name='registration/password_reset_email.html',
+             use_https=False, token_generator=None,
+             from_email=None, request=None, html_email_template_name=None,
+             extra_email_context=None):
+        from django.contrib.auth.tokens import default_token_generator
+        if token_generator is None:
+            token_generator = default_token_generator
+
+        if not domain_override:
+            from wger.core.email_service import get_base_url
+            from urllib.parse import urlparse
+            base_url = get_base_url(request)
+            parsed = urlparse(base_url)
+            domain_override = parsed.netloc or 'fitme-backend-mucu.onrender.com'
+            use_https = (parsed.scheme == 'https')
+
+        return super().save(
+            domain_override=domain_override,
+            subject_template_name=subject_template_name,
+            email_template_name=email_template_name,
+            use_https=use_https,
+            token_generator=token_generator,
+            from_email=from_email,
+            request=request,
+            html_email_template_name=html_email_template_name,
+            extra_email_context=extra_email_context,
+        )
+
 
 class PasswordResetFormCaptcha(FitMePasswordResetForm):
     captcha = ReCaptchaField(

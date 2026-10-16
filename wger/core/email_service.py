@@ -17,20 +17,30 @@ logger = logging.getLogger('wger.email_service')
 
 def get_base_url(request=None):
     """
-    Resolves the base URL (protocol + host) for public links.
-    Prioritizes request header/host if available, falls back to SITE_URL setting.
+    Resolves the base URL (protocol + host) for public links sent via email.
+    Always ensures links sent to users are publicly reachable (production domain)
+    rather than internal localhost/127.0.0.1 addresses.
     """
-    if request:
-        protocol = 'https' if request.is_secure() else 'http'
-        # Check X-Forwarded-Proto if behind reverse proxy (e.g. Render / Cloudflare)
-        x_proto = request.META.get('HTTP_X_FORWARDED_PROTO')
-        if x_proto:
-            protocol = x_proto.split(',')[0].strip()
-        host = request.get_host()
-        return f"{protocol}://{host}"
+    site_url = getattr(settings, 'SITE_URL', 'https://fitme-backend-mucu.onrender.com').rstrip('/')
 
-    site_url = getattr(settings, 'SITE_URL', 'https://fitmefitness.lk')
-    return site_url.rstrip('/')
+    if request:
+        host = request.get_host().lower()
+        # If the request host is local/internal dev (localhost, 127.0.0.1, or port 8000),
+        # ALWAYS fallback to production site_url so emails never send broken local links to members!
+        is_local = (
+            'localhost' in host
+            or '127.0.0.1' in host
+            or ':8000' in host
+            or host.startswith('0.0.0.0')
+        )
+        if not is_local:
+            protocol = 'https' if request.is_secure() else 'http'
+            x_proto = request.META.get('HTTP_X_FORWARDED_PROTO')
+            if x_proto:
+                protocol = x_proto.split(',')[0].strip()
+            return f"{protocol}://{request.get_host()}".rstrip('/')
+
+    return site_url
 
 
 def generate_password_set_url(user, request=None):

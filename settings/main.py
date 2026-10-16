@@ -144,7 +144,7 @@ ZKBIO_BRIDGE_TOKEN = LIVEU_BRANCH_API_KEY
 # The site's URL (e.g. http://www.my-local-gym.com or http://localhost:8000)
 # This is needed for uploaded files and images (exercise images, etc.) to be
 # properly served.
-SITE_URL = env.str('SITE_URL', 'http://localhost:8000')
+SITE_URL = env.str('SITE_URL', 'https://fitme-backend-mucu.onrender.com')
 
 # Path to uploaded files
 # Absolute filesystem path to the directory that will hold user-uploaded files.
