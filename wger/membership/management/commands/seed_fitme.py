@@ -92,8 +92,9 @@ class Command(BaseCommand):
                 'registration_fee': 0.00,
                 'duration_days': 30,
                 'max_members': 1,
-                'description': 'Discounted plan for students with valid ID. No Registration Fee! Total: LKR 3,500 / month.'
+                'description': 'Discounted plan for students aged 18 and under (with valid student ID). Zero Registration Fee! When turning 19, a general package is required. Total: LKR 3,500 / month.'
             },
+
         ]
         for p in plans:
             obj, created = MembershipPlan.objects.update_or_create(

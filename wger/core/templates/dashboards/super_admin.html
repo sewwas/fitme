@@ -1481,7 +1481,7 @@
               <i class="fa fa-search-dollar" style="color:var(--neon-lime);"></i> Audit Discrepancies &amp; Missing Records Inspector
             </div>
             <div style="font-size:0.78rem;color:var(--text-muted);margin-top:2px;">
-              System diagnostic scan identifying missing annual fees, expired/unrenewed memberships, missing turnstile biometrics, and missing expense bills.
+              System diagnostic scan identifying missing annual fees, expired/unrenewed memberships, missing expense bills, and inventory stock issues.
             </div>
           </div>
 
@@ -1496,9 +1496,6 @@
             <button type="button" class="filter-pill" onclick="switchAuditInspectorTab('expired', this)">
               Expired Passes ({{ financial_audit.expired_unrenewed_count }})
             </button>
-            <button type="button" class="filter-pill" onclick="switchAuditInspectorTab('bio', this)">
-              Missing Biometrics ({{ financial_audit.missing_bio_count }})
-            </button>
             <button type="button" class="filter-pill" onclick="switchAuditInspectorTab('bills', this)">
               Missing Bills ({{ financial_audit.missing_bills_count }})
             </button>
@@ -1510,12 +1507,12 @@
 
         <div class="card-body" style="padding:0;">
 
-          <!-- SECTION A: Unpaid Annual Maintenance Fee (LKR 2,500) -->
+          <!-- SECTION A: Unpaid Annual Registration / Maintenance Fee (LKR 1,000) -->
           <div id="auditSectionAnnual" class="audit-inspector-section">
             <div style="padding:0.85rem 1.25rem;background:#151A1E;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
               <div>
-                <strong style="color:#fff;font-size:0.88rem;"><i class="fa fa-id-card" style="color:#F59E0B;margin-right:0.4rem;"></i>Unpaid Annual Facility Maintenance Fees (Year {{ current_year }})</strong>
-                <span style="font-size:0.75rem;color:var(--text-muted);margin-left:0.5rem;">Active gym members without an annual registration/maintenance fee recorded for the current calendar year (LKR 2,500 due)</span>
+                <strong style="color:#fff;font-size:0.88rem;"><i class="fa fa-id-card" style="color:#F59E0B;margin-right:0.4rem;"></i>Unpaid Annual Registration / Maintenance Fees (Year {{ current_year|default:financial_audit.current_year|default:2026 }})</strong>
+                <span style="font-size:0.75rem;color:var(--text-muted);margin-left:0.5rem;">Active gym members without an annual registration fee recorded for {{ current_year|default:financial_audit.current_year|default:2026 }} (Standard: LKR 1,000 due &bull; Students Exempt)</span>
               </div>
               <span class="badge-role" style="background:rgba(245,158,11,0.15);color:#F59E0B;">{{ financial_audit.missing_annual_fee_count }} Athletes</span>
             </div>
@@ -1526,6 +1523,7 @@
                     <th>Member Account</th>
                     <th>Phone</th>
                     <th>Biometric PIN</th>
+                    <th>Package Tier</th>
                     <th>Annual Fee Due</th>
                     <th>Status</th>
                     <th style="text-align:right;">Resolution Action</th>
@@ -1534,19 +1532,28 @@
                 <tbody>
                   {% for m in financial_audit.missing_annual_fee_members %}
                     <tr>
-                      <td style="font-weight:700;color:#fff;">{{ m.name }}</td>
+                      <td style="font-weight:700;color:#fff;">
+                        {{ m.name }}
+                        {% if m.join_date %}
+                          <div style="font-size:0.72rem;color:var(--text-muted);font-weight:normal;"><i class="fa fa-calendar-alt" style="margin-right:3px;"></i>Joined: {{ m.join_date|date:"d M Y" }}</div>
+                        {% else %}
+                          <div style="font-size:0.72rem;color:var(--text-muted);font-weight:normal;"><i class="fa fa-clock" style="margin-right:3px;"></i>Joined: Pre-{{ current_year|default:financial_audit.current_year|default:2026 }}</div>
+                        {% endif %}
+                      </td>
                       <td style="color:var(--text-muted);">{{ m.phone }}</td>
                       <td><span style="font-family:monospace;font-weight:800;color:var(--neon-lime);">#FM{{ m.pin }}</span></td>
-                      <td style="font-weight:800;color:#F59E0B;">LKR 2,500.00</td>
-                      <td><span class="badge-role" style="background:rgba(239,68,68,0.15);color:#f87171;font-size:0.68rem;"><i class="fa fa-exclamation-circle"></i> UNPAID ({{ current_year }})</span></td>
+                      <td style="color:#fff;font-size:0.82rem;">{{ m.plan_name|default:"Standard Plan" }}</td>
+                      <td style="font-weight:800;color:#F59E0B;">LKR {{ m.fee_due|default:"1,000.00"|floatformat:2 }}</td>
+                      <td><span class="badge-role" style="background:rgba(239,68,68,0.15);color:#f87171;font-size:0.68rem;"><i class="fa fa-exclamation-circle"></i> UNPAID ({{ current_year|default:financial_audit.current_year|default:2026 }})</span></td>
                       <td style="text-align:right;">
-                        <a href="/dashboard/front-desk/" class="btn-action btn-lime" style="font-size:0.74rem;padding:0.35rem 0.75rem;text-decoration:none;">
+                        <a href="/dashboard/front-desk/?member_id={{ m.user_id }}" class="btn-action btn-lime" style="font-size:0.74rem;padding:0.35rem 0.75rem;text-decoration:none;">
                           <i class="fa fa-credit-card"></i> Collect Fee at Desk
                         </a>
                       </td>
                     </tr>
+
                   {% empty %}
-                    <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-check-circle" style="color:var(--neon-lime);"></i> All active athletes have settled their {{ current_year }} annual maintenance fee!</td></tr>
+                    <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-check-circle" style="color:var(--neon-lime);"></i> All active athletes have settled their {{ current_year|default:financial_audit.current_year|default:2026 }} annual maintenance fee!</td></tr>
                   {% endfor %}
                 </tbody>
               </table>
@@ -1588,61 +1595,6 @@
                     </tr>
                   {% empty %}
                     <tr><td colspan="5" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-check-circle" style="color:var(--neon-lime);"></i> No unrenewed expired memberships found.</td></tr>
-                  {% endfor %}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- SECTION C: Missing Turnstile Biometrics (Hardware Audit) -->
-          <div id="auditSectionBio" class="audit-inspector-section" style="border-top:1px solid var(--border-color);">
-            <div style="padding:0.85rem 1.25rem;background:#151A1E;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
-              <div>
-                <strong style="color:#fff;font-size:0.88rem;"><i class="fa fa-fingerprint" style="color:var(--cyan);margin-right:0.4rem;"></i>Missing Biometrics on Turnstile Hardware</strong>
-                <span style="font-size:0.75rem;color:var(--text-muted);margin-left:0.5rem;">Active athletes who lack a Face ID portrait or Optical Fingerprint template on the ZKTeco SpeedFace turnstile</span>
-              </div>
-              <span class="badge-role" style="background:rgba(0,240,255,0.15);color:var(--cyan);">{{ financial_audit.missing_bio_count }} Hardware Gaps</span>
-            </div>
-            <div style="overflow-x:auto;">
-              <table class="table-custom">
-                <thead>
-                  <tr>
-                    <th>Member</th>
-                    <th>Phone</th>
-                    <th>Hardware PIN</th>
-                    <th>Face ID Status</th>
-                    <th>Fingerprint Status</th>
-                    <th style="text-align:right;">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for b in financial_audit.missing_bio_members %}
-                    <tr>
-                      <td style="font-weight:700;color:#fff;">{{ b.name }}</td>
-                      <td style="color:var(--text-muted);">{{ b.phone }}</td>
-                      <td><span style="font-family:monospace;font-weight:800;color:var(--neon-lime);">#FM{{ b.pin }}</span></td>
-                      <td>
-                        {% if b.face_missing %}
-                          <span class="badge-role" style="background:rgba(239,68,68,0.15);color:#f87171;font-size:0.68rem;"><i class="fa fa-times"></i> Missing Face</span>
-                        {% else %}
-                          <span class="badge-role" style="background:rgba(118,192,67,0.15);color:var(--neon-lime);font-size:0.68rem;"><i class="fa fa-check"></i> Enrolled</span>
-                        {% endif %}
-                      </td>
-                      <td>
-                        {% if b.fp_missing %}
-                          <span class="badge-role" style="background:rgba(245,158,11,0.15);color:#F59E0B;font-size:0.68rem;"><i class="fa fa-times"></i> Missing Fingerprint</span>
-                        {% else %}
-                          <span class="badge-role" style="background:rgba(118,192,67,0.15);color:var(--neon-lime);font-size:0.68rem;"><i class="fa fa-check"></i> Enrolled</span>
-                        {% endif %}
-                      </td>
-                      <td style="text-align:right;">
-                        <a href="/dashboard/front-desk/" class="btn-action" style="background:#1C242A;border:1px solid var(--cyan);color:var(--cyan);font-size:0.74rem;padding:0.35rem 0.75rem;text-decoration:none;">
-                          <i class="fa fa-camera"></i> Enroll at Desk
-                        </a>
-                      </td>
-                    </tr>
-                  {% empty %}
-                    <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-check-circle" style="color:var(--neon-lime);"></i> All active athletes have complete biometric credentials enrolled!</td></tr>
                   {% endfor %}
                 </tbody>
               </table>
@@ -4549,20 +4501,17 @@
 
     const secAnnual = document.getElementById('auditSectionAnnual');
     const secExpired = document.getElementById('auditSectionExpired');
-    const secBio = document.getElementById('auditSectionBio');
     const secBills = document.getElementById('auditSectionBills');
     const secStock = document.getElementById('auditSectionStock');
 
     if (category === 'all') {
       if (secAnnual) secAnnual.style.display = 'block';
       if (secExpired) secExpired.style.display = 'block';
-      if (secBio) secBio.style.display = 'block';
       if (secBills) secBills.style.display = 'block';
       if (secStock) secStock.style.display = 'block';
     } else {
       if (secAnnual) secAnnual.style.display = category === 'annual' ? 'block' : 'none';
       if (secExpired) secExpired.style.display = category === 'expired' ? 'block' : 'none';
-      if (secBio) secBio.style.display = category === 'bio' ? 'block' : 'none';
       if (secBills) secBills.style.display = category === 'bills' ? 'block' : 'none';
       if (secStock) secStock.style.display = category === 'stock' ? 'block' : 'none';
     }

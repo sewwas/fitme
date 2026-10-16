@@ -987,7 +987,9 @@
               <li><i class="fa fa-check"></i> Personal Fitness Intake Assessment</li>
               {% if p.plan_type == 'student' %}
                 <li style="color:var(--cyan);font-weight:700;"><i class="fa fa-graduation-cap"></i> Zero Yearly Fee</li>
+                <li style="color:#f59e0b;font-weight:700;"><i class="fa fa-id-card"></i> Age 18 &amp; Under Only (General package required at 19+)</li>
               {% endif %}
+
             </ul>
           </div>
           <a href="/register/?plan={{ p.id }}" class="btn-plan">Apply for {{ p.name }}</a>

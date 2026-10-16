@@ -49,6 +49,12 @@ class MembershipPlan(models.Model):
     def __str__(self):
         return f"{self.name} — LKR {self.price_monthly}/mo"
 
+    @property
+    def is_student_plan(self):
+        """Returns True if this plan is a student package."""
+        return self.plan_type == 'student' or 'student' in (self.name or '').lower()
+
+
 
 class MemberProfile(models.Model):
     """Extended profile for gym members (linked 1:1 to Django User)."""
@@ -101,10 +107,28 @@ class MemberProfile(models.Model):
         related_name='assigned_members',
         help_text="Currently active gym training program assigned by coach"
     )
+    join_date = models.DateField(
+        null=True, blank=True,
+        verbose_name="Join Date",
+        help_text="Official date the member joined Fit Me"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
         return f"Member: {self.user.get_full_name() or self.user.username}"
+
+    @property
+    def effective_join_date(self):
+        """Returns the member's official join date, fallback to first subscription or user.date_joined."""
+        if self.join_date:
+            return self.join_date
+        first_sub = self.user.subscriptions.order_by('start_date').first()
+        if first_sub and first_sub.start_date:
+            return first_sub.start_date
+        if self.user and self.user.date_joined:
+            return self.user.date_joined.date()
+        return None
+
 
     def get_next_pin(self):
         """Auto-generate next available biometric PIN (1000–9999)."""
@@ -114,6 +138,28 @@ class MemberProfile(models.Model):
         if last and last.biometric_pin:
             return str(int(last.biometric_pin) + 1)
         return '1000'
+
+    @property
+    def age(self):
+        """Calculates current age from date_of_birth."""
+        if not self.date_of_birth:
+            return None
+        today = timezone.now().date()
+        return today.year - self.date_of_birth.year - (
+            (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
+        )
+
+    @property
+    def is_student_eligible(self):
+        """
+        Student package is strictly for students aged 18 and under.
+        When reaching 19, a general package is required.
+        """
+        current_age = self.age
+        if current_age is None:
+            return None
+        return current_age <= 18
+
 
 
 class Subscription(models.Model):
@@ -288,6 +334,28 @@ class MemberApplication(models.Model):
 
     def __str__(self):
         return f"{self.full_name} ({self.nic_passport}) — {self.status}"
+
+    @property
+    def calculated_age(self):
+        """Calculates current age from date_of_birth, fallback to stored age."""
+        if self.date_of_birth:
+            today = timezone.now().date()
+            return today.year - self.date_of_birth.year - (
+                (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
+            )
+        return self.age
+
+    @property
+    def is_student_eligible(self):
+        """
+        Student package is strictly for applicants aged 18 and under.
+        When reaching 19, a general package is required.
+        """
+        current_age = self.calculated_age
+        if current_age is None:
+            return None
+        return current_age <= 18
+
 
 
 class BodyCheckIn(models.Model):

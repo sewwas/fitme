@@ -2837,14 +2837,24 @@
         <label>Select Membership Package</label>
         <select id="selfRenewPlanSelect" class="form-control" onchange="updateRenewSummary()">
           {% for p in membership_plans %}
-            <option value="{{ p.id }}" data-price="{{ p.price_monthly|stringformat:'.2f' }}" data-days="{{ p.duration_days }}">
-              {{ p.name }} — LKR {{ p.price_monthly|floatformat:0 }} ({{ p.duration_days }} Days)
+            <option value="{{ p.id }}" 
+                    data-price="{{ p.price_monthly|stringformat:'.2f' }}" 
+                    data-days="{{ p.duration_days }}"
+                    data-type="{{ p.plan_type }}"
+                    {% if p.plan_type == 'student' and profile.age and profile.age >= 19 %}disabled{% endif %}>
+              {{ p.name }} — LKR {{ p.price_monthly|floatformat:0 }} ({{ p.duration_days }} Days){% if p.plan_type == 'student' and profile.age and profile.age >= 19 %} — [Ineligible: Age 18 &amp; under only]{% endif %}
             </option>
           {% empty %}
             <option value="">No active membership plans found</option>
           {% endfor %}
         </select>
+        {% if profile.age and profile.age >= 19 %}
+          <div style="margin-top:0.45rem;font-size:0.76rem;color:#f59e0b;display:flex;align-items:center;gap:0.35rem;">
+            <i class="fa fa-info-circle"></i> <span>Student package is reserved for ages 18 &amp; under. At age {{ profile.age }}, general packages apply.</span>
+          </div>
+        {% endif %}
       </div>
+
 
       <div class="form-group">
         <label>Payment Method</label>
@@ -3475,11 +3485,20 @@
     e.preventDefault();
     const sel = document.getElementById('selfRenewPlanSelect');
     const planId = sel.value;
+    const opt = sel.selectedOptions.length ? sel.selectedOptions[0] : null;
+    const planType = (opt?.getAttribute('data-type') || '').toLowerCase();
+    const memAge = {{ profile.age|default:'null' }};
+    if (planType === 'student' && memAge !== null && memAge >= 19) {
+      alert("The Student Package is strictly available for members aged 18 and under.\n\nAt age 19 or older, please renew with a general membership package (e.g., Monthly Package).");
+      return;
+    }
+
     const paymentMethod = document.getElementById('selfRenewPaymentMethod').value;
     if (!planId) {
       alert("Please select a membership package.");
       return;
     }
+
 
     const btn = document.getElementById('btnSubmitRenew');
     btn.disabled = true;

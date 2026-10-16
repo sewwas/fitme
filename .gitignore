@@ -98,3 +98,6 @@ venv-wger
 
 # macOS
 .DS_Store
+
+.vercel
+.env*

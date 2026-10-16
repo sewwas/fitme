@@ -430,13 +430,15 @@
                         data-duration="{{ plan.duration_days }}"
                         data-type="{{ plan.plan_type }}"
                         {% if forloop.first %}selected{% endif %}>
-                  {{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }}{% if plan.discount and plan.discount > 0 %} (Save LKR {{ plan.discount|floatformat:0 }}){% endif %}
+                  {{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }}{% if plan.discount and plan.discount > 0 %} (Save LKR {{ plan.discount|floatformat:0 }}){% endif %}{% if plan.plan_type == 'student' %} (Ages 18 &amp; under only){% endif %}
                 </option>
               {% empty %}
                 <option value="1" data-price="4000" data-regfee="1000" data-duration="30" data-type="individual">Monthly Package — LKR 4,000</option>
               {% endfor %}
             </select>
+            <div id="studentAgeNotice" style="display:none;margin-top:0.75rem;padding:0.75rem 1rem;background:rgba(245,158,11,0.12);border:1px solid #f59e0b;border-radius:8px;font-size:0.83rem;color:#fbbf24;line-height:1.4;"></div>
           </div>
+
           <div class="form-group">
             <label>Start Date</label>
             <input type="date" class="form-control" name="start_date" id="startDate" onchange="updatePlanDates()">
@@ -627,11 +629,67 @@
       const dobVal = document.getElementById('dob').value;
       if (!dobVal) return;
       const dob = new Date(dobVal);
-      const diffMs = Date.now() - dob.getTime();
-      const ageDate = new Date(diffMs);
-      const age = Math.abs(ageDate.getUTCFullYear() - 1970);
-      document.getElementById('age').value = isNaN(age) ? '' : age;
+      const today = new Date();
+      let age = today.getFullYear() - dob.getFullYear();
+      const m = today.getMonth() - dob.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < dob.getDate())) {
+        age--;
+      }
+      document.getElementById('age').value = (isNaN(age) || age < 0) ? '' : age;
+      validateStudentAgeEligibility();
     }
+
+    function validateStudentAgeEligibility() {
+      const ageVal = parseInt(document.getElementById('age').value);
+      const select = document.getElementById('planSelect');
+      if (!select) return;
+
+      const studentNotice = document.getElementById('studentAgeNotice');
+
+      for (let i = 0; i < select.options.length; i++) {
+        const opt = select.options[i];
+        const pType = (opt.getAttribute('data-type') || '').toLowerCase();
+        const pName = (opt.textContent || '').toLowerCase();
+        const isStudent = pType === 'student' || pName.includes('student');
+
+        if (isStudent) {
+          if (!opt.getAttribute('data-base-label')) {
+            opt.setAttribute('data-base-label', opt.textContent);
+          }
+
+          if (!isNaN(ageVal) && ageVal >= 19) {
+            opt.disabled = true;
+            opt.textContent = opt.getAttribute('data-base-label') + ' — [Ineligible: Ages 18 & under only]';
+
+            // If student package is currently selected, switch to standard Monthly Package
+            if (select.selectedIndex === i) {
+              let fallbackIdx = 0;
+              for (let j = 0; j < select.options.length; j++) {
+                const o2 = select.options[j];
+                const t2 = (o2.getAttribute('data-type') || '').toLowerCase();
+                if (t2 === 'individual' || (!t2.includes('student') && !o2.disabled)) {
+                  fallbackIdx = j;
+                  break;
+                }
+              }
+              select.selectedIndex = fallbackIdx;
+              if (studentNotice) {
+                studentNotice.style.display = 'block';
+                studentNotice.innerHTML = `<strong><i class="fa fa-info-circle"></i> Student Age Policy:</strong> The Student Package is strictly reserved for students aged <strong>18 and under</strong>. Because you are <strong>${ageVal} years old</strong>, your selection has been automatically set to the general <strong>Monthly Package</strong>.`;
+              }
+              updatePlanPrice();
+            }
+          } else {
+            opt.disabled = false;
+            opt.textContent = opt.getAttribute('data-base-label');
+            if (studentNotice && (!isNaN(ageVal) && ageVal <= 18)) {
+              studentNotice.style.display = 'none';
+            }
+          }
+        }
+      }
+    }
+
 
     function updatePlanDates() {
       const startVal = document.getElementById('startDate').value;
@@ -664,6 +722,21 @@
       const price = parseFloat(String(rawPrice).replace(/,/g, '')) || 4000;
       const planType = (opt.getAttribute('data-type') || '').toLowerCase();
       const planName = (opt.textContent || '').toLowerCase();
+      const ageVal = parseInt(document.getElementById('age')?.value);
+
+      // Prevent selecting student package if 19 or older
+      if ((planType === 'student' || planName.includes('student')) && !isNaN(ageVal) && ageVal >= 19) {
+        alert(`The Student Package is strictly for students aged 18 and under.\n\nAt age ${ageVal}, please choose a general membership package.`);
+        for (let i = 0; i < select.options.length; i++) {
+          if ((select.options[i].getAttribute('data-type') || '').toLowerCase() === 'individual') {
+            select.selectedIndex = i;
+            break;
+          }
+        }
+        updatePlanPrice();
+        return;
+      }
+
 
       // Yearly fee: Free (LKR 0) for students, LKR 1,000 for standard packages
       let yearlyFee = 1000;
@@ -720,11 +793,45 @@
       document.querySelectorAll('input[name="goals"]:checked').forEach(cb => goals.push(cb.value));
       formData.set('primary_goal', goals.join(', '));
 
+      const selOpt = document.getElementById('planSelect')?.selectedOptions[0];
+      const pType = (selOpt?.getAttribute('data-type') || '').toLowerCase();
+      const ageNum = parseInt(document.getElementById('age')?.value);
+      if (pType === 'student' && !isNaN(ageNum) && ageNum >= 19) {
+        alert("The Student Package is strictly available for ages 18 and under. When turning 19, a general package must be selected.");
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa fa-paper-plane"></i> Submit Membership Registration';
+        return;
+      }
+
+
+      function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+          const cookies = document.cookie.split(';');
+          for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+              cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+              break;
+            }
+          }
+        }
+        return cookieValue;
+      }
+
       try {
+        const csrfToken = getCookie('csrftoken') || formData.get('csrfmiddlewaretoken');
+        const headers = {};
+        if (csrfToken) {
+          headers['X-CSRFToken'] = csrfToken;
+        }
+
         const res = await fetch('/register/', {
           method: 'POST',
+          headers: headers,
           body: formData
         });
+
         const data = await res.json();
         if (data.success) {
           document.getElementById('regForm').style.display = 'none';

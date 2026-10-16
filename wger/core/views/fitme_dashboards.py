@@ -628,15 +628,34 @@ def super_admin_dashboard(request, active_tab=None):
         annual_fee_amount__gt=0
     ).values_list('member_id', flat=True))
 
+    active_subs_qs = Subscription.objects.filter(
+        status='active', end_date__gte=today
+    ).select_related('plan').order_by('end_date')
+    latest_subs = {s.member_id: s for s in active_subs_qs}
+
     missing_annual_fee_members = []
     for prof in MemberProfile.objects.filter(user_id__in=active_sub_members).select_related('user'):
         if prof.user_id not in paid_annual_member_ids:
+            # Active gym members who registered/joined in the current calendar year paid their registration upon joining
+            if prof.join_date and prof.join_date.year >= current_year:
+                continue
+
+            sub = latest_subs.get(prof.user_id)
+            plan = sub.plan if sub else None
+            # Students are exempt from annual registration fee (LKR 0)
+            if plan and (getattr(plan, 'is_student_plan', False) or plan.plan_type == 'student' or 'student' in (plan.name or '').lower()):
+                continue
+            fee_due = plan.registration_fee if (plan and getattr(plan, 'registration_fee', None) is not None) else Decimal('1000.00')
             missing_annual_fee_members.append({
                 'user_id': prof.user_id,
                 'name': prof.user.get_full_name() or prof.user.username,
                 'phone': prof.phone or '—',
                 'pin': prof.biometric_pin or prof.user_id,
+                'plan_name': plan.name if plan else 'Standard Package',
+                'fee_due': fee_due,
+                'join_date': prof.join_date,
             })
+
 
     expired_unrenewed_subs = list(Subscription.objects.filter(
         end_date__lt=today
@@ -671,12 +690,12 @@ def super_admin_dashboard(request, active_tab=None):
     total_audit_discrepancies = (
         len(missing_annual_fee_members) +
         len(expired_unrenewed_subs) +
-        len(missing_bio_members) +
         len(missing_bill_expenses) +
         len(stock_issues)
     )
 
     financial_audit = {
+        'current_year': str(current_year),
         'monthly_trends': audit_monthly_trends,
         'monthly_trends_json': json.dumps(audit_monthly_trends),
         'revenue_streams': revenue_streams_list,
@@ -690,8 +709,8 @@ def super_admin_dashboard(request, active_tab=None):
         'missing_annual_fee_count': len(missing_annual_fee_members),
         'expired_unrenewed_subs': expired_unrenewed_subs,
         'expired_unrenewed_count': len(expired_unrenewed_subs),
-        'missing_bio_members': missing_bio_members,
-        'missing_bio_count': len(missing_bio_members),
+        'missing_bio_members': [],
+        'missing_bio_count': 0,
         'missing_bill_expenses': missing_bill_expenses,
         'missing_bills_count': len(missing_bill_expenses),
         'stock_issues': stock_issues,
@@ -913,6 +932,7 @@ def super_admin_dashboard(request, active_tab=None):
         'staff_users_list': staff_users_list,
         'recent_salary_advances': recent_salary_advances,
         'financial_audit': financial_audit,
+        'current_year': str(current_year),
         'is_super_admin': is_super_admin,
         'current_role': current_role,
     }
@@ -927,7 +947,7 @@ def admin_users_view(request):
 
 
 @login_required
-@role_required('front_desk', 'super_admin')
+@role_required('front_desk', 'admin', 'super_admin')
 def front_desk_dashboard(request):
     """Front Desk — member queue, biometric enrollment, live turnstile monitor, payments, and 80mm thermal receipts."""
     from wger.membership.services import check_and_expire_subscriptions
@@ -955,6 +975,7 @@ def front_desk_dashboard(request):
         PaymentReceipt.objects.filter(
             issued_at__year=current_year
         ).filter(
+            Q(annual_fee_amount__gt=0) |
             Q(notes__icontains='Annual') | 
             Q(notes__icontains='Yearly') | 
             Q(notes__icontains='Registration') |
@@ -971,7 +992,8 @@ def front_desk_dashboard(request):
             pn = prof.notes.lower()
             if str(current_year) in prof.notes and ('annual' in pn or 'yearly' in pn or 'registration' in pn):
                 notes_paid = True
-        m.has_paid_yearly_this_year = has_receipt or notes_paid
+        joined_this_year = bool(prof and prof.join_date and prof.join_date.year >= current_year)
+        m.has_paid_yearly_this_year = has_receipt or notes_paid or joined_this_year
 
         # Detect active / expired subscription dates
         subs = list(m.subscriptions.all())
@@ -1041,6 +1063,7 @@ def front_desk_dashboard(request):
         'coaches': CoachProfile.objects.filter(is_active=True).select_related('user'),
         'recent_receipts': recent_receipts,
         'recent_door_punches': recent_punches,
+        'is_admin_user': request.user.is_superuser or request.user.groups.filter(name__in=['admin', 'super_admin']).exists(),
         'staff_users_list': [
             {'id': u.id, 'username': u.username, 'full_name': u.get_full_name() or u.username}
             for u in User.objects.filter(is_staff=True, is_active=True).order_by('username')
@@ -1376,12 +1399,38 @@ def public_registration_view(request):
         start_date = data.get('start_date') or None
         end_date = data.get('end_date') or None
 
+
+        # Calculate actual age from date of birth if available
+        if dob:
+            try:
+                from datetime import date
+                dob_d = date.fromisoformat(str(dob))
+                t_date = timezone.now().date()
+                calculated_applicant_age = t_date.year - dob_d.year - ((t_date.month, t_date.day) < (dob_d.month, dob_d.day))
+                age = calculated_applicant_age
+            except Exception:
+                pass
+
+        # Strict Age Validation for Student Package: only under 19 (age <= 18) allowed. At 19+, general package is mandatory.
+        if plan and (getattr(plan, 'is_student_plan', False) or plan.plan_type == 'student' or 'student' in (plan.name or '').lower()):
+            if age is None and not dob:
+                return JsonResponse({
+                    'success': False,
+                    'error': 'Date of birth is required to verify Student Package eligibility (must be age 18 or under).'
+                }, status=400)
+            if age is not None and age >= 19:
+                return JsonResponse({
+                    'success': False,
+                    'error': f'The Student Package is strictly available for students aged 18 and under. Because the applicant is {age} years old, please select a general membership package (e.g. Monthly Package).'
+                }, status=400)
+
         # Preferred coach lookup
         from django.contrib.auth import get_user_model
         User = get_user_model()
         preferred_coach_id = data.get('preferred_coach_id')
         preferred_coach = User.objects.filter(id=preferred_coach_id).first() if preferred_coach_id else None
         pt_needed = (data.get('personal_trainer_needed') == 'yes') or (plan and plan.plan_type == 'personal_coaching') or bool(preferred_coach)
+
 
         app = MemberApplication.objects.create(
             full_name=full_name,
@@ -1425,7 +1474,7 @@ def public_registration_view(request):
 
 
 @login_required
-@role_required('front_desk', 'super_admin')
+@role_required('front_desk', 'admin', 'super_admin')
 def create_application_api(request):
     """Creates a new member application from front desk walk-in or intake form."""
     if request.method != 'POST':
@@ -1505,7 +1554,7 @@ def generate_unique_biometric_pin():
 
 
 @login_required
-@role_required('front_desk', 'super_admin')
+@role_required('front_desk', 'admin', 'super_admin')
 def approve_application_api(request, app_id):
     """Dynamically approves an intake application, creates user, PIN, and biometric profile."""
     if request.method != 'POST':
@@ -1572,7 +1621,10 @@ def approve_application_api(request, app_id):
         profile.medical_conditions = app.medical_condition_details or ''
         profile.under_medication = app.medication_details or ''
         profile.personal_trainer_needed = app.personal_trainer_needed
+        if not profile.join_date:
+            profile.join_date = app.start_date or (app.applied_at.date() if app.applied_at else timezone.now().date())
         profile.save()
+
 
         # BiometricProfile for ZKBio Turnstile hardware / LiveU Cloud
         bio_profile = BiometricProfile.objects.filter(user=user).first()
@@ -1645,6 +1697,15 @@ def approve_application_api(request, app_id):
             plan = MembershipPlan.objects.filter(id=plan_id).first()
         if not plan:
             plan = app.desired_plan or MembershipPlan.objects.first()
+
+        # Strict Age Validation for Student Package: only under 19 (age <= 18) allowed. At 19+, general package is mandatory.
+        if plan and (getattr(plan, 'is_student_plan', False) or plan.plan_type == 'student' or 'student' in (plan.name or '').lower()):
+            app_age = getattr(app, 'calculated_age', None) or app.age
+            if app_age is not None and app_age >= 19:
+                return JsonResponse({
+                    'error': f"Cannot enroll under Student Package: {app.full_name} is {app_age} years old. Student packages are restricted to ages 18 and under. When turning 19, a general package is required."
+                }, status=400)
+
 
         # Fee calculations: First year fee (annual registration fee) & package fee
         default_first_year = Decimal('0.00') if (plan and plan.plan_type == 'student') else Decimal(str(getattr(plan, 'registration_fee', 1000.00)))
@@ -1748,7 +1809,7 @@ def approve_application_api(request, app_id):
 
 
 @login_required
-@role_required('front_desk', 'super_admin')
+@role_required('front_desk', 'admin', 'super_admin')
 def reject_application_api(request, app_id):
     """Dynamically rejects an intake application."""
     if request.method != 'POST':
@@ -1775,7 +1836,7 @@ def reject_application_api(request, app_id):
 
 
 @login_required
-@role_required('front_desk', 'super_admin')
+@role_required('front_desk', 'admin', 'super_admin')
 def record_payment_api(request):
     """Records payment, activates subscription, provisions door access, and issues 80mm thermal receipt."""
     if request.method != 'POST':
@@ -1811,6 +1872,16 @@ def record_payment_api(request):
         return JsonResponse({'error': 'Member not found'}, status=404)
 
     plan = MembershipPlan.objects.filter(id=plan_id).first() or MembershipPlan.objects.first()
+
+    # Strict Age Validation for Student Package: only under 19 (age <= 18) allowed. At 19+, general package is mandatory.
+    if plan and (getattr(plan, 'is_student_plan', False) or plan.plan_type == 'student' or 'student' in (plan.name or '').lower()):
+        m_profile = MemberProfile.objects.filter(user=member).first()
+        mem_age = getattr(m_profile, 'age', None)
+        if mem_age is not None and mem_age >= 19:
+            return JsonResponse({
+                'error': f"The Student Package is strictly for members aged 18 and under. {member.get_full_name() or member.username} is {mem_age} years old and must select a general membership package."
+            }, status=400)
+
 
     coaching_only = bool(data.get('coaching_only', False))
     today = timezone.now().date()
@@ -1965,7 +2036,7 @@ def record_payment_api(request):
 
 
 @login_required
-@role_required('front_desk', 'super_admin')
+@role_required('front_desk', 'admin', 'super_admin')
 def assign_coach_api(request, member_id):
     """Front Desk or Super Admin assigns or updates a personal coach for a member."""
     if request.method != 'POST':
@@ -2257,7 +2328,7 @@ def desk_member_lookup_api(request):
 
 
 @login_required
-@role_required('front_desk', 'coach', 'super_admin')
+@role_required('front_desk', 'admin', 'coach', 'super_admin')
 def member_full_profile_api(request, member_id):
     """Returns complete 360-degree dossier for a gym member."""
     from django.contrib.auth import get_user_model
@@ -2356,7 +2427,9 @@ def member_full_profile_api(request, member_id):
             'blood_group': prof.blood_group if prof else 'N/A',
             'address': prof.address if prof else '',
             'photo_url': photo_url,
-            'date_joined': member.date_joined.strftime('%d %b %Y'),
+            'date_joined': (prof.effective_join_date.strftime('%d %b %Y') if (prof and prof.effective_join_date) else member.date_joined.strftime('%d %b %Y')),
+            'join_date': (prof.join_date.strftime('%d %b %Y') if (prof and prof.join_date) else None),
+
             # Emergency
             'emergency_name': prof.emergency_contact_name if prof else '',
             'emergency_relationship': prof.emergency_relationship if prof else '',
@@ -2770,7 +2843,7 @@ def log_water_api(request):
 
 
 @login_required
-@role_required('super_admin', 'front_desk')
+@role_required('super_admin', 'admin', 'front_desk')
 def toggle_member_access_api(request, member_id):
     """Admin toggles turnstile hardware biometric access on or off for a member."""
     if request.method != 'POST':
@@ -3153,7 +3226,7 @@ def admin_create_user_api(request):
 
 
 @login_required
-@role_required('front_desk', 'super_admin')
+@role_required('front_desk', 'admin', 'super_admin')
 def resend_member_invite_api(request, member_id):
     """
     Re-sends the branded welcome email and cryptographic password setup link to a member.
@@ -3572,7 +3645,15 @@ def admin_override_subscription_api(request, sub_id):
     if 'plan_id' in data and data['plan_id']:
         p = MembershipPlan.objects.filter(id=data['plan_id']).first()
         if p:
+            if getattr(p, 'is_student_plan', False) or p.plan_type == 'student' or 'student' in (p.name or '').lower():
+                from wger.membership.models import MemberProfile
+                prof = MemberProfile.objects.filter(user=sub.member).first()
+                if prof and prof.age is not None and prof.age >= 19 and not data.get('force'):
+                    return JsonResponse({
+                        'error': f'Cannot assign Student Package: Member is {prof.age} years old (Student Package is restricted to ages 18 and under).'
+                    }, status=400)
             sub.plan = p
+
 
     notes = data.get('notes', '').strip()
     timestamp = timezone.now().strftime('%Y-%m-%d %H:%M')
@@ -3852,7 +3933,7 @@ def admin_export_expenses_csv(request):
 
 
 @login_required
-@role_required('super_admin', 'front_desk')
+@role_required('super_admin', 'admin', 'front_desk')
 def admin_daily_eod_report(request):
     """
     Renders printable Daily End of Day (EOD) Cash Drawer Reconciliation & Sales Report.
@@ -3953,6 +4034,17 @@ def member_self_renew_api(request):
     plan = MembershipPlan.objects.filter(id=plan_id, is_active=True).first()
     if not plan:
         return JsonResponse({'error': 'Please select an active membership package.'}, status=400)
+
+    # Strict Age Validation for Student Package: only under 19 (age <= 18) allowed. At 19+, general package is mandatory.
+    if getattr(plan, 'is_student_plan', False) or plan.plan_type == 'student' or 'student' in (plan.name or '').lower():
+        from wger.membership.models import MemberProfile
+        mem_profile = MemberProfile.objects.filter(user=request.user).first()
+        user_age = getattr(mem_profile, 'age', None)
+        if user_age is not None and user_age >= 19:
+            return JsonResponse({
+                'error': f'You are currently {user_age} years old. The Student Package is strictly available for members aged 18 and under. When turning 19, a general membership package is required.'
+            }, status=400)
+
 
     today = timezone.now().date()
     current_sub = Subscription.objects.filter(

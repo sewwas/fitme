@@ -235,7 +235,44 @@
     {% if PASSKEY_LOGIN_ENABLED %}
         {% include "mfa/webauthn/snippets/login_script.html" %}
     {% endif %}
+    <script>
+    (function() {
+        // Prevent stale CSRF token if page is restored from browser back/forward cache (bfcache)
+        window.addEventListener('pageshow', function(e) {
+            if (e.persisted) {
+                window.location.reload();
+            }
+        });
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        const loginForm = document.querySelector('form.wger-form');
+        if (loginForm) {
+            loginForm.addEventListener('submit', function() {
+                const cookieToken = getCookie('csrftoken');
+                const tokenInput = loginForm.querySelector('input[name="csrfmiddlewaretoken"]');
+                if (cookieToken && tokenInput && tokenInput.value !== cookieToken) {
+                    tokenInput.value = cookieToken;
+                }
+            });
+        }
+    })();
+    </script>
 {% endblock %}
+
 
 {% block footer %}
 {# Omit footer specifically on login page #}

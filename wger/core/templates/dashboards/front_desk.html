@@ -590,10 +590,15 @@
     <span class="role-badge">Front Desk &amp; Biometrics</span>
   </a>
   <div style="display:flex;align-items:center;gap:1rem;color:var(--text-muted);font-size:0.88rem;flex-wrap:wrap;">
+    {% if is_admin_user %}
+    <a href="/dashboard/admin/" class="btn-action" style="background:#181D20;border:1px solid rgba(118,192,67,0.35);color:var(--neon-lime);text-decoration:none;padding:0.42rem 0.85rem;border-radius:8px;font-size:0.82rem;font-weight:700;display:inline-flex;align-items:center;gap:0.45rem;transition:all 0.2s;" onmouseover="this.style.background='var(--neon-lime)';this.style.color='#000'" onmouseout="this.style.background='#181D20';this.style.color='var(--neon-lime)'">
+      <i class="fa fa-chart-line"></i> Admin Console
+    </a>
+    {% endif %}
     <a href="/" class="btn-action" style="background:#181D20;border:1px solid rgba(255,255,255,0.2);color:#fff;text-decoration:none;padding:0.42rem 0.85rem;border-radius:8px;font-size:0.82rem;font-weight:700;display:inline-flex;align-items:center;gap:0.45rem;transition:all 0.2s;" onmouseover="this.style.borderColor='var(--neon-lime)';this.style.color='var(--neon-lime)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.2)';this.style.color='#fff'">
       <i class="fa fa-home" style="color:var(--neon-lime);"></i> Club Home
     </a>
-    <span><i class="fa fa-user-circle"></i> {{ request.user.username }}</span>
+    <span><i class="fa fa-user-circle"></i> {{ request.user.get_full_name|default:request.user.username }}</span>
     <form method="post" action="/account/logout/" style="display:inline;">{% csrf_token %}
       <button type="submit" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.85rem;"><i class="fa fa-sign-out-alt"></i> Logout</button>
     </form>
@@ -921,12 +926,15 @@
                       data-plan-name="{{ app.desired_plan.name|default:'Individual'|escape }}"
                       data-adm-fee="{{ app.admission_fee|floatformat:0 }}"
                       data-mon-fee="{{ app.monthly_fee|floatformat:0 }}"
-                      data-pay-method="{{ app.payment_method|default:'cash'|escape }}">
+                      data-pay-method="{{ app.payment_method|default:'cash'|escape }}"
+                      data-age="{{ app.calculated_age|default:app.age|default:'' }}">
+
                     <td>
                       <div style="font-weight:700;color:var(--text-primary);">{{ app.full_name }}</div>
                       <div style="font-size:0.75rem;color:var(--text-muted);">
-                        NIC: <span style="color:#fff;">{{ app.nic_passport|default:"-" }}</span> • {{ app.phone }}
+                        NIC: <span style="color:#fff;">{{ app.nic_passport|default:"-" }}</span> • {{ app.phone }}{% if app.calculated_age or app.age %} • Age: <strong style="color:#fff;">{{ app.calculated_age|default:app.age }}</strong>{% endif %}
                       </div>
+
                       {% if app.has_medical_conditions %}
                         <span class="badge badge-red" style="font-size:0.65rem;margin-top:2px;">Medical Alert</span>
                       {% endif %}
@@ -1408,9 +1416,11 @@
                           data-sub-end="{{ m.active_sub_end_str }}"
                           data-sub-plan="{{ m.active_plan_name }}"
                           data-latest-sub-end="{{ m.latest_sub_end_str }}"
-                          data-yearly-paid="{% if m.has_paid_yearly_this_year %}true{% else %}false{% endif %}">
-                    {{ m.get_full_name|default:m.username }} (PIN: #{{ m.biometric_profile.zk_pin|default:m.id }}){% if m.member_profile.phone %} &bull; {{ m.member_profile.phone }}{% endif %}{% if m.has_active_subscription %} &bull; [✓ Paid until {{ m.active_sub_end_str }}]{% elif m.latest_sub_end_str %} &bull; [Expired: {{ m.latest_sub_end_str }}]{% else %} &bull; [Monthly Due]{% endif %}{% if not m.has_paid_yearly_this_year %} &bull; [Yearly Due]{% endif %}
+                          data-yearly-paid="{% if m.has_paid_yearly_this_year %}true{% else %}false{% endif %}"
+                          data-age="{{ m.member_profile.age|default:'' }}">
+                    {{ m.get_full_name|default:m.username }} (PIN: #{{ m.biometric_profile.zk_pin|default:m.id }}){% if m.member_profile.age %} [Age: {{ m.member_profile.age }}]{% endif %}{% if m.member_profile.phone %} &bull; {{ m.member_profile.phone }}{% endif %}{% if m.has_active_subscription %} &bull; [✓ Paid until {{ m.active_sub_end_str }}]{% elif m.latest_sub_end_str %} &bull; [Expired: {{ m.latest_sub_end_str }}]{% else %} &bull; [Monthly Due]{% endif %}{% if not m.has_paid_yearly_this_year %} &bull; [Yearly Due]{% endif %}
                   </option>
+
                 {% endfor %}
               {% else %}
                 {% for sub in active_subscriptions %}
@@ -1422,9 +1432,11 @@
                           data-sub-end="{{ sub.member.active_sub_end_str|default:sub.end_date|date:'d M Y' }}"
                           data-sub-plan="{{ sub.plan.name }}"
                           data-latest-sub-end="{{ sub.end_date|date:'d M Y' }}"
-                          data-yearly-paid="{% if sub.member.has_paid_yearly_this_year %}true{% else %}false{% endif %}">
-                    {{ sub.member.get_full_name|default:sub.member.username }} (#{{ sub.member.id }}) &bull; [✓ Paid until {{ sub.end_date|date:'d M Y' }}]{% if not sub.member.has_paid_yearly_this_year %} &bull; [Yearly Due]{% endif %}
+                          data-yearly-paid="{% if sub.member.has_paid_yearly_this_year %}true{% else %}false{% endif %}"
+                          data-age="{{ sub.member.member_profile.age|default:'' }}">
+                    {{ sub.member.get_full_name|default:sub.member.username }} (#{{ sub.member.id }}){% if sub.member.member_profile.age %} [Age: {{ sub.member.member_profile.age }}]{% endif %} &bull; [✓ Paid until {{ sub.end_date|date:'d M Y' }}]{% if not sub.member.has_paid_yearly_this_year %} &bull; [Yearly Due]{% endif %}
                   </option>
+
                 {% endfor %}
               {% endif %}
             </select>
@@ -1439,11 +1451,14 @@
                         data-regfee="{{ plan.registration_fee|stringformat:'.2f' }}"
                         data-duration="{{ plan.duration_days }}"
                         data-type="{{ plan.plan_type }}">
-                  {{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }} ({{ plan.duration_days }} Days)
+                  {{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }} ({{ plan.duration_days }} Days){% if plan.plan_type == 'student' %} [Ages 18 &amp; under only]{% endif %}
                 </option>
               {% endfor %}
             </select>
           </div>
+
+          <div id="payStudentAgeWarning" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;background:rgba(239,68,68,0.12);border:1px solid #ef4444;border-radius:8px;font-size:0.83rem;color:#fca5a5;line-height:1.4;"></div>
+
 
           <!-- Monthly Membership Subscription: Auto-detected Status & Charge Toggle -->
           <div class="form-group" style="margin-bottom:1rem;">
@@ -1691,11 +1706,14 @@
                     data-regfee="{{ plan.registration_fee|stringformat:'.2f' }}"
                     data-duration="{{ plan.duration_days }}"
                     data-type="{{ plan.plan_type }}">
-              {{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }} ({{ plan.duration_days }} Days)
+              {{ plan.name }} — LKR {{ plan.price_monthly|floatformat:0 }} ({{ plan.duration_days }} Days){% if plan.plan_type == 'student' %} [Ages 18 &amp; under only]{% endif %}
             </option>
           {% endfor %}
         </select>
       </div>
+
+      <div id="approveStudentAgeWarning" style="display:none;margin-bottom:1rem;padding:0.75rem 1rem;background:rgba(239,68,68,0.12);border:1px solid #ef4444;border-radius:8px;font-size:0.83rem;color:#fca5a5;line-height:1.4;"></div>
+
 
       <!-- First Year Fee (New Member Annual Registration Fee) Toggle & Amount -->
       <div class="form-group" style="margin-bottom:1rem;">
@@ -2511,18 +2529,22 @@
     const admFee = row.getAttribute('data-adm-fee') || '';
     const monFee = row.getAttribute('data-mon-fee') || '';
     const payMethod = row.getAttribute('data-pay-method') || 'cash';
-    openApproveModal(appId, name, nic, phone, email, planId, admFee, monFee, payMethod);
+    const age = row.getAttribute('data-age') || '';
+    openApproveModal(appId, name, nic, phone, email, planId, admFee, monFee, payMethod, age);
   }
 
-  function openApproveModal(appId, name, nic, phone, email, planId, admFee, monFee, payMethod) {
+  function openApproveModal(appId, name, nic, phone, email, planId, admFee, monFee, payMethod, age) {
     document.getElementById('approveAppId').value = appId;
+    const modal = document.getElementById('approveAppModal');
+    if (modal) modal.setAttribute('data-applicant-age', age || '');
     document.getElementById('approveAppMemberName').textContent = name || 'Applicant';
     document.getElementById('approveAppNIC').textContent = nic || 'Not provided';
-    document.getElementById('approveAppPhone').textContent = phone || '-';
+    document.getElementById('approveAppPhone').textContent = phone ? `${phone}${age ? ` • Age: ${age}` : ''}` : '-';
     document.getElementById('approveAppEmail').textContent = email || '-';
     if (payMethod && document.getElementById('approvePaymentMethod')) {
       document.getElementById('approvePaymentMethod').value = payMethod;
     }
+
     const notesInput = document.getElementById('approveNotes');
     if (notesInput) notesInput.value = '';
 
@@ -2570,6 +2592,23 @@
     const desc = document.getElementById('approveFirstYearDesc');
 
     const isStudent = planType === 'student' || planName.includes('student');
+
+    // Age policy validation for Student Package
+    const applicantAge = parseInt(document.getElementById('approveAppModal')?.getAttribute('data-applicant-age'));
+    const warningEl = document.getElementById('approveStudentAgeWarning');
+    const approveBtn = document.getElementById('btnConfirmApproveApp');
+
+    if (isStudent && !isNaN(applicantAge) && applicantAge >= 19) {
+      if (warningEl) {
+        warningEl.style.display = 'block';
+        warningEl.innerHTML = `<i class="fa fa-exclamation-circle"></i> <strong>Age Policy Warning:</strong> Applicant is <strong>${applicantAge} years old</strong>. The Student Package is strictly for ages 18 and under. When turning 19, a general package is required. Please assign a general package before approving.`;
+      }
+      if (approveBtn) approveBtn.disabled = true;
+    } else {
+      if (warningEl) warningEl.style.display = 'none';
+      if (approveBtn) approveBtn.disabled = false;
+    }
+
 
     if (isStudent) {
       if (yearlyInput) yearlyInput.value = '0';
@@ -2655,7 +2694,18 @@
 
     const planSel = document.getElementById('approveAppPlanId');
     const planOpt = planSel?.selectedOptions[0];
+    const planType = (planOpt?.getAttribute('data-type') || '').toLowerCase();
+    const planName = (planOpt?.textContent || '').toLowerCase();
+    const applicantAge = parseInt(document.getElementById('approveAppModal')?.getAttribute('data-applicant-age'));
+    if ((planType === 'student' || planName.includes('student')) && !isNaN(applicantAge) && applicantAge >= 19) {
+      alert(`Cannot approve under Student Package: Applicant is ${applicantAge} years old. Student Package is restricted to ages 18 and under.\n\nPlease select a general package.`);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check"></i> Approve &amp; Collect Payment';
+      return;
+    }
+
     const packagePrice = parseFloat(document.getElementById('approvePackageFeeAmount')?.value) || (parseFloat(planOpt?.getAttribute('data-price')) || 4000);
+
     const includeYearly = document.getElementById('approveIncludeFirstYearFee')?.checked || false;
     const firstYearFee = includeYearly ? (parseFloat(document.getElementById('approveFirstYearFeeAmount')?.value) || 0) : 0;
     const totalPaid = packagePrice + firstYearFee;
@@ -3018,7 +3068,25 @@
       }
     }
 
+    const memberAge = parseInt(selectedMemberOpt?.getAttribute('data-age'));
+    const isStudent = planType === 'student' || planName.toLowerCase().includes('student');
+    const studentWarningEl = document.getElementById('payStudentAgeWarning');
+
+    if (isStudent && !isNaN(memberAge) && memberAge >= 19) {
+      if (studentWarningEl) {
+        studentWarningEl.style.display = 'block';
+        studentWarningEl.innerHTML = `<i class="fa fa-exclamation-triangle"></i> <strong>Age Policy Warning:</strong> Member is <strong>${memberAge} years old</strong>. The Student Package is strictly for ages 18 and under. When 19 or older, a general package (e.g. Monthly Package) must be selected.`;
+      }
+      const submitBtn = document.getElementById('btnSubmitPayment');
+      if (submitBtn) submitBtn.disabled = true;
+    } else {
+      if (studentWarningEl) studentWarningEl.style.display = 'none';
+      const submitBtn = document.getElementById('btnSubmitPayment');
+      if (submitBtn) submitBtn.disabled = false;
+    }
+
     const coachVal = coachSel ? coachSel.value : '';
+
     const coachText = coachSel && coachSel.selectedOptions.length && coachVal ? coachSel.selectedOptions[0].textContent : '';
 
     // Check whether monthly package fee is ticked to be charged
@@ -3186,7 +3254,23 @@
     const chargeMonthly = document.getElementById('payChargeMonthlyFee') ? document.getElementById('payChargeMonthlyFee').checked : true;
     const coachingOnly = (!chargeMonthly && Boolean(coachId));
 
+    const memberSel = document.getElementById('payMemberId');
+    const memberOpt = memberSel?.selectedOptions[0];
+    const memberAge = parseInt(memberOpt?.getAttribute('data-age'));
+    const planSel = document.getElementById('payPlanId');
+    const planOpt = planSel?.selectedOptions[0];
+    const planType = (planOpt?.getAttribute('data-type') || '').toLowerCase();
+    const planName = (planOpt?.textContent || '').toLowerCase();
+
+    if ((planType === 'student' || planName.includes('student')) && !isNaN(memberAge) && memberAge >= 19) {
+      alert(`The Student Package is only allowed for members aged 18 and under.\n\nThis member is ${memberAge} years old and must get a general package.`);
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-check-circle"></i> Confirm & Unlock Gate';
+      return;
+    }
+
     try {
+
       const res = await fetch('/dashboard/api/record-payment/', {
         method: 'POST',
         headers: {
@@ -3810,6 +3894,17 @@
         if (icon) icon.className = 'fa fa-angles-right';
       }
     }
+
+    // Auto-open Billing / Collect Fee Modal if member_id is in URL query parameters
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      const targetMemberId = urlParams.get('member_id');
+      if (targetMemberId) {
+        setTimeout(() => {
+          openPaymentModalWithMember(targetMemberId, true);
+        }, 180);
+      }
+    } catch(e) {}
   });
 
   window.addEventListener('beforeunload', () => {

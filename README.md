@@ -75,9 +75,10 @@ Visit `http://localhost:8000/login/` — login automatically routes to your role
 | **6 Months Package** | Rs. 24,000 | Rs. 2,500 | **LKR 21,500** | 180 Days | 1 Member | LKR 1,000 |
 | **Couple Monthly Package** | Rs. 8,000 | Rs. 500 | **LKR 7,500** | 30 Days | 2 Members | LKR 1,000 |
 | **3 Persons Family Monthly** | Rs. 12,000 | Rs. 1,000 | **LKR 11,000** | 30 Days | 3 Members | LKR 1,000 |
-| **Students** | Rs. 3,500 | — | **LKR 3,500** | 30 Days | 1 Member | **FREE (No Reg Fee)** |
+| **Students** | Rs. 3,500 | — | **LKR 3,500** | 30 Days | 1 Member | **FREE (No Reg Fee)** — *Ages 18 & under only* |
 
-> **Registration Details:** Registration fee of Rs. 1,000 applies for all new members (except Students). Effective from 27th April 2026.
+> **Registration Details:** Registration fee of Rs. 1,000 applies for all new members (except Students). The Student Package is strictly available for ages 18 and under; when turning 19, a general package is required. Effective from 27th April 2026.
+
 > **Terms & Conditions:** Non-transferable, Non-refundable. Management reserves the right to make changes.
 > **Contact:** `hellofitme@outlook.com` | `070 762 7878` | Pitigala, Sri Lanka
 

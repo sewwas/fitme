@@ -346,8 +346,15 @@ HEADLESS_JWT_REFRESH_TOKEN_EXPIRES_IN = REFRESH_TOKEN_LIFETIME_HOURS * 3600
 #
 CSRF_TRUSTED_ORIGINS = env.list(
     'CSRF_TRUSTED_ORIGINS',
-    default=['http://127.0.0.1', 'http://localhost', 'https://localhost'],
+    default=[
+        'http://127.0.0.1',
+        'http://127.0.0.1:8000',
+        'http://localhost',
+        'http://localhost:8000',
+        'https://localhost',
+    ],
 )
+
 
 if env.bool('X_FORWARDED_PROTO_HEADER_SET', False):
     SECURE_PROXY_SSL_HEADER = (
