@@ -706,3 +706,53 @@ class ClubExpense(models.Model):
     def __str__(self):
         return f"{self.title} — LKR {self.amount} ({self.get_category_display()})"
 
+
+class GymConfiguration(models.Model):
+    """
+    Singleton system configuration for Fit Me gym operational parameters,
+    statutory compliance rates, and PT commission defaults.
+    """
+    gym_name = models.CharField(max_length=100, default='Fit Me Fitness Club')
+    pt_commission_rate = models.DecimalField(
+        max_digits=8, decimal_places=2, default=Decimal('4000.00'),
+        help_text="Coach commission per dedicated 1-on-1 personal training athlete (LKR)"
+    )
+    standard_coaching_fee = models.DecimalField(
+        max_digits=8, decimal_places=2, default=Decimal('7000.00'),
+        help_text="Standard member personal coaching fee add-on (LKR)"
+    )
+    annual_admission_fee = models.DecimalField(
+        max_digits=8, decimal_places=2, default=Decimal('1000.00'),
+        help_text="Standard annual admission/registration fee (LKR)"
+    )
+    epf_employee_rate = models.DecimalField(
+        max_digits=4, decimal_places=2, default=Decimal('0.08'),
+        help_text="Sri Lankan EPF employee deduction rate (default 8%)"
+    )
+    epf_employer_rate = models.DecimalField(
+        max_digits=4, decimal_places=2, default=Decimal('0.12'),
+        help_text="Sri Lankan EPF employer contribution rate (default 12%)"
+    )
+    etf_employer_rate = models.DecimalField(
+        max_digits=4, decimal_places=2, default=Decimal('0.03'),
+        help_text="Sri Lankan ETF employer contribution rate (default 3%)"
+    )
+    absence_penalty_multiplier = models.DecimalField(
+        max_digits=4, decimal_places=2, default=Decimal('1.25'),
+        help_text="Overtime/absence minute rate multiplier (default 1.25x)"
+    )
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Gym Configuration"
+        verbose_name_plural = "Gym Configuration"
+
+    def __str__(self):
+        return f"{self.gym_name} Configuration"
+
+    @classmethod
+    def get_solo(cls):
+        """Returns the singleton configuration object, creating it with defaults if missing."""
+        obj, _ = cls.objects.get_or_create(id=1)
+        return obj
+

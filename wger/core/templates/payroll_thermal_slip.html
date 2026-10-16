@@ -109,7 +109,7 @@
   <div style="font-size:11px;font-weight:900;margin-bottom:3px;">[ PT COACHED ATHLETES &amp; SPLIT ]</div>
   {% for c in pt_clients %}
   <div class="row">
-    <span>• {{ c.name|truncatechars:18 }}</span>
+    <span>&bull; {{ c.name|truncatechars:18 }}</span>
     <span class="bold">+ LKR {{ c.coach_share|floatformat:2 }}</span>
   </div>
   {% endfor %}

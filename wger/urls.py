@@ -40,6 +40,17 @@ from rest_framework_simplejwt.views import (
     TokenVerifyView,
 )
 
+from django.views.generic import RedirectView
+from django.contrib.auth.views import (
+    PasswordResetDoneView,
+    PasswordResetCompleteView,
+)
+from wger.core.views.user import WgerPasswordResetConfirmView
+from wger.core.views import assessment_apis as aa
+from wger.core.views import fitme_dashboards as fd
+from wger.zkbio_integration import views as zkbio_views
+
+
 # wger
 from wger.core.api import views as core_api_views
 from wger.exercises.api import views as exercises_api_views
@@ -268,6 +279,52 @@ sitemaps = {
     'exercises': ExercisesSitemap,
 }  # 'nutrition': NutritionSitemap}
 
+
+def health_check_view(request):
+    """
+    Lightweight health check endpoint for container orchestrators (Render, Docker, Kubernetes).
+    Returns 200 OK with JSON status and database connectivity indicator.
+    """
+    from django.http import JsonResponse
+    from django.db import connection
+    status = {"status": "ok"}
+    http_status = 200
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute("SELECT 1;")
+        status["database"] = "connected"
+    except Exception as exc:
+        status["database"] = "error"
+        status["status"] = "degraded"
+        status["detail"] = str(exc)
+        http_status = 503
+    return JsonResponse(status, status=http_status)
+
+
+def protected_media_serve(request, path, document_root=None, show_indexes=False):
+    """
+    Ensure media files (member photos, receipts, documents) are accessible only
+    to authenticated users (via session or Bearer JWT token).
+    """
+    if not getattr(request, 'user', None) or not request.user.is_authenticated:
+        auth_header = request.headers.get('Authorization', '')
+        if auth_header.startswith('Bearer '):
+            try:
+                from rest_framework_simplejwt.authentication import JWTAuthentication
+                validated = JWTAuthentication().authenticate(request)
+                if validated:
+                    request.user = validated[0]
+            except Exception:
+                pass
+
+    if not getattr(request, 'user', None) or not request.user.is_authenticated:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden("Authentication required to access media files.")
+
+    from django.views.static import serve
+    return serve(request, path, document_root=document_root, show_indexes=show_indexes)
+
+
 #
 # The actual URLs
 #
@@ -305,157 +362,161 @@ urlpatterns += [
     path('admin/', admin.site.urls),
 
     # ── Login Redirects ──
-    path('login/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/user/login', permanent=False)),
-    path('en/user/login', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/user/login', permanent=False)),
-    path('en/user/login/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/user/login', permanent=False)),
+    path('login', RedirectView.as_view(url='/user/login', permanent=False)),
+    path('login/', RedirectView.as_view(url='/user/login', permanent=False)),
+    path('user/login/', RedirectView.as_view(url='/user/login', permanent=False)),
+    path('en/user/login', RedirectView.as_view(url='/user/login', permanent=False)),
+    path('en/user/login/', RedirectView.as_view(url='/user/login', permanent=False)),
 
     # ── Password Reset URLs (Root Aliases for Django auth & email links) ──
     path(
         'user/password/reset/check/<uidb64>/<token>/',
-        __import__('wger.core.views.user', fromlist=['WgerPasswordResetConfirmView']).WgerPasswordResetConfirmView.as_view(),
+        WgerPasswordResetConfirmView.as_view(),
         name='password_reset_confirm',
     ),
     path(
         'user/password/reset/check/<uidb64>/<token>',
-        __import__('wger.core.views.user', fromlist=['WgerPasswordResetConfirmView']).WgerPasswordResetConfirmView.as_view(),
+        WgerPasswordResetConfirmView.as_view(),
     ),
     path(
         'reset/<uidb64>/<token>/',
-        __import__('wger.core.views.user', fromlist=['WgerPasswordResetConfirmView']).WgerPasswordResetConfirmView.as_view(),
+        WgerPasswordResetConfirmView.as_view(),
         name='password_reset_confirm_short',
     ),
     path(
         'reset/<uidb64>/<token>',
-        __import__('wger.core.views.user', fromlist=['WgerPasswordResetConfirmView']).WgerPasswordResetConfirmView.as_view(),
+        WgerPasswordResetConfirmView.as_view(),
     ),
     path(
         'user/password/reset/done/',
-        __import__('django.contrib.auth.views', fromlist=['PasswordResetDoneView']).PasswordResetDoneView.as_view(),
+        PasswordResetDoneView.as_view(),
         name='password_reset_done',
     ),
     path(
         'user/password/reset/complete/',
-        __import__('django.contrib.auth.views', fromlist=['PasswordResetCompleteView']).PasswordResetCompleteView.as_view(),
+        PasswordResetCompleteView.as_view(),
         name='password_reset_complete',
     ),
 
     # ── Fit Me Role Dashboards (Clean URLs) ──
     path('dashboard/', include(([
-        path('', __import__('wger.core.views.fitme_dashboards', fromlist=['dashboard_redirect']).dashboard_redirect, name='fitme-dashboard'),
-        path('admin/', __import__('wger.core.views.fitme_dashboards', fromlist=['super_admin_dashboard']).super_admin_dashboard, name='fitme-admin'),
-        path('admin/users/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_users_view']).admin_users_view, name='fitme-admin-users'),
-        path('front-desk/', __import__('wger.core.views.fitme_dashboards', fromlist=['front_desk_dashboard']).front_desk_dashboard, name='fitme-front-desk'),
-        path('coach/', __import__('wger.core.views.fitme_dashboards', fromlist=['coach_dashboard']).coach_dashboard, name='fitme-coach'),
-        path('member/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_dashboard']).member_dashboard, name='fitme-member'),
+        path('', fd.dashboard_redirect, name='fitme-dashboard'),
+        path('admin/', fd.super_admin_dashboard, name='fitme-admin'),
+        path('admin/users/', fd.admin_users_view, name='fitme-admin-users'),
+        path('front-desk/', fd.front_desk_dashboard, name='fitme-front-desk'),
+        path('coach/', fd.coach_dashboard, name='fitme-coach'),
+        path('member/', fd.member_dashboard, name='fitme-member'),
         # Dynamic Actions
-        path('api/applications/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['create_application_api']).create_application_api, name='api-app-create'),
-        path('api/applications/<int:app_id>/approve/', __import__('wger.core.views.fitme_dashboards', fromlist=['approve_application_api']).approve_application_api, name='api-app-approve'),
-        path('api/applications/<int:app_id>/reject/', __import__('wger.core.views.fitme_dashboards', fromlist=['reject_application_api']).reject_application_api, name='api-app-reject'),
-        path('api/record-payment/', __import__('wger.core.views.fitme_dashboards', fromlist=['record_payment_api']).record_payment_api, name='api-record-payment'),
-        path('api/desk/lookup/', __import__('wger.core.views.fitme_dashboards', fromlist=['desk_member_lookup_api']).desk_member_lookup_api, name='api-desk-lookup'),
-        path('api/members/<int:member_id>/profile/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_full_profile_api']).member_full_profile_api, name='api-member-profile'),
-        path('api/meals/<int:meal_id>/review/', __import__('wger.core.views.fitme_dashboards', fromlist=['review_meal_api']).review_meal_api, name='api-meal-review'),
-        path('api/members/<int:member_id>/ping/', __import__('wger.core.views.fitme_dashboards', fromlist=['ping_member_api']).ping_member_api, name='api-member-ping'),
-        path('api/members/<int:member_id>/resend-invite/', __import__('wger.core.views.fitme_dashboards', fromlist=['resend_member_invite_api']).resend_member_invite_api, name='api-member-resend-invite'),
-        path('api/quick-meal/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_quick_meal_api']).log_quick_meal_api, name='api-quick-meal'),
-        path('api/log-water/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_water_api']).log_water_api, name='api-log-water'),
-        path('api/alerts/<int:alert_id>/resolve/', __import__('wger.core.views.fitme_dashboards', fromlist=['resolve_absence_alert_api']).resolve_absence_alert_api, name='api-alert-resolve'),
+        path('api/applications/create/', fd.create_application_api, name='api-app-create'),
+        path('api/applications/<int:app_id>/approve/', fd.approve_application_api, name='api-app-approve'),
+        path('api/applications/<int:app_id>/reject/', fd.reject_application_api, name='api-app-reject'),
+        path('api/record-payment/', fd.record_payment_api, name='api-record-payment'),
+        path('api/desk/lookup/', fd.desk_member_lookup_api, name='api-desk-lookup'),
+        path('api/members/<int:member_id>/profile/', fd.member_full_profile_api, name='api-member-profile'),
+        path('api/meals/<int:meal_id>/review/', fd.review_meal_api, name='api-meal-review'),
+        path('api/members/<int:member_id>/ping/', fd.ping_member_api, name='api-member-ping'),
+        path('api/members/<int:member_id>/resend-invite/', fd.resend_member_invite_api, name='api-member-resend-invite'),
+        path('api/quick-meal/', fd.log_quick_meal_api, name='api-quick-meal'),
+        path('api/log-water/', fd.log_water_api, name='api-log-water'),
+        path('api/alerts/<int:alert_id>/resolve/', fd.resolve_absence_alert_api, name='api-alert-resolve'),
         # New 31-Module Dynamic APIs
-        path('api/log-workout/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_workout_api']).log_workout_api, name='api-log-workout'),
-        path('api/log-measurement/', __import__('wger.core.views.fitme_dashboards', fromlist=['log_measurement_api']).log_measurement_api, name='api-log-measurement'),
-        path('api/members/<int:member_id>/assign-plan/', __import__('wger.core.views.fitme_dashboards', fromlist=['assign_program_api']).assign_program_api, name='api-member-assign-plan'),
-        path('api/members/<int:member_id>/assign-coach/', __import__('wger.core.views.fitme_dashboards', fromlist=['assign_coach_api']).assign_coach_api, name='api-member-assign-coach'),
-        path('api/members/<int:member_id>/set-nutrition/', __import__('wger.core.views.fitme_dashboards', fromlist=['set_nutrition_target_api']).set_nutrition_target_api, name='api-member-set-nutrition'),
-        path('api/members/<int:member_id>/toggle-access/', __import__('wger.core.views.fitme_dashboards', fromlist=['toggle_member_access_api']).toggle_member_access_api, name='api-member-toggle-access'),
-        path('api/programs/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_program_api']).admin_create_program_api, name='api-admin-create-program'),
-        path('api/programs/<int:prog_id>/edit/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_edit_program_api']).admin_edit_program_api, name='api-admin-edit-program'),
-        path('api/programs/<int:prog_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_delete_program_api']).admin_delete_program_api, name='api-admin-delete-program'),
-        path('api/announcements/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_announcement_api']).admin_create_announcement_api, name='api-admin-create-announcement'),
-        path('api/testimonials/<int:testimonial_id>/toggle/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_testimonial_api']).admin_toggle_testimonial_api, name='api-admin-toggle-testimonial'),
+        path('api/log-workout/', fd.log_workout_api, name='api-log-workout'),
+        path('api/log-measurement/', fd.log_measurement_api, name='api-log-measurement'),
+        path('api/members/<int:member_id>/assign-plan/', fd.assign_program_api, name='api-member-assign-plan'),
+        path('api/members/<int:member_id>/assign-coach/', fd.assign_coach_api, name='api-member-assign-coach'),
+        path('api/members/<int:member_id>/set-nutrition/', fd.set_nutrition_target_api, name='api-member-set-nutrition'),
+        path('api/members/<int:member_id>/toggle-access/', fd.toggle_member_access_api, name='api-member-toggle-access'),
+        path('api/programs/create/', fd.admin_create_program_api, name='api-admin-create-program'),
+        path('api/programs/<int:prog_id>/edit/', fd.admin_edit_program_api, name='api-admin-edit-program'),
+        path('api/programs/<int:prog_id>/delete/', fd.admin_delete_program_api, name='api-admin-delete-program'),
+        path('api/announcements/create/', fd.admin_create_announcement_api, name='api-admin-create-announcement'),
+        path('api/testimonials/<int:testimonial_id>/toggle/', fd.admin_toggle_testimonial_api, name='api-admin-toggle-testimonial'),
         # Staff, User Creation & Role Management APIs
-        path('api/users/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_user_api']).admin_create_user_api, name='api-admin-create-user'),
-        path('api/users/<int:user_id>/role/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_update_user_role_api']).admin_update_user_role_api, name='api-admin-user-role'),
-        path('api/users/<int:user_id>/toggle-active/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_user_active_api']).admin_toggle_user_active_api, name='api-admin-user-toggle-active'),
-        path('api/users/<int:user_id>/reset-password/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_reset_user_password_api']).admin_reset_user_password_api, name='api-admin-user-reset-password'),
+        path('api/users/create/', fd.admin_create_user_api, name='api-admin-create-user'),
+        path('api/users/<int:user_id>/role/', fd.admin_update_user_role_api, name='api-admin-user-role'),
+        path('api/users/<int:user_id>/toggle-active/', fd.admin_toggle_user_active_api, name='api-admin-user-toggle-active'),
+        path('api/users/<int:user_id>/reset-password/', fd.admin_reset_user_password_api, name='api-admin-user-reset-password'),
+        path('api/audit/align-roles/', fd.admin_audit_align_roles_api, name='api-audit-align-roles'),
         # Super Admin Dedicated: Plan Builder & Subscription Overrides
-        path('api/plans/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_plan_api']).admin_create_plan_api, name='api-admin-create-plan'),
-        path('api/plans/<int:plan_id>/edit/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_edit_plan_api']).admin_edit_plan_api, name='api-admin-edit-plan'),
-        path('api/plans/<int:plan_id>/toggle/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_plan_api']).admin_toggle_plan_api, name='api-admin-toggle-plan'),
-        path('api/plans/<int:plan_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_delete_plan_api']).admin_delete_plan_api, name='api-admin-delete-plan'),
-        path('api/subscriptions/<int:sub_id>/override/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_override_subscription_api']).admin_override_subscription_api, name='api-admin-sub-override'),
+        path('api/plans/create/', fd.admin_create_plan_api, name='api-admin-create-plan'),
+        path('api/plans/<int:plan_id>/edit/', fd.admin_edit_plan_api, name='api-admin-edit-plan'),
+        path('api/plans/<int:plan_id>/toggle/', fd.admin_toggle_plan_api, name='api-admin-toggle-plan'),
+        path('api/plans/<int:plan_id>/delete/', fd.admin_delete_plan_api, name='api-admin-delete-plan'),
+        path('api/subscriptions/<int:sub_id>/override/', fd.admin_override_subscription_api, name='api-admin-sub-override'),
         # Financial Reports & Ledger Export
-        path('admin/reports/export-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_financial_csv']).admin_export_financial_csv, name='admin-reports-export-csv'),
-        path('admin/reports/export-members-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_members_csv']).admin_export_members_csv, name='admin-reports-export-members-csv'),
-        path('admin/reports/export-expenses-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_expenses_csv']).admin_export_expenses_csv, name='admin-reports-export-expenses-csv'),
-        path('admin/reports/export-payroll-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_payroll_csv']).admin_export_payroll_csv, name='admin-reports-export-payroll-csv'),
-        path('admin/reports/eod/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_daily_eod_report']).admin_daily_eod_report, name='admin-daily-eod-report'),
+        path('admin/reports/export-csv/', fd.admin_export_financial_csv, name='admin-reports-export-csv'),
+        path('admin/reports/export-members-csv/', fd.admin_export_members_csv, name='admin-reports-export-members-csv'),
+        path('admin/reports/export-expenses-csv/', fd.admin_export_expenses_csv, name='admin-reports-export-expenses-csv'),
+        path('admin/reports/export-payroll-csv/', fd.admin_export_payroll_csv, name='admin-reports-export-payroll-csv'),
+        path('admin/reports/eod/', fd.admin_daily_eod_report, name='admin-daily-eod-report'),
         # Staff Payroll Management APIs
-        path('api/payroll/recalculate/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_recalculate_payroll_api']).admin_recalculate_payroll_api, name='api-admin-payroll-recalculate'),
-        path('api/payroll/enroll-staff/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_enroll_staff_payroll_api']).admin_enroll_staff_payroll_api, name='api-admin-payroll-enroll-staff'),
-        path('api/payroll/<int:ledger_id>/pt-breakdown/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_get_pt_breakdown_api']).admin_get_pt_breakdown_api, name='api-admin-payroll-pt-breakdown'),
-        path('api/payroll/<int:ledger_id>/adjust/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_adjust_payroll_ledger_api']).admin_adjust_payroll_ledger_api, name='api-admin-payroll-adjust'),
-        path('api/payroll/<int:ledger_id>/finalize/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_finalize_payroll_ledger_api']).admin_finalize_payroll_ledger_api, name='api-admin-payroll-finalize'),
-        path('payroll/<int:ledger_id>/thermal-slip/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_payroll_thermal_slip_view']).admin_payroll_thermal_slip_view, name='payroll-thermal-slip'),
+        path('api/payroll/recalculate/', fd.admin_recalculate_payroll_api, name='api-admin-payroll-recalculate'),
+        path('api/payroll/enroll-staff/', fd.admin_enroll_staff_payroll_api, name='api-admin-payroll-enroll-staff'),
+        path('api/payroll/<int:ledger_id>/pt-breakdown/', fd.admin_get_pt_breakdown_api, name='api-admin-payroll-pt-breakdown'),
+        path('api/payroll/<int:ledger_id>/adjust/', fd.admin_adjust_payroll_ledger_api, name='api-admin-payroll-adjust'),
+        path('api/payroll/<int:ledger_id>/delete/', fd.admin_delete_payroll_ledger_api, name='api-admin-payroll-delete'),
+        path('api/payroll/<int:ledger_id>/finalize/', fd.admin_finalize_payroll_ledger_api, name='api-admin-payroll-finalize'),
+        path('payroll/<int:ledger_id>/thermal-slip/', fd.admin_payroll_thermal_slip_view, name='payroll-thermal-slip'),
         # Staff Attendance & Shift Rosters
-        path('api/staff-attendance/clock/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_clock_staff_attendance_api']).admin_clock_staff_attendance_api, name='api-staff-attendance-clock'),
-        path('api/staff-shifts/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_staff_shift_api']).admin_create_staff_shift_api, name='api-staff-shifts-create'),
-        path('api/staff-shifts/bulk-generate/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_generate_bulk_roster_api']).admin_generate_bulk_roster_api, name='api-staff-shifts-bulk-generate'),
-        path('api/staff-shifts/<int:shift_id>/toggle-leave/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_shift_leave_api']).admin_toggle_shift_leave_api, name='api-staff-shifts-toggle-leave'),
-        path('api/staff-schedule/<int:staff_id>/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_get_staff_work_schedule_api']).admin_get_staff_work_schedule_api, name='api-staff-schedule-get'),
-        path('api/staff-schedule/save/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_save_staff_work_schedule_api']).admin_save_staff_work_schedule_api, name='api-staff-schedule-save'),
-        path('api/payroll/issue-advance/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_issue_salary_advance_api']).admin_issue_salary_advance_api, name='api-payroll-issue-advance'),
-        path('advances/<int:advance_id>/thermal-voucher/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_advance_thermal_voucher_view']).admin_advance_thermal_voucher_view, name='advance-thermal-voucher'),
+        path('api/staff-attendance/clock/', fd.admin_clock_staff_attendance_api, name='api-staff-attendance-clock'),
+        path('api/staff-shifts/create/', fd.admin_create_staff_shift_api, name='api-staff-shifts-create'),
+        path('api/staff-shifts/bulk-generate/', fd.admin_generate_bulk_roster_api, name='api-staff-shifts-bulk-generate'),
+        path('api/staff-shifts/<int:shift_id>/toggle-leave/', fd.admin_toggle_shift_leave_api, name='api-staff-shifts-toggle-leave'),
+        path('api/staff-schedule/<int:staff_id>/', fd.admin_get_staff_work_schedule_api, name='api-staff-schedule-get'),
+        path('api/staff-schedule/save/', fd.admin_save_staff_work_schedule_api, name='api-staff-schedule-save'),
+        path('api/payroll/issue-advance/', fd.admin_issue_salary_advance_api, name='api-payroll-issue-advance'),
+        path('advances/<int:advance_id>/thermal-voucher/', fd.admin_advance_thermal_voucher_view, name='advance-thermal-voucher'),
         # Financial OPEX & Expenses APIs
-        path('api/expenses/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_expense_api']).admin_create_expense_api, name='api-admin-create-expense'),
-        path('api/expenses/<int:expense_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_delete_expense_api']).admin_delete_expense_api, name='api-admin-delete-expense'),
-        path('api/expenses/<int:expense_id>/upload-receipt/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_upload_expense_receipt_api']).admin_upload_expense_receipt_api, name='api-admin-upload-expense-receipt'),
+        path('api/expenses/create/', fd.admin_create_expense_api, name='api-admin-create-expense'),
+        path('api/expenses/<int:expense_id>/delete/', fd.admin_delete_expense_api, name='api-admin-delete-expense'),
+        path('api/expenses/<int:expense_id>/upload-receipt/', fd.admin_upload_expense_receipt_api, name='api-admin-upload-expense-receipt'),
         # Member Self-Service Instant Renewal & Door Unlock
-        path('api/member/self-renew/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_self_renew_api']).member_self_renew_api, name='api-member-self-renew'),
+        path('api/member/self-renew/', fd.member_self_renew_api, name='api-member-self-renew'),
     ], 'fitme'))),
 
-    path('api/member/self-renew/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_self_renew_api']).member_self_renew_api, name='api-direct-member-self-renew'),
-    path('api/desk/lookup/', __import__('wger.core.views.fitme_dashboards', fromlist=['desk_member_lookup_api']).desk_member_lookup_api, name='api-direct-desk-lookup'),
-    path('api/members/<int:member_id>/profile/', __import__('wger.core.views.fitme_dashboards', fromlist=['member_full_profile_api']).member_full_profile_api, name='api-direct-member-profile'),
-    path('api/profile/update-photo/', __import__('wger.zkbio_integration.views', fromlist=['upload_face_api']).upload_face_api, name='api-profile-update-photo'),
+    path('api/member/self-renew/', fd.member_self_renew_api, name='api-direct-member-self-renew'),
+    path('api/desk/lookup/', fd.desk_member_lookup_api, name='api-direct-desk-lookup'),
+    path('api/members/<int:member_id>/profile/', fd.member_full_profile_api, name='api-direct-member-profile'),
+    path('api/profile/update-photo/', zkbio_views.upload_face_api, name='api-profile-update-photo'),
 
     # ── Super Admin Dedicated: Plan Builder & Subscription Overrides (direct /api/ aliases) ──
-    path('api/plans/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_plan_api']).admin_create_plan_api, name='api-direct-admin-create-plan'),
-    path('api/plans/<int:plan_id>/edit/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_edit_plan_api']).admin_edit_plan_api, name='api-direct-admin-edit-plan'),
-    path('api/plans/<int:plan_id>/toggle/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_toggle_plan_api']).admin_toggle_plan_api, name='api-direct-admin-toggle-plan'),
-    path('api/subscriptions/<int:sub_id>/override/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_override_subscription_api']).admin_override_subscription_api, name='api-direct-admin-sub-override'),
+    path('api/plans/create/', fd.admin_create_plan_api, name='api-direct-admin-create-plan'),
+    path('api/plans/<int:plan_id>/edit/', fd.admin_edit_plan_api, name='api-direct-admin-edit-plan'),
+    path('api/plans/<int:plan_id>/toggle/', fd.admin_toggle_plan_api, name='api-direct-admin-toggle-plan'),
+    path('api/subscriptions/<int:sub_id>/override/', fd.admin_override_subscription_api, name='api-direct-admin-sub-override'),
     # Multi-User (Couples & Family) Partner Linking APIs
-    path('api/subscriptions/<int:subscription_id>/link-partner/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_link_partner_api']).admin_link_partner_api, name='api-link-partner'),
-    path('api/buddy-links/<int:link_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_unlink_partner_api']).admin_unlink_partner_api, name='api-unlink-partner'),
-    path('api/payroll/issue-advance/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_issue_salary_advance_api']).admin_issue_salary_advance_api, name='api-direct-payroll-issue-advance'),
-    path('api/payroll/enroll-staff/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_enroll_staff_payroll_api']).admin_enroll_staff_payroll_api, name='api-direct-payroll-enroll-staff'),
+    path('api/subscriptions/<int:subscription_id>/link-partner/', fd.admin_link_partner_api, name='api-link-partner'),
+    path('api/buddy-links/<int:link_id>/delete/', fd.admin_unlink_partner_api, name='api-unlink-partner'),
+    path('api/payroll/issue-advance/', fd.admin_issue_salary_advance_api, name='api-direct-payroll-issue-advance'),
+    path('api/payroll/enroll-staff/', fd.admin_enroll_staff_payroll_api, name='api-direct-payroll-enroll-staff'),
     # Direct expense API aliases
-    path('api/expenses/create/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_create_expense_api']).admin_create_expense_api, name='api-direct-admin-create-expense'),
-    path('api/expenses/<int:expense_id>/delete/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_delete_expense_api']).admin_delete_expense_api, name='api-direct-admin-delete-expense'),
-    path('api/expenses/<int:expense_id>/upload-receipt/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_upload_expense_receipt_api']).admin_upload_expense_receipt_api, name='api-direct-admin-upload-expense-receipt'),
-    path('dashboard/admin/reports/export-expenses-csv/', __import__('wger.core.views.fitme_dashboards', fromlist=['admin_export_expenses_csv']).admin_export_expenses_csv, name='admin-direct-reports-export-expenses-csv'),
+    path('api/expenses/create/', fd.admin_create_expense_api, name='api-direct-admin-create-expense'),
+    path('api/expenses/<int:expense_id>/delete/', fd.admin_delete_expense_api, name='api-direct-admin-delete-expense'),
+    path('api/expenses/<int:expense_id>/upload-receipt/', fd.admin_upload_expense_receipt_api, name='api-direct-admin-upload-expense-receipt'),
+    path('dashboard/admin/reports/export-expenses-csv/', fd.admin_export_expenses_csv, name='admin-direct-reports-export-expenses-csv'),
 
     # ── Fit Me Point of Sale (POS) for Gym Drinks & Supplements ──
     path('pos/', include('wger.pos.urls', namespace='pos')),
-    path('dashboard/pos/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/pos/', permanent=False)),
+    path('dashboard/pos/', RedirectView.as_view(url='/pos/', permanent=False)),
 
     # ── Fit Me Public Website Contact API ──
-    path('api/public/contact/', __import__('wger.core.views.fitme_dashboards', fromlist=['public_contact_api']).public_contact_api, name='public-contact-api'),
+    path('api/public/contact/', fd.public_contact_api, name='public-contact-api'),
 
 
     # ── Legacy /fitme/ Redirects to clean routes ──
-    path('fitme/dashboard/admin/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/dashboard/admin/', permanent=False)),
-    path('fitme/dashboard/front-desk/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/dashboard/front-desk/', permanent=False)),
-    path('fitme/dashboard/coach/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/dashboard/coach/', permanent=False)),
-    path('fitme/dashboard/member/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/dashboard/member/', permanent=False)),
-    path('fitme/dashboard/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/dashboard/', permanent=False)),
-    path('fitme/register/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/register/', permanent=False)),
-    path('fitme/receipt/<int:receipt_id>/', __import__('django.views.generic', fromlist=['RedirectView']).RedirectView.as_view(url='/receipt/%(receipt_id)s/', permanent=False)),
+    path('fitme/dashboard/admin/', RedirectView.as_view(url='/dashboard/admin/', permanent=False)),
+    path('fitme/dashboard/front-desk/', RedirectView.as_view(url='/dashboard/front-desk/', permanent=False)),
+    path('fitme/dashboard/coach/', RedirectView.as_view(url='/dashboard/coach/', permanent=False)),
+    path('fitme/dashboard/member/', RedirectView.as_view(url='/dashboard/member/', permanent=False)),
+    path('fitme/dashboard/', RedirectView.as_view(url='/dashboard/', permanent=False)),
+    path('fitme/register/', RedirectView.as_view(url='/register/', permanent=False)),
+    path('fitme/receipt/<int:receipt_id>/', RedirectView.as_view(url='/receipt/%(receipt_id)s/', permanent=False)),
 
     # ── Fit Me 80mm Thermal Receipt View (Clean URL: /receipt/<id>/) ──
-    path('receipt/<int:receipt_id>/', __import__('wger.core.views.fitme_dashboards', fromlist=['view_receipt']).view_receipt, name='receipt-view'),
+    path('receipt/<int:receipt_id>/', fd.view_receipt, name='receipt-view'),
 
     # ── Fit Me Official Membership Registration Form (Clean URL: /register/) ──
-    path('register/', __import__('wger.core.views.fitme_dashboards', fromlist=['public_registration_view']).public_registration_view, name='public-register'),
+    path('register/', fd.public_registration_view, name='public-register'),
 
     # ── Fit Me Hardware & Operations Integrations ──
     path('api/zkbio/', include(('wger.zkbio_integration.urls', 'zkbio_integration'), namespace='zkbio_integration')),
@@ -464,16 +525,15 @@ urlpatterns += [
     path('api/habit/', include(('wger.habit.urls', 'habit'), namespace='habit')),
 
     # ── Fit Me Assessment Forms (Digital PDF equivalents) ──
-    path('api/assessments/nutrition/submit/', __import__('wger.core.views.assessment_apis', fromlist=['submit_nutrition_assessment_api']).submit_nutrition_assessment_api, name='assessment-nutrition-submit'),
-    path('api/assessments/workout/submit/', __import__('wger.core.views.assessment_apis', fromlist=['submit_workout_assessment_api']).submit_workout_assessment_api, name='assessment-workout-submit'),
-    path('api/assessments/nutrition/<int:assessment_id>/review/', __import__('wger.core.views.assessment_apis', fromlist=['coach_review_nutrition_assessment_api']).coach_review_nutrition_assessment_api, name='assessment-nutrition-review'),
-    path('api/assessments/workout/<int:assessment_id>/review/', __import__('wger.core.views.assessment_apis', fromlist=['coach_review_workout_assessment_api']).coach_review_workout_assessment_api, name='assessment-workout-review'),
-    path('api/assessments/pending/', __import__('wger.core.views.assessment_apis', fromlist=['list_pending_assessments_api']).list_pending_assessments_api, name='assessment-pending-list'),
-    path('api/assessments/<str:assessment_type>/<int:assessment_id>/detail/', __import__('wger.core.views.assessment_apis', fromlist=['get_assessment_detail_api']).get_assessment_detail_api, name='assessment-detail'),
-    path('api/assessments/my/', __import__('wger.core.views.assessment_apis', fromlist=['get_my_assessments_api']).get_my_assessments_api, name='assessment-my'),
-
+    path('api/assessments/nutrition/submit/', aa.submit_nutrition_assessment_api, name='assessment-nutrition-submit'),
+    path('api/assessments/workout/submit/', aa.submit_workout_assessment_api, name='assessment-workout-submit'),
+    path('api/assessments/nutrition/<int:assessment_id>/review/', aa.coach_review_nutrition_assessment_api, name='assessment-nutrition-review'),
+    path('api/assessments/workout/<int:assessment_id>/review/', aa.coach_review_workout_assessment_api, name='assessment-workout-review'),
+    path('api/assessments/pending/', aa.list_pending_assessments_api, name='assessment-pending-list'),
+    path('api/assessments/<str:assessment_type>/<int:assessment_id>/detail/', aa.get_assessment_detail_api, name='assessment-detail'),
+    path('api/assessments/my/', aa.get_my_assessments_api, name='assessment-my'),
     # ── Media Uploads (Profile photos, receipts) ──
-    re_path(r'^media/(?P<path>.*)$', __import__('django.views.static', fromlist=['serve']).serve, {
+    re_path(r'^media/(?P<path>.*)$', protected_media_serve, {
         'document_root': settings.MEDIA_ROOT
     }),
 
@@ -577,3 +637,8 @@ if settings.DEBUG:
 
 if settings.EXPOSE_PROMETHEUS_METRICS:
     urlpatterns += [path('prometheus/', include('django_prometheus.urls'))]
+
+# Unprefixed routes for health checks and container probes
+urlpatterns += [
+    path('health/', health_check_view, name='health-check'),
+]

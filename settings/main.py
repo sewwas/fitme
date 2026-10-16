@@ -91,15 +91,23 @@ TIME_ZONE = env.str('TIME_ZONE', 'Europe/Berlin')
 
 # Django
 SECRET_KEY = env.str('SECRET_KEY', '')
-if not SECRET_KEY or (SECRET_KEY in _DEFAULT_KEYS and not DEBUG):
+_KNOWN_WEAK_PATTERNS = ('fitme_secure_key', 'fitme_portal', 'super_secret', 'changeme', 'secret_key')
+_IS_WEAK_SECRET = (
+    not SECRET_KEY
+    or SECRET_KEY in _DEFAULT_KEYS
+    or len(SECRET_KEY) < 32
+    or any(pattern in SECRET_KEY.lower() for pattern in _KNOWN_WEAK_PATTERNS)
+)
+if not SECRET_KEY:
     SECRET_KEY = secrets.token_urlsafe(50)
-    if not DEBUG:
-        warnings.warn(
-            'SECRET_KEY is not set or uses the default value so '
-            'a random key was generated, sessions will not persist across restarts. '
-            'Set SECRET_KEY in your environment for production use.',
-            stacklevel=1,
-        )
+elif _IS_WEAK_SECRET and not DEBUG:
+    SECRET_KEY = secrets.token_urlsafe(50)
+    warnings.warn(
+        'SECRET_KEY is too weak or uses a predictable/default value. '
+        'A cryptographically secure random key was generated for this process. '
+        'Please set a strong, random 50+ character SECRET_KEY in your production environment.',
+        stacklevel=1,
+    )
 
 # JWT keypair (RS256)
 JWT_PUBLIC_KEY = env.str('JWT_PUBLIC_KEY', '')
@@ -157,10 +165,32 @@ STATIC_URL = env.str('STATIC_URL', '/static/')
 
 LOGIN_REDIRECT_URL = env.str('LOGIN_REDIRECT_URL', '/dashboard/')
 
-# Allow all hosts to access the application. Change if used in production.
-ALLOWED_HOSTS = [
-    '*',
-]
+# Allowed hosts — parsed from env to prevent HTTP Host header injection.
+# Never use '*' in production; it enables forged password-reset links.
+ALLOWED_HOSTS = env.list('ALLOWED_HOSTS', default=[
+    'localhost',
+    '127.0.0.1',
+    '.onrender.com',
+    'fitme-backend-mucu.onrender.com',
+    'fitmefitness.lk',
+])
+
+#
+# Security Headers & SSL Hardening
+#
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+
+# In production (non-DEBUG), enforce HTTPS and secure cookies
+if not DEBUG:
+    SECURE_SSL_REDIRECT = env.bool('DJANGO_SECURE_SSL_REDIRECT', True)
+    SESSION_COOKIE_SECURE = env.bool('SESSION_COOKIE_SECURE', True)
+    CSRF_COOKIE_SECURE = env.bool('CSRF_COOKIE_SECURE', True)
+    SECURE_HSTS_SECONDS = env.int('SECURE_HSTS_SECONDS', 31536000)  # 1 year
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
+    # Trust reverse proxy SSL termination (Render, Vercel, Cloudflare)
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 SESSION_ENGINE = 'django.contrib.sessions.backends.cached_db'
 

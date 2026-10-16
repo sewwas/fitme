@@ -2,7 +2,7 @@ import json
 from decimal import Decimal
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.db.models import Sum, F
+from django.db.models import Sum, F, DecimalField, ExpressionWrapper
 from django.http import JsonResponse, HttpResponseBadRequest
 from django.shortcuts import render, get_object_or_404
 from django.utils import timezone
@@ -40,7 +40,11 @@ def pos_register_view(request):
     today = timezone.now().date()
     categories = POSCategory.objects.all().order_by('display_order', 'name')
     products = POSProduct.objects.filter(is_active=True).select_related('category').order_by('category__display_order', 'name')
-    members = MemberProfile.objects.select_related('user').order_by('user__first_name', 'user__username')[:200]
+    is_super_admin = request.user.is_superuser or request.user.groups.filter(name='super_admin').exists()
+    members_qs = MemberProfile.objects.exclude(user__userprofile__is_temporary=True).select_related('user')
+    if not is_super_admin:
+        members_qs = members_qs.exclude(user__is_superuser=True).exclude(user__groups__name='super_admin')
+    members = members_qs.order_by('user__first_name', 'user__username')[:200]
     
     today_sales = POSSale.objects.filter(created_at__date=today, status='COMPLETED')
     today_revenue = today_sales.aggregate(total=Sum('total_amount'))['total'] or Decimal('0.00')
@@ -57,9 +61,14 @@ def pos_register_view(request):
         has_audit_discrepancy=True
     ).order_by('last_discrepancy_count', 'name')
 
-    total_cost_valuation = sum(p.cost_price * p.stock_quantity for p in products)
-    total_retail_valuation = sum(p.price * p.stock_quantity for p in products)
-    total_units = sum(p.stock_quantity for p in products)
+    pos_val_aggs = POSProduct.objects.filter(is_active=True).aggregate(
+        cost_val=Sum(ExpressionWrapper(F('cost_price') * F('stock_quantity'), output_field=DecimalField(max_digits=12, decimal_places=2))),
+        retail_val=Sum(ExpressionWrapper(F('price') * F('stock_quantity'), output_field=DecimalField(max_digits=12, decimal_places=2))),
+        total_units=Sum('stock_quantity')
+    )
+    total_cost_valuation = pos_val_aggs['cost_val'] or Decimal('0.00')
+    total_retail_valuation = pos_val_aggs['retail_val'] or Decimal('0.00')
+    total_units = pos_val_aggs['total_units'] or 0
 
     recent_sales = POSSale.objects.select_related('cashier', 'customer_member').order_by('-created_at')[:15]
     recent_audits = POSInventoryAudit.objects.select_related('product', 'auditor').order_by('-audit_date')[:15]

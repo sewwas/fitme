@@ -1,8 +1,21 @@
 from django.contrib import admin
 from wger.gym_operations_payroll.models import (
     StaffShift, SuddenAbsenceAlert, PayrollLedger,
-    ShiftTemplate, StaffWorkSchedule, StaffSalaryAdvance
+    ShiftTemplate, StaffWorkSchedule, StaffSalaryAdvance,
+    GymConfiguration
 )
+
+
+@admin.register(GymConfiguration)
+class GymConfigurationAdmin(admin.ModelAdmin):
+    list_display = ('gym_name', 'pt_commission_rate', 'standard_coaching_fee', 'annual_admission_fee', 'epf_employee_rate', 'updated_at')
+
+    def has_add_permission(self, request):
+        return not GymConfiguration.objects.exists()
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
 
 
 @admin.register(ShiftTemplate)

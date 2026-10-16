@@ -3291,8 +3291,13 @@
           yearly_fee_amount: yearlyFeeAmount
         })
       });
-      const data = await res.json();
-      if (data.success) {
+      let data;
+      try {
+        data = await res.json();
+      } catch (jsonErr) {
+        throw new Error(`Server returned an unexpected response (Status ${res.status}). Please check system logs.`);
+      }
+      if (data && data.success) {
         closePaymentModal();
         showToast(data.message);
         if (data.receipt_id) {
@@ -3305,7 +3310,7 @@
         btn.innerHTML = '<i class="fa fa-check-circle"></i> Confirm & Unlock Gate';
       }
     } catch (err) {
-      alert("Payment failed: " + err);
+      alert("Payment failed: " + (err.message || err));
       btn.disabled = false;
       btn.innerHTML = '<i class="fa fa-check-circle"></i> Confirm & Unlock Gate';
     }

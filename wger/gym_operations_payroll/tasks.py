@@ -134,7 +134,19 @@ def calculate_monthly_payroll(year=None, month=None):
     else:
         last_day = timezone.datetime(year, month + 1, 1).date() - timedelta(days=1)
 
-    staff_users = User.objects.filter(is_staff=True, is_active=True)
+    # Filter genuine gym staff employees (coaches, front desk, trainers) - exclude superusers & pure administrators
+    from django.db.models import Q
+    admin_groups = ['super_admin', 'admin']
+    sched_user_ids = list(StaffWorkSchedule.objects.values_list('staff_user_id', flat=True))
+    staff_users = User.objects.filter(
+        is_active=True
+    ).filter(
+        Q(is_staff=True) | Q(id__in=sched_user_ids)
+    ).exclude(
+        is_superuser=True
+    ).exclude(
+        Q(groups__name__in=admin_groups) & ~Q(groups__name__in=['coach', 'front_desk'])
+    ).distinct()
     generated = 0
 
     for staff in staff_users:
@@ -155,24 +167,32 @@ def calculate_monthly_payroll(year=None, month=None):
 
         overtime_pay = (Decimal(total_overtime_minutes) * minute_rate * Decimal('1.5')).quantize(Decimal('0.01'))
         late_penalty = (Decimal(total_late_minutes) * minute_rate).quantize(Decimal('0.01'))
-        absence_penalty = (Decimal(total_absence_minutes) * minute_rate * Decimal('1.25')).quantize(Decimal('0.01'))
+        from wger.gym_operations_payroll.models import GymConfiguration
+        gym_cfg = GymConfiguration.get_solo()
 
-        # Calculate dynamic PT coaching commissions (LKR 4,000 per active coached client)
+        absence_penalty = (Decimal(total_absence_minutes) * minute_rate * gym_cfg.absence_penalty_multiplier).quantize(Decimal('0.01'))
+
+        # Calculate dynamic PT coaching commissions (dynamically configured per unique coached client)
         from wger.membership.models import MemberProfile
-        coached_count = MemberProfile.objects.filter(
+        coached_profiles = MemberProfile.objects.filter(
             assigned_coach=staff,
             personal_trainer_needed=True,
+            user__is_staff=False,
+            user__is_superuser=False,
+            user__is_active=True,
             user__subscriptions__status='active',
             user__subscriptions__start_date__lte=last_day,
             user__subscriptions__end_date__gte=first_day
-        ).distinct().count()
-        computed_pt_commission = Decimal(coached_count) * Decimal('4000.00')
+        )
+        unique_athlete_ids = set(coached_profiles.values_list('user_id', flat=True))
+        coached_count = len(unique_athlete_ids)
+        computed_pt_commission = Decimal(coached_count) * gym_cfg.pt_commission_rate
 
-        # Calculate EPF & ETF (Sri Lankan Statutory Compliance)
+        # Calculate EPF & ETF (Sri Lankan Statutory Compliance via GymConfiguration)
         epf_eligible = work_sched.epf_etf_eligible if work_sched else True
-        epf_employee_8 = (base_salary_val * Decimal('0.08')).quantize(Decimal('0.01')) if epf_eligible else Decimal('0.00')
-        epf_employer_12 = (base_salary_val * Decimal('0.12')).quantize(Decimal('0.01')) if epf_eligible else Decimal('0.00')
-        etf_employer_3 = (base_salary_val * Decimal('0.03')).quantize(Decimal('0.01')) if epf_eligible else Decimal('0.00')
+        epf_employee_8 = (base_salary_val * gym_cfg.epf_employee_rate).quantize(Decimal('0.01')) if epf_eligible else Decimal('0.00')
+        epf_employer_12 = (base_salary_val * gym_cfg.epf_employer_rate).quantize(Decimal('0.01')) if epf_eligible else Decimal('0.00')
+        etf_employer_3 = (base_salary_val * gym_cfg.etf_employer_rate).quantize(Decimal('0.01')) if epf_eligible else Decimal('0.00')
 
         # Calculate mid-month Staff Salary Advances disbursed in this period
         advances_qs = StaffSalaryAdvance.objects.filter(
@@ -210,8 +230,7 @@ def calculate_monthly_payroll(year=None, month=None):
             ledger.etf_employer_3 = etf_employer_3
             ledger.salary_advance_deduction = total_advances
 
-            if created or (ledger.pt_commissions or Decimal('0.00')) < computed_pt_commission:
-                ledger.pt_commissions = computed_pt_commission
+            ledger.pt_commissions = computed_pt_commission
 
             ledger.notes = f"Auto-computed: {coached_count} coached client(s) (LKR {computed_pt_commission:,.2f}), {total_late_minutes}m late, {total_absence_minutes}m absence, {total_overtime_minutes}m OT, advances: LKR {total_advances:,.2f}."
             ledger.save()

@@ -130,14 +130,24 @@ class MemberProfile(models.Model):
         return None
 
 
-    def get_next_pin(self):
-        """Auto-generate next available biometric PIN (1000–9999)."""
-        last = MemberProfile.objects.filter(
-            biometric_pin__isnull=False
-        ).order_by('-biometric_pin').first()
-        if last and last.biometric_pin:
-            return str(int(last.biometric_pin) + 1)
-        return '1000'
+    @classmethod
+    def get_next_pin(cls):
+        """Auto-generate next available unique biometric PIN (1000–9999) atomically."""
+        from django.db import transaction
+        with transaction.atomic():
+            from wger.zkbio_integration.models import BiometricProfile
+            existing_pins = set()
+            for p in cls.objects.exclude(biometric_pin__isnull=True).values_list('biometric_pin', flat=True):
+                if p and str(p).strip().isdigit():
+                    existing_pins.add(int(str(p).strip()))
+            for p in BiometricProfile.objects.exclude(zk_pin__isnull=True).values_list('zk_pin', flat=True):
+                if p and str(p).strip().isdigit():
+                    existing_pins.add(int(str(p).strip()))
+            max_pin = max(existing_pins) if existing_pins else 1000
+            candidate = max(max_pin + 1, 1001)
+            while candidate in existing_pins:
+                candidate += 1
+            return str(candidate)
 
     @property
     def age(self):
@@ -185,8 +195,8 @@ class Subscription(models.Model):
     )
     plan = models.ForeignKey(MembershipPlan, on_delete=models.PROTECT)
     start_date = models.DateField()
-    end_date = models.DateField()
-    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending_payment')
+    end_date = models.DateField(db_index=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending_payment', db_index=True)
     payment_method = models.CharField(max_length=20, choices=PAYMENT_METHODS, blank=True)
     amount_paid = models.DecimalField(max_digits=8, decimal_places=2, default=Decimal('0.00'))
     payment_date = models.DateTimeField(null=True, blank=True)
@@ -201,6 +211,9 @@ class Subscription(models.Model):
 
     class Meta:
         ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['status', 'end_date'], name='sub_status_end_idx'),
+        ]
 
     def __str__(self):
         return f"{self.member.username} — {self.plan.name} ({self.status})"

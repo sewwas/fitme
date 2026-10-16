@@ -713,12 +713,13 @@ def remote_buzzer_trigger(request):
     """
     Endpoint: /api/zkbio/remote-buzzer/
     Admin-authorized trigger to buzz open turnstile door immediately on 192.168.1.23.
+    Logs an ENTRY for an athlete/member through the turnstile.
     """
     if not (request.user.is_authenticated and request.user.is_staff):
         return HttpResponseForbidden('Staff credentials required')
 
     DoorAccessLog.objects.create(
-        user=request.user,
+        user=None,
         zk_pin='BUZZER',
         event_type='ENTRY',
         verify_mode='BUZZER',
@@ -726,6 +727,9 @@ def remote_buzzer_trigger(request):
         terminal_name='REMOTE_BUZZER_OVERRIDE',
         raw_payload={'triggered_by': request.user.username, 'timestamp': timezone.now().isoformat()}
     )
+
+    # Immediately invalidate floor cache so the live counter reflects the buzzer entry
+    _FLOOR_STATUS_CACHE['data'] = None
 
     return JsonResponse({
         'success': True,
@@ -743,39 +747,54 @@ def floor_status_api(request):
     """
     Endpoint: /api/zkbio/floor-status/
     Returns real-time floor count: active members and staff on the floor.
-    Micro-cached for 3 seconds to avoid continuous SQLite table scans.
+    Micro-cached for 2 seconds to avoid continuous SQLite table scans.
     """
     import time
+    from datetime import timedelta
+    from django.db.models import Q
+    from wger.gym_operations_payroll.models import StaffShift
+
+    now = timezone.now()
     now_ts = time.time()
-    if _FLOOR_STATUS_CACHE['data'] and (now_ts - _FLOOR_STATUS_CACHE['ts'] < 3.0):
+    if _FLOOR_STATUS_CACHE['data'] and (now_ts - _FLOOR_STATUS_CACHE['ts'] < 2.0):
         return JsonResponse(_FLOOR_STATUS_CACHE['data'])
 
-    today = timezone.now().date()
+    today = now.date()
+    cutoff = now - timedelta(hours=10)
+
+    # Fetch recent logs from today or within the active workout session window (10h)
     today_logs = DoorAccessLog.objects.filter(
-        punch_time__date=today,
+        Q(punch_time__date=today) | Q(punch_time__gte=cutoff),
         event_type__in=['ENTRY', 'EXIT']
     ).select_related('user').order_by('punch_time')
 
     user_latest_event = {}
     for log in today_logs:
-        key = log.user_id if log.user_id else f"pin_{log.zk_pin}"
+        key = log.user_id if log.user_id else f"pin_{log.zk_pin}_{log.id}"
         user_latest_event[key] = (log.event_type, log.user)
 
     members_on_floor = 0
-    staff_on_floor = 0
+    staff_on_floor_set = set()
 
+    # 1. Staff who are currently ON_FLOOR in StaffShift model
+    for s_user_id in StaffShift.objects.filter(shift_date=today, status='ON_FLOOR').values_list('staff_user_id', flat=True):
+        staff_on_floor_set.add(s_user_id)
+
+    # 2. Door Access Logs
     for key, (event_type, user) in user_latest_event.items():
         if event_type == 'ENTRY':
             if user and user.is_staff:
-                staff_on_floor += 1
+                staff_on_floor_set.add(user.id)
             else:
                 members_on_floor += 1
+
+    staff_on_floor = len(staff_on_floor_set)
 
     payload = {
         'members_on_floor': members_on_floor,
         'staff_on_floor': staff_on_floor,
         'total_on_floor': members_on_floor + staff_on_floor,
-        'timestamp': timezone.now().isoformat()
+        'timestamp': now.isoformat()
     }
     _FLOOR_STATUS_CACHE['ts'] = now_ts
     _FLOOR_STATUS_CACHE['data'] = payload

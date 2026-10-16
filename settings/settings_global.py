@@ -155,6 +155,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     # Prometheus
     'django_prometheus.middleware.PrometheusBeforeMiddleware',
+    'django.middleware.security.SecurityMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -464,7 +465,7 @@ AXES_ENABLED = True
 AXES_FAILURE_LIMIT = 10
 AXES_COOLOFF_TIME = timedelta(minutes=30)
 AXES_LOCKOUT_TEMPLATE = None
-AXES_RESET_ON_SUCCESS = False
+AXES_RESET_ON_SUCCESS = True
 AXES_RESET_COOL_OFF_ON_FAILURE_DURING_LOCKOUT = True
 
 # If you want to set up redis, set AXES_HANDLER = 'axes.handlers.cache.AxesCacheHandler'
@@ -594,9 +595,18 @@ SIMPLE_JWT = {
 }
 
 #
-# CORS headers: allow all hosts to access the API
+# CORS headers: restrict API access to known Fit Me origins only.
+# CORS_ORIGIN_ALLOW_ALL was removed — it let any website make authenticated requests.
 #
-CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOWED_ORIGINS = [
+    'https://fitmefitness.lk',
+    'https://fitmefitness-murex.vercel.app',
+    'https://fitme-backend-mucu.onrender.com',
+    'http://localhost:3000',
+    'http://localhost:8000',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:8000',
+]
 CORS_URLS_REGEX = r'^/api/.*$'
 
 #

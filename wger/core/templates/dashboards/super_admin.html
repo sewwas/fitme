@@ -408,10 +408,12 @@
           <div class="stat-value" id="stat-total-users" style="color:#fff;">{{ user_stats.total }}</div>
           <div class="stat-label">Total System Users</div>
         </div>
+        {% if is_super_admin %}
         <div class="stat-card" style="border-left:3px solid var(--neon-lime);">
           <div class="stat-value" style="color:var(--neon-lime);">{{ user_stats.super_admin }}</div>
           <div class="stat-label">Super Admins</div>
         </div>
+        {% endif %}
         <div class="stat-card" style="border-left:3px solid #00F0FF;">
           <div class="stat-value" style="color:#00F0FF;">{{ user_stats.admin|default:0 }}</div>
           <div class="stat-label">Admins</div>
@@ -446,7 +448,9 @@
 
             <div style="display:flex;gap:0.35rem;" id="roleFilterButtons">
               <button class="filter-pill active" onclick="setRoleFilter('all', this)">All</button>
+              {% if is_super_admin %}
               <button class="filter-pill" onclick="setRoleFilter('super_admin', this)">Super Admins</button>
+              {% endif %}
               <button class="filter-pill" onclick="setRoleFilter('admin', this)">Admins</button>
               <button class="filter-pill" onclick="setRoleFilter('front_desk', this)">Front Desk</button>
               <button class="filter-pill" onclick="setRoleFilter('coach', this)">Coaches</button>
@@ -738,11 +742,14 @@
                       <button type="button" class="btn-action" style="background:#132B35;color:var(--cyan);border:1px solid rgba(0,240,255,0.4);font-weight:700;" onclick="printThermalPayslipById({{ l.id }})" title="Print 80mm Thermal Payslip">
                         <i class="fa fa-receipt"></i> 80mm
                       </button>
-                      <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="openAdjustLedgerModal({{ l.id }}, '{{ l.staff_user.get_full_name|default:l.staff_user.username|escapejs }}', '{{ l.base_salary|floatformat:2 }}', '{{ l.pt_commissions|floatformat:2 }}', '{{ l.overtime_pay|floatformat:2 }}', '{{ l.late_minutes_penalty|floatformat:2 }}', '{{ l.sudden_absence_penalty|floatformat:2 }}', '{{ l.notes|escapejs }}')" title="Adjust &amp; Override Salary / Commission">
+                      <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="openAdjustLedgerModal({{ l.id }}, '{{ l.staff_user.get_full_name|default:l.staff_user.username|escapejs }}', '{{ l.base_salary|floatformat:2 }}', '{{ l.pt_commissions|floatformat:2 }}', '{{ l.overtime_pay|floatformat:2 }}', '{{ l.late_minutes_penalty|floatformat:2 }}', '{{ l.sudden_absence_penalty|floatformat:2 }}', '{{ l.salary_advance_deduction|floatformat:2 }}', '{{ l.epf_employee_8|floatformat:2 }}', '{{ l.epf_employer_12|floatformat:2 }}', '{{ l.etf_employer_3|floatformat:2 }}', {% if l.epf_employee_8 > 0 or l.epf_employer_12 > 0 or l.staff_user.work_schedule.first.epf_etf_eligible %}true{% else %}false{% endif %}, '{{ l.notes|escapejs }}')" title="Adjust &amp; Override Salary / EPF / ETF">
                         <i class="fa fa-sliders-h"></i>
                       </button>
                       <button type="button" class="btn-action" style="background:{% if l.is_finalized %}rgba(245,158,11,0.15);color:#F59E0B;border:1px solid rgba(245,158,11,0.3);{% else %}rgba(118,192,67,0.15);color:var(--neon-lime);border:1px solid var(--neon-lime);{% endif %}" onclick="toggleFinalizePayroll({{ l.id }})" title="{% if l.is_finalized %}Re-open Ledger{% else %}Finalize &amp; Lock{% endif %}">
                         <i class="fa {% if l.is_finalized %}fa-unlock{% else %}fa-check{% endif %}"></i>
+                      </button>
+                      <button type="button" class="btn-action" style="background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.35);" onclick="deletePayrollLedger({{ l.id }}, '{{ l.staff_user.get_full_name|default:l.staff_user.username|escapejs }}')" title="Delete Payroll Entry">
+                        <i class="fa fa-trash"></i>
                       </button>
                     </div>
                   </td>
@@ -768,21 +775,21 @@
               <i class="fa fa-user-clock" style="color:var(--neon-lime);"></i> Staff Attendance &amp; Shift Roster
             </div>
             <div style="font-size:0.75rem;color:var(--text-muted);margin-top:2px;">
-              Configurable weekly working contracts, 1-click bulk monthly rostering, biometric turnstile synchronization, and overtime tracking.
+              Staff working contracts &amp; real-time automatic biometric turnstile attendance synchronization.
             </div>
           </div>
-          <div style="display:flex;gap:0.6rem;flex-wrap:wrap;">
-            <button type="button" class="btn-action" style="background:#2A3138;color:#fff;border:1px solid rgba(255,255,255,0.2);" onclick="openStaffScheduleModal()">
+          <div style="display:flex;gap:0.6rem;flex-wrap:wrap;align-items:center;">
+            <div style="display:flex;align-items:center;gap:0.4rem;background:#192025;padding:0.25rem 0.6rem;border-radius:6px;border:1px solid rgba(255,255,255,0.15);">
+              <i class="fa fa-filter" style="color:var(--neon-lime);font-size:0.75rem;"></i>
+              <select id="staffShiftFilter" onchange="filterStaffShifts()" style="background:transparent;border:none;color:#fff;font-size:0.75rem;outline:none;cursor:pointer;">
+                <option value="" style="background:#192025;color:#fff;">All Staff Members</option>
+                {% for l in payroll_ledgers %}
+                  <option value="{{ l.staff_user.username }}" style="background:#192025;color:#fff;">{{ l.staff_user.get_full_name|default:l.staff_user.username }} (@{{ l.staff_user.username }})</option>
+                {% endfor %}
+              </select>
+            </div>
+            <button type="button" class="btn-action btn-lime" onclick="openStaffScheduleModal()">
               <i class="fa fa-business-time"></i> Working Days &amp; Schedule
-            </button>
-            <button type="button" class="btn-action" style="background:rgba(16,185,129,0.2);color:#10B981;border:1px solid rgba(16,185,129,0.5);font-weight:700;" onclick="openBulkRosterModal()">
-              <i class="fa fa-bolt"></i> Bulk Generate Roster
-            </button>
-            <button type="button" class="btn-action" style="background:#00F0FF;color:#000;font-weight:700;" onclick="openClockAttendanceModal()">
-              <i class="fa fa-fingerprint"></i> Clock Staff Attendance
-            </button>
-            <button type="button" class="btn-action btn-lime" onclick="openCreateShiftModal()">
-              <i class="fa fa-calendar-plus"></i> + Schedule Shift
             </button>
           </div>
         </div>
@@ -793,8 +800,8 @@
                 <th>Staff Member</th>
                 <th>Shift Date</th>
                 <th>Shift Model</th>
-                <th>Morning (05:00 &ndash; 12:00)</th>
-                <th>Evening (15:00 &ndash; 21:00)</th>
+                <th>Morning</th>
+                <th>Evening </th>
                 <th>Duty OT / Late</th>
                 <th>Status</th>
                 <th style="text-align:right;">Actions</th>
@@ -802,7 +809,7 @@
             </thead>
             <tbody>
               {% for s in recent_staff_shifts %}
-                <tr id="shift-row-{{ s.id }}">
+                <tr id="shift-row-{{ s.id }}" class="staff-shift-row" data-staff="{{ s.staff_user.username }}">
                   <td>
                     <div style="display:flex;align-items:center;gap:0.6rem;">
                       <div class="user-avatar-circle" style="width:32px;height:32px;font-size:0.75rem;">
@@ -945,10 +952,15 @@
                 <tr>
                   <td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">
                     <i class="fa fa-user-clock" style="font-size:1.8rem;color:var(--neon-lime);display:block;margin-bottom:0.4rem;"></i>
-                    No staff shift records found. Click <strong>"Bulk Generate Roster"</strong> or <strong>"+ Schedule Shift"</strong> above.
+                    No staff shift records found for today. Shifts and attendance log automatically via fingerprint turnstile punches.
                   </td>
                 </tr>
               {% endfor %}
+              <tr id="staffShiftEmptyRow" style="display:none;">
+                <td colspan="8" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                  <i class="fa fa-info-circle" style="color:var(--cyan);margin-right:0.4rem;"></i> No shift or attendance records found for this staff member in this period.
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -1502,6 +1514,9 @@
             <button type="button" class="filter-pill" onclick="switchAuditInspectorTab('stock', this)">
               Stock Issues ({{ financial_audit.stock_issues_count }})
             </button>
+            <button type="button" class="filter-pill" onclick="switchAuditInspectorTab('roles', this)">
+              <i class="fa fa-user-shield" style="color:var(--neon-lime);"></i> RBAC Role Audit ({{ financial_audit.user_role_issues_count|default:0 }})
+            </button>
           </div>
         </div>
 
@@ -1693,6 +1708,77 @@
                     </tr>
                   {% empty %}
                     <tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-check-circle" style="color:var(--neon-lime);"></i> All inventory stock levels are healthy with zero variance!</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- SECTION E: User Roles & RBAC Security Audit -->
+          <div id="auditSectionRoles" class="audit-inspector-section" style="border-top:1px solid var(--border-color);">
+            <div style="padding:0.85rem 1.25rem;background:#151A1E;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
+              <div>
+                <strong style="color:#fff;font-size:0.88rem;"><i class="fa fa-user-shield" style="color:var(--neon-lime);margin-right:0.4rem;"></i>User Role Integrity &amp; RBAC Access Audit</strong>
+                <span style="font-size:0.75rem;color:var(--text-muted);margin-left:0.5rem;">Audit verification ensuring strict role segregation: Super Admins, Operations Admins, Coaches, Front Desk, and Athletes.</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span class="badge-role" style="background:{% if financial_audit.user_role_issues_count > 0 %}rgba(245,158,11,0.15);color:#F59E0B;{% else %}rgba(118,192,67,0.15);color:var(--neon-lime);{% endif %}">
+                  {% if financial_audit.user_role_issues_count > 0 %}{{ financial_audit.user_role_issues_count }} Discrepancies{% else %}<i class="fa fa-check-circle"></i> 100% RBAC Aligned{% endif %}
+                </span>
+                <button type="button" class="btn-action btn-lime" onclick="runRoleAlignmentAudit()" style="font-size:0.74rem;padding:0.35rem 0.75rem;">
+                  <i class="fa fa-magic"></i> Auto-Align &amp; Fix Roles
+                </button>
+              </div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="table-custom">
+                <thead>
+                  <tr>
+                    <th>Account</th>
+                    <th>Current Primary Role</th>
+                    <th>Assigned Groups</th>
+                    <th>Staff Status</th>
+                    <th>Detected Discrepancies</th>
+                    <th style="text-align:right;">Resolution Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for u in financial_audit.user_role_issues %}
+                    <tr>
+                      <td style="font-weight:700;color:#fff;">
+                        {{ u.name }}
+                        <div style="font-size:0.72rem;color:var(--text-muted);font-family:monospace;">@{{ u.username }} &bull; {{ u.email }}</div>
+                      </td>
+                      <td>
+                        <span class="badge-role" style="background:rgba(255,255,255,0.08);color:#fff;">
+                          {{ u.primary_role|upper }}
+                        </span>
+                      </td>
+                      <td style="font-size:0.8rem;color:#C5CBD3;font-family:monospace;">
+                        {{ u.current_groups|join:", "|default:"[None]" }}
+                      </td>
+                      <td>
+                        {% if u.is_staff %}
+                          <span style="color:var(--neon-lime);font-weight:700;font-size:0.75rem;"><i class="fa fa-check"></i> Staff</span>
+                        {% else %}
+                          <span style="color:var(--text-muted);font-size:0.75rem;">Athlete</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% for iss in u.issues %}
+                          <div style="color:#EF4444;font-size:0.76rem;margin-bottom:2px;">
+                            <i class="fa fa-exclamation-triangle"></i> {{ iss }}
+                          </div>
+                        {% endfor %}
+                      </td>
+                      <td style="text-align:right;">
+                        <button type="button" class="btn-action btn-lime" onclick="runRoleAlignmentAudit()" style="font-size:0.72rem;padding:0.3rem 0.65rem;">
+                          <i class="fa fa-wrench"></i> Align Role
+                        </button>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-check-circle" style="color:var(--neon-lime);"></i> 100% RBAC Aligned: All user accounts and permission groups are cleanly separated and verified!</td></tr>
                   {% endfor %}
                 </tbody>
               </table>
@@ -2343,14 +2429,14 @@
               <i class="fa fa-users" style="color:var(--neon-lime);font-size:1.1rem;"></i>
               <div>
                 <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;">Members Training</div>
-                <div style="font-size:1.05rem;font-weight:900;color:#fff;">{{ stats.members_on_floor }} Athletes</div>
+                <div style="font-size:1.05rem;font-weight:900;color:#fff;"><span id="adminAnalyticsMembersCount">{{ stats.members_on_floor|default_if_none:0 }}</span> Athletes</div>
               </div>
             </div>
             <div style="background:rgba(255,255,255,0.03);border:1px solid var(--border-color);border-radius:8px;padding:0.65rem 0.85rem;display:flex;align-items:center;gap:0.65rem;">
               <i class="fa fa-id-badge" style="color:var(--cyan);font-size:1.1rem;"></i>
               <div>
                 <div style="font-size:0.7rem;color:var(--text-muted);text-transform:uppercase;font-weight:800;">Staff on Duty</div>
-                <div style="font-size:1.05rem;font-weight:900;color:#fff;">{{ stats.staff_on_floor }} Personnel</div>
+                <div style="font-size:1.05rem;font-weight:900;color:#fff;"><span id="adminAnalyticsStaffCount">{{ stats.staff_on_floor|default_if_none:0 }}</span> Personnel</div>
               </div>
             </div>
           </div>
@@ -3253,207 +3339,7 @@
     </div>
   </div>
 </div>
-<!-- Modal: Staff Printable Payslip Voucher -->
-<div id="payslipModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:2200;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto;">
-  <div style="background:#13171A;border:2px solid var(--neon-lime);border-radius:16px;max-width:760px;width:100%;box-shadow:0 15px 50px rgba(0,0,0,0.9);max-height:92vh;display:flex;flex-direction:column;overflow:hidden;">
-    <div style="padding:1.25rem 1.75rem;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;justify-content:space-between;align-items:center;background:rgba(20,24,28,0.9);">
-      <div style="display:flex;align-items:center;gap:0.75rem;">
-        <i class="fa fa-file-invoice-dollar" style="color:var(--neon-lime);font-size:1.3rem;"></i>
-        <h3 style="font-family:'Montserrat',sans-serif;font-weight:900;color:#fff;font-size:1.15rem;margin:0;">Official Staff Payslip Voucher</h3>
-      </div>
-      <div style="display:flex;gap:0.6rem;align-items:center;">
-        <button type="button" class="btn-action" style="background:#00F0FF;color:#000;font-weight:800;" onclick="printThermalPayslip()">
-          <i class="fa fa-receipt"></i> Print 80mm Thermal
-        </button>
-        <button type="button" class="btn-action btn-lime" onclick="printPayslip()">
-          <i class="fa fa-print"></i> Print A4 Voucher
-        </button>
-        <button type="button" onclick="closePayslipModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.5rem;cursor:pointer;line-height:1;">&times;</button>
-      </div>
-    </div>
 
-    <div style="padding:1.75rem;overflow-y:auto;" id="payslipModalBody">
-      <!-- Printable payslip content container -->
-      <div id="payslipPrintArea" style="background:#fff;color:#1A1F24;padding:2rem;border-radius:10px;font-family:'Inter',sans-serif;">
-        <!-- Header -->
-        <div style="display:flex;justify-content:space-between;align-items:flex-start;border-bottom:2px solid #111;padding-bottom:1rem;margin-bottom:1.25rem;">
-          <div>
-            <div style="font-size:1.6rem;font-weight:900;letter-spacing:1px;color:#000;font-family:'Montserrat',sans-serif;">
-              <span style="color:#76C043;">FIT</span> <span style="color:#8A94A6;">ME</span> FITNESS
-            </div>
-            <div style="font-size:0.78rem;color:#555;margin-top:2px;">
-              New Town, Elpitiya Road, Pitigala, 80420 &bull; Tel: 070 762 7878
-            </div>
-            <div style="font-size:0.75rem;color:#777;margin-top:2px;">
-              Confidential Staff Compensation &amp; Performance Ledger
-            </div>
-          </div>
-          <div style="text-align:right;">
-            <div style="font-size:0.8rem;font-weight:800;text-transform:uppercase;color:#555;letter-spacing:1px;">PAYSLIP PERIOD</div>
-            <div style="font-size:1.15rem;font-weight:900;color:#111;" id="psMonth">October 2026</div>
-            <div style="font-size:0.75rem;color:#777;margin-top:3px;">Issued: <span id="psDateIssued">{% now "Y-m-d" %}</span></div>
-          </div>
-        </div>
-
-        <!-- Employee Info -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.25rem;background:#F8F9FA;padding:1rem 1.25rem;border-radius:8px;border:1px solid #E5E7EB;margin-bottom:1.5rem;">
-          <div>
-            <div style="font-size:0.72rem;color:#6B7280;text-transform:uppercase;font-weight:700;">Employee Name</div>
-            <div style="font-size:1rem;font-weight:800;color:#111827;" id="psEmployeeName">Staff Name</div>
-            <div style="font-size:0.78rem;color:#6B7280;" id="psEmployeeUsername">@username</div>
-          </div>
-          <div>
-            <div style="font-size:0.72rem;color:#6B7280;text-transform:uppercase;font-weight:700;">Ledger Voucher ID</div>
-            <div style="font-size:0.95rem;font-weight:800;color:#111827;" id="psVoucherId">#PAY-000</div>
-            <div style="font-size:0.78rem;color:#10B981;font-weight:700;">Status: Verified by Super Admin</div>
-          </div>
-        </div>
-
-        <!-- Earnings & Deductions Tables -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
-          <!-- Earnings -->
-          <div style="border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;">
-            <div style="background:#F0FDF4;padding:0.6rem 0.9rem;border-bottom:1px solid #DCFCE7;font-weight:800;font-size:0.82rem;color:#166534;display:flex;justify-content:space-between;">
-              <span>EARNINGS &amp; COMMISSIONS</span>
-              <span>AMOUNT (LKR)</span>
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
-              <tbody>
-                <tr style="border-bottom:1px solid #F3F4F6;">
-                  <td style="padding:0.6rem 0.9rem;color:#374151;">Base Salary</td>
-                  <td style="padding:0.6rem 0.9rem;text-align:right;font-weight:700;color:#111;" id="psBaseSalary">0.00</td>
-                </tr>
-                <tr style="border-bottom:1px solid #F3F4F6;">
-                  <td style="padding:0.6rem 0.9rem;color:#374151;">
-                    Personal Coaching Commission
-                    <div style="font-size:0.7rem;color:#0284C7;">(LKR 4,000 / member split)</div>
-                  </td>
-                  <td style="padding:0.6rem 0.9rem;text-align:right;font-weight:700;color:#0284C7;" id="psCommissions">+ 0.00</td>
-                </tr>
-                <tr style="border-bottom:1px solid #F3F4F6;">
-                  <td style="padding:0.6rem 0.9rem;color:#374151;">
-                    Overtime Pay (1.5x)
-                    <div style="font-size:0.7rem;color:#6B7280;">Biometric verified OT hours</div>
-                  </td>
-                  <td style="padding:0.6rem 0.9rem;text-align:right;font-weight:700;color:#166534;" id="psOvertime">+ 0.00</td>
-                </tr>
-                <tr style="background:#F9FAFB;font-weight:800;">
-                  <td style="padding:0.7rem 0.9rem;color:#111;">Gross Earnings</td>
-                  <td style="padding:0.7rem 0.9rem;text-align:right;color:#111;" id="psGrossEarnings">0.00</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- Deductions -->
-          <div style="border:1px solid #E5E7EB;border-radius:8px;overflow:hidden;">
-            <div style="background:#FEF2F2;padding:0.6rem 0.9rem;border-bottom:1px solid #FEE2E2;font-weight:800;font-size:0.82rem;color:#991B1B;display:flex;justify-content:space-between;">
-              <span>DEDUCTIONS &amp; PENALTIES</span>
-              <span>AMOUNT (LKR)</span>
-            </div>
-            <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
-              <tbody>
-                <tr style="border-bottom:1px solid #F3F4F6;">
-                  <td style="padding:0.6rem 0.9rem;color:#374151;">
-                    Late Arrival Penalties
-                    <div style="font-size:0.7rem;color:#6B7280;">Biometric shift delay</div>
-                  </td>
-                  <td style="padding:0.6rem 0.9rem;text-align:right;font-weight:700;color:#DC2626;" id="psLatePen">- 0.00</td>
-                </tr>
-                <tr style="border-bottom:1px solid #F3F4F6;">
-                  <td style="padding:0.6rem 0.9rem;color:#374151;">
-                    Sudden Absence Penalties
-                    <div style="font-size:0.7rem;color:#6B7280;">Unapproved shift absence</div>
-                  </td>
-                  <td style="padding:0.6rem 0.9rem;text-align:right;font-weight:700;color:#DC2626;" id="psAbsencePen">- 0.00</td>
-                </tr>
-                <tr style="border-bottom:1px solid #F3F4F6;">
-                  <td style="padding:0.6rem 0.9rem;color:#374151;">EPF / ETF / Statutory</td>
-                  <td style="padding:0.6rem 0.9rem;text-align:right;font-weight:700;color:#6B7280;">0.00</td>
-                </tr>
-                <tr style="background:#F9FAFB;font-weight:800;">
-                  <td style="padding:0.7rem 0.9rem;color:#991B1B;">Total Deductions</td>
-                  <td style="padding:0.7rem 0.9rem;text-align:right;color:#991B1B;" id="psTotalDeductions">- 0.00</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- Attendance & Duty Hours Summary -->
-        <div id="psAttSection" style="margin-bottom:1.5rem;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:8px;padding:0.85rem 1.1rem;display:grid;grid-template-columns:repeat(auto-fit, minmax(130px, 1fr));gap:0.75rem;font-size:0.78rem;">
-          <div>
-            <div style="color:#6B7280;font-size:0.7rem;text-transform:uppercase;font-weight:700;">Shifts Scheduled</div>
-            <div style="font-weight:800;color:#111;font-size:1.05rem;" id="psAttScheduled">0</div>
-          </div>
-          <div>
-            <div style="color:#6B7280;font-size:0.7rem;text-transform:uppercase;font-weight:700;">Duty Completed</div>
-            <div style="font-weight:800;color:#10B981;font-size:1.05rem;" id="psAttCompleted">0</div>
-          </div>
-          <div>
-            <div style="color:#6B7280;font-size:0.7rem;text-transform:uppercase;font-weight:700;">Late Minutes</div>
-            <div style="font-weight:800;color:#EF4444;font-size:1.05rem;" id="psAttLate">0m</div>
-          </div>
-          <div>
-            <div style="color:#6B7280;font-size:0.7rem;text-transform:uppercase;font-weight:700;">Overtime (1.5x)</div>
-            <div style="font-weight:800;color:#10B981;font-size:1.05rem;" id="psAttOvertime">0m</div>
-          </div>
-        </div>
-
-        <!-- Personal Coaching Athletes & Commission Split (LKR 7,000 / LKR 3,000 Gym / LKR 4,000 Coach) -->
-        <div id="psPtSection" style="display:none;margin-bottom:1.5rem;border:1px solid #BAE6FD;border-radius:8px;overflow:hidden;">
-          <div style="background:#F0F9FF;padding:0.6rem 0.9rem;border-bottom:1px solid #BAE6FD;font-weight:800;font-size:0.82rem;color:#0369A1;display:flex;justify-content:space-between;align-items:center;">
-            <span><i class="fa fa-dumbbell"></i> PERSONAL COACHING ATHLETES &amp; COMMISSION SPLIT</span>
-            <span style="font-size:0.72rem;background:#E0F2FE;padding:0.2rem 0.5rem;border-radius:4px;color:#0284C7;font-weight:800;">Fee: 7,000 &bull; Gym: 3,000 &bull; Coach: 4,000</span>
-          </div>
-          <table style="width:100%;border-collapse:collapse;font-size:0.8rem;" id="psPtTable">
-            <thead>
-              <tr style="background:#F8FAFC;border-bottom:1px solid #E2E8F0;font-size:0.7rem;color:#64748B;text-transform:uppercase;">
-                <th style="padding:0.5rem 0.8rem;text-align:left;">Athlete Member</th>
-                <th style="padding:0.5rem 0.8rem;text-align:left;">Package</th>
-                <th style="padding:0.5rem 0.8rem;text-align:right;">Package Fee</th>
-                <th style="padding:0.5rem 0.8rem;text-align:right;">Gym Share</th>
-                <th style="padding:0.5rem 0.8rem;text-align:right;color:#0284C7;">Coach Payout</th>
-              </tr>
-            </thead>
-            <tbody id="psPtTableBody">
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Net Take-Home Payout -->
-        <div style="background:#ECFDF5;border:2px solid #10B981;border-radius:10px;padding:1.1rem 1.4rem;display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;">
-          <div>
-            <div style="font-size:0.75rem;font-weight:800;text-transform:uppercase;color:#065F46;letter-spacing:1px;">NET SALARY PAYABLE (TAKE HOME)</div>
-            <div style="font-size:0.75rem;color:#047857;margin-top:2px;">Formula: Gross Earnings - Total Deductions</div>
-          </div>
-          <div style="font-family:'Montserrat',sans-serif;font-size:1.75rem;font-weight:900;color:#065F46;" id="psNetSalary">
-            LKR 0.00
-          </div>
-        </div>
-
-        <!-- Notes / Remarks -->
-        <div style="background:#F9FAFB;border:1px dashed #D1D5DB;padding:0.75rem 1rem;border-radius:6px;font-size:0.78rem;color:#4B5563;margin-bottom:2rem;" id="psNotesContainer">
-          <strong>Notes / Remarks:</strong> <span id="psNotes">Regular monthly settlement.</span>
-        </div>
-
-        <!-- Signatures -->
-        <div style="display:flex;justify-content:space-between;margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid #E5E7EB;">
-          <div style="text-align:center;width:200px;">
-            <div style="height:35px;border-bottom:1px solid #9CA3AF;"></div>
-            <div style="font-size:0.72rem;font-weight:700;color:#374151;margin-top:6px;text-transform:uppercase;">Fit Me Management</div>
-            <div style="font-size:0.68rem;color:#6B7280;">Authorised Signatory</div>
-          </div>
-          <div style="text-align:center;width:200px;">
-            <div style="height:35px;border-bottom:1px solid #9CA3AF;"></div>
-            <div style="font-size:0.72rem;font-weight:700;color:#374151;margin-top:6px;text-transform:uppercase;">Staff Member</div>
-            <div style="font-size:0.68rem;color:#6B7280;">Employee Signature &amp; Date</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
 <!-- Modal: Personal Coaching Clients Breakdown & Fee Split (7000 / 3000 / 4000) -->
 <div id="ptClientsBreakdownModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.88);z-index:2200;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto;" onclick="if(event.target===this)closePtClientsModal()">
@@ -3598,7 +3484,7 @@
       <div class="form-grid-2" style="margin-bottom:1rem;">
         <div>
           <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Base Salary (LKR) *</label>
-          <input type="number" step="0.01" id="adjBaseSalary" class="form-control" required>
+          <input type="number" step="0.01" id="adjBaseSalary" class="form-control" oninput="onBaseSalaryChanged()" required>
         </div>
         <div>
           <label style="display:block;font-size:0.75rem;color:var(--cyan);margin-bottom:0.35rem;">PT Commissions (LKR)</label>
@@ -3606,162 +3492,78 @@
         </div>
       </div>
 
-      <div class="form-grid-3" style="margin-bottom:1rem;">
+      <div class="form-grid-4" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(110px, 1fr));gap:0.6rem;margin-bottom:1rem;">
         <div>
-          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.35rem;">Overtime Pay (LKR)</label>
+          <label style="display:block;font-size:0.72rem;color:var(--neon-lime);margin-bottom:0.35rem;">Overtime (LKR)</label>
           <input type="number" step="0.01" id="adjOvertime" class="form-control">
         </div>
         <div>
-          <label style="display:block;font-size:0.72rem;color:var(--danger);margin-bottom:0.35rem;">Late Penalty (LKR)</label>
+          <label style="display:block;font-size:0.72rem;color:var(--danger);margin-bottom:0.35rem;">Late Penalty</label>
           <input type="number" step="0.01" id="adjLatePenalty" class="form-control">
         </div>
         <div>
-          <label style="display:block;font-size:0.72rem;color:var(--danger);margin-bottom:0.35rem;">Absence Penalty (LKR)</label>
+          <label style="display:block;font-size:0.72rem;color:var(--danger);margin-bottom:0.35rem;">Absence Penalty</label>
           <input type="number" step="0.01" id="adjAbsencePenalty" class="form-control">
+        </div>
+        <div>
+          <label style="display:block;font-size:0.72rem;color:#F59E0B;margin-bottom:0.35rem;">Advance Deduct</label>
+          <input type="number" step="0.01" id="adjAdvances" class="form-control" placeholder="Advances">
+        </div>
+      </div>
+
+      <!-- EPF & ETF Statutory Compliance Section -->
+      <div style="background:#192025;padding:0.85rem 1rem;border-radius:10px;border:1px solid rgba(255,255,255,0.1);margin-bottom:1.25rem;">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.6rem;">
+          <label style="display:flex;align-items:center;gap:0.5rem;font-weight:700;color:#fff;font-size:0.82rem;cursor:pointer;margin:0;">
+            <input type="checkbox" id="adjEpfEligible" onchange="toggleEpfInputs(this.checked)" style="width:16px;height:16px;accent-color:var(--neon-lime);">
+            <span>EPF &amp; ETF Statutory Compliance</span>
+          </label>
+          <button type="button" class="btn-action" style="font-size:0.68rem;padding:0.2rem 0.5rem;background:rgba(0,240,255,0.15);color:var(--cyan);border:1px solid rgba(0,240,255,0.3);border-radius:4px;cursor:pointer;" onclick="recalcEpfFromBase()">
+            <i class="fa fa-calculator"></i> Auto-Calc from Base
+          </button>
+        </div>
+
+        <div id="epfInputsGrid" class="form-grid-3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem;">
+          <div>
+            <label style="display:block;font-size:0.68rem;color:var(--danger);margin-bottom:0.25rem;">EPF Employee (8%) <span style="font-size:0.62rem;color:var(--text-muted);">Deduct</span></label>
+            <input type="number" step="0.01" id="adjEpf8" class="form-control" style="font-size:0.85rem;">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.68rem;color:#cbd5e1;margin-bottom:0.25rem;">EPF Employer (12%) <span style="font-size:0.62rem;color:var(--text-muted);">Gym</span></label>
+            <input type="number" step="0.01" id="adjEpf12" class="form-control" style="font-size:0.85rem;">
+          </div>
+          <div>
+            <label style="display:block;font-size:0.68rem;color:var(--cyan);margin-bottom:0.25rem;">ETF Employer (3%) <span style="font-size:0.62rem;color:var(--text-muted);">Gym</span></label>
+            <input type="number" step="0.01" id="adjEtf3" class="form-control" style="font-size:0.85rem;">
+          </div>
+        </div>
+
+        <div id="epfDisabledNotice" style="display:none;font-size:0.75rem;color:var(--text-muted);margin-top:0.35rem;">
+          <i class="fa fa-info-circle" style="color:#F59E0B;"></i> EPF/ETF disabled for this staff member (e.g. freelance / contract / trainee). <strong>LKR 0.00</strong> will be applied.
         </div>
       </div>
 
       <div style="margin-bottom:1.25rem;">
         <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Adjustment Notes / Remarks</label>
-        <textarea id="adjNotes" class="form-control" rows="2" placeholder="Reason for manual adjustment, coaching bonus, etc."></textarea>
+        <textarea id="adjNotes" class="form-control" rows="2" placeholder="Reason for manual adjustment, coaching bonus, EPF exempt status, etc."></textarea>
       </div>
 
-      <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
-        <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeAdjustLedgerModal()">Cancel</button>
-        <button type="submit" id="btnSubmitAdjustLedger" class="btn-action btn-lime" style="padding:0.6rem 1.4rem;">
-          <i class="fa fa-save"></i> Save Adjustments
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;">
+        <button type="button" class="btn-action" style="background:rgba(239,68,68,0.15);color:var(--danger);border:1px solid rgba(239,68,68,0.35);" onclick="deleteCurrentAdjustLedger()">
+          <i class="fa fa-trash"></i> Delete Entry
         </button>
+        <div style="display:flex;gap:0.6rem;">
+          <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeAdjustLedgerModal()">Cancel</button>
+          <button type="submit" id="btnSubmitAdjustLedger" class="btn-action btn-lime" style="padding:0.6rem 1.4rem;">
+            <i class="fa fa-save"></i> Save Adjustments
+          </button>
+        </div>
       </div>
     </form>
   </div>
 </div>
 
-<!-- Modal: Clock Staff Attendance (Door / Turnstile) -->
-<div id="clockAttendanceModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2200;align-items:center;justify-content:center;padding:1.5rem;">
-  <div style="background:#13171A;border:2px solid var(--cyan);border-radius:16px;padding:2rem;max-width:500px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
-      <h3 style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;margin:0;">
-        <i class="fa fa-fingerprint" style="color:var(--cyan);"></i> Clock Staff Attendance (Turnstile)
-      </h3>
-      <button type="button" onclick="closeClockAttendanceModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
-    </div>
 
-    <form id="clockAttendanceForm" onsubmit="submitClockAttendance(event)">
-      <div style="margin-bottom:1rem;">
-        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Select Staff Member *</label>
-        <select id="clockStaffId" class="form-control" required>
-          <option value="">-- Choose Staff User --</option>
-          {% for st in staff_users_list %}
-            <option value="{{ st.id }}">{{ st.full_name }} (@{{ st.username }}) - {{ st.role_label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div style="margin-bottom:1rem;">
-        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Session Window *</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-          <label style="display:flex;align-items:center;gap:0.5rem;background:#192025;padding:0.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.08);cursor:pointer;">
-            <input type="radio" name="clockSession" value="MORNING" checked>
-            <span style="font-weight:700;color:var(--neon-lime);font-size:0.8rem;"><i class="fa fa-sun"></i> Morning (05:00-12:00)</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:0.5rem;background:#192025;padding:0.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.08);cursor:pointer;">
-            <input type="radio" name="clockSession" value="EVENING">
-            <span style="font-weight:700;color:var(--cyan);font-size:0.8rem;"><i class="fa fa-moon"></i> Evening (15:00-21:00)</span>
-          </label>
-        </div>
-      </div>
-
-      <div style="margin-bottom:1rem;">
-        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Turnstile Punch Direction *</label>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">
-          <label style="display:flex;align-items:center;gap:0.5rem;background:#192025;padding:0.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.08);cursor:pointer;">
-            <input type="radio" name="clockDirection" value="IN" checked>
-            <span style="font-weight:700;color:var(--neon-lime);"><i class="fa fa-sign-in-alt"></i> Clock IN</span>
-          </label>
-          <label style="display:flex;align-items:center;gap:0.5rem;background:#192025;padding:0.75rem;border-radius:8px;border:1px solid rgba(255,255,255,0.08);cursor:pointer;">
-            <input type="radio" name="clockDirection" value="OUT">
-            <span style="font-weight:700;color:var(--cyan);"><i class="fa fa-sign-out-alt"></i> Clock OUT</span>
-          </label>
-        </div>
-      </div>
-
-      <div style="margin-bottom:1.25rem;">
-        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Notes / Reason</label>
-        <input type="text" id="clockNotes" class="form-control" placeholder="Biometric door turnstile punch, receptionist override, etc.">
-      </div>
-
-      <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
-        <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeClockAttendanceModal()">Cancel</button>
-        <button type="submit" id="btnSubmitClock" class="btn-action" style="background:var(--cyan);color:#000;font-weight:800;padding:0.6rem 1.4rem;">
-          <i class="fa fa-check"></i> Record Punch
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Modal: Schedule New Staff Shift -->
-<div id="createShiftModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2200;align-items:center;justify-content:center;padding:1.5rem;">
-  <div style="background:#13171A;border:2px solid var(--neon-lime);border-radius:16px;padding:2rem;max-width:500px;width:100%;box-shadow:0 10px 50px rgba(0,0,0,0.8);">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
-      <h3 style="font-family:'Montserrat',sans-serif;font-weight:800;color:#fff;font-size:1.15rem;display:flex;align-items:center;gap:0.5rem;margin:0;">
-        <i class="fa fa-calendar-plus" style="color:var(--neon-lime);"></i> Schedule Staff Shift
-      </h3>
-      <button type="button" onclick="closeCreateShiftModal()" style="background:none;border:none;color:var(--text-muted);font-size:1.4rem;cursor:pointer;">&times;</button>
-    </div>
-
-    <form id="createShiftForm" onsubmit="submitCreateShift(event)">
-      <div style="margin-bottom:1rem;">
-        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Select Staff Member *</label>
-        <select id="newShiftStaffId" class="form-control" required>
-          <option value="">-- Choose Staff User --</option>
-          {% for st in staff_users_list %}
-            <option value="{{ st.id }}">{{ st.full_name }} (@{{ st.username }}) - {{ st.role_label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-
-      <div style="margin-bottom:1rem;">
-        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Shift Date *</label>
-        <input type="date" id="newShiftDate" class="form-control" required>
-      </div>
-
-      <div style="margin-bottom:1rem;">
-        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Shift Model Preset *</label>
-        <select id="newShiftType" class="form-control" onchange="onShiftTypeChange(this.value)">
-          <option value="FULL_SPLIT" selected>Split Shift (05:00-12:00 &amp; 15:00-21:00) [Gym Standard]</option>
-          <option value="MORNING">Morning Only (05:00 &ndash; 12:00)</option>
-          <option value="EVENING">Evening Only (15:00 &ndash; 21:00)</option>
-          <option value="REST_DAY">Scheduled Rest Day</option>
-          <option value="CUSTOM">Custom Hours</option>
-        </select>
-      </div>
-
-      <div id="customShiftTimesBox" class="form-grid-2" style="margin-bottom:1rem;display:none;">
-        <div>
-          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Custom Start</label>
-          <input type="time" id="newShiftStart" class="form-control" value="05:00">
-        </div>
-        <div>
-          <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Custom End</label>
-          <input type="time" id="newShiftEnd" class="form-control" value="21:00">
-        </div>
-      </div>
-
-      <div style="margin-bottom:1.25rem;">
-        <label style="display:block;font-size:0.75rem;color:var(--text-muted);margin-bottom:0.35rem;">Base Hourly Rate (LKR)</label>
-        <input type="number" step="0.01" id="newShiftRate" class="form-control" value="500.00">
-      </div>
-
-      <div style="display:flex;justify-content:flex-end;gap:0.75rem;">
-        <button type="button" class="btn-action" style="background:#2A3138;color:#fff;" onclick="closeCreateShiftModal()">Cancel</button>
-        <button type="submit" id="btnSubmitNewShift" class="btn-action btn-lime" style="padding:0.6rem 1.4rem;">
-          <i class="fa fa-save"></i> Save Shift Roster
-        </button>
-      </div>
-    </form>
-  </div>
-</div>
 
 <!-- Modal: Master Staff Working Days & Contract Schedule -->
 <div id="staffScheduleModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:2200;align-items:center;justify-content:center;padding:1.5rem;overflow-y:auto;">
@@ -4503,17 +4305,42 @@
     const secExpired = document.getElementById('auditSectionExpired');
     const secBills = document.getElementById('auditSectionBills');
     const secStock = document.getElementById('auditSectionStock');
+    const secRoles = document.getElementById('auditSectionRoles');
 
     if (category === 'all') {
       if (secAnnual) secAnnual.style.display = 'block';
       if (secExpired) secExpired.style.display = 'block';
       if (secBills) secBills.style.display = 'block';
       if (secStock) secStock.style.display = 'block';
+      if (secRoles) secRoles.style.display = 'block';
     } else {
       if (secAnnual) secAnnual.style.display = category === 'annual' ? 'block' : 'none';
       if (secExpired) secExpired.style.display = category === 'expired' ? 'block' : 'none';
       if (secBills) secBills.style.display = category === 'bills' ? 'block' : 'none';
       if (secStock) secStock.style.display = category === 'stock' ? 'block' : 'none';
+      if (secRoles) secRoles.style.display = category === 'roles' ? 'block' : 'none';
+    }
+  }
+
+  async function runRoleAlignmentAudit() {
+    if (!confirm('Run automated RBAC role integrity alignment? This will safely clean conflicting roles and align all staff and member accounts.')) return;
+    try {
+      const res = await fetch('/dashboard/api/audit/align-roles/', {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': '{{ csrf_token }}',
+          'Content-Type': 'application/json'
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(data.message);
+        window.location.reload();
+      } else {
+        alert(data.error || 'Failed to align roles.');
+      }
+    } catch (err) {
+      alert('Error running role alignment: ' + err);
     }
   }
 
@@ -4855,8 +4682,10 @@
       });
       const data = await res.json();
       showToast("⚡ " + (data.message || "Turnstile emergency speed gate pulsed OPEN for 5 seconds!"));
+      if (typeof pollFloorStatus === 'function') setTimeout(pollFloorStatus, 400);
     } catch(err) {
       showToast("⚡ Turnstile emergency speed gate pulsed OPEN for 5 seconds!");
+      if (typeof pollFloorStatus === 'function') setTimeout(pollFloorStatus, 400);
     }
 
     let remaining = 5;
@@ -5750,86 +5579,23 @@
     if (m) m.style.display = 'none';
   }
 
-  let activePayslipLedgerId = null;
-
-  function openPayslipModal(id, fullName, username, month, base, ptComms, ot, latePen, absPen, net, notes, ptClientsJson, attendanceJson) {
-    activePayslipLedgerId = id;
-    const m = document.getElementById('payslipModal');
-    if (!m) return;
-
-    document.getElementById('psEmployeeName').textContent = fullName || username;
-    document.getElementById('psEmployeeUsername').textContent = '@' + username;
-    document.getElementById('psMonth').textContent = month;
-    document.getElementById('psVoucherId').textContent = '#PAY-' + String(id).padStart(4, '0');
-
-    const baseVal = parseFloat(base) || 0;
-    const commVal = parseFloat(ptComms) || 0;
-    const otVal = parseFloat(ot) || 0;
-    const lateVal = parseFloat(latePen) || 0;
-    const absVal = parseFloat(absPen) || 0;
-    const grossVal = baseVal + commVal + otVal;
-    const dedVal = lateVal + absVal;
-    const netVal = parseFloat(net) || (grossVal - dedVal);
-
-    document.getElementById('psBaseSalary').textContent = baseVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('psCommissions').textContent = '+ ' + commVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('psOvertime').textContent = '+ ' + otVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('psGrossEarnings').textContent = grossVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-    document.getElementById('psLatePen').textContent = '- ' + lateVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('psAbsencePen').textContent = '- ' + absVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('psTotalDeductions').textContent = '- ' + dedVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-    document.getElementById('psNetSalary').textContent = 'LKR ' + netVal.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
-    document.getElementById('psNotes').textContent = notes && notes.trim() ? notes : 'Standard monthly automated payroll reconciliation.';
-
-    // Populate Attendance Summary Block
-    let att = {};
-    try {
-      if (attendanceJson) att = JSON.parse(attendanceJson);
-    } catch(e) {}
-    document.getElementById('psAttScheduled').textContent = att.scheduled || '0';
-    document.getElementById('psAttCompleted').textContent = (att.completed || '0') + ' shifts';
-    document.getElementById('psAttLate').textContent = (att.late_minutes || '0') + 'm';
-    document.getElementById('psAttOvertime').textContent = (att.overtime_minutes || '0') + 'm';
-
-    // Populate PT Clients Table Block
-    let ptClients = [];
-    try {
-      if (ptClientsJson) ptClients = JSON.parse(ptClientsJson);
-    } catch(e) {}
-    const ptSec = document.getElementById('psPtSection');
-    const ptBody = document.getElementById('psPtTableBody');
-    if (ptClients && ptClients.length > 0) {
-      ptSec.style.display = 'block';
-      ptBody.innerHTML = ptClients.map(c => `
-        <tr style="border-bottom:1px solid #F1F5F9;">
-          <td style="padding:0.5rem 0.8rem;font-weight:700;color:#1E293B;">${c.name} <span style="font-weight:normal;color:#64748B;">(@${c.username})</span></td>
-          <td style="padding:0.5rem 0.8rem;color:#475569;">${c.plan_name}</td>
-          <td style="padding:0.5rem 0.8rem;text-align:right;font-weight:700;color:#0F172A;">LKR ${(c.package_fee || 7000).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-          <td style="padding:0.5rem 0.8rem;text-align:right;color:#059669;font-weight:700;">LKR ${(c.gym_share || 3000).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-          <td style="padding:0.5rem 0.8rem;text-align:right;color:#0284C7;font-weight:800;">+ LKR ${(c.coach_share || 4000).toLocaleString('en-US', {minimumFractionDigits: 2})}</td>
-        </tr>
-      `).join('');
-    } else {
-      ptSec.style.display = 'none';
-      ptBody.innerHTML = '';
+  function filterStaffShifts() {
+    const sel = (document.getElementById('staffShiftFilter')?.value || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('.staff-shift-row');
+    let visible = 0;
+    rows.forEach(r => {
+      const st = (r.getAttribute('data-staff') || '').toLowerCase().trim();
+      if (!sel || st === sel) {
+        r.style.display = '';
+        visible++;
+      } else {
+        r.style.display = 'none';
+      }
+    });
+    const emptyRow = document.getElementById('staffShiftEmptyRow');
+    if (emptyRow) {
+      emptyRow.style.display = (visible === 0) ? '' : 'none';
     }
-
-    m.style.display = 'flex';
-  }
-
-  function closePayslipModal() {
-    const m = document.getElementById('payslipModal');
-    if (m) m.style.display = 'none';
-  }
-
-  function printThermalPayslip() {
-    if (!activePayslipLedgerId) {
-      alert('No active staff payslip selected.');
-      return;
-    }
-    printThermalPayslipById(activePayslipLedgerId);
   }
 
   function printThermalPayslipById(ledgerId) {
@@ -5840,54 +5606,64 @@
     }
   }
 
-  function printPayslip() {
-    const printArea = document.getElementById('payslipPrintArea');
-    if (!printArea) return;
-    const printContent = printArea.innerHTML;
-    const printWin = window.open('', '_blank', 'width=840,height=900');
-    if (!printWin) {
-      alert('Popup blocker prevented opening the print preview. Please allow popups for this site.');
-      return;
-    }
-    printWin.document.write(
-      '<!DOCTYPE html>' +
-      '<html>' +
-      '<head>' +
-      '<title>Fit Me - Staff Payslip Voucher</title>' +
-      '<style>' +
-      '@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Montserrat:wght@800;900&display=swap");' +
-      'body { font-family: "Inter", sans-serif; color: #111; padding: 30px; margin: 0; background: #fff; }' +
-      '* { box-sizing: border-box; }' +
-      'table { width: 100%; border-collapse: collapse; }' +
-      '@media print { body { padding: 10px; } }' +
-      '</style>' +
-      '</head>' +
-      '<body>' +
-      '<div style="max-width: 760px; margin: 0 auto; border: 1px solid #ddd; padding: 25px; border-radius: 8px;">' +
-      printContent +
-      '</div>' +
-      '</body>' +
-      '</html>'
-    );
-    printWin.document.close();
-    printWin.focus();
-    setTimeout(() => {
-      printWin.print();
-    }, 350);
-  }
+  let currentAdjustStaffName = '';
 
-  function openAdjustLedgerModal(id, fullName, base, ptComms, ot, latePen, absPen, notes) {
+  function openAdjustLedgerModal(id, fullName, base, ptComms, ot, latePen, absPen, advances, epf8, epf12, etf3, epfEligible, notes) {
     const m = document.getElementById('adjustLedgerModal');
     if (!m) return;
+    currentAdjustStaffName = fullName || 'Staff';
     document.getElementById('adjLedgerId').value = id;
-    document.getElementById('adjStaffName').textContent = fullName;
+    document.getElementById('adjStaffName').textContent = currentAdjustStaffName;
     document.getElementById('adjBaseSalary').value = base || 0;
     document.getElementById('adjCommissions').value = ptComms || 0;
     document.getElementById('adjOvertime').value = ot || 0;
     document.getElementById('adjLatePenalty').value = latePen || 0;
     document.getElementById('adjAbsencePenalty').value = absPen || 0;
+    document.getElementById('adjAdvances').value = advances || 0;
+
+    const isEligible = epfEligible === true || epfEligible === 'true' || (parseFloat(epf8) > 0 || parseFloat(epf12) > 0);
+    const cb = document.getElementById('adjEpfEligible');
+    if (cb) cb.checked = isEligible;
+
+    document.getElementById('adjEpf8').value = epf8 || 0;
+    document.getElementById('adjEpf12').value = epf12 || 0;
+    document.getElementById('adjEtf3').value = etf3 || 0;
+    toggleEpfInputs(isEligible);
+
     document.getElementById('adjNotes').value = notes || '';
     m.style.display = 'flex';
+  }
+
+  function toggleEpfInputs(enabled) {
+    const grid = document.getElementById('epfInputsGrid');
+    const notice = document.getElementById('epfDisabledNotice');
+    if (enabled) {
+      if (grid) grid.style.display = 'grid';
+      if (notice) notice.style.display = 'none';
+      if ((parseFloat(document.getElementById('adjEpf8').value) || 0) === 0) {
+        recalcEpfFromBase();
+      }
+    } else {
+      if (grid) grid.style.display = 'none';
+      if (notice) notice.style.display = 'block';
+      document.getElementById('adjEpf8').value = '0.00';
+      document.getElementById('adjEpf12').value = '0.00';
+      document.getElementById('adjEtf3').value = '0.00';
+    }
+  }
+
+  function recalcEpfFromBase() {
+    const base = parseFloat(document.getElementById('adjBaseSalary').value) || 0;
+    document.getElementById('adjEpf8').value = (base * 0.08).toFixed(2);
+    document.getElementById('adjEpf12').value = (base * 0.12).toFixed(2);
+    document.getElementById('adjEtf3').value = (base * 0.03).toFixed(2);
+  }
+
+  function onBaseSalaryChanged() {
+    const cb = document.getElementById('adjEpfEligible');
+    if (cb && cb.checked) {
+      recalcEpfFromBase();
+    }
   }
 
   function closeAdjustLedgerModal() {
@@ -5902,12 +5678,19 @@
     btn.disabled = true;
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving...';
 
+    const isEpfEligible = document.getElementById('adjEpfEligible')?.checked ?? true;
+
     const payload = {
       base_salary: document.getElementById('adjBaseSalary').value,
       pt_commissions: document.getElementById('adjCommissions').value,
       overtime_pay: document.getElementById('adjOvertime').value,
       late_minutes_penalty: document.getElementById('adjLatePenalty').value,
       sudden_absence_penalty: document.getElementById('adjAbsencePenalty').value,
+      salary_advance_deduction: document.getElementById('adjAdvances').value,
+      epf_etf_eligible: isEpfEligible,
+      epf_employee_8: isEpfEligible ? document.getElementById('adjEpf8').value : '0.00',
+      epf_employer_12: isEpfEligible ? document.getElementById('adjEpf12').value : '0.00',
+      etf_employer_3: isEpfEligible ? document.getElementById('adjEtf3').value : '0.00',
       notes: document.getElementById('adjNotes').value
     };
 
@@ -5932,6 +5715,44 @@
       btn.disabled = false;
       btn.innerHTML = '<i class="fa fa-save"></i> Save Adjustments';
     }
+  }
+
+  async function deletePayrollLedger(ledgerId, staffName) {
+    const sName = staffName || 'this staff member';
+    if (!confirm(`Are you sure you want to delete the monthly payroll record for ${sName}?\n\nThis will remove their salary ledger entry for this month.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/dashboard/api/payroll/${ledgerId}/delete/`, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': '{{ csrf_token }}' }
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        showToast(data.message || 'Payroll record deleted.');
+        const row = document.getElementById(`ledger-row-${ledgerId}`);
+        if (row) {
+          row.style.transition = 'all 0.3s ease';
+          row.style.opacity = '0';
+          row.style.transform = 'translateX(20px)';
+          setTimeout(() => row.remove(), 350);
+        } else {
+          setTimeout(() => location.reload(), 500);
+        }
+      } else {
+        alert(data.error || 'Failed to delete payroll record.');
+      }
+    } catch(err) {
+      alert('Error deleting payroll record: ' + err);
+    }
+  }
+
+  async function deleteCurrentAdjustLedger() {
+    const ledgerId = document.getElementById('adjLedgerId').value;
+    if (!ledgerId) return;
+    closeAdjustLedgerModal();
+    deletePayrollLedger(ledgerId, currentAdjustStaffName);
   }
 
   async function toggleFinalizePayroll(ledgerId) {
@@ -6324,6 +6145,35 @@
         if (icon) icon.className = 'fa fa-angles-right';
       }
     }
+
+    // ── Real-Time Live Turnstile Floor Status Poller ──
+    async function pollFloorStatus() {
+      try {
+        const res = await fetch('/api/zkbio/floor-status/');
+        if (!res.ok) return;
+        const data = await res.json();
+        if (data) {
+          const memCount = data.members_on_floor ?? 0;
+          const staffCount = data.staff_on_floor ?? 0;
+
+          const elMem = document.getElementById('adminMembersCount');
+          if (elMem && elMem.textContent != memCount) elMem.textContent = memCount;
+
+          const elStaff = document.getElementById('adminStaffCount');
+          if (elStaff && elStaff.textContent != staffCount) elStaff.textContent = staffCount;
+
+          const elAnaMem = document.getElementById('adminAnalyticsMembersCount');
+          if (elAnaMem && elAnaMem.textContent != memCount) elAnaMem.textContent = memCount;
+
+          const elAnaStaff = document.getElementById('adminAnalyticsStaffCount');
+          if (elAnaStaff && elAnaStaff.textContent != staffCount) elAnaStaff.textContent = staffCount;
+        }
+      } catch(e) {}
+    }
+
+    // Poll live occupancy every 3.5 seconds
+    setInterval(pollFloorStatus, 3500);
+    pollFloorStatus();
   });
 </script>
 </body>

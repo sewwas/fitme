@@ -29,6 +29,13 @@ RUN uv pip install --system -r pyproject.toml
 # Copy project source code
 COPY . .
 
+# Create unprivileged user and set file ownership
+RUN groupadd -r appuser && useradd -r -g appuser -d /app -s /sbin/nologin appuser \
+    && mkdir -p /app/media /app/static \
+    && chown -R appuser:appuser /app
+
+USER appuser
+
 EXPOSE 8000
 
 CMD ["gunicorn", "wger.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "3"]
