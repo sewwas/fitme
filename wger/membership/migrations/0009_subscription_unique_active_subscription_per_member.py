@@ -12,8 +12,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddConstraint(
-            model_name='subscription',
-            constraint=models.UniqueConstraint(condition=models.Q(('status', 'active')), fields=('member',), name='unique_active_subscription_per_member'),
-        ),
     ]
+

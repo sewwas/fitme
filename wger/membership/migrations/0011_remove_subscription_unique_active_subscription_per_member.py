@@ -10,8 +10,5 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveConstraint(
-            model_name='subscription',
-            name='unique_active_subscription_per_member',
-        ),
     ]
+
