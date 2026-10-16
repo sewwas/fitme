@@ -371,6 +371,42 @@ def pos_restock_api(request, product_id):
 
 
 @login_required
+@require_POST
+def pos_delete_product_api(request, product_id):
+    """
+    Allow strictly Admins / Super Admins to delete or deactivate a product from POS inventory.
+    If the product has historical sales, it is soft-deleted (is_active=False) to preserve financial audits.
+    If it has no sales attached, it is safely removed completely.
+    """
+    if not is_admin_user(request.user):
+        return JsonResponse({
+            'success': False,
+            'error': 'Permission Denied: Only Gym Administrators and Super Admins have authorization to delete items from inventory.'
+        }, status=403)
+
+    product = get_object_or_404(POSProduct, id=product_id)
+    prod_name = product.name
+
+    # Check if product has sales
+    has_sales = product.sale_items.exists()
+
+    if has_sales:
+        product.is_active = False
+        product.save(update_fields=['is_active', 'updated_at'])
+        action_type = 'archived'
+    else:
+        product.delete()
+        action_type = 'deleted'
+
+    return JsonResponse({
+        'success': True,
+        'message': f"Product '{prod_name}' successfully removed from POS catalog ({action_type}).",
+        'product_id': product_id,
+        'action_type': action_type,
+    })
+
+
+@login_required
 def pos_thermal_receipt_view(request, receipt_number):
     """
     Renders an 80mm thermal printer receipt page for a POS sale.
@@ -424,11 +460,11 @@ def pos_stock_audit_api(request):
     action_taken = data.get('action_taken', 'STOCK_ADJUSTED')
     notes = data.get('notes', '').strip()
 
-    # HIGH RISK SECURITY CHECK: Only Super Admin can adjust live inventory stock numbers
-    if action_taken == 'STOCK_ADJUSTED' and not is_super_admin_user(request.user):
+    # SECURITY CHECK: Only Gym Admin or Super Admin can adjust live inventory stock numbers
+    if action_taken == 'STOCK_ADJUSTED' and not is_admin_user(request.user):
         return JsonResponse({
             'success': False,
-            'error': 'High Risk Operation Denied: Only Super Admin has authorization to adjust live inventory stock numbers. You may record the physical count as "Flagged as Missing (Under Review)" instead.'
+            'error': 'Permission Denied: Only Gym Administrators authorization to adjust live inventory stock numbers. You may record the physical count as "Flagged as Missing (Under Review)" instead.'
         }, status=403)
 
     unit_cost = product.cost_price or Decimal('0.00')
@@ -552,20 +588,148 @@ def pos_cash_drawer_audit_api(request):
 
 
 @login_required
+@require_POST
+def pos_full_stock_audit_api(request):
+    """
+    Perform a Full Physical Inventory Stock Audit in bulk.
+    Accepts physical counts for multiple or all products, calculates individual discrepancies
+    and total shrinkage/gain, atomically updates stock (if authorized) and creates POSInventoryAudit logs.
+    """
+    try:
+        data = json.loads(request.body)
+    except Exception as e:
+        return HttpResponseBadRequest(json.dumps({'error': 'Invalid JSON: ' + str(e)}), content_type='application/json')
+
+    items = data.get('items', [])
+    if not items:
+        return JsonResponse({'success': False, 'error': 'No inventory items provided for audit.'}, status=400)
+
+    reason = data.get('reason', 'COUNT_CORRECTION')
+    action_taken = data.get('action_taken', 'STOCK_ADJUSTED' if is_admin_user(request.user) else 'FLAGGED_MISSING')
+    global_notes = data.get('notes', '').strip()
+
+    if action_taken == 'STOCK_ADJUSTED' and not is_admin_user(request.user):
+        return JsonResponse({
+            'success': False,
+            'error': 'Permission Denied: Only Gym Administrators and Super Admins have authorization to adjust live inventory stock numbers.'
+        }, status=403)
+
+    audited_products = []
+    total_expected = 0
+    total_counted = 0
+    total_shrinkage_loss = Decimal('0.00')
+    total_gain_value = Decimal('0.00')
+    discrepancy_count = 0
+    exact_matches = 0
+
+    with transaction.atomic():
+        now = timezone.now()
+        for item in items:
+            prod_id = item.get('product_id')
+            if not prod_id:
+                continue
+
+            try:
+                product = POSProduct.objects.get(id=prod_id)
+            except POSProduct.DoesNotExist:
+                continue
+
+            expected_qty = product.stock_quantity
+            try:
+                counted_qty = int(item.get('counted_quantity', expected_qty))
+            except (ValueError, TypeError):
+                continue
+
+            if counted_qty < 0:
+                continue
+
+            discrepancy = counted_qty - expected_qty
+            unit_cost = product.cost_price or Decimal('0.00')
+            unit_price = product.price or Decimal('0.00')
+            variance_val = Decimal(str(discrepancy)) * unit_cost
+            item_notes = (item.get('notes') or global_notes).strip()
+
+            audit = POSInventoryAudit.objects.create(
+                product=product,
+                auditor=request.user,
+                expected_quantity=expected_qty,
+                counted_quantity=counted_qty,
+                discrepancy=discrepancy,
+                unit_cost=unit_cost,
+                unit_price=unit_price,
+                variance_value=variance_val,
+                reason=reason,
+                action_taken=action_taken,
+                notes=item_notes,
+                audit_date=now,
+            )
+
+            if action_taken == 'STOCK_ADJUSTED':
+                product.stock_quantity = counted_qty
+
+            product.last_audited_at = now
+            product.has_audit_discrepancy = (discrepancy < 0)
+            product.last_discrepancy_count = discrepancy
+            product.save()
+
+            total_expected += expected_qty
+            total_counted += counted_qty
+            if discrepancy < 0:
+                discrepancy_count += 1
+                total_shrinkage_loss += abs(variance_val)
+            elif discrepancy > 0:
+                discrepancy_count += 1
+                total_gain_value += variance_val
+            else:
+                exact_matches += 1
+
+            audited_products.append({
+                'id': product.id,
+                'name': product.name,
+                'sku': product.sku,
+                'expected': expected_qty,
+                'counted': counted_qty,
+                'discrepancy': discrepancy,
+                'variance_value': float(variance_val),
+                'new_stock': product.stock_quantity,
+            })
+
+    net_variance_value = total_gain_value - total_shrinkage_loss
+    return JsonResponse({
+        'success': True,
+        'message': f"Full inventory audit completed: {len(audited_products)} items audited. {exact_matches} exact match, {discrepancy_count} discrepancies.",
+        'summary': {
+            'total_items_audited': len(audited_products),
+            'exact_matches': exact_matches,
+            'discrepancy_count': discrepancy_count,
+            'total_expected': total_expected,
+            'total_counted': total_counted,
+            'net_units_diff': total_counted - total_expected,
+            'total_shrinkage_loss': float(total_shrinkage_loss),
+            'total_gain_value': float(total_gain_value),
+            'net_variance_value': float(net_variance_value),
+            'action_taken': action_taken,
+        },
+        'audited_products': audited_products,
+    })
+
+
+@login_required
 def pos_audit_data_api(request):
     """
     Returns live inventory audit telemetry for POS and Admin modals.
+    Provides products, summary, missing items, recent stock audits, and till shift audits.
     """
-    products = POSProduct.objects.filter(is_active=True).select_related('category')
+    products = POSProduct.objects.filter(is_active=True).select_related('category').order_by('category__display_order', 'name')
     total_cost = sum(p.cost_price * p.stock_quantity for p in products)
     total_retail = sum(p.price * p.stock_quantity for p in products)
     total_units = sum(p.stock_quantity for p in products)
     
     missing_items = POSProduct.objects.filter(is_active=True, has_audit_discrepancy=True).values(
-        'id', 'name', 'sku', 'stock_quantity', 'last_discrepancy_count', 'cost_price', 'price'
+        'id', 'name', 'sku', 'stock_quantity', 'last_discrepancy_count', 'cost_price', 'price', 'unit'
     )
     
-    recent_audits = POSInventoryAudit.objects.select_related('product', 'auditor').order_by('-audit_date')[:25]
+    recent_audits = POSInventoryAudit.objects.select_related('product', 'auditor').order_by('-audit_date')[:30]
     recent_audits_data = [
         {
             'id': a.id,
@@ -584,6 +748,39 @@ def pos_audit_data_api(request):
         for a in recent_audits
     ]
 
+    recent_drawer_audits = POSCashDrawerAudit.objects.select_related('cashier').order_by('-audit_date')[:15]
+    recent_drawer_data = [
+        {
+            'id': d.id,
+            'expected_cash': float(d.expected_cash),
+            'counted_cash': float(d.counted_cash),
+            'discrepancy': float(d.discrepancy),
+            'status': d.status,
+            'status_display': d.get_status_display(),
+            'cashier': d.cashier.get_full_name() or d.cashier.username if d.cashier else 'Staff',
+            'date': d.audit_date.strftime('%Y-%m-%d %H:%M'),
+            'notes': d.notes,
+        }
+        for d in recent_drawer_audits
+    ]
+
+    catalog_data = [
+        {
+            'id': p.id,
+            'name': p.name,
+            'sku': p.sku,
+            'category_name': p.category.name if p.category else 'General',
+            'category_icon': p.category.icon if p.category else 'fa-box',
+            'stock_quantity': p.stock_quantity,
+            'cost_price': float(p.cost_price or 0),
+            'price': float(p.price or 0),
+            'unit': p.unit,
+            'has_audit_discrepancy': p.has_audit_discrepancy,
+            'last_discrepancy_count': p.last_discrepancy_count,
+        }
+        for p in products
+    ]
+
     return JsonResponse({
         'success': True,
         'summary': {
@@ -596,6 +793,8 @@ def pos_audit_data_api(request):
         },
         'missing_items': list(missing_items),
         'recent_audits': recent_audits_data,
+        'recent_drawer_audits': recent_drawer_data,
+        'catalog': catalog_data,
     })
 
 

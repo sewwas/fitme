@@ -119,6 +119,11 @@
       background: #20272D;
       border-color: rgba(255,255,255,0.2);
     }
+    .btn-top.active {
+      background: rgba(0, 240, 255, 0.15) !important;
+      border-color: var(--cyan) !important;
+      color: #fff !important;
+    }
     .btn-lime {
       background: var(--neon-lime);
       color: #000;
@@ -818,6 +823,9 @@
     <button type="button" class="btn-top" onclick="openStockAuditModal()" style="background:#172228;color:var(--neon-lime);border-color:rgba(118,192,67,0.4);" title="Physical Stock Audit & Count Check">
       <i class="fa fa-clipboard-check"></i> Stock Audit
     </button>
+    <button type="button" class="btn-top" onclick="openFullAuditModal()" style="background:#172228;color:var(--cyan);border-color:rgba(0,240,255,0.4);" title="Perform Full Physical Stock Audit across All Products">
+      <i class="fa fa-clipboard-list"></i> Full Audit
+    </button>
     <a href="/pos/audit/plan/" target="_blank" class="btn-top" style="background:#172228;color:var(--cyan);border-color:rgba(0,240,255,0.4);text-decoration:none;" title="Print Official Stock Audit Count Plan Sheet">
       <i class="fa fa-file-invoice"></i> Audit Plan
     </a>
@@ -825,7 +833,7 @@
       <i class="fa fa-calculator"></i> Till Audit
     </button>
     <button type="button" class="btn-top" onclick="openAuditHistoryModal()" style="background:#172228;color:#C084FC;border-color:rgba(192,132,252,0.4);" title="Audit History & Discrepancies Log">
-      <i class="fa fa-history"></i> Logs
+      <i class="fa fa-history"></i> Audit Logs
     </button>
     {% if is_admin %}
       <button type="button" class="btn-top" onclick="openRestockModal()" style="background:#172228;color:var(--neon-lime);border-color:rgba(118,192,67,0.4);" title="Quick Inventory Restock (Admin Authorized)">
@@ -922,6 +930,11 @@
                   <button type="button" class="btn-audit-card" onclick="event.stopPropagation(); quickAuditProduct({{ prod.id }}, '{{ prod.name|escapejs }}', {{ prod.stock_quantity }}, {{ prod.cost_price|default:0 }}, {{ prod.price }}, '{{ prod.unit|default:'unit'|escapejs }}')" title="Audit &amp; Check Stock Count">
                     <i class="fa fa-clipboard-check"></i>
                   </button>
+                  {% if is_admin %}
+                    <button type="button" class="btn-audit-card" style="border-color:rgba(255,51,102,0.3);color:#FF3366;" onclick="event.stopPropagation(); deleteProduct({{ prod.id }}, '{{ prod.name|escapejs }}')" title="Delete Item (Admin Only)">
+                      <i class="fa fa-trash-alt"></i>
+                    </button>
+                  {% endif %}
                   <button type="button" class="btn-add-mini" title="Add to ticket">
                     <i class="fa fa-plus"></i>
                   </button>
@@ -1221,25 +1234,25 @@
         <div class="form-group">
           <label style="display:flex;justify-content:space-between;align-items:center;">
             <span>Action to Apply *</span>
-            {% if not is_super_admin %}
-              <span style="font-size:0.68rem;color:var(--warning);font-weight:700;"><i class="fa fa-lock"></i> Super Admin Only</span>
+            {% if not is_admin %}
+              <span style="font-size:0.68rem;color:var(--warning);font-weight:700;"><i class="fa fa-lock"></i> Admin Only</span>
             {% endif %}
           </label>
           <select id="auditActionSelect">
-            {% if is_super_admin %}
-              <option value="STOCK_ADJUSTED">Adjust System Stock to Counted (Super Admin Authorized)</option>
+            {% if is_admin %}
+              <option value="STOCK_ADJUSTED">Adjust System Stock to Counted (Admin Authorized)</option>
               <option value="FLAGGED_MISSING">Flag as Missing (Keep Stock, Under Review)</option>
             {% else %}
               <option value="FLAGGED_MISSING" selected>Flag as Missing (Keep Stock, Under Review)</option>
-              <option value="STOCK_ADJUSTED" disabled>Adjust System Stock (Locked • Super Admin Only)</option>
+              <option value="STOCK_ADJUSTED" disabled>Adjust System Stock (Locked • Admin Only)</option>
             {% endif %}
           </select>
         </div>
       </div>
 
-      {% if not is_super_admin %}
+      {% if not is_admin %}
         <div style="background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:6px;padding:0.55rem 0.75rem;margin-bottom:0.75rem;font-size:0.76rem;color:#FCD34D;line-height:1.4;">
-          <i class="fa fa-shield-alt"></i> <strong>High-Risk Security Protocol:</strong> Direct inventory stock alterations are restricted to <strong>Super Admin</strong>. Your physical shelf count check will be saved as an official audit record and flagged for Super Admin reconciliation.
+          <i class="fa fa-shield-alt"></i> <strong>Audit Protocol:</strong> Direct inventory stock alterations are restricted to <strong>Gym Admin &amp; Super Admin</strong>. Your physical shelf count check will be saved as an official audit record and flagged for Admin reconciliation.
         </div>
       {% endif %}
 
@@ -1315,20 +1328,28 @@
       <button type="button" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;" onclick="closeAuditHistoryModal()">&times;</button>
     </div>
     <div class="modal-body" style="padding:1rem;">
-      <div style="display:flex;gap:0.5rem;margin-bottom:1rem;border-bottom:1px solid var(--border-color);padding-bottom:0.5rem;">
-        <button type="button" class="btn-top" id="tabBtnMissingFinder" onclick="switchAuditHistoryTab('missing')" style="font-size:0.78rem;background:rgba(255,51,102,0.15);border-color:#FF3366;color:#fff;">
-          <i class="fa fa-triangle-exclamation" style="color:var(--danger);"></i> Missing Items ({{ missing_stock_count }})
+      <div style="display:flex;gap:0.5rem;margin-bottom:1rem;border-bottom:1px solid var(--border-color);padding-bottom:0.5rem;align-items:center;flex-wrap:wrap;">
+        <button type="button" class="btn-top active" id="tabBtnAuditLog" onclick="switchAuditHistoryTab('logs')" style="font-size:0.78rem;">
+          <i class="fa fa-list-check" style="color:var(--neon-lime);"></i> Stock Audit Logs
         </button>
-        <button type="button" class="btn-top" id="tabBtnAuditLog" onclick="switchAuditHistoryTab('logs')" style="font-size:0.78rem;">
-          <i class="fa fa-list-check" style="color:var(--neon-lime);"></i> Recent Stock Audits
+        <button type="button" class="btn-top" id="tabBtnMissingFinder" onclick="switchAuditHistoryTab('missing')" style="font-size:0.78rem;">
+          <i class="fa fa-triangle-exclamation" style="color:var(--danger);"></i> Missing Items (<span id="missingStockBadgeCount">{{ missing_stock_count }}</span>)
         </button>
         <button type="button" class="btn-top" id="tabBtnTillLog" onclick="switchAuditHistoryTab('tills')" style="font-size:0.78rem;">
           <i class="fa fa-cash-register" style="color:#F59E0B;"></i> Till Shift Audits
         </button>
+        <div style="margin-left:auto;display:flex;gap:0.4rem;">
+          <button type="button" class="btn-top" onclick="fetchLiveAuditData()" style="padding:4px 8px;font-size:0.75rem;background:#182025;color:var(--cyan);border-color:rgba(0,240,255,0.3);" title="Refresh live audit logs">
+            <i class="fa fa-sync" id="auditRefreshIcon"></i> Refresh
+          </button>
+          <button type="button" class="btn-top" onclick="closeAuditHistoryModal(); openFullAuditModal();" style="padding:4px 8px;font-size:0.75rem;background:#182025;color:var(--neon-lime);border-color:rgba(118,192,67,0.3);" title="Launch Full Inventory Audit">
+            <i class="fa fa-clipboard-list"></i> Full Audit
+          </button>
+        </div>
       </div>
 
       <!-- Tab 1: Missing Items -->
-      <div id="auditTabMissing">
+      <div id="auditTabMissing" style="display:none;">
         <div style="background:#0E1215;padding:0.75rem;border-radius:8px;margin-bottom:0.75rem;font-size:0.78rem;color:var(--text-muted);display:flex;justify-content:space-between;align-items:center;">
           <span>Items flagged with missing stock during recent physical counts:</span>
           <a href="/pos/audit/plan/" target="_blank" style="color:var(--cyan);text-decoration:none;font-weight:700;"><i class="fa fa-print"></i> Print Shelf Audit Plan</a>
@@ -1379,7 +1400,7 @@
       </div>
 
       <!-- Tab 2: Recent Stock Audits -->
-      <div id="auditTabLogs" style="display:none;">
+      <div id="auditTabLogs">
         <div style="max-height:360px;overflow-y:auto;">
           <table style="width:100%;border-collapse:collapse;font-size:0.78rem;">
             <thead>
@@ -1462,8 +1483,168 @@
         </div>
       </div>
     </div>
-    <div class="modal-footer">
+    <div class="modal-footer" style="display:flex;justify-content:space-between;align-items:center;">
+      <div style="display:flex;gap:0.4rem;">
+        <button type="button" class="btn-top" onclick="closeAuditHistoryModal(); openStockAuditModal();" style="background:#182025;color:var(--neon-lime);">
+          <i class="fa fa-plus-circle"></i> Log Single Audit
+        </button>
+        <button type="button" class="btn-top" onclick="closeAuditHistoryModal(); openFullAuditModal();" style="background:#182025;color:var(--cyan);">
+          <i class="fa fa-clipboard-list"></i> Full Audit
+        </button>
+      </div>
       <button class="btn-top" onclick="closeAuditHistoryModal()">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: FULL INVENTORY AUDIT SHEET -->
+<div class="modal-backdrop" id="fullAuditModal">
+  <div class="modal-card" style="max-width:980px;width:96%;max-height:92vh;display:flex;flex-direction:column;">
+    <div class="modal-header">
+      <div class="modal-title">
+        <i class="fa fa-clipboard-list" style="color:var(--cyan);"></i> Full Inventory Stock Audit Sheet
+      </div>
+      <button type="button" style="background:none;border:none;color:#fff;font-size:1.2rem;cursor:pointer;" onclick="closeFullAuditModal()">&times;</button>
+    </div>
+
+    <div class="modal-body" style="padding:1rem;overflow-y:auto;flex:1;">
+      <!-- Controls Bar -->
+      <div style="background:#0E1215;border:1px solid var(--border-color);border-radius:8px;padding:0.75rem 1rem;margin-bottom:0.85rem;display:grid;grid-template-columns:1fr 1fr auto;gap:0.75rem;align-items:end;">
+        <div>
+          <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;text-transform:uppercase;font-weight:700;">Audit Reason / Classification</label>
+          <select id="fullAuditReasonSelect" style="width:100%;background:#182025;color:#fff;border:1px solid var(--border-color);padding:0.45rem 0.6rem;border-radius:6px;font-size:0.82rem;">
+            {% for code, label in audit_reasons %}
+              <option value="{{ code }}" {% if code == 'COUNT_CORRECTION' %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;text-transform:uppercase;font-weight:700;">Action to Apply *</label>
+          <select id="fullAuditActionSelect" style="width:100%;background:#182025;color:#fff;border:1px solid var(--border-color);padding:0.45rem 0.6rem;border-radius:6px;font-size:0.82rem;">
+            {% if is_admin %}
+              <option value="STOCK_ADJUSTED" selected>Adjust System Stock to Counted (Admin Authorized)</option>
+              <option value="FLAGGED_MISSING">Flag as Missing (Keep Stock, Under Review)</option>
+            {% else %}
+              <option value="FLAGGED_MISSING" selected>Flag as Missing (Keep Stock, Under Review)</option>
+              <option value="STOCK_ADJUSTED" disabled>Adjust System Stock (Locked • Admin Only)</option>
+            {% endif %}
+          </select>
+        </div>
+        <div style="display:flex;gap:0.4rem;">
+          <button type="button" class="btn-top" onclick="fullAuditPreFillAll()" style="font-size:0.76rem;background:#182025;color:var(--cyan);border-color:rgba(0,240,255,0.4);" title="Set all counted inputs to expected stock">
+            <i class="fa fa-clone"></i> Match All Expected
+          </button>
+          <button type="button" class="btn-top" onclick="fullAuditClearAll()" style="font-size:0.76rem;background:#182025;color:var(--text-muted);" title="Clear all counted inputs">
+            <i class="fa fa-eraser"></i> Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Discrepancy KPI Summary -->
+      <div style="display:grid;grid-template-columns:repeat(5, 1fr);gap:0.5rem;margin-bottom:0.85rem;">
+        <div style="background:#0E1215;border:1px solid var(--border-color);border-radius:6px;padding:0.6rem 0.75rem;text-align:center;">
+          <span style="font-size:0.68rem;color:var(--text-muted);display:block;text-transform:uppercase;">Catalog Items</span>
+          <strong id="fullAuditTotalProductsCount" style="font-size:1.15rem;color:#fff;font-family:'Montserrat',sans-serif;">{{ products.count }}</strong>
+        </div>
+        <div style="background:#0E1215;border:1px solid var(--border-color);border-radius:6px;padding:0.6rem 0.75rem;text-align:center;">
+          <span style="font-size:0.68rem;color:var(--text-muted);display:block;text-transform:uppercase;">Expected Units</span>
+          <strong id="fullAuditTotalExpectedUnits" style="font-size:1.15rem;color:#93C5FD;font-family:'JetBrains Mono',monospace;">{{ total_units }}</strong>
+        </div>
+        <div style="background:#0E1215;border:1px solid var(--border-color);border-radius:6px;padding:0.6rem 0.75rem;text-align:center;">
+          <span style="font-size:0.68rem;color:var(--text-muted);display:block;text-transform:uppercase;">Counted Units</span>
+          <strong id="fullAuditTotalCountedUnits" style="font-size:1.15rem;color:var(--neon-lime);font-family:'JetBrains Mono',monospace;">{{ total_units }}</strong>
+        </div>
+        <div style="background:#0E1215;border:1px solid var(--border-color);border-radius:6px;padding:0.6rem 0.75rem;text-align:center;">
+          <span style="font-size:0.68rem;color:var(--text-muted);display:block;text-transform:uppercase;">Discrepancies</span>
+          <strong id="fullAuditDiscrepanciesCount" style="font-size:1.15rem;color:#10B981;font-family:'JetBrains Mono',monospace;">0</strong>
+        </div>
+        <div style="background:#0E1215;border:1px solid var(--border-color);border-radius:6px;padding:0.6rem 0.75rem;text-align:center;">
+          <span style="font-size:0.68rem;color:var(--text-muted);display:block;text-transform:uppercase;">Estimated Variance</span>
+          <strong id="fullAuditVarianceValue" style="font-size:1.05rem;color:#10B981;font-family:'JetBrains Mono',monospace;">LKR 0.00</strong>
+        </div>
+      </div>
+
+      <!-- Filter pills & Search -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.6rem;gap:0.5rem;flex-wrap:wrap;">
+        <div style="display:flex;gap:0.35rem;flex-wrap:wrap;" id="fullAuditCatFilters">
+          <button type="button" class="cat-pill active" onclick="filterFullAuditTable('all', this)">All ({{ products.count }})</button>
+          <button type="button" class="cat-pill" onclick="filterFullAuditTable('diff', this)">Variances Only</button>
+          {% for cat in categories %}
+            <button type="button" class="cat-pill" onclick="filterFullAuditTable('{{ cat.slug }}', this)">{{ cat.name }}</button>
+          {% endfor %}
+        </div>
+        <input type="text" id="fullAuditSearchInput" oninput="searchFullAuditTable()" placeholder="Quick filter by SKU or name..." style="background:#182025;border:1px solid var(--border-color);color:#fff;padding:0.35rem 0.65rem;border-radius:6px;font-size:0.78rem;width:200px;">
+      </div>
+
+      <!-- Full Audit Table -->
+      <div style="max-height:380px;overflow-y:auto;border:1px solid var(--border-color);border-radius:6px;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.8rem;" id="fullAuditTable">
+          <thead>
+            <tr style="background:#141A1E;border-bottom:1px solid var(--border-color);position:sticky;top:0;z-index:2;color:var(--text-muted);text-align:left;">
+              <th style="padding:8px 10px;">Product &amp; Category</th>
+              <th style="padding:8px;text-align:center;">SKU</th>
+              <th style="padding:8px;text-align:right;">Cost</th>
+              <th style="padding:8px;text-align:center;">Expected</th>
+              <th style="padding:8px 12px;text-align:center;width:140px;">Physical Count</th>
+              <th style="padding:8px;text-align:center;width:120px;">Discrepancy</th>
+              <th style="padding:8px;text-align:right;width:110px;">Variance (LKR)</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for prod in products %}
+              <tr class="full-audit-row" data-id="{{ prod.id }}" data-category="{{ prod.category.slug }}" data-name="{{ prod.name|lower }}" data-sku="{{ prod.sku|lower }}" data-expected="{{ prod.stock_quantity }}" data-cost="{{ prod.cost_price|default:0 }}" data-unit="{{ prod.unit }}" style="border-bottom:1px solid rgba(255,255,255,0.05);">
+                <td style="padding:8px 10px;">
+                  <strong style="color:#fff;display:block;">{{ prod.name }}</strong>
+                  <span style="font-size:0.7rem;color:var(--cyan);"><i class="fa {{ prod.category.icon }}"></i> {{ prod.category.name }}</span>
+                </td>
+                <td style="padding:8px;text-align:center;font-family:'JetBrains Mono',monospace;color:var(--text-muted);font-size:0.75rem;">
+                  {{ prod.sku }}
+                </td>
+                <td style="padding:8px;text-align:right;font-family:'JetBrains Mono',monospace;color:var(--text-muted);">
+                  LKR {{ prod.cost_price|default:0|floatformat:2 }}
+                </td>
+                <td style="padding:8px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:700;color:#93C5FD;">
+                  {{ prod.stock_quantity }} {{ prod.unit }}s
+                </td>
+                <td style="padding:6px 10px;text-align:center;">
+                  <div style="display:flex;align-items:center;justify-content:center;gap:4px;">
+                    <button type="button" onclick="adjustCountInput({{ prod.id }}, -1)" style="width:24px;height:26px;background:#1D242B;border:1px solid var(--border-color);color:#fff;border-radius:4px;cursor:pointer;">-</button>
+                    <input type="number" min="0" step="1" id="fullCountInput_{{ prod.id }}" class="full-count-input" value="{{ prod.stock_quantity }}" oninput="handleFullCountChange({{ prod.id }})" style="width:65px;height:26px;background:#0E1215;border:1px solid var(--border-color);color:#fff;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:800;border-radius:4px;font-size:0.85rem;">
+                    <button type="button" onclick="adjustCountInput({{ prod.id }}, 1)" style="width:24px;height:26px;background:#1D242B;border:1px solid var(--border-color);color:#fff;border-radius:4px;cursor:pointer;">+</button>
+                  </div>
+                </td>
+                <td style="padding:8px;text-align:center;">
+                  <span id="fullDiffBadge_{{ prod.id }}" style="font-family:'JetBrains Mono',monospace;font-size:0.75rem;padding:2px 6px;border-radius:4px;color:#10B981;font-weight:700;">
+                    0 (Match)
+                  </span>
+                </td>
+                <td style="padding:8px;text-align:right;font-family:'JetBrains Mono',monospace;font-size:0.75rem;">
+                  <span id="fullVarianceVal_{{ prod.id }}" style="color:var(--text-muted);">
+                    LKR 0.00
+                  </span>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <div class="form-group" style="margin-top:0.75rem;margin-bottom:0;">
+        <label style="font-size:0.72rem;color:var(--text-muted);display:block;margin-bottom:4px;text-transform:uppercase;font-weight:700;">General Full Audit Notes</label>
+        <textarea id="fullAuditGeneralNotes" rows="2" placeholder="e.g. End of month complete physical floor and storage audit; sealed count verified with cashier..." style="background:#0E1215;border:1px solid var(--border-color);color:#fff;padding:0.5rem;border-radius:6px;font-size:0.8rem;font-family:inherit;width:100%;"></textarea>
+      </div>
+    </div>
+
+    <div class="modal-footer" style="padding:0.75rem 1rem;background:#141A1E;border-top:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;">
+      <a href="/pos/audit/plan/" target="_blank" style="color:var(--cyan);text-decoration:none;font-size:0.78rem;font-weight:700;display:inline-flex;align-items:center;gap:4px;">
+        <i class="fa fa-print"></i> Open Printable Audit Plan
+      </a>
+      <div style="display:flex;gap:0.5rem;">
+        <button type="button" class="btn-top" onclick="closeFullAuditModal()">Cancel</button>
+        <button type="button" class="btn-top btn-lime" id="btnSubmitFullAudit" onclick="submitFullStockAudit()">
+          <i class="fa fa-save"></i> Save &amp; Record Full Audit
+        </button>
+      </div>
     </div>
   </div>
 </div>
@@ -1901,6 +2082,38 @@
     }
   }
 
+  // ── Admin Delete Product ──
+  async function deleteProduct(id, name) {
+    if (!confirm(`Are you sure you want to delete "${name}" from POS inventory?\n\nThis action is restricted strictly to Gym Administrators.`)) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/pos/api/products/${id}/delete/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        }
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message, false);
+        const card = document.querySelector(`.product-card[data-id="${id}"]`);
+        if (card) {
+          card.style.transition = 'all 0.35s ease';
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.85)';
+          setTimeout(() => card.remove(), 350);
+        }
+      } else {
+        alert('Delete Failed: ' + (data.error || 'Server error'));
+      }
+    } catch(err) {
+      alert('Network Error: ' + err.message);
+    }
+  }
+
   // ── Toast Utility ──
   function showToast(msg, isErr = false) {
     const c = document.getElementById('toastContainer');
@@ -2012,9 +2225,9 @@
     const actionTaken = document.getElementById('auditActionSelect').value;
     const notes = document.getElementById('auditNotesInput').value.trim();
 
-    const isSuperAdmin = {{ is_super_admin|yesno:"true,false" }};
-    if (actionTaken === 'STOCK_ADJUSTED' && !isSuperAdmin) {
-      alert('High-Risk Operation Blocked: Changing live stock inventory numbers is restricted strictly to Super Admin. Please select "Flag as Missing (Keep Stock, Under Review)".');
+    const isAdmin = {{ is_admin|yesno:"true,false" }};
+    if (actionTaken === 'STOCK_ADJUSTED' && !isAdmin) {
+      alert('Permission Denied: Changing live stock inventory numbers is restricted to Gym Administrators. Please select "Flag as Missing (Keep Stock, Under Review)".');
       return;
     }
 
@@ -2138,7 +2351,10 @@
   // ── Audit History Viewer ──
   function openAuditHistoryModal() {
     const modal = document.getElementById('auditHistoryModal');
-    if (modal) modal.classList.add('open');
+    if (modal) {
+      modal.classList.add('open');
+      fetchLiveAuditData();
+    }
   }
 
   function closeAuditHistoryModal() {
@@ -2151,9 +2367,362 @@
     document.getElementById('auditTabLogs').style.display = tab === 'logs' ? 'block' : 'none';
     document.getElementById('auditTabTills').style.display = tab === 'tills' ? 'block' : 'none';
 
-    document.getElementById('tabBtnMissingFinder').className = tab === 'missing' ? 'btn-top active' : 'btn-top';
-    document.getElementById('tabBtnAuditLog').className = tab === 'logs' ? 'btn-top active' : 'btn-top';
-    document.getElementById('tabBtnTillLog').className = tab === 'tills' ? 'btn-top active' : 'btn-top';
+    const btnMissing = document.getElementById('tabBtnMissingFinder');
+    const btnLogs = document.getElementById('tabBtnAuditLog');
+    const btnTills = document.getElementById('tabBtnTillLog');
+
+    [btnMissing, btnLogs, btnTills].forEach(b => {
+      if (b) {
+        b.classList.remove('active');
+        b.style.background = '#181E23';
+        b.style.borderColor = 'var(--border-color)';
+        b.style.color = '#fff';
+      }
+    });
+
+    if (tab === 'missing' && btnMissing) {
+      btnMissing.classList.add('active');
+      btnMissing.style.background = 'rgba(255,51,102,0.15)';
+      btnMissing.style.borderColor = '#FF3366';
+    } else if (tab === 'logs' && btnLogs) {
+      btnLogs.classList.add('active');
+      btnLogs.style.background = 'rgba(0,240,255,0.15)';
+      btnLogs.style.borderColor = 'var(--cyan)';
+    } else if (tab === 'tills' && btnTills) {
+      btnTills.classList.add('active');
+      btnTills.style.background = 'rgba(245,158,11,0.15)';
+      btnTills.style.borderColor = '#F59E0B';
+    }
+  }
+
+  async function fetchLiveAuditData() {
+    const icon = document.getElementById('auditRefreshIcon');
+    if (icon) icon.classList.add('fa-spin');
+    try {
+      const res = await fetch('/pos/api/audit/data/');
+      const data = await res.json();
+      if (!data.success) return;
+
+      // Update Stock Audits Table
+      const logsBody = document.querySelector('#auditTabLogs tbody');
+      if (logsBody && data.recent_audits) {
+        if (data.recent_audits.length === 0) {
+          logsBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No stock audits recorded yet.</td></tr>';
+        } else {
+          logsBody.innerHTML = data.recent_audits.map(a => `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+              <td style="padding:6px;color:var(--text-muted);white-space:nowrap;">${a.date}</td>
+              <td style="padding:6px;color:#fff;font-weight:700;">${escapeHtml(a.product_name)}</td>
+              <td style="padding:6px;text-align:center;font-family:'JetBrains Mono',monospace;">${a.expected} &rarr; ${a.counted}</td>
+              <td style="padding:6px;text-align:center;">
+                ${a.discrepancy < 0 ? `<span style="color:#FF3366;font-weight:800;">${a.discrepancy}</span>` :
+                  (a.discrepancy > 0 ? `<span style="color:var(--neon-lime);font-weight:800;">+${a.discrepancy}</span>` :
+                  `<span style="color:#10B981;font-weight:700;">0 (Match)</span>`)}
+              </td>
+              <td style="padding:6px;color:var(--text-muted);">${escapeHtml(a.reason)}</td>
+              <td style="padding:6px;color:var(--cyan);">${escapeHtml(a.auditor)}</td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      // Update Missing Items Table
+      const missingBody = document.querySelector('#auditTabMissing tbody');
+      const badgeCount = document.getElementById('missingStockBadgeCount');
+      if (badgeCount && data.summary) badgeCount.textContent = data.summary.missing_items_count;
+      if (missingBody && data.missing_items) {
+        if (data.missing_items.length === 0) {
+          missingBody.innerHTML = `
+            <tr>
+              <td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">
+                <i class="fa fa-check-circle" style="color:#10B981;font-size:1.5rem;margin-bottom:0.5rem;display:block;"></i>
+                No missing stock discrepancies detected! All products are reconciled.
+              </td>
+            </tr>`;
+        } else {
+          missingBody.innerHTML = data.missing_items.map(prod => `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+              <td style="padding:8px 6px;font-weight:700;color:#fff;">${escapeHtml(prod.name)}</td>
+              <td style="padding:8px 6px;font-family:'JetBrains Mono',monospace;color:var(--text-muted);">${escapeHtml(prod.sku)}</td>
+              <td style="padding:8px 6px;text-align:center;font-weight:700;">${prod.stock_quantity}</td>
+              <td style="padding:8px 6px;text-align:center;">
+                <span style="background:rgba(255,51,102,0.18);color:#FF3366;font-weight:800;padding:2px 6px;border-radius:4px;">
+                  ${prod.last_discrepancy_count} units
+                </span>
+              </td>
+              <td style="padding:8px 6px;text-align:right;color:#FF3366;font-family:'JetBrains Mono',monospace;font-weight:700;">
+                LKR ${(prod.cost_price || 0).toFixed(2)}
+              </td>
+              <td style="padding:8px 6px;text-align:center;">
+                <button type="button" class="btn-top" onclick="quickAuditProduct(${prod.id}, '${escapeHtml(prod.name)}', ${prod.stock_quantity}, ${prod.cost_price || 0}, ${prod.price || 0}, '${escapeHtml(prod.unit || 'unit')}')" style="padding:3px 8px;font-size:0.72rem;background:#182025;color:var(--neon-lime);">
+                  Re-Audit
+                </button>
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
+
+      // Update Till Shift Audits Table
+      const tillBody = document.querySelector('#auditTabTills tbody');
+      if (tillBody && data.recent_drawer_audits) {
+        if (data.recent_drawer_audits.length === 0) {
+          tillBody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">No till shift audits recorded yet.</td></tr>';
+        } else {
+          tillBody.innerHTML = data.recent_drawer_audits.map(ta => `
+            <tr style="border-bottom:1px solid rgba(255,255,255,0.05);">
+              <td style="padding:6px;color:var(--text-muted);">${ta.date}</td>
+              <td style="padding:6px;color:#fff;font-weight:700;">${escapeHtml(ta.cashier)}</td>
+              <td style="padding:6px;text-align:right;font-family:'JetBrains Mono',monospace;">LKR ${ta.expected_cash.toFixed(2)}</td>
+              <td style="padding:6px;text-align:right;font-family:'JetBrains Mono',monospace;color:var(--neon-lime);">LKR ${ta.counted_cash.toFixed(2)}</td>
+              <td style="padding:6px;text-align:center;font-family:'JetBrains Mono',monospace;font-weight:800;">
+                ${ta.discrepancy < 0 ? `<span style="color:#FF3366;">-LKR ${Math.abs(ta.discrepancy).toFixed(2)}</span>` :
+                  (ta.discrepancy > 0 ? `<span style="color:#F59E0B;">+LKR ${ta.discrepancy.toFixed(2)}</span>` :
+                  `<span style="color:#10B981;">LKR 0.00</span>`)}
+              </td>
+              <td style="padding:6px;text-align:center;">
+                <span style="font-size:0.7rem;padding:2px 6px;border-radius:4px;font-weight:800;${ta.status === 'BALANCED' ? 'background:rgba(16,185,129,0.15);color:#10B981;' : 'background:rgba(255,51,102,0.15);color:#FF3366;'}">
+                  ${escapeHtml(ta.status)}
+                </span>
+              </td>
+            </tr>
+          `).join('');
+        }
+      }
+    } catch (e) {
+      console.warn('Audit telemetry fetch error:', e);
+    } finally {
+      if (icon) icon.classList.remove('fa-spin');
+    }
+  }
+
+  // ── Full Inventory Stock Audit ──
+  function openFullAuditModal() {
+    const modal = document.getElementById('fullAuditModal');
+    if (!modal) return;
+    modal.classList.add('open');
+    recalculateFullAuditSummary();
+  }
+
+  function closeFullAuditModal() {
+    const modal = document.getElementById('fullAuditModal');
+    if (modal) modal.classList.remove('open');
+  }
+
+  function adjustCountInput(prodId, delta) {
+    const inp = document.getElementById('fullCountInput_' + prodId);
+    if (!inp) return;
+    let val = parseInt(inp.value, 10);
+    if (isNaN(val)) val = 0;
+    val = Math.max(0, val + delta);
+    inp.value = val;
+    handleFullCountChange(prodId);
+  }
+
+  function handleFullCountChange(prodId) {
+    const row = document.querySelector(`.full-audit-row[data-id="${prodId}"]`);
+    if (!row) return;
+    const expected = parseInt(row.getAttribute('data-expected') || '0', 10);
+    const cost = parseFloat(row.getAttribute('data-cost') || '0');
+    const inp = document.getElementById('fullCountInput_' + prodId);
+    const badge = document.getElementById('fullDiffBadge_' + prodId);
+    const variance = document.getElementById('fullVarianceVal_' + prodId);
+
+    const countedVal = inp ? inp.value.trim() : '';
+    if (countedVal === '') {
+      badge.innerHTML = `<span style="color:var(--text-muted);">Pending</span>`;
+      variance.textContent = '—';
+      recalculateFullAuditSummary();
+      return;
+    }
+
+    const counted = parseInt(countedVal, 10);
+    const diff = counted - expected;
+    const diffCost = Math.abs(diff) * cost;
+
+    if (diff === 0) {
+      badge.innerHTML = `<span style="color:#10B981;font-weight:700;"><i class="fa fa-check"></i> Match</span>`;
+      variance.innerHTML = `<span style="color:var(--text-muted);">LKR 0.00</span>`;
+      row.style.background = 'transparent';
+    } else if (diff < 0) {
+      badge.innerHTML = `<span style="color:#FF3366;font-weight:800;background:rgba(255,51,102,0.18);padding:2px 6px;border-radius:4px;">${diff} units</span>`;
+      variance.innerHTML = `<span style="color:#FF3366;font-weight:800;">-LKR ${diffCost.toFixed(2)}</span>`;
+      row.style.background = 'rgba(255,51,102,0.04)';
+    } else {
+      badge.innerHTML = `<span style="color:var(--neon-lime);font-weight:800;background:rgba(118,192,67,0.18);padding:2px 6px;border-radius:4px;">+${diff} units</span>`;
+      variance.innerHTML = `<span style="color:var(--neon-lime);font-weight:800;">+LKR ${diffCost.toFixed(2)}</span>`;
+      row.style.background = 'rgba(118,192,67,0.04)';
+    }
+
+    recalculateFullAuditSummary();
+  }
+
+  function fullAuditPreFillAll() {
+    const rows = document.querySelectorAll('.full-audit-row');
+    rows.forEach(row => {
+      const id = row.getAttribute('data-id');
+      const expected = row.getAttribute('data-expected');
+      const inp = document.getElementById('fullCountInput_' + id);
+      if (inp) inp.value = expected;
+      handleFullCountChange(id);
+    });
+  }
+
+  function fullAuditClearAll() {
+    const rows = document.querySelectorAll('.full-audit-row');
+    rows.forEach(row => {
+      const id = row.getAttribute('data-id');
+      const inp = document.getElementById('fullCountInput_' + id);
+      if (inp) inp.value = 0;
+      handleFullCountChange(id);
+    });
+  }
+
+  function filterFullAuditTable(catSlug, btn) {
+    const rows = document.querySelectorAll('.full-audit-row');
+    rows.forEach(row => {
+      const rowCat = row.getAttribute('data-category');
+      const expected = parseInt(row.getAttribute('data-expected') || '0', 10);
+      const id = row.getAttribute('data-id');
+      const inp = document.getElementById('fullCountInput_' + id);
+      const counted = inp && inp.value !== '' ? parseInt(inp.value, 10) : expected;
+
+      if (catSlug === 'all') {
+        row.style.display = '';
+      } else if (catSlug === 'diff') {
+        row.style.display = (counted !== expected) ? '' : 'none';
+      } else {
+        row.style.display = (rowCat === catSlug) ? '' : 'none';
+      }
+    });
+
+    const filterPills = document.querySelectorAll('#fullAuditCatFilters .cat-pill');
+    filterPills.forEach(p => p.classList.remove('active'));
+    if (btn) btn.classList.add('active');
+  }
+
+  function searchFullAuditTable() {
+    const q = (document.getElementById('fullAuditSearchInput').value || '').toLowerCase().trim();
+    const rows = document.querySelectorAll('.full-audit-row');
+    rows.forEach(row => {
+      const name = row.getAttribute('data-name') || '';
+      const sku = row.getAttribute('data-sku') || '';
+      row.style.display = (name.includes(q) || sku.includes(q)) ? '' : 'none';
+    });
+  }
+
+  function recalculateFullAuditSummary() {
+    const rows = document.querySelectorAll('.full-audit-row');
+    let totalExpected = 0;
+    let totalCounted = 0;
+    let discrepancies = 0;
+    let totalNetVariance = 0;
+
+    rows.forEach(row => {
+      const expected = parseInt(row.getAttribute('data-expected') || '0', 10);
+      const cost = parseFloat(row.getAttribute('data-cost') || '0');
+      const id = row.getAttribute('data-id');
+      const inp = document.getElementById('fullCountInput_' + id);
+      const countedVal = inp ? inp.value.trim() : '';
+
+      totalExpected += expected;
+      if (countedVal !== '') {
+        const counted = parseInt(countedVal, 10);
+        totalCounted += counted;
+        const diff = counted - expected;
+        if (diff !== 0) {
+          discrepancies++;
+          totalNetVariance += (diff * cost);
+        }
+      }
+    });
+
+    const countDisplay = document.getElementById('fullAuditTotalCountedUnits');
+    if (countDisplay) countDisplay.textContent = totalCounted;
+
+    const discDisplay = document.getElementById('fullAuditDiscrepanciesCount');
+    if (discDisplay) {
+      discDisplay.textContent = discrepancies;
+      discDisplay.style.color = discrepancies > 0 ? '#FF3366' : '#10B981';
+    }
+
+    const varDisplay = document.getElementById('fullAuditVarianceValue');
+    if (varDisplay) {
+      if (totalNetVariance === 0) {
+        varDisplay.textContent = 'LKR 0.00';
+        varDisplay.style.color = '#10B981';
+      } else if (totalNetVariance < 0) {
+        varDisplay.textContent = `-LKR ${Math.abs(totalNetVariance).toFixed(2)}`;
+        varDisplay.style.color = '#FF3366';
+      } else {
+        varDisplay.textContent = `+LKR ${totalNetVariance.toFixed(2)}`;
+        varDisplay.style.color = 'var(--neon-lime)';
+      }
+    }
+  }
+
+  async function submitFullStockAudit() {
+    const rows = document.querySelectorAll('.full-audit-row');
+    const items = [];
+    rows.forEach(row => {
+      const id = parseInt(row.getAttribute('data-id'), 10);
+      const inp = document.getElementById('fullCountInput_' + id);
+      if (inp && inp.value !== '') {
+        items.push({
+          product_id: id,
+          counted_quantity: parseInt(inp.value, 10)
+        });
+      }
+    });
+
+    if (items.length === 0) {
+      alert('No product counts entered.');
+      return;
+    }
+
+    const reason = document.getElementById('fullAuditReasonSelect').value;
+    const actionTaken = document.getElementById('fullAuditActionSelect').value;
+    const notes = document.getElementById('fullAuditGeneralNotes').value.trim();
+
+    const isAdmin = {{ is_admin|yesno:"true,false" }};
+    if (actionTaken === 'STOCK_ADJUSTED' && !isAdmin) {
+      alert('Permission Denied: Changing live stock inventory numbers is restricted to Gym Administrators.');
+      return;
+    }
+
+    const btn = document.getElementById('btnSubmitFullAudit');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Processing Full Audit...';
+
+    try {
+      const res = await fetch('/pos/api/audit/full/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: JSON.stringify({
+          reason: reason,
+          action_taken: actionTaken,
+          notes: notes,
+          items: items
+        })
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        showToast(data.message, data.summary.discrepancy_count > 0);
+        closeFullAuditModal();
+        setTimeout(() => window.location.reload(), 800);
+      } else {
+        alert('Full Audit Error: ' + (data.error || 'Server error'));
+      }
+    } catch(err) {
+      alert('Network Error: ' + err.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-save"></i> Save &amp; Record Full Audit';
+    }
   }
 
   function filterMissingCategory(btn = null) {
@@ -2181,6 +2750,7 @@
       closeRestockModal();
       closeReceiptModal();
       closeStockAuditModal();
+      closeFullAuditModal();
       closeDrawerAuditModal();
       closeAuditHistoryModal();
     }
