@@ -1147,7 +1147,7 @@
                       </button>
                       {% if m.latest_sub %}
                         <button class="btn-action" style="background:rgba(123,201,0,0.14);color:var(--neon-lime);border:1px solid rgba(123,201,0,0.4);" 
-                                onclick="openOverrideSubModal({{ m.latest_sub.id }}, '{{ m.user.get_full_name|default:m.user.username|escapejs }}', '{{ m.latest_sub.plan.id }}', '{{ m.latest_sub.start_date|date:'Y-m-d' }}', '{{ m.latest_sub.end_date|date:'Y-m-d' }}', '{{ m.latest_sub.amount_paid|floatformat:0 }}', '{{ m.latest_sub.status }}')"
+                                onclick="openOverrideSubModal({{ m.latest_sub.id }}, '{{ m.user.get_full_name|default:m.user.username|escapejs }}', '{{ m.latest_sub.plan.id }}', '{{ m.latest_sub.start_date|date:'Y-m-d' }}', '{{ m.latest_sub.end_date|date:'Y-m-d' }}', '{{ m.latest_sub.amount_paid|stringformat:'.2f' }}', '{{ m.latest_sub.status }}')"
                                 title="Data Override">
                           <i class="fa fa-sliders-h"></i> Data Override
                         </button>
@@ -5180,12 +5180,19 @@
     }
   }
 
+  function parseCurrency(val) {
+    if (val === null || val === undefined) return 0;
+    const cleaned = String(val).replace(/,/g, '').trim();
+    const num = parseFloat(cleaned);
+    return isNaN(num) ? 0 : num;
+  }
+
   // Subscription Data Override Modal & Submit (Super Admin)
   function getSelectedPlanPrice() {
     const sel = document.getElementById('overridePlanId');
     if (!sel || !sel.selectedOptions || !sel.selectedOptions[0]) return 0;
     const priceAttr = sel.selectedOptions[0].getAttribute('data-price');
-    return parseFloat(priceAttr || 0);
+    return parseCurrency(priceAttr);
   }
 
   function onOverridePlanChange() {
@@ -5260,13 +5267,13 @@
     } else if (type === 'flat') {
       valInput.disabled = false;
       lblVal.textContent = 'Flat Discount (LKR)';
-      const entered = parseFloat(valInput.value || 0);
+      const entered = parseCurrency(valInput.value);
       discountAmount = Math.min(stdPrice, Math.max(0, entered));
       discTagEl.textContent = '(-LKR ' + discountAmount.toLocaleString('en-US') + ' Off)';
     } else if (type === 'percentage') {
       valInput.disabled = false;
       lblVal.textContent = 'Discount Percentage (%)';
-      const pct = parseFloat(valInput.value || 0);
+      const pct = parseCurrency(valInput.value);
       const safePct = Math.min(100, Math.max(0, pct));
       discountAmount = (stdPrice * safePct) / 100;
       discTagEl.textContent = '(-' + safePct + '% Off = LKR ' + discountAmount.toLocaleString('en-US') + ')';
@@ -5326,7 +5333,7 @@
     if (settleFront) settleFront.checked = true;
 
     if (amountPaid !== undefined && amountPaid !== null && amountPaid !== '') {
-      const numPaid = parseFloat(amountPaid);
+      const numPaid = parseCurrency(amountPaid);
       const stdPrice = getSelectedPlanPrice();
       if (numPaid === 0 && stdPrice > 0) {
         // Pre-activate 100% full waiver
@@ -5360,7 +5367,7 @@
     btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Applying Override...';
 
     const discType = document.getElementById('overrideDiscountType').value;
-    const discVal = parseFloat(document.getElementById('overrideDiscountValue').value || 0);
+    const discVal = parseCurrency(document.getElementById('overrideDiscountValue').value);
     const stdPrice = getSelectedPlanPrice();
     let discAmt = 0;
     if (discType === 'full_waiver') discAmt = stdPrice;
