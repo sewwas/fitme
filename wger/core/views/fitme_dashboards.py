@@ -989,7 +989,7 @@ def super_admin_dashboard(request, active_tab=None):
         'is_super_admin': is_super_admin,
         'role': current_role,
         'user_role': current_role,
-        'page_title': 'Super Admin Master Console' if is_super_admin else 'Admin Operations Console',
+        'page_title': 'Admin Console',
         'active_tab': current_tab,
         'selected_payroll_month': first_of_selected_month.strftime('%Y-%m'),
         'available_months': available_months,
@@ -2133,7 +2133,7 @@ def record_payment_api(request):
 
             receipt_notes = 'Front Desk POS Payment'
             if pending_concession and concession_discount_amount > 0:
-                receipt_notes = f"{receipt_notes} | Super Admin Concession: -LKR {concession_discount_amount:,.2f} ({pending_concession.get_reason_category_display()})"
+                receipt_notes = f"{receipt_notes} | Admin Concession: -LKR {concession_discount_amount:,.2f} ({pending_concession.get_reason_category_display()})"
 
             if is_personal_coaching and assigned_coach_user:
                 first_of_month = today.replace(day=1)
@@ -4096,7 +4096,7 @@ def admin_override_subscription_api(request, sub_id):
                 discount_amount=disc_amount,
                 payment_method='cash',
                 cashier=request.user,
-                notes=f'Super Admin collected LKR {net_payable} (-LKR {disc_amount} concession)'
+                notes=f'Admin collected LKR {net_payable} (-LKR {disc_amount} concession)'
             )
     else:
         # Standard override without concession
@@ -4112,13 +4112,13 @@ def admin_override_subscription_api(request, sub_id):
     notes = data.get('notes', '').strip()
     timestamp = timezone.now().strftime('%Y-%m-%d %H:%M')
     concession_str = f" [Concession: {disc_type.upper()} -LKR {disc_amount} | {reason_cat} | Mode: {settlement_mode}]" if disc_amount > Decimal('0.00') or disc_type == 'full_waiver' else ""
-    override_note = f"\n[Super Admin Data Override by {request.user.username} at {timestamp}{concession_str}]: {notes}" if notes else f"\n[Super Admin Data Override by {request.user.username} at {timestamp}{concession_str}]"
+    override_note = f"\n[Admin Data Override by {request.user.username} at {timestamp}{concession_str}]: {notes}" if notes else f"\n[Admin Data Override by {request.user.username} at {timestamp}{concession_str}]"
     sub.notes = (sub.notes or '') + override_note
     sub.save()
 
     # Formal Concession Audit Logging
     if is_partial_concession or disc_type == 'full_waiver':
-        justification_text = notes or f"Super Admin {disc_type} override concession"
+        justification_text = notes or f"Admin {disc_type} override concession"
         if is_partial_concession and settlement_mode == 'front_desk':
             justification_text += f" | Pending Front Desk collection of LKR {net_payable:,.2f}"
 
@@ -4149,7 +4149,7 @@ def admin_override_subscription_api(request, sub_id):
 
     return JsonResponse({
         'success': True,
-        'message': f"Subscription #{sub.id} for {sub.member.username} was successfully overridden by Super Admin.",
+        'message': f"Subscription #{sub.id} for {sub.member.username} was successfully overridden by Admin.",
         'subscription': {
             'id': sub.id,
             'status': sub.status,

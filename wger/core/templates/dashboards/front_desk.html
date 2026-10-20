@@ -1522,11 +1522,11 @@
         <!-- RIGHT COLUMN: Real-Time Total Payable Card, Settlement & Submission -->
         <div style="display:flex;flex-direction:column;gap:0.35rem;">
 
-          <!-- Super Admin Concession Detection Banner -->
+          <!-- Admin Concession Detection Banner -->
           <div id="payConcessionBanner" style="display:none;margin-bottom:0.85rem;padding:0.75rem 0.95rem;background:rgba(245,158,11,0.12);border:1.5px solid #F59E0B;border-radius:10px;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
               <div style="font-weight:800;color:#FBBF24;font-size:0.85rem;display:flex;align-items:center;gap:0.4rem;">
-                <i class="fa fa-gift" style="color:#FBBF24;"></i> Super Admin Concession Approved
+                <i class="fa fa-gift" style="color:#FBBF24;"></i> Admin Concession Approved
               </div>
               <span id="concessionBadge" style="font-size:0.72rem;background:#F59E0B;color:#000;font-weight:800;padding:2px 8px;border-radius:999px;">-LKR 0</span>
             </div>
@@ -1576,7 +1576,7 @@
                 <div id="payConcessionLineItem" style="display:none;justify-content:space-between;align-items:center;">
                   <span style="display:flex;align-items:center;gap:0.4rem;">
                     <i class="fa fa-tag" style="color:#FBBF24;font-size:0.75rem;"></i>
-                    <span id="payConcessionLabel">Super Admin Concession:</span>
+                    <span id="payConcessionLabel">Admin Concession:</span>
                   </span>
                   <span style="color:#FBBF24;font-weight:700;" id="payConcessionAmountDisplay">-LKR 0</span>
                 </div>
@@ -3101,7 +3101,7 @@
         yearlyBadge.style.background = 'rgba(0, 240, 255, 0.15)';
         yearlyBadge.style.color = '#00F0FF';
         yearlyBadge.style.borderColor = 'rgba(0, 240, 255, 0.3)';
-        if (yearlyDesc) yearlyDesc.textContent = 'Annual Registration Fee waived under approved Super Admin concession';
+        if (yearlyDesc) yearlyDesc.textContent = 'Annual Registration Fee waived under approved Admin concession';
       } else {
         yearlyBadge.textContent = `DUE: +LKR ${planYearlyFee.toLocaleString()}`;
         yearlyBadge.style.background = 'rgba(239, 68, 68, 0.18)';
@@ -3211,7 +3211,7 @@
     const hasConcession = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-concession') === 'true') : false;
     const concessionAmount = selectedMemberOpt ? parseCurrency(selectedMemberOpt.getAttribute('data-concession-amount')) : 0;
     const concessionReason = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-concession-reason') || 'Special Concession') : '';
-    const concessionAuthor = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-concession-author') || 'Super Admin') : '';
+    const concessionAuthor = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-concession-author') || 'Admin') : '';
 
     const concessionBanner = document.getElementById('payConcessionBanner');
     const concessionLineItem = document.getElementById('payConcessionLineItem');
@@ -3295,7 +3295,7 @@
     }
 
     if (subText) {
-      if (appliedConcession > 0) subText.textContent = `✨ Super Admin Concession applied (-LKR ${appliedConcession.toLocaleString()} off)`;
+      if (appliedConcession > 0) subText.textContent = `✨ Admin Concession applied (-LKR ${appliedConcession.toLocaleString()} off)`;
       else if (!chargeMonthly && isCoaching && includeYearly) subText.textContent = 'Personal Coaching (LKR 7,000) + Annual Registration Fee';
       else if (!chargeMonthly && isCoaching) subText.textContent = 'Coaching Only (Monthly Package Already Paid)';
       else if (!chargeMonthly && includeYearly) subText.textContent = 'Annual Registration Fee Only (Monthly Fee Active)';

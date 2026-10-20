@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Super Admin Console — Fit Me | Pitigala</title>
+<title>Admin Console — Fit Me | Pitigala</title>
 <link rel="icon" href="{% static 'images/logos/fitme-official-logo.jpg' %}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -324,7 +324,7 @@
       <span class="brand-name"><span style="color:var(--neon-lime);">FIT</span> <span style="color:#C5CBD3;">ME</span></span>
     </a>
     {% if is_super_admin %}
-      <span class="role-badge" style="background:var(--neon-lime);color:#000;"><i class="fa fa-crown"></i> Super Admin (Master)</span>
+      <span class="role-badge" style="background:var(--neon-lime);color:#000;"><i class="fa fa-shield-alt"></i> Admin</span>
     {% else %}
       <span class="role-badge" style="background:#00F0FF;color:#000;"><i class="fa fa-shield-alt"></i> Admin</span>
     {% endif %}
@@ -395,7 +395,7 @@
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem;">
         <div>
           <h1 class="page-title"><i class="fa fa-user-shield" style="color:var(--neon-lime);margin-right:0.5rem;"></i>Staff &amp; Role Management</h1>
-          <p class="page-sub">Provision new staff accounts, manage RBAC security roles (Super Admin, Admin, Front Desk, Coach, Member), configure biometric turnstile PINs, and control platform access.</p>
+          <p class="page-sub">Provision new staff accounts, manage RBAC security roles (Admin, Operations Staff, Front Desk, Coach, Member), configure biometric turnstile PINs, and control platform access.</p>
         </div>
         <button class="btn-action btn-lime" style="padding:0.7rem 1.4rem;font-size:0.9rem;" onclick="openCreateUserModal()">
           <i class="fa fa-user-plus"></i> + Create Staff / User
@@ -411,7 +411,7 @@
         {% if is_super_admin %}
         <div class="stat-card" style="border-left:3px solid var(--neon-lime);">
           <div class="stat-value" style="color:var(--neon-lime);">{{ user_stats.super_admin }}</div>
-          <div class="stat-label">Super Admins</div>
+          <div class="stat-label">Admins (Full Access)</div>
         </div>
         {% endif %}
         <div class="stat-card" style="border-left:3px solid #00F0FF;">
@@ -449,7 +449,7 @@
             <div style="display:flex;gap:0.35rem;" id="roleFilterButtons">
               <button class="filter-pill active" onclick="setRoleFilter('all', this)">All</button>
               {% if is_super_admin %}
-              <button class="filter-pill" onclick="setRoleFilter('super_admin', this)">Super Admins</button>
+              <button class="filter-pill" onclick="setRoleFilter('super_admin', this)">Admins (Full)</button>
               {% endif %}
               <button class="filter-pill" onclick="setRoleFilter('admin', this)">Admins</button>
               <button class="filter-pill" onclick="setRoleFilter('front_desk', this)">Front Desk</button>
@@ -501,7 +501,7 @@
                       </span>
                       {% if is_super_admin %}
                         <select class="role-switcher-select" onchange="changeUserRole({{ u.id }}, this.value)" title="Change User Role">
-                          <option value="super_admin" {% if u.primary_role == 'super_admin' %}selected{% endif %}>Super Admin</option>
+                          <option value="super_admin" {% if u.primary_role == 'super_admin' %}selected{% endif %}>Admin (Full Access)</option>
                           <option value="admin" {% if u.primary_role == 'admin' %}selected{% endif %}>Admin</option>
                           <option value="front_desk" {% if u.primary_role == 'front_desk' %}selected{% endif %}>Front Desk</option>
                           <option value="coach" {% if u.primary_role == 'coach' %}selected{% endif %}>Coach</option>
@@ -1722,7 +1722,7 @@
             <div style="padding:0.85rem 1.25rem;background:#151A1E;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
               <div>
                 <strong style="color:#fff;font-size:0.88rem;"><i class="fa fa-user-shield" style="color:var(--neon-lime);margin-right:0.4rem;"></i>User Role Integrity &amp; RBAC Access Audit</strong>
-                <span style="font-size:0.75rem;color:var(--text-muted);margin-left:0.5rem;">Audit verification ensuring strict role segregation: Super Admins, Operations Admins, Coaches, Front Desk, and Athletes.</span>
+                <span style="font-size:0.75rem;color:var(--text-muted);margin-left:0.5rem;">Audit verification ensuring strict role segregation: Admins, Operations Staff, Coaches, Front Desk, and Athletes.</span>
               </div>
               <div style="display:flex;align-items:center;gap:0.6rem;">
                 <span class="badge-role" style="background:{% if financial_audit.user_role_issues_count > 0 %}rgba(245,158,11,0.15);color:#F59E0B;{% else %}rgba(118,192,67,0.15);color:var(--neon-lime);{% endif %}">
@@ -1792,7 +1792,7 @@
           <div id="auditSectionConcessions" class="audit-inspector-section" style="border-top:1px solid var(--border-color);">
             <div style="padding:0.85rem 1.25rem;background:#151A1E;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
               <div>
-                <strong style="color:#fff;font-size:0.88rem;"><i class="fa fa-gift" style="color:var(--neon-lime);margin-right:0.4rem;"></i>Super Admin Concessions, 100% Free VIP Passes &amp; Discount Audits</strong>
+                <strong style="color:#fff;font-size:0.88rem;"><i class="fa fa-gift" style="color:var(--neon-lime);margin-right:0.4rem;"></i>Admin Concessions, 100% Free VIP Passes &amp; Discount Audits</strong>
                 <span style="font-size:0.75rem;color:var(--text-muted);margin-left:0.5rem;">Official audit trail of all non-standard overrides, VIP fee waivers (LKR 0), and management authorized discount grants.</span>
               </div>
               <div style="display:flex;align-items:center;gap:0.6rem;">
@@ -2796,8 +2796,8 @@
         <div class="role-radio-card" id="card-role-super_admin" onclick="selectRoleInModal('super_admin')">
           <input type="radio" name="modal_role" value="super_admin">
           <i class="fa fa-crown" style="color:var(--neon-lime);font-size:1.1rem;"></i>
-          <div class="role-card-title" style="color:var(--neon-lime);">Super Admin</div>
-          <div class="role-card-desc">Master Owner</div>
+          <div class="role-card-title" style="color:var(--neon-lime);">Admin</div>
+          <div class="role-card-desc">Full Access</div>
         </div>
         <div class="role-radio-card" id="card-role-admin" onclick="selectRoleInModal('admin')">
           <input type="radio" name="modal_role" value="admin">
@@ -3179,7 +3179,7 @@
           <label style="font-size:0.78rem;font-weight:700;color:#FBBF24;display:flex;align-items:center;gap:0.4rem;margin:0;">
             <i class="fa fa-gift"></i> Special Concession &amp; Fee Waiver
           </label>
-          <span style="font-size:0.68rem;color:#D97706;background:rgba(251,191,36,0.15);padding:2px 6px;border-radius:4px;font-weight:700;">Super Admin Override</span>
+          <span style="font-size:0.68rem;color:#D97706;background:rgba(251,191,36,0.15);padding:2px 6px;border-radius:4px;font-weight:700;">Admin Override</span>
         </div>
 
         <!-- Quick 1-Click Concession Buttons -->
@@ -3222,7 +3222,7 @@
             <option value="staff_perk">Staff Perk / Employee / Family Benefit</option>
             <option value="hardship">Special Concession / Student Financial Hardship</option>
             <option value="retention">Member Retention / Loyalty Award</option>
-            <option value="other">Other Authorized Super Admin Concession</option>
+            <option value="other">Other Authorized Admin Concession</option>
           </select>
         </div>
 
@@ -3250,7 +3250,7 @@
             </label>
             <label style="display:flex;align-items:flex-start;gap:0.45rem;cursor:pointer;color:#9CA3AF;">
               <input type="radio" name="overrideSettlementMode" id="settleModeNow" value="collected_now" onchange="onSettlementModeChange()" style="margin-top:2px;">
-              <span>Cash already collected now by Super Admin (Arms turnstile immediately)</span>
+              <span>Cash already collected now by Admin (Arms turnstile immediately)</span>
             </label>
           </div>
         </div>
