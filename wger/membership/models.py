@@ -318,6 +318,18 @@ class MembershipDiscountAudit(models.Model):
     def __str__(self):
         return f"{self.get_discount_type_display()} for {self.member.username} by {self.authorized_by.username if self.authorized_by else 'Admin'} (-LKR {self.discount_amount})"
 
+    @property
+    def is_settled(self):
+        """True if 100% complimentary pass or receipt has been issued by front desk cashier."""
+        return self.discount_type == 'full_waiver' or self.receipt_id is not None
+
+    @property
+    def pending_amount_due(self):
+        """Amount remaining to be collected at the counter by front desk."""
+        if self.is_settled:
+            return Decimal('0.00')
+        return max(Decimal('0.00'), self.original_price - self.discount_amount)
+
 
 
 class MemberApplication(models.Model):

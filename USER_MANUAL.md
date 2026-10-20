@@ -178,15 +178,14 @@ For billing adjustments, custom discounts, or granting complimentary passes:
 1. Navigate to **2. Members & Access** (`#tab-admin-members`)
 2. In the Registered Member Directory, click **"Data Override"** (`fa-sliders-h`) next to the member's subscription
 3. The **Master Data Override: Subscription** modal will open with the **Special Concession & Fee Waiver** engine:
-   - **🎁 100% Free (Full Off)**: 1-click preset that zeroes the payable amount (`LKR 0.00`), sets the status to Active (unlocked at turnstile), selects Management Comp, and writes the audit note.
+   - **🎁 100% Free (Full Off)**: 1-click preset that zeroes the payable amount (`LKR 0.00`), sets the status to Active (unlocked at turnstile), selects Management Comp, and generates an official complimentary voucher.
    - **🏷️ 50% Off / -Rs. 1,000 Off**: Instant percentage or flat discount reduction.
-   - **Custom Concession Type**: Choose between *Full Waiver*, *Flat LKR Discount*, or *Percentage %*.
+   - **Concession Payment Settlement**:
+     - **Pending Front Desk Counter Billing (Default & Recommended)**: Concession is approved, subscription is set to *Pending Payment*, and the turnstile remains locked. The member pays the remaining balance at the front desk counter via **Record Payment / Quick Renew**, where the receptionist collects the net balance and unlocks the gate.
+     - **Cash Collected Now by Admin**: Super Admin received the cash at their desk; arms turnstile and issues receipt immediately.
    - **Reason Category (Mandatory)**: Select *VIP / Brand Ambassador*, *Staff Perk*, *Management Comp*, *Hardship*, or *Member Retention*.
    - **Live Calculation**: Displays Standard Plan Price, Savings Badge, and Net Payable.
-4. Click **"Apply Data Override"**:
-   - Updates the subscription and synchronizes the payment receipt.
-   - Arms their Biometric PIN / Face ID immediately at the gate.
-   - Logs an entry in the **Membership Discount Audit** ledger.
+4. Click **"Apply Data Override"** to save to the **Membership Discount Audit** ledger.
 
 ### 4.5 Discount & Complimentary Pass Auditing
 
@@ -195,7 +194,8 @@ All concessions are permanently tracked in the **Membership Discount Audit** log
 | Field | Purpose |
 |-------|---------|
 | **Discount Type** | Full Waiver (100% Free), Percentage %, or Flat LKR |
-| **Original Price vs Payable** | List price before discount vs net amount collected (LKR 0.00 for full waiver) |
+| **Original Price vs Payable** | List price before discount vs net amount collected (or remaining balance due) |
+| **Settlement Status** | *Comped Free Pass*, *Settled @ Counter (Receipt #)*, or *Pending Front Desk Billing* |
 | **Reason Category** | VIP/Sponsor, Staff Perk, Management Comp, Hardship, Retention |
 | **Authorized By** | Super Admin username who signed off on the concession |
 | **Justification** | Written business rationale |

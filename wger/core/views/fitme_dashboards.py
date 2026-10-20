@@ -1150,6 +1150,8 @@ def front_desk_dashboard(request):
             m.latest_sub_end_str = m.active_sub_end_str
 
     from wger.gym_operations_payroll.models import BuddyMembership
+    from wger.membership.models import MembershipDiscountAudit
+
     all_member_ids = [m.id for m in all_members]
     buddy_links_fd = {
         bl.partner_member_id: bl
@@ -1157,8 +1159,19 @@ def front_desk_dashboard(request):
             partner_member_id__in=all_member_ids
         ).select_related('subscription__plan', 'subscription__member', 'primary_member')
     }
+
+    pending_concessions_map = {
+        aud.member_id: aud
+        for aud in MembershipDiscountAudit.objects.filter(
+            member_id__in=all_member_ids,
+            receipt__isnull=True,
+            subscription__status='pending_payment'
+        ).select_related('authorized_by', 'plan')
+    }
+
     for m in all_members:
         m.linked_as_partner = buddy_links_fd.get(m.id)
+        m.pending_concession = pending_concessions_map.get(m.id)
 
     context = {
         'role': 'front_desk',
@@ -2019,18 +2032,43 @@ def record_payment_api(request):
             start_date = (latest_active_sub.end_date + timezone.timedelta(days=1)) if latest_active_sub else today
             end_date = start_date + timezone.timedelta(days=getattr(plan, 'duration_days', 30))
 
+        # Check for existing pending subscription from Super Admin override
+        existing_pending_sub = Subscription.objects.filter(
+            member=member, status='pending_payment'
+        ).order_by('-created_at').first()
+
+        # Check for approved Super Admin concession awaiting Front Desk billing
+        from wger.membership.models import MembershipDiscountAudit
+        pending_concession = MembershipDiscountAudit.objects.filter(
+            member=member,
+            receipt__isnull=True
+        ).order_by('-created_at').first()
+        concession_discount_amount = pending_concession.discount_amount if pending_concession else Decimal('0.00')
+
         with transaction.atomic():
-            sub = Subscription.objects.create(
-                member=member,
-                plan=plan,
-                start_date=start_date,
-                end_date=end_date,
-                status='active',
-                payment_method=method,
-                amount_paid=amount_dec,
-                approved_by=request.user,
-                payment_date=timezone.now()
-            )
+            if existing_pending_sub:
+                sub = existing_pending_sub
+                sub.plan = plan
+                sub.start_date = start_date
+                sub.end_date = end_date
+                sub.status = 'active'
+                sub.payment_method = method
+                sub.amount_paid = amount_dec
+                sub.approved_by = request.user
+                sub.payment_date = timezone.now()
+                sub.save()
+            else:
+                sub = Subscription.objects.create(
+                    member=member,
+                    plan=plan,
+                    start_date=start_date,
+                    end_date=end_date,
+                    status='active',
+                    payment_method=method,
+                    amount_paid=amount_dec,
+                    approved_by=request.user,
+                    payment_date=timezone.now()
+                )
 
             # Ensure biometric access is restored
             bio = BiometricProfile.objects.filter(user=member).first()
@@ -2062,6 +2100,9 @@ def record_payment_api(request):
             )
 
             receipt_notes = 'Front Desk POS Payment'
+            if pending_concession and concession_discount_amount > 0:
+                receipt_notes = f"{receipt_notes} | Super Admin Concession: -LKR {concession_discount_amount:,.2f} ({pending_concession.get_reason_category_display()})"
+
             if is_personal_coaching and assigned_coach_user:
                 first_of_month = today.replace(day=1)
                 ledger, _ = PayrollLedger.objects.get_or_create(
@@ -2079,9 +2120,9 @@ def record_payment_api(request):
                 ledger.notes = (ledger.notes + f"\n+ LKR 4,000 PT Commission for member {member.username} ({plan.name if plan else 'Coaching'}).").strip()
                 ledger.save(update_fields=['pt_commissions', 'notes'])
                 if coaching_only:
-                    receipt_notes = f"Personal Coaching Add-on (Monthly Active Pass) | LKR {gym_cut} Gym Facility Fee | LKR {coach_cut} Coach ({coach_name})"
+                    receipt_notes = f"{receipt_notes} | Personal Coaching Add-on (Monthly Active Pass) | LKR {gym_cut} Gym Facility Fee | LKR {coach_cut} Coach ({coach_name})"
                 else:
-                    receipt_notes = f"Personal Coaching Split: LKR {gym_cut} Gym Facility Fee | LKR {coach_cut} Coach ({coach_name})"
+                    receipt_notes = f"{receipt_notes} | Personal Coaching Split: LKR {gym_cut} Gym Facility Fee | LKR {coach_cut} Coach ({coach_name})"
 
             # Handle Yearly Registration / Renewal Fee
             if include_yearly_fee:
@@ -2098,7 +2139,7 @@ def record_payment_api(request):
                 receipt_notes = f"{receipt_notes} | Ref: {reference_note}"
 
             # Update subscription notes for full auditability
-            sub.notes = receipt_notes
+            sub.notes = (sub.notes or '') + ("\n" + receipt_notes if sub.notes else receipt_notes)
             sub.save(update_fields=['notes'])
 
             # Compute granular billing amounts for accurate receipt itemization
@@ -2140,6 +2181,7 @@ def record_payment_api(request):
                 validity_end=sub.end_date,
                 amount_paid=amount_dec,
                 package_amount=package_amount,
+                discount_amount=concession_discount_amount,
                 coaching_amount=coaching_amount,
                 annual_fee_amount=yearly_fee_amount,
                 coach_name=coach_name_str,
@@ -2148,6 +2190,14 @@ def record_payment_api(request):
                 member_pin=pin,
                 notes=receipt_notes
             )
+
+            # Settle pending MembershipDiscountAudit
+            if pending_concession:
+                pending_concession.receipt = receipt
+                pending_concession.final_amount_paid = amount_dec
+                pending_concession.subscription = sub
+                pending_concession.justification = (pending_concession.justification + f" | Settled at Front Desk by {request.user.username} (Receipt #{receipt.receipt_number})").strip()
+                pending_concession.save(update_fields=['receipt', 'final_amount_paid', 'subscription', 'justification'])
 
         return JsonResponse({
             'success': True,
@@ -3906,24 +3956,24 @@ def admin_override_subscription_api(request, sub_id):
     disc_value = Decimal(str(data.get('discount_value') or 0))
     disc_amount = Decimal(str(data.get('discount_amount') or 0))
     reason_cat = data.get('reason_category', 'management_comp')
+    settlement_mode = data.get('settlement_mode', 'front_desk')  # 'front_desk' or 'collected_now'
+    std_price = sub.plan.price_monthly if sub.plan else Decimal('0.00')
+    net_payable = max(Decimal('0.00'), std_price - disc_amount) if disc_amount > Decimal('0.00') else std_price
+
+    from wger.gym_operations_payroll.models import PaymentReceipt
+    from wger.membership.models import MembershipDiscountAudit
+    from wger.zkbio_integration.models import BiometricProfile
+
+    receipt = None
+    is_partial_concession = (disc_type in ['percentage', 'flat'] and disc_amount > Decimal('0.00'))
 
     if disc_type == 'full_waiver':
+        # 100% Free pass — Zero payable, active immediately, gate unlocked, LKR 0 receipt
         sub.amount_paid = Decimal('0.00')
-        disc_amount = sub.plan.price_monthly if sub.plan else Decimal('0.00')
-    elif disc_amount > Decimal('0.00'):
-        if sub.plan:
-            sub.amount_paid = max(Decimal('0.00'), sub.plan.price_monthly - disc_amount)
+        sub.status = 'active'
+        disc_amount = std_price
 
-    notes = data.get('notes', '').strip()
-    timestamp = timezone.now().strftime('%Y-%m-%d %H:%M')
-    concession_str = f" [Concession: {disc_type.upper()} -LKR {disc_amount} | {reason_cat}]" if disc_amount > Decimal('0.00') or disc_type == 'full_waiver' else ""
-    override_note = f"\n[Super Admin Data Override by {request.user.username} at {timestamp}{concession_str}]: {notes}" if notes else f"\n[Super Admin Data Override by {request.user.username} at {timestamp}{concession_str}]"
-    sub.notes = (sub.notes or '') + override_note
-    sub.save()
-
-    # If subscription status is active, ensure biometric profile is armed for turnstile access
-    if sub.status == 'active':
-        from wger.zkbio_integration.models import BiometricProfile
+        # Arm gate turnstile
         bio, _ = BiometricProfile.objects.get_or_create(
             user=sub.member,
             defaults={'zk_pin': str(1000 + sub.member.id)}
@@ -3932,50 +3982,119 @@ def admin_override_subscription_api(request, sub_id):
         bio.sync_status = 'PENDING'
         bio.save(update_fields=['disabled', 'sync_status'])
 
-    # Synchronize linked PaymentReceipt to avoid financial ledger mismatches
-    from wger.gym_operations_payroll.models import PaymentReceipt
-    receipt = PaymentReceipt.objects.filter(subscription=sub).first()
-    if receipt:
-        receipt.validity_start = sub.start_date
-        receipt.validity_end = sub.end_date
-        receipt.amount_paid = sub.amount_paid
-        receipt.discount_amount = disc_amount
-        receipt.plan_name = sub.plan.name
-        receipt.save()
+        receipt = PaymentReceipt.objects.filter(subscription=sub).first()
+        if receipt:
+            receipt.validity_start = sub.start_date
+            receipt.validity_end = sub.end_date
+            receipt.amount_paid = Decimal('0.00')
+            receipt.discount_amount = disc_amount
+            receipt.plan_name = sub.plan.name
+            receipt.notes = '100% Complimentary VIP / Management Fee Waiver'
+            receipt.save()
+        else:
+            receipt = PaymentReceipt.objects.create(
+                receipt_number=PaymentReceipt.generate_next_receipt_number(),
+                subscription=sub,
+                member=sub.member,
+                plan_name=sub.plan.name if sub.plan else 'Complimentary',
+                duration_days=sub.plan.duration_days if sub.plan else 30,
+                validity_start=sub.start_date,
+                validity_end=sub.end_date,
+                amount_paid=Decimal('0.00'),
+                discount_amount=disc_amount,
+                payment_method='cash',
+                cashier=request.user,
+                notes='100% Complimentary VIP / Management Fee Waiver'
+            )
+
+    elif is_partial_concession:
+        if settlement_mode == 'front_desk':
+            # Member has NOT paid yet! Pending payment at Front Desk counter.
+            # Gate remains locked until front desk collects remaining amount.
+            sub.status = 'pending_payment'
+            sub.amount_paid = Decimal('0.00')
+            receipt = None  # No receipt until front desk collects the money!
+
+            bio = BiometricProfile.objects.filter(user=sub.member).first()
+            if bio:
+                bio.disabled = True
+                bio.sync_status = 'PENDING'
+                bio.save(update_fields=['disabled', 'sync_status'])
+        else:
+            # Super Admin physically received the cash right now
+            sub.status = 'active'
+            sub.amount_paid = net_payable
+
+            bio, _ = BiometricProfile.objects.get_or_create(
+                user=sub.member,
+                defaults={'zk_pin': str(1000 + sub.member.id)}
+            )
+            bio.disabled = False
+            bio.sync_status = 'PENDING'
+            bio.save(update_fields=['disabled', 'sync_status'])
+
+            receipt = PaymentReceipt.objects.create(
+                receipt_number=PaymentReceipt.generate_next_receipt_number(),
+                subscription=sub,
+                member=sub.member,
+                plan_name=sub.plan.name if sub.plan else 'Custom',
+                duration_days=sub.plan.duration_days if sub.plan else 30,
+                validity_start=sub.start_date,
+                validity_end=sub.end_date,
+                amount_paid=net_payable,
+                discount_amount=disc_amount,
+                payment_method='cash',
+                cashier=request.user,
+                notes=f'Super Admin collected LKR {net_payable} (-LKR {disc_amount} concession)'
+            )
     else:
-        receipt = PaymentReceipt.objects.create(
-            receipt_number=PaymentReceipt.generate_next_receipt_number(),
-            subscription=sub,
-            member=sub.member,
-            plan_name=sub.plan.name,
-            duration_days=sub.plan.duration_days,
-            validity_start=sub.start_date,
-            validity_end=sub.end_date,
-            amount_paid=sub.amount_paid,
-            discount_amount=disc_amount,
-            payment_method='cash',
-            cashier=request.user,
-            notes='Auto-reconciled on Super Admin override'
-        )
+        # Standard override without concession
+        if sub.status == 'active':
+            bio, _ = BiometricProfile.objects.get_or_create(
+                user=sub.member,
+                defaults={'zk_pin': str(1000 + sub.member.id)}
+            )
+            bio.disabled = False
+            bio.sync_status = 'PENDING'
+            bio.save(update_fields=['disabled', 'sync_status'])
+
+    notes = data.get('notes', '').strip()
+    timestamp = timezone.now().strftime('%Y-%m-%d %H:%M')
+    concession_str = f" [Concession: {disc_type.upper()} -LKR {disc_amount} | {reason_cat} | Mode: {settlement_mode}]" if disc_amount > Decimal('0.00') or disc_type == 'full_waiver' else ""
+    override_note = f"\n[Super Admin Data Override by {request.user.username} at {timestamp}{concession_str}]: {notes}" if notes else f"\n[Super Admin Data Override by {request.user.username} at {timestamp}{concession_str}]"
+    sub.notes = (sub.notes or '') + override_note
+    sub.save()
 
     # Formal Concession Audit Logging
-    if (disc_type in ['full_waiver', 'percentage', 'flat'] and disc_amount > Decimal('0.00')) or disc_type == 'full_waiver':
-        from wger.membership.models import MembershipDiscountAudit
+    if is_partial_concession or disc_type == 'full_waiver':
+        justification_text = notes or f"Super Admin {disc_type} override concession"
+        if is_partial_concession and settlement_mode == 'front_desk':
+            justification_text += f" | Pending Front Desk collection of LKR {net_payable:,.2f}"
+
+        # Clean up any previous un-settled audit record for this subscription to avoid duplicates
+        MembershipDiscountAudit.objects.filter(subscription=sub, receipt__isnull=True).delete()
+
         MembershipDiscountAudit.objects.create(
             member=sub.member,
             authorized_by=request.user,
             subscription=sub,
             plan=sub.plan,
             discount_type=disc_type,
-            original_price=sub.plan.price_monthly if sub.plan else Decimal('0.00'),
+            original_price=std_price,
             discount_value=disc_value,
             discount_amount=disc_amount,
             annual_fee_waived=True,
-            final_amount_paid=sub.amount_paid,
+            final_amount_paid=Decimal('0.00') if (is_partial_concession and settlement_mode == 'front_desk') else (sub.amount_paid or Decimal('0.00')),
             reason_category=reason_cat,
-            justification=notes or f"Super Admin {disc_type} override concession",
+            justification=justification_text,
             receipt=receipt
         )
+
+    msg = f"Subscription #{sub.id} for {sub.member.username} updated."
+    if is_partial_concession and settlement_mode == 'front_desk':
+        msg = f"Concession of LKR {disc_amount:,.0f} approved for {sub.member.username}. Subscription set to Pending Payment (Due: LKR {net_payable:,.0f}). Member must pay at Front Desk."
+    elif disc_type == 'full_waiver':
+        msg = f"100% Complimentary Free Pass activated for {sub.member.username}. Turnstile gate unlocked immediately."
 
     return JsonResponse({
         'success': True,

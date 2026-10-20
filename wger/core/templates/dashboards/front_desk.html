@@ -1417,8 +1417,15 @@
                           data-sub-plan="{{ m.active_plan_name }}"
                           data-latest-sub-end="{{ m.latest_sub_end_str }}"
                           data-yearly-paid="{% if m.has_paid_yearly_this_year %}true{% else %}false{% endif %}"
-                          data-age="{{ m.member_profile.age|default:'' }}">
-                    {{ m.get_full_name|default:m.username }} (PIN: #{{ m.biometric_profile.zk_pin|default:m.id }}){% if m.member_profile.age %} [Age: {{ m.member_profile.age }}]{% endif %}{% if m.member_profile.phone %} &bull; {{ m.member_profile.phone }}{% endif %}{% if m.has_active_subscription %} &bull; [✓ Paid until {{ m.active_sub_end_str }}]{% elif m.latest_sub_end_str %} &bull; [Expired: {{ m.latest_sub_end_str }}]{% else %} &bull; [Monthly Due]{% endif %}{% if not m.has_paid_yearly_this_year %} &bull; [Yearly Due]{% endif %}
+                          data-age="{{ m.member_profile.age|default:'' }}"
+                          data-concession="{% if m.pending_concession %}true{% else %}false{% endif %}"
+                          data-concession-amount="{{ m.pending_concession.discount_amount|default:'0' }}"
+                          data-concession-type="{{ m.pending_concession.discount_type|default:'' }}"
+                          data-concession-val="{{ m.pending_concession.discount_value|default:'0' }}"
+                          data-concession-reason="{{ m.pending_concession.get_reason_category_display|default:'' }}"
+                          data-concession-author="{{ m.pending_concession.authorized_by.username|default:'Admin' }}"
+                          data-concession-plan-id="{{ m.pending_concession.plan_id|default:'' }}">
+                    {{ m.get_full_name|default:m.username }} (PIN: #{{ m.biometric_profile.zk_pin|default:m.id }}){% if m.member_profile.age %} [Age: {{ m.member_profile.age }}]{% endif %}{% if m.member_profile.phone %} &bull; {{ m.member_profile.phone }}{% endif %}{% if m.pending_concession %} &bull; [🎁 Concession: -LKR {{ m.pending_concession.discount_amount|floatformat:0 }} Approved]{% elif m.has_active_subscription %} &bull; [✓ Paid until {{ m.active_sub_end_str }}]{% elif m.latest_sub_end_str %} &bull; [Expired: {{ m.latest_sub_end_str }}]{% else %} &bull; [Monthly Due]{% endif %}{% if not m.has_paid_yearly_this_year %} &bull; [Yearly Due]{% endif %}
                   </option>
 
                 {% endfor %}
@@ -1513,6 +1520,20 @@
 
         <!-- RIGHT COLUMN: Real-Time Total Payable Card, Settlement & Submission -->
         <div style="display:flex;flex-direction:column;gap:0.35rem;">
+
+          <!-- Super Admin Concession Detection Banner -->
+          <div id="payConcessionBanner" style="display:none;margin-bottom:0.85rem;padding:0.75rem 0.95rem;background:rgba(245,158,11,0.12);border:1.5px solid #F59E0B;border-radius:10px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;">
+              <div style="font-weight:800;color:#FBBF24;font-size:0.85rem;display:flex;align-items:center;gap:0.4rem;">
+                <i class="fa fa-gift" style="color:#FBBF24;"></i> Super Admin Concession Approved
+              </div>
+              <span id="concessionBadge" style="font-size:0.72rem;background:#F59E0B;color:#000;font-weight:800;padding:2px 8px;border-radius:999px;">-LKR 0</span>
+            </div>
+            <div id="concessionDetailText" style="font-size:0.74rem;color:#E2E8F0;margin-top:4px;line-height:1.35;">
+              Concession authorized by @Admin. Member will only be billed the remaining net amount.
+            </div>
+          </div>
+
           <!-- Real-Time Total Payable Amount Card -->
           <div class="form-group" style="margin-bottom:1rem;">
             <div style="background:linear-gradient(135deg, rgba(20,25,28,0.96) 0%, rgba(14,18,22,0.96) 100%);border:1.5px solid var(--neon-lime);border-radius:12px;padding:1.15rem 1.25rem;box-shadow:0 8px 24px rgba(0,0,0,0.35), 0 0 16px rgba(118,192,67,0.15);position:relative;overflow:hidden;">
@@ -1550,6 +1571,13 @@
                     <span>Base Package (<span id="payPlanSummaryName" style="color:#fff;font-weight:700;">Monthly Package</span>):</span>
                   </span>
                   <span style="color:#fff;font-weight:700;" id="payBasePlanAmountDisplay">LKR 4,000</span>
+                </div>
+                <div id="payConcessionLineItem" style="display:none;justify-content:space-between;align-items:center;">
+                  <span style="display:flex;align-items:center;gap:0.4rem;">
+                    <i class="fa fa-tag" style="color:#FBBF24;font-size:0.75rem;"></i>
+                    <span id="payConcessionLabel">Super Admin Concession:</span>
+                  </span>
+                  <span style="color:#FBBF24;font-weight:700;" id="payConcessionAmountDisplay">-LKR 0</span>
                 </div>
                 <div id="payCoachingLineItem" style="display:none;justify-content:space-between;align-items:center;">
                   <span style="display:flex;align-items:center;gap:0.4rem;">
@@ -2974,6 +3002,11 @@
       yearlyCheckbox.checked = !yearlyPaid;
     }
 
+    const concessionPlanId = selectedOpt?.getAttribute('data-concession-plan-id');
+    if (concessionPlanId && document.getElementById('payPlanId')) {
+      document.getElementById('payPlanId').value = concessionPlanId;
+    }
+
     updatePayAmountDisplay();
   }
 
@@ -3164,7 +3197,37 @@
       yearlyContainer.style.background = includeYearly ? 'rgba(118,192,67,0.06)' : 'rgba(255,255,255,0.03)';
     }
 
-    const totalPayable = effectiveBasePrice + coachingAddon + appliedYearlyFee;
+    // Check if member has an approved Super Admin Concession
+    const hasConcession = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-concession') === 'true') : false;
+    const concessionAmount = selectedMemberOpt ? (parseFloat(selectedMemberOpt.getAttribute('data-concession-amount')) || 0) : 0;
+    const concessionReason = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-concession-reason') || 'Special Concession') : '';
+    const concessionAuthor = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-concession-author') || 'Super Admin') : '';
+
+    const concessionBanner = document.getElementById('payConcessionBanner');
+    const concessionLineItem = document.getElementById('payConcessionLineItem');
+    const concessionAmtDisplay = document.getElementById('payConcessionAmountDisplay');
+
+    let appliedConcession = 0;
+    if (hasConcession && concessionAmount > 0 && chargeMonthly) {
+      appliedConcession = Math.min(effectiveBasePrice, concessionAmount);
+      if (concessionBanner) {
+        concessionBanner.style.display = 'block';
+        const badgeEl = document.getElementById('concessionBadge');
+        if (badgeEl) badgeEl.textContent = `-LKR ${appliedConcession.toLocaleString()}`;
+        const detailEl = document.getElementById('concessionDetailText');
+        if (detailEl) detailEl.innerHTML = `<b>${concessionReason}</b> authorized by <b>@${concessionAuthor}</b>. Standard rate reduced by LKR ${appliedConcession.toLocaleString()}. Member pays net remaining balance at counter.`;
+      }
+      if (concessionLineItem) {
+        concessionLineItem.style.display = 'flex';
+        if (concessionAmtDisplay) concessionAmtDisplay.textContent = `-LKR ${appliedConcession.toLocaleString()}`;
+      }
+    } else {
+      if (concessionBanner) concessionBanner.style.display = 'none';
+      if (concessionLineItem) concessionLineItem.style.display = 'none';
+    }
+
+    const netBasePrice = Math.max(0, effectiveBasePrice - appliedConcession);
+    const totalPayable = netBasePrice + coachingAddon + appliedYearlyFee;
 
     // Update displays
     if (planSummaryName) planSummaryName.textContent = planName;
@@ -3175,6 +3238,8 @@
         } else {
           basePlanDisplay.innerHTML = `<span style="text-decoration:line-through;color:var(--text-muted);font-size:0.75rem;">LKR ${basePrice.toLocaleString()}</span> <span style="color:var(--neon-lime);font-weight:700;">(Fee Waived: LKR 0)</span>`;
         }
+      } else if (appliedConcession > 0) {
+        basePlanDisplay.innerHTML = `<span style="text-decoration:line-through;color:var(--text-muted);font-size:0.75rem;">LKR ${basePrice.toLocaleString()}</span> <span style="color:var(--neon-lime);font-weight:700;">LKR ${netBasePrice.toLocaleString()}</span>`;
       } else {
         basePlanDisplay.textContent = 'LKR ' + basePrice.toLocaleString();
       }
@@ -3209,7 +3274,7 @@
     if (yearlyAmtInput) yearlyAmtInput.value = appliedYearlyFee;
 
     const pkgAmtInput = document.getElementById('payPackageAmount');
-    if (pkgAmtInput) pkgAmtInput.value = effectiveBasePrice;
+    if (pkgAmtInput) pkgAmtInput.value = netBasePrice;
 
     const coachAmtInput = document.getElementById('payCoachingAmount');
     if (coachAmtInput) coachAmtInput.value = coachingAddon;
@@ -3220,7 +3285,8 @@
     }
 
     if (subText) {
-      if (!chargeMonthly && isCoaching && includeYearly) subText.textContent = 'Personal Coaching (LKR 7,000) + Annual Registration Fee';
+      if (appliedConcession > 0) subText.textContent = `✨ Super Admin Concession applied (-LKR ${appliedConcession.toLocaleString()} off)`;
+      else if (!chargeMonthly && isCoaching && includeYearly) subText.textContent = 'Personal Coaching (LKR 7,000) + Annual Registration Fee';
       else if (!chargeMonthly && isCoaching) subText.textContent = 'Coaching Only (Monthly Package Already Paid)';
       else if (!chargeMonthly && includeYearly) subText.textContent = 'Annual Registration Fee Only (Monthly Fee Active)';
       else if (!chargeMonthly) subText.textContent = `Monthly Active until ${subEnd || 'Date'}`;

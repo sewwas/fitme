@@ -163,6 +163,7 @@ class MembershipDiscountAuditAdmin(admin.ModelAdmin):
         'original_price',
         'discount_amount',
         'final_amount_paid',
+        'settlement_status_display',
         'reason_category',
         'authorized_by',
     )
@@ -186,3 +187,11 @@ class MembershipDiscountAuditAdmin(admin.ModelAdmin):
             return format_html('<span style="background:#2563EB;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold;font-size:11px;">{}% OFF</span>', obj.discount_value)
         return format_html('<span style="background:#D97706;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold;font-size:11px;">-LKR {}</span>', obj.discount_amount)
     discount_badge.short_description = 'Concession Type'
+
+    def settlement_status_display(self, obj):
+        if obj.discount_type == 'full_waiver':
+            return format_html('<span style="background:rgba(5,150,105,0.15);color:#059669;padding:2px 8px;border-radius:4px;font-weight:bold;font-size:11px;">✔ Comped Free Pass</span>')
+        elif obj.receipt:
+            return format_html('<span style="background:rgba(16,185,129,0.15);color:#10B981;padding:2px 8px;border-radius:4px;font-weight:bold;font-size:11px;">✔ Settled (#{})</span>', obj.receipt.receipt_number)
+        return format_html('<span style="background:rgba(217,119,6,0.15);color:#D97706;padding:2px 8px;border-radius:4px;font-weight:bold;font-size:11px;">⏳ Pending Counter (Due: LKR {})</span>', int(obj.pending_amount_due))
+    settlement_status_display.short_description = 'Settlement Status'

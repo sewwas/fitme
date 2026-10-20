@@ -1815,6 +1815,7 @@
                     <th>Standard Price</th>
                     <th>Waived / Discount</th>
                     <th>Amount Collected</th>
+                    <th>Settlement Status</th>
                     <th>Reason Category</th>
                     <th>Authorized By</th>
                     <th>Justification &amp; Notes</th>
@@ -1842,8 +1843,29 @@
                       </td>
                       <td style="font-family:monospace;color:var(--text-muted);font-size:0.82rem;">LKR {{ a.original_price|floatformat:0 }}</td>
                       <td style="font-family:monospace;font-weight:700;color:#10B981;font-size:0.82rem;">-LKR {{ a.discount_amount|floatformat:0 }}</td>
-                      <td style="font-family:monospace;font-weight:800;color:{% if a.final_amount_paid == 0 %}var(--neon-lime){% else %}#fff{% endif %};font-size:0.88rem;">
-                        LKR {{ a.final_amount_paid|floatformat:2 }}
+                      <td style="font-family:monospace;font-weight:800;color:{% if a.final_amount_paid == 0 and a.discount_type == 'full_waiver' %}var(--neon-lime){% elif a.final_amount_paid > 0 %}#fff{% else %}#EF4444{% endif %};font-size:0.88rem;">
+                        {% if a.receipt %}
+                          LKR {{ a.final_amount_paid|floatformat:2 }}
+                        {% elif a.discount_type == 'full_waiver' %}
+                          LKR 0.00
+                        {% else %}
+                          <span style="color:#FBBF24;">Due: LKR {{ a.pending_amount_due|floatformat:0 }}</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if a.discount_type == 'full_waiver' %}
+                          <span class="badge-role" style="background:rgba(16,185,129,0.15);color:#10B981;font-weight:700;font-size:0.7rem;">
+                            <i class="fa fa-check-circle"></i> Comped Free Pass
+                          </span>
+                        {% elif a.receipt %}
+                          <span class="badge-role" style="background:rgba(16,185,129,0.15);color:#10B981;font-weight:700;font-size:0.7rem;">
+                            <i class="fa fa-check-double"></i> Settled @ Counter (#{{ a.receipt.receipt_number }})
+                          </span>
+                        {% else %}
+                          <span class="badge-role" style="background:rgba(245,158,11,0.2);color:#FBBF24;font-weight:700;font-size:0.7rem;">
+                            <i class="fa fa-clock"></i> Pending Front Desk Billing
+                          </span>
+                        {% endif %}
                       </td>
                       <td style="font-size:0.78rem;color:#ccc;">{{ a.get_reason_category_display }}</td>
                       <td style="font-size:0.78rem;color:var(--cyan);font-weight:600;">@{{ a.authorized_by.username|default:"Admin" }}</td>
@@ -1852,7 +1874,7 @@
                       </td>
                     </tr>
                   {% empty %}
-                    <tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-info-circle"></i> No special fee waivers or concession overrides have been granted yet.</td></tr>
+                    <tr><td colspan="11" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-info-circle"></i> No special fee waivers or concession overrides have been granted yet.</td></tr>
                   {% endfor %}
                 </tbody>
               </table>
@@ -3215,9 +3237,26 @@
             <span id="calcFinalPayable" style="color:#10B981;font-weight:800;font-size:0.92rem;">LKR 0</span>
           </div>
         </div>
+
+        <!-- Concession Settlement Mode (Pending Front Desk Collection vs Collected Now) -->
+        <div id="concessionSettlementBox" style="display:none;margin-top:0.75rem;padding-top:0.65rem;border-top:1px dashed #374151;">
+          <label style="display:block;font-size:0.72rem;color:#FBBF24;margin-bottom:0.35rem;font-weight:700;">
+            <i class="fa fa-cash-register" style="color:var(--neon-lime);"></i> Concession Payment Settlement:
+          </label>
+          <div style="display:flex;flex-direction:column;gap:0.4rem;font-size:0.76rem;">
+            <label style="display:flex;align-items:flex-start;gap:0.45rem;cursor:pointer;color:#FDE68A;">
+              <input type="radio" name="overrideSettlementMode" id="settleModeFrontDesk" value="front_desk" checked onchange="onSettlementModeChange()" style="margin-top:2px;">
+              <span><b>Pending Front Desk Counter Billing</b> (Recommended &bull; Gate locked until member pays remaining balance at front desk counter)</span>
+            </label>
+            <label style="display:flex;align-items:flex-start;gap:0.45rem;cursor:pointer;color:#9CA3AF;">
+              <input type="radio" name="overrideSettlementMode" id="settleModeNow" value="collected_now" onchange="onSettlementModeChange()" style="margin-top:2px;">
+              <span>Cash already collected now by Super Admin (Arms turnstile immediately)</span>
+            </label>
+          </div>
+        </div>
       </div>
 
-      <div style="margin-bottom:0.85rem;">
+      <div style="margin-bottom:0.85rem;" id="grpOverrideAmountPaid">
         <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Final Amount Paid (LKR) *</label>
         <input type="number" step="0.01" id="overrideAmountPaid" required class="form-control" placeholder="0.00">
       </div>
@@ -5235,7 +5274,37 @@
 
     const netPayable = Math.max(0, stdPrice - discountAmount);
     finalPayableEl.textContent = 'LKR ' + netPayable.toLocaleString('en-US', {minimumFractionDigits: 0});
-    amountPaidInput.value = netPayable.toFixed(2);
+
+    const settleBox = document.getElementById('concessionSettlementBox');
+    const statusSel = document.getElementById('overrideStatus');
+    const grpPaid = document.getElementById('grpOverrideAmountPaid');
+
+    if (type === 'full_waiver') {
+      if (settleBox) settleBox.style.display = 'none';
+      if (statusSel) statusSel.value = 'active';
+      amountPaidInput.value = '0.00';
+      if (grpPaid) grpPaid.style.display = 'none';
+    } else if (type === 'flat' || type === 'percentage') {
+      if (settleBox) settleBox.style.display = 'block';
+      if (grpPaid) grpPaid.style.display = 'block';
+      const isFrontDesk = document.getElementById('settleModeFrontDesk')?.checked;
+      if (isFrontDesk) {
+        if (statusSel) statusSel.value = 'pending_payment';
+        amountPaidInput.value = '0.00';
+        discTagEl.textContent += ` (Due at Front Desk: LKR ${netPayable.toLocaleString('en-US')})`;
+      } else {
+        if (statusSel) statusSel.value = 'active';
+        amountPaidInput.value = netPayable.toFixed(2);
+      }
+    } else {
+      if (settleBox) settleBox.style.display = 'none';
+      if (grpPaid) grpPaid.style.display = 'block';
+      amountPaidInput.value = netPayable.toFixed(2);
+    }
+  }
+
+  function onSettlementModeChange() {
+    recalculateOverrideDiscount();
   }
 
   function openOverrideSubModal(subId, memberName, planId, startDate, endDate, amountPaid, status) {
@@ -5253,6 +5322,8 @@
     document.getElementById('overrideDiscountType').value = 'none';
     document.getElementById('overrideDiscountValue').value = '';
     document.getElementById('overrideDiscountValue').disabled = true;
+    const settleFront = document.getElementById('settleModeFrontDesk');
+    if (settleFront) settleFront.checked = true;
 
     if (amountPaid !== undefined && amountPaid !== null && amountPaid !== '') {
       const numPaid = parseFloat(amountPaid);
@@ -5296,6 +5367,8 @@
     else if (discType === 'flat') discAmt = Math.min(stdPrice, discVal);
     else if (discType === 'percentage') discAmt = (stdPrice * Math.min(100, discVal)) / 100;
 
+    const settlementMode = document.querySelector('input[name="overrideSettlementMode"]:checked')?.value || 'front_desk';
+
     const payload = {
       plan_id: document.getElementById('overridePlanId').value,
       status: document.getElementById('overrideStatus').value,
@@ -5305,6 +5378,7 @@
       discount_type: discType,
       discount_value: discVal,
       discount_amount: discAmt,
+      settlement_mode: settlementMode,
       reason_category: document.getElementById('overrideReasonCategory').value,
       notes: document.getElementById('overrideNotes').value.trim()
     };
