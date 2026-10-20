@@ -1092,7 +1092,7 @@
                       <div style="font-weight:700;color:#fff;font-size:0.85rem;">{{ m.latest_sub.plan.name }}</div>
                       <div style="font-size:0.75rem;color:var(--text-muted);">
                         Expires: <strong style="color:{% if m.latest_sub.is_active %}var(--neon-lime){% else %}var(--danger){% endif %};">{{ m.latest_sub.end_date|default:"--" }}</strong>
-                        &bull; LKR {{ m.latest_sub.amount_paid|floatformat:0 }}
+                        &bull; LKR {% if m.latest_sub.amount_paid > 0 %}{{ m.latest_sub.amount_paid|floatformat:0 }}{% else %}{{ m.latest_sub.plan.price_monthly|floatformat:0 }}{% endif %}
                       </div>
                       {% if m.latest_sub.plan.max_members > 1 %}
                         <div style="margin-top:0.35rem;font-size:0.73rem;">

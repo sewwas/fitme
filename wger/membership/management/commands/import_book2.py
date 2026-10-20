@@ -106,11 +106,11 @@ class Command(BaseCommand):
                         else:
                             phone_str = str(phone)
 
-                    # Payment amount
+                    # Payment amount (fallback to plan standard price if omitted in Excel)
                     try:
-                        amount = Decimal(str(payment_val)) if payment_val and str(payment_val).replace('.', '', 1).isdigit() else Decimal('0.00')
+                        amount = Decimal(str(payment_val)) if payment_val and str(payment_val).replace('.', '', 1).isdigit() else (plan.price_monthly if plan else Decimal('0.00'))
                     except Exception:
-                        amount = Decimal('0.00')
+                        amount = plan.price_monthly if plan else Decimal('0.00')
 
                     self.stdout.write(
                         f"{str(pin):<6} | {name[:24]:<24} | {phone_str:<12} | {plan_name[:16]:<16} | "
