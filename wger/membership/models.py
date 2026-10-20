@@ -253,6 +253,73 @@ class Subscription(models.Model):
         return max(0, (self.plan.max_members - 1) - len(self.linked_partners))
 
 
+class MembershipDiscountAudit(models.Model):
+    """
+    Super Admin Special Concession, Discount & Complimentary Pass Audit Log.
+    Tracks all non-standard financial overrides, fee waivers (LKR 0), and custom discounts.
+    """
+    DISCOUNT_TYPES = [
+        ('full_waiver', '100% Free / Complimentary Pass'),
+        ('percentage', 'Percentage Discount (%)'),
+        ('flat', 'Flat Amount Discount (LKR)'),
+    ]
+
+    REASON_CATEGORIES = [
+        ('vip_sponsor', 'VIP / Brand Ambassador / Sponsored Athlete'),
+        ('staff_perk', 'Staff Perk / Employee / Family Benefit'),
+        ('management_comp', 'Management / Director Guest Privilege'),
+        ('hardship', 'Special Concession / Student Financial Hardship'),
+        ('retention', 'Member Retention / Loyalty Award'),
+        ('other', 'Other Authorized Super Admin Concession'),
+    ]
+
+    member = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='received_discount_audits'
+    )
+    authorized_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='authorized_discount_audits'
+    )
+    subscription = models.ForeignKey(
+        Subscription,
+        on_delete=models.CASCADE,
+        related_name='discount_audits'
+    )
+    plan = models.ForeignKey(
+        MembershipPlan,
+        on_delete=models.PROTECT,
+        related_name='discount_grants'
+    )
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPES, default='full_waiver')
+    original_price = models.DecimalField(max_digits=10, decimal_places=2, help_text="Standard plan list price")
+    discount_value = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Discount percentage or flat LKR value entered")
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Actual financial reduction in LKR")
+    annual_fee_waived = models.BooleanField(default=True, help_text="Whether yearly registration fee was waived")
+    final_amount_paid = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Net amount collected from member (0 for complimentary)")
+    reason_category = models.CharField(max_length=30, choices=REASON_CATEGORIES, default='management_comp')
+    justification = models.TextField(help_text="Mandatory detailed business rationale for granting this discount/free plan")
+    receipt = models.ForeignKey(
+        'gym_operations_payroll.PaymentReceipt',
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='discount_audit_record'
+    )
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        verbose_name = 'Membership Discount Audit'
+        verbose_name_plural = 'Membership Discount Audits'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.get_discount_type_display()} for {self.member.username} by {self.authorized_by.username if self.authorized_by else 'Admin'} (-LKR {self.discount_amount})"
+
+
+
 class MemberApplication(models.Model):
     """
     Official Fit Me Fitness Club — Membership Registration Intake Queue.

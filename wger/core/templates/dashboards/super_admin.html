@@ -1517,6 +1517,9 @@
             <button type="button" class="filter-pill" onclick="switchAuditInspectorTab('roles', this)">
               <i class="fa fa-user-shield" style="color:var(--neon-lime);"></i> RBAC Role Audit ({{ financial_audit.user_role_issues_count|default:0 }})
             </button>
+            <button type="button" class="filter-pill" onclick="switchAuditInspectorTab('concessions', this)">
+              <i class="fa fa-gift" style="color:var(--neon-lime);"></i> Concessions &amp; Waivers ({{ financial_audit.discount_audits_count|default:0 }})
+            </button>
           </div>
         </div>
 
@@ -1779,6 +1782,77 @@
                     </tr>
                   {% empty %}
                     <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-check-circle" style="color:var(--neon-lime);"></i> 100% RBAC Aligned: All user accounts and permission groups are cleanly separated and verified!</td></tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- SECTION F: Special Concessions, 100% Free Passes & Fee Waivers -->
+          <div id="auditSectionConcessions" class="audit-inspector-section" style="border-top:1px solid var(--border-color);">
+            <div style="padding:0.85rem 1.25rem;background:#151A1E;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem;">
+              <div>
+                <strong style="color:#fff;font-size:0.88rem;"><i class="fa fa-gift" style="color:var(--neon-lime);margin-right:0.4rem;"></i>Super Admin Concessions, 100% Free VIP Passes &amp; Discount Audits</strong>
+                <span style="font-size:0.75rem;color:var(--text-muted);margin-left:0.5rem;">Official audit trail of all non-standard overrides, VIP fee waivers (LKR 0), and management authorized discount grants.</span>
+              </div>
+              <div style="display:flex;align-items:center;gap:0.6rem;">
+                <span class="badge-role" style="background:rgba(118,192,67,0.15);color:var(--neon-lime);">
+                  {{ financial_audit.discount_audits_count|default:0 }} Grants Logged
+                </span>
+                <a href="/admin/membership/membershipdiscountaudit/" target="_blank" class="btn-action" style="background:#1F2428;border:1px solid rgba(255,255,255,0.2);color:#fff;font-size:0.74rem;padding:0.35rem 0.75rem;text-decoration:none;">
+                  <i class="fa fa-external-link-alt"></i> Django Admin Log
+                </a>
+              </div>
+            </div>
+            <div style="overflow-x:auto;">
+              <table class="table-custom">
+                <thead>
+                  <tr>
+                    <th>Date &amp; Time</th>
+                    <th>Athlete Account</th>
+                    <th>Membership Plan</th>
+                    <th>Concession Type</th>
+                    <th>Standard Price</th>
+                    <th>Waived / Discount</th>
+                    <th>Amount Collected</th>
+                    <th>Reason Category</th>
+                    <th>Authorized By</th>
+                    <th>Justification &amp; Notes</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for a in financial_audit.discount_audits %}
+                    <tr>
+                      <td style="color:var(--text-muted);font-family:monospace;font-size:0.78rem;">
+                        {{ a.created_at|date:"d M Y, H:i" }}
+                      </td>
+                      <td style="font-weight:700;color:#fff;">
+                        {{ a.member.get_full_name|default:a.member.username }}
+                        <div style="font-size:0.72rem;color:var(--text-muted);font-family:monospace;">@{{ a.member.username }}</div>
+                      </td>
+                      <td style="color:#ccc;font-size:0.82rem;">{{ a.plan.name }}</td>
+                      <td>
+                        {% if a.discount_type == 'full_waiver' %}
+                          <span class="badge-role" style="background:rgba(16,185,129,0.2);color:#10B981;font-weight:700;font-size:0.72rem;">100% FREE PASS</span>
+                        {% elif a.discount_type == 'percentage' %}
+                          <span class="badge-role" style="background:rgba(59,130,246,0.2);color:#60A5FA;font-weight:700;font-size:0.72rem;">{{ a.discount_value|floatformat:0 }}% OFF</span>
+                        {% else %}
+                          <span class="badge-role" style="background:rgba(245,158,11,0.2);color:#FBBF24;font-weight:700;font-size:0.72rem;">-LKR {{ a.discount_amount|floatformat:0 }}</span>
+                        {% endif %}
+                      </td>
+                      <td style="font-family:monospace;color:var(--text-muted);font-size:0.82rem;">LKR {{ a.original_price|floatformat:0 }}</td>
+                      <td style="font-family:monospace;font-weight:700;color:#10B981;font-size:0.82rem;">-LKR {{ a.discount_amount|floatformat:0 }}</td>
+                      <td style="font-family:monospace;font-weight:800;color:{% if a.final_amount_paid == 0 %}var(--neon-lime){% else %}#fff{% endif %};font-size:0.88rem;">
+                        LKR {{ a.final_amount_paid|floatformat:2 }}
+                      </td>
+                      <td style="font-size:0.78rem;color:#ccc;">{{ a.get_reason_category_display }}</td>
+                      <td style="font-size:0.78rem;color:var(--cyan);font-weight:600;">@{{ a.authorized_by.username|default:"Admin" }}</td>
+                      <td style="font-size:0.78rem;color:var(--text-muted);max-width:220px;" title="{{ a.justification }}">
+                        {{ a.justification|truncatechars:60 }}
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr><td colspan="10" style="text-align:center;padding:2rem;color:var(--text-muted);"><i class="fa fa-info-circle"></i> No special fee waivers or concession overrides have been granted yet.</td></tr>
                   {% endfor %}
                 </tbody>
               </table>
@@ -3048,16 +3122,16 @@
       <div class="form-grid-2" style="margin-bottom:0.85rem;">
         <div>
           <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Membership Plan</label>
-          <select id="overridePlanId" class="form-control">
+          <select id="overridePlanId" class="form-control" onchange="onOverridePlanChange()">
             {% for pl in membership_plans %}
-              <option value="{{ pl.id }}">{{ pl.name }} (LKR {{ pl.price_monthly|floatformat:0 }})</option>
+              <option value="{{ pl.id }}" data-price="{{ pl.price_monthly|stringformat:'.2f' }}">{{ pl.name }} (LKR {{ pl.price_monthly|floatformat:0 }})</option>
             {% endfor %}
           </select>
         </div>
         <div>
           <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Status</label>
           <select id="overrideStatus" class="form-control">
-            <option value="active">Active</option>
+            <option value="active">Active (Gate Unlocked)</option>
             <option value="expired">Expired</option>
             <option value="frozen">Frozen / Suspended</option>
             <option value="cancelled">Cancelled</option>
@@ -3077,14 +3151,80 @@
         </div>
       </div>
 
+      <!-- Super Admin Concession & Discount Engine -->
+      <div style="background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.35);border-radius:8px;padding:0.85rem;margin-bottom:0.95rem;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
+          <label style="font-size:0.78rem;font-weight:700;color:#FBBF24;display:flex;align-items:center;gap:0.4rem;margin:0;">
+            <i class="fa fa-gift"></i> Special Concession &amp; Fee Waiver
+          </label>
+          <span style="font-size:0.68rem;color:#D97706;background:rgba(251,191,36,0.15);padding:2px 6px;border-radius:4px;font-weight:700;">Super Admin Override</span>
+        </div>
+
+        <!-- Quick 1-Click Concession Buttons -->
+        <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-bottom:0.65rem;">
+          <button type="button" onclick="applyConcessionPreset('full_waiver')" style="background:#059669;color:#fff;font-size:0.72rem;font-weight:700;padding:0.35rem 0.65rem;border-radius:4px;border:none;cursor:pointer;">
+            🎁 100% Free (Full Off)
+          </button>
+          <button type="button" onclick="applyConcessionPreset('50_pct')" style="background:#2563EB;color:#fff;font-size:0.72rem;font-weight:700;padding:0.35rem 0.65rem;border-radius:4px;border:none;cursor:pointer;">
+            🏷️ 50% Off
+          </button>
+          <button type="button" onclick="applyConcessionPreset('flat_1000')" style="background:#4B5563;color:#fff;font-size:0.72rem;font-weight:700;padding:0.35rem 0.65rem;border-radius:4px;border:none;cursor:pointer;">
+            -Rs. 1,000 Off
+          </button>
+          <button type="button" onclick="applyConcessionPreset('none')" style="background:#1F2937;color:#9CA3AF;font-size:0.72rem;padding:0.35rem 0.65rem;border-radius:4px;border:1px solid #374151;cursor:pointer;">
+            Reset Standard Price
+          </button>
+        </div>
+
+        <div class="form-grid-2" style="margin-bottom:0.6rem;">
+          <div>
+            <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Concession Type</label>
+            <select id="overrideDiscountType" class="form-control" onchange="recalculateOverrideDiscount()">
+              <option value="none">No Discount (Standard Pricing)</option>
+              <option value="full_waiver">🎁 100% Free / Full Waiver (Complimentary)</option>
+              <option value="flat">Flat LKR Discount (Rs. Off)</option>
+              <option value="percentage">Percentage Discount (%)</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;" id="lblDiscountValue">Discount Value (LKR / %)</label>
+            <input type="number" step="0.01" id="overrideDiscountValue" class="form-control" placeholder="0.00" oninput="recalculateOverrideDiscount()" disabled>
+          </div>
+        </div>
+
+        <div style="margin-bottom:0.6rem;">
+          <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Reason Category * (Mandatory Audit Trail)</label>
+          <select id="overrideReasonCategory" class="form-control">
+            <option value="management_comp">Management / Director Guest Privilege</option>
+            <option value="vip_sponsor">VIP / Brand Ambassador / Sponsored Athlete</option>
+            <option value="staff_perk">Staff Perk / Employee / Family Benefit</option>
+            <option value="hardship">Special Concession / Student Financial Hardship</option>
+            <option value="retention">Member Retention / Loyalty Award</option>
+            <option value="other">Other Authorized Super Admin Concession</option>
+          </select>
+        </div>
+
+        <!-- Live Calculation Box -->
+        <div style="background:#111827;border:1px dashed #4B5563;border-radius:6px;padding:0.5rem 0.75rem;font-size:0.75rem;display:flex;justify-content:space-between;align-items:center;">
+          <div>
+            <span style="color:#9CA3AF;">Plan Price: </span><span id="calcStandardPrice" style="color:#fff;font-weight:700;">LKR 0</span>
+            <span style="color:#F87171;margin-left:0.5rem;font-weight:700;" id="calcDiscountTag"></span>
+          </div>
+          <div>
+            <span style="color:#9CA3AF;">Net Payable: </span>
+            <span id="calcFinalPayable" style="color:#10B981;font-weight:800;font-size:0.92rem;">LKR 0</span>
+          </div>
+        </div>
+      </div>
+
       <div style="margin-bottom:0.85rem;">
-        <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Amount Paid (LKR)</label>
-        <input type="number" step="0.01" id="overrideAmountPaid" class="form-control" placeholder="Override recorded amount">
+        <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Final Amount Paid (LKR) *</label>
+        <input type="number" step="0.01" id="overrideAmountPaid" required class="form-control" placeholder="0.00">
       </div>
 
       <div style="margin-bottom:1.25rem;">
-        <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Admin Override Reason / Audit Note</label>
-        <textarea id="overrideNotes" rows="2" class="form-control" placeholder="e.g. Free 1-month grace period granted for medical hiatus"></textarea>
+        <label style="display:block;font-size:0.72rem;color:var(--text-muted);margin-bottom:0.25rem;">Admin Override Reason / Audit Note *</label>
+        <textarea id="overrideNotes" rows="2" class="form-control" placeholder="e.g. 100% Free pass authorized by Director / VIP Brand Ambassador"></textarea>
       </div>
 
       <div style="display:flex;justify-content:flex-end;gap:0.75rem;flex-wrap:wrap;">
@@ -4306,6 +4446,7 @@
     const secBills = document.getElementById('auditSectionBills');
     const secStock = document.getElementById('auditSectionStock');
     const secRoles = document.getElementById('auditSectionRoles');
+    const secConcessions = document.getElementById('auditSectionConcessions');
 
     if (category === 'all') {
       if (secAnnual) secAnnual.style.display = 'block';
@@ -4313,12 +4454,14 @@
       if (secBills) secBills.style.display = 'block';
       if (secStock) secStock.style.display = 'block';
       if (secRoles) secRoles.style.display = 'block';
+      if (secConcessions) secConcessions.style.display = 'block';
     } else {
       if (secAnnual) secAnnual.style.display = category === 'annual' ? 'block' : 'none';
       if (secExpired) secExpired.style.display = category === 'expired' ? 'block' : 'none';
       if (secBills) secBills.style.display = category === 'bills' ? 'block' : 'none';
       if (secStock) secStock.style.display = category === 'stock' ? 'block' : 'none';
       if (secRoles) secRoles.style.display = category === 'roles' ? 'block' : 'none';
+      if (secConcessions) secConcessions.style.display = category === 'concessions' ? 'block' : 'none';
     }
   }
 
@@ -4999,6 +5142,102 @@
   }
 
   // Subscription Data Override Modal & Submit (Super Admin)
+  function getSelectedPlanPrice() {
+    const sel = document.getElementById('overridePlanId');
+    if (!sel || !sel.selectedOptions || !sel.selectedOptions[0]) return 0;
+    const priceAttr = sel.selectedOptions[0].getAttribute('data-price');
+    return parseFloat(priceAttr || 0);
+  }
+
+  function onOverridePlanChange() {
+    recalculateOverrideDiscount();
+  }
+
+  function applyConcessionPreset(preset) {
+    const typeSel = document.getElementById('overrideDiscountType');
+    const valInput = document.getElementById('overrideDiscountValue');
+    const reasonSel = document.getElementById('overrideReasonCategory');
+    const statusSel = document.getElementById('overrideStatus');
+
+    if (preset === 'full_waiver') {
+      typeSel.value = 'full_waiver';
+      valInput.disabled = true;
+      valInput.value = '';
+      reasonSel.value = 'management_comp';
+      statusSel.value = 'active';
+      document.getElementById('overrideNotes').value = '100% Complimentary VIP / Management Guest Pass (Full Waiver)';
+    } else if (preset === '50_pct') {
+      typeSel.value = 'percentage';
+      valInput.disabled = false;
+      valInput.value = '50';
+      reasonSel.value = 'staff_perk';
+      statusSel.value = 'active';
+      document.getElementById('overrideNotes').value = '50% Staff Perk / Special Concession Discount';
+    } else if (preset === 'flat_1000') {
+      typeSel.value = 'flat';
+      valInput.disabled = false;
+      valInput.value = '1000';
+      reasonSel.value = 'hardship';
+      statusSel.value = 'active';
+      document.getElementById('overrideNotes').value = 'Rs. 1,000 Special Student / Hardship Concession';
+    } else {
+      typeSel.value = 'none';
+      valInput.disabled = true;
+      valInput.value = '';
+    }
+    recalculateOverrideDiscount();
+  }
+
+  function recalculateOverrideDiscount() {
+    const type = document.getElementById('overrideDiscountType').value;
+    const valInput = document.getElementById('overrideDiscountValue');
+    const lblVal = document.getElementById('lblDiscountValue');
+    const stdPrice = getSelectedPlanPrice();
+    const stdPriceEl = document.getElementById('calcStandardPrice');
+    const discTagEl = document.getElementById('calcDiscountTag');
+    const finalPayableEl = document.getElementById('calcFinalPayable');
+    const amountPaidInput = document.getElementById('overrideAmountPaid');
+
+    stdPriceEl.textContent = 'LKR ' + stdPrice.toLocaleString('en-US', {minimumFractionDigits: 0});
+
+    let discountAmount = 0;
+    if (type === 'none') {
+      valInput.disabled = true;
+      valInput.value = '';
+      lblVal.textContent = 'Discount Value (LKR / %)';
+      discTagEl.textContent = '';
+      const finalPrice = stdPrice;
+      finalPayableEl.textContent = 'LKR ' + finalPrice.toLocaleString('en-US', {minimumFractionDigits: 0});
+      amountPaidInput.value = finalPrice.toFixed(2);
+      return;
+    }
+
+    if (type === 'full_waiver') {
+      valInput.disabled = true;
+      valInput.value = '';
+      lblVal.textContent = 'Full Waiver (100% Free)';
+      discountAmount = stdPrice;
+      discTagEl.textContent = '(-100% Complimentary Free Pass)';
+    } else if (type === 'flat') {
+      valInput.disabled = false;
+      lblVal.textContent = 'Flat Discount (LKR)';
+      const entered = parseFloat(valInput.value || 0);
+      discountAmount = Math.min(stdPrice, Math.max(0, entered));
+      discTagEl.textContent = '(-LKR ' + discountAmount.toLocaleString('en-US') + ' Off)';
+    } else if (type === 'percentage') {
+      valInput.disabled = false;
+      lblVal.textContent = 'Discount Percentage (%)';
+      const pct = parseFloat(valInput.value || 0);
+      const safePct = Math.min(100, Math.max(0, pct));
+      discountAmount = (stdPrice * safePct) / 100;
+      discTagEl.textContent = '(-' + safePct + '% Off = LKR ' + discountAmount.toLocaleString('en-US') + ')';
+    }
+
+    const netPayable = Math.max(0, stdPrice - discountAmount);
+    finalPayableEl.textContent = 'LKR ' + netPayable.toLocaleString('en-US', {minimumFractionDigits: 0});
+    amountPaidInput.value = netPayable.toFixed(2);
+  }
+
   function openOverrideSubModal(subId, memberName, planId, startDate, endDate, amountPaid, status) {
     const m = document.getElementById('overrideSubModal');
     if (!m) return;
@@ -5007,28 +5246,66 @@
     if (planId) document.getElementById('overridePlanId').value = planId;
     if (startDate) document.getElementById('overrideStartDate').value = startDate;
     if (endDate) document.getElementById('overrideEndDate').value = endDate;
-    if (amountPaid) document.getElementById('overrideAmountPaid').value = amountPaid;
     if (status) document.getElementById('overrideStatus').value = status;
     document.getElementById('overrideNotes').value = '';
+
+    // Initialize concession controls
+    document.getElementById('overrideDiscountType').value = 'none';
+    document.getElementById('overrideDiscountValue').value = '';
+    document.getElementById('overrideDiscountValue').disabled = true;
+
+    if (amountPaid !== undefined && amountPaid !== null && amountPaid !== '') {
+      const numPaid = parseFloat(amountPaid);
+      const stdPrice = getSelectedPlanPrice();
+      if (numPaid === 0 && stdPrice > 0) {
+        // Pre-activate 100% full waiver
+        applyConcessionPreset('full_waiver');
+      } else if (stdPrice > 0 && numPaid < stdPrice) {
+        document.getElementById('overrideDiscountType').value = 'flat';
+        document.getElementById('overrideDiscountValue').disabled = false;
+        document.getElementById('overrideDiscountValue').value = (stdPrice - numPaid).toFixed(2);
+        recalculateOverrideDiscount();
+      } else {
+        document.getElementById('overrideAmountPaid').value = numPaid;
+        recalculateOverrideDiscount();
+      }
+    } else {
+      recalculateOverrideDiscount();
+    }
+
     m.style.display = 'flex';
   }
+
   function closeOverrideSubModal() {
     const m = document.getElementById('overrideSubModal');
     if (m) m.style.display = 'none';
   }
+
   async function submitOverrideSub(e) {
     e.preventDefault();
     const subId = document.getElementById('overrideSubId').value;
     const btn = document.getElementById('btnSubmitOverrideSub');
     btn.disabled = true;
-    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Overriding...';
+    btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Applying Override...';
+
+    const discType = document.getElementById('overrideDiscountType').value;
+    const discVal = parseFloat(document.getElementById('overrideDiscountValue').value || 0);
+    const stdPrice = getSelectedPlanPrice();
+    let discAmt = 0;
+    if (discType === 'full_waiver') discAmt = stdPrice;
+    else if (discType === 'flat') discAmt = Math.min(stdPrice, discVal);
+    else if (discType === 'percentage') discAmt = (stdPrice * Math.min(100, discVal)) / 100;
 
     const payload = {
       plan_id: document.getElementById('overridePlanId').value,
       status: document.getElementById('overrideStatus').value,
       start_date: document.getElementById('overrideStartDate').value || null,
       end_date: document.getElementById('overrideEndDate').value,
-      amount_paid: document.getElementById('overrideAmountPaid').value || null,
+      amount_paid: document.getElementById('overrideAmountPaid').value || '0.00',
+      discount_type: discType,
+      discount_value: discVal,
+      discount_amount: discAmt,
+      reason_category: document.getElementById('overrideReasonCategory').value,
       notes: document.getElementById('overrideNotes').value.trim()
     };
 

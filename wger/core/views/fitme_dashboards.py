@@ -765,6 +765,11 @@ def super_admin_dashboard(request, active_tab=None):
         len(user_role_issues)
     )
 
+    from wger.membership.models import MembershipDiscountAudit
+    discount_audits = list(MembershipDiscountAudit.objects.select_related(
+        'member', 'authorized_by', 'plan', 'receipt'
+    ).order_by('-created_at')[:50])
+
     financial_audit = {
         'current_year': str(current_year),
         'monthly_trends': audit_monthly_trends,
@@ -788,6 +793,8 @@ def super_admin_dashboard(request, active_tab=None):
         'stock_issues_count': len(stock_issues),
         'user_role_issues': user_role_issues,
         'user_role_issues_count': len(user_role_issues),
+        'discount_audits': discount_audits,
+        'discount_audits_count': len(discount_audits),
         'total_audit_discrepancies': total_audit_discrepancies,
     }
 
@@ -1032,6 +1039,7 @@ def super_admin_dashboard(request, active_tab=None):
         'staff_users_list': staff_users_list,
         'recent_salary_advances': recent_salary_advances,
         'financial_audit': financial_audit,
+        'discount_audits': discount_audits,
         'current_year': str(current_year),
         'is_super_admin': is_super_admin,
         'current_role': current_role,
@@ -3893,11 +3901,36 @@ def admin_override_subscription_api(request, sub_id):
             sub.plan = p
 
 
+    # Concession & Discount Processing (Super Admin Exclusive)
+    disc_type = data.get('discount_type', 'none')
+    disc_value = Decimal(str(data.get('discount_value') or 0))
+    disc_amount = Decimal(str(data.get('discount_amount') or 0))
+    reason_cat = data.get('reason_category', 'management_comp')
+
+    if disc_type == 'full_waiver':
+        sub.amount_paid = Decimal('0.00')
+        disc_amount = sub.plan.price_monthly if sub.plan else Decimal('0.00')
+    elif disc_amount > Decimal('0.00'):
+        if sub.plan:
+            sub.amount_paid = max(Decimal('0.00'), sub.plan.price_monthly - disc_amount)
+
     notes = data.get('notes', '').strip()
     timestamp = timezone.now().strftime('%Y-%m-%d %H:%M')
-    override_note = f"\n[Super Admin Data Override by {request.user.username} at {timestamp}]: {notes}" if notes else f"\n[Super Admin Data Override by {request.user.username} at {timestamp}]"
+    concession_str = f" [Concession: {disc_type.upper()} -LKR {disc_amount} | {reason_cat}]" if disc_amount > Decimal('0.00') or disc_type == 'full_waiver' else ""
+    override_note = f"\n[Super Admin Data Override by {request.user.username} at {timestamp}{concession_str}]: {notes}" if notes else f"\n[Super Admin Data Override by {request.user.username} at {timestamp}{concession_str}]"
     sub.notes = (sub.notes or '') + override_note
     sub.save()
+
+    # If subscription status is active, ensure biometric profile is armed for turnstile access
+    if sub.status == 'active':
+        from wger.zkbio_integration.models import BiometricProfile
+        bio, _ = BiometricProfile.objects.get_or_create(
+            user=sub.member,
+            defaults={'zk_pin': str(1000 + sub.member.id)}
+        )
+        bio.disabled = False
+        bio.sync_status = 'PENDING'
+        bio.save(update_fields=['disabled', 'sync_status'])
 
     # Synchronize linked PaymentReceipt to avoid financial ledger mismatches
     from wger.gym_operations_payroll.models import PaymentReceipt
@@ -3906,10 +3939,11 @@ def admin_override_subscription_api(request, sub_id):
         receipt.validity_start = sub.start_date
         receipt.validity_end = sub.end_date
         receipt.amount_paid = sub.amount_paid
+        receipt.discount_amount = disc_amount
         receipt.plan_name = sub.plan.name
         receipt.save()
-    elif sub.amount_paid > Decimal('0.00'):
-        PaymentReceipt.objects.create(
+    else:
+        receipt = PaymentReceipt.objects.create(
             receipt_number=PaymentReceipt.generate_next_receipt_number(),
             subscription=sub,
             member=sub.member,
@@ -3918,9 +3952,29 @@ def admin_override_subscription_api(request, sub_id):
             validity_start=sub.start_date,
             validity_end=sub.end_date,
             amount_paid=sub.amount_paid,
+            discount_amount=disc_amount,
             payment_method='cash',
             cashier=request.user,
             notes='Auto-reconciled on Super Admin override'
+        )
+
+    # Formal Concession Audit Logging
+    if (disc_type in ['full_waiver', 'percentage', 'flat'] and disc_amount > Decimal('0.00')) or disc_type == 'full_waiver':
+        from wger.membership.models import MembershipDiscountAudit
+        MembershipDiscountAudit.objects.create(
+            member=sub.member,
+            authorized_by=request.user,
+            subscription=sub,
+            plan=sub.plan,
+            discount_type=disc_type,
+            original_price=sub.plan.price_monthly if sub.plan else Decimal('0.00'),
+            discount_value=disc_value,
+            discount_amount=disc_amount,
+            annual_fee_waived=True,
+            final_amount_paid=sub.amount_paid,
+            reason_category=reason_cat,
+            justification=notes or f"Super Admin {disc_type} override concession",
+            receipt=receipt
         )
 
     return JsonResponse({

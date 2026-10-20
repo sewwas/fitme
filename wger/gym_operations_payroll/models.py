@@ -454,6 +454,7 @@ class PaymentReceipt(models.Model):
     package_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Base membership plan fee")
     coaching_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Personal coaching fee / add-on")
     annual_fee_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Annual registration / renewal fee")
+    discount_amount = models.DecimalField(max_digits=10, decimal_places=2, default=Decimal('0.00'), help_text="Super Admin discount or complimentary fee waiver")
     coach_name = models.CharField(max_length=100, blank=True, default='', help_text="Assigned personal coach if applicable")
     payment_method = models.CharField(max_length=30, default='cash')
     cashier = models.ForeignKey(
@@ -477,9 +478,49 @@ class PaymentReceipt(models.Model):
     def get_line_items(self):
         """
         Returns structured list of billing line items for 80mm thermal receipt & invoices.
-        Handles both new granularly recorded receipts and existing historical receipts.
+        Handles complimentary (LKR 0) passes, discounted packages, and granular line items.
         """
         items = []
+
+        val_start_str = self.validity_start.strftime('%d/%m/%Y') if self.validity_start else ''
+        val_end_str = self.validity_end.strftime('%d/%m/%Y') if self.validity_end else ''
+        val_range = f"{val_start_str} - {val_end_str}" if val_start_str and val_end_str else ''
+        detail_str = f"{self.duration_days} Days Access"
+        if val_range:
+            detail_str += f" ({val_range})"
+
+        # ── 1. Special Handling for Super Admin Concessions / 100% Free Passes ──
+        if self.discount_amount and self.discount_amount > 0:
+            gross_package = (self.package_amount or Decimal('0.00')) + self.discount_amount
+            items.append({
+                'name': self.plan_name,
+                'detail': detail_str,
+                'amount': gross_package,
+                'badge': 'Package',
+            })
+            waiver_label = "100% Complimentary Waiver" if (self.amount_paid == 0) else "Authorized Discount"
+            items.append({
+                'name': f"Super Admin Concession ({waiver_label})",
+                'detail': "Management Authorized Fee Waiver",
+                'amount': -self.discount_amount,
+                'badge': 'Waiver' if (self.amount_paid == 0) else 'Discount',
+            })
+            if self.coaching_amount and self.coaching_amount > 0:
+                coach_label = f"Assigned Coach: {self.coach_name}" if self.coach_name else "1-on-1 Dedicated Trainer"
+                items.append({
+                    'name': 'Personal Coaching (1-on-1)',
+                    'detail': coach_label,
+                    'amount': self.coaching_amount,
+                    'badge': 'Coaching',
+                })
+            if self.annual_fee_amount and self.annual_fee_amount > 0:
+                items.append({
+                    'name': 'Annual Registration / Renewal Fee',
+                    'detail': f"Registration Period: {self.issued_at.year}",
+                    'amount': self.annual_fee_amount,
+                    'badge': 'Annual Fee',
+                })
+            return items
 
         has_granular = (
             (self.package_amount and self.package_amount > 0) or
@@ -487,15 +528,8 @@ class PaymentReceipt(models.Model):
             (self.annual_fee_amount and self.annual_fee_amount > 0)
         )
 
-        val_start_str = self.validity_start.strftime('%d/%m/%Y') if self.validity_start else ''
-        val_end_str = self.validity_end.strftime('%d/%m/%Y') if self.validity_end else ''
-        val_range = f"{val_start_str} - {val_end_str}" if val_start_str and val_end_str else ''
-
         if has_granular:
             if self.package_amount and self.package_amount > 0:
-                detail_str = f"{self.duration_days} Days Access"
-                if val_range:
-                    detail_str += f" ({val_range})"
                 items.append({
                     'name': self.plan_name,
                     'detail': detail_str,

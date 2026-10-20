@@ -19,6 +19,7 @@ from .models import (
     Announcement,
     MemberWorkoutLog,
     MemberMeasurement,
+    MembershipDiscountAudit,
 )
 
 
@@ -150,3 +151,38 @@ class MemberMeasurementAdmin(admin.ModelAdmin):
     raw_id_fields = ('member',)
     date_hierarchy = 'date'
     ordering = ('-date',)
+
+
+@admin.register(MembershipDiscountAudit)
+class MembershipDiscountAuditAdmin(admin.ModelAdmin):
+    list_display = (
+        'created_at',
+        'member',
+        'plan',
+        'discount_badge',
+        'original_price',
+        'discount_amount',
+        'final_amount_paid',
+        'reason_category',
+        'authorized_by',
+    )
+    list_filter = ('discount_type', 'reason_category', 'annual_fee_waived', 'created_at')
+    search_fields = (
+        'member__username',
+        'member__first_name',
+        'member__last_name',
+        'authorized_by__username',
+        'justification',
+    )
+    raw_id_fields = ('member', 'authorized_by', 'subscription', 'receipt')
+    readonly_fields = ('created_at',)
+    date_hierarchy = 'created_at'
+    ordering = ('-created_at',)
+
+    def discount_badge(self, obj):
+        if obj.discount_type == 'full_waiver':
+            return format_html('<span style="background:#059669;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold;font-size:11px;">100% FREE PASS</span>')
+        elif obj.discount_type == 'percentage':
+            return format_html('<span style="background:#2563EB;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold;font-size:11px;">{}% OFF</span>', obj.discount_value)
+        return format_html('<span style="background:#D97706;color:#fff;padding:2px 8px;border-radius:4px;font-weight:bold;font-size:11px;">-LKR {}</span>', obj.discount_amount)
+    discount_badge.short_description = 'Concession Type'
