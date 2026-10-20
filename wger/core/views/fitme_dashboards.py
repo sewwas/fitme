@@ -1119,6 +1119,7 @@ def front_desk_dashboard(request):
             m.active_sub_end_str = best_active.end_date.strftime('%d %b %Y')
             m.active_sub_end_iso = best_active.end_date.isoformat()
             m.active_plan_name = best_active.plan.name if best_active.plan else 'Active Plan'
+            m.active_plan_id = best_active.plan_id
             m.latest_sub_end_str = m.active_sub_end_str
         else:
             m.has_active_subscription = False
@@ -1129,8 +1130,10 @@ def front_desk_dashboard(request):
             if subs:
                 latest_sub = max(subs, key=lambda s: s.end_date)
                 m.latest_sub_end_str = latest_sub.end_date.strftime('%d %b %Y')
+                m.active_plan_id = latest_sub.plan_id
             else:
                 m.latest_sub_end_str = ''
+                m.active_plan_id = None
 
     for sub in active_subs:
         if hasattr(sub, 'member'):
@@ -1147,6 +1150,7 @@ def front_desk_dashboard(request):
             m.active_sub_end_str = sub.end_date.strftime('%d %b %Y')
             m.active_sub_end_iso = sub.end_date.isoformat()
             m.active_plan_name = sub.plan.name if sub.plan else 'Active Plan'
+            m.active_plan_id = sub.plan_id
             m.latest_sub_end_str = m.active_sub_end_str
 
     from wger.gym_operations_payroll.models import BuddyMembership
@@ -1160,18 +1164,35 @@ def front_desk_dashboard(request):
         ).select_related('subscription__plan', 'subscription__member', 'primary_member')
     }
 
-    pending_concessions_map = {
-        aud.member_id: aud
-        for aud in MembershipDiscountAudit.objects.filter(
-            member_id__in=all_member_ids,
-            receipt__isnull=True,
-            subscription__status='pending_payment'
-        ).select_related('authorized_by', 'plan')
-    }
+    # 1. First priority: Uncollected pending concessions explicitly awaiting Front Desk counter billing
+    pending_concessions = MembershipDiscountAudit.objects.filter(
+        member_id__in=all_member_ids,
+        receipt__isnull=True
+    ).select_related('authorized_by', 'plan').order_by('-created_at')
+
+    pending_concessions_map = {}
+    for aud in pending_concessions:
+        if aud.member_id not in pending_concessions_map:
+            pending_concessions_map[aud.member_id] = aud
+
+    # 2. Second priority: Approved recurring concessions on file (e.g. staff perk, hardship, discount policy)
+    latest_audits = MembershipDiscountAudit.objects.filter(
+        member_id__in=all_member_ids
+    ).select_related('authorized_by', 'plan').order_by('-created_at')
+
+    latest_audit_map = {}
+    for aud in latest_audits:
+        if aud.member_id not in latest_audit_map:
+            latest_audit_map[aud.member_id] = aud
 
     for m in all_members:
         m.linked_as_partner = buddy_links_fd.get(m.id)
-        m.pending_concession = pending_concessions_map.get(m.id)
+        if m.id in pending_concessions_map:
+            m.pending_concession = pending_concessions_map[m.id]
+        elif m.id in latest_audit_map and latest_audit_map[m.id].discount_amount and latest_audit_map[m.id].discount_amount > 0:
+            m.pending_concession = latest_audit_map[m.id]
+        else:
+            m.pending_concession = None
 
     context = {
         'role': 'front_desk',
@@ -2043,7 +2064,18 @@ def record_payment_api(request):
             member=member,
             receipt__isnull=True
         ).order_by('-created_at').first()
-        concession_discount_amount = pending_concession.discount_amount if pending_concession else Decimal('0.00')
+
+        latest_concession = None
+        if not pending_concession:
+            latest_concession = MembershipDiscountAudit.objects.filter(
+                member=member
+            ).order_by('-created_at').first()
+            if latest_concession and latest_concession.discount_amount and latest_concession.discount_amount > Decimal('0.00'):
+                concession_discount_amount = latest_concession.discount_amount
+            else:
+                concession_discount_amount = Decimal('0.00')
+        else:
+            concession_discount_amount = pending_concession.discount_amount if pending_concession else Decimal('0.00')
 
         with transaction.atomic():
             if existing_pending_sub:
@@ -2168,7 +2200,10 @@ def record_payment_api(request):
                     package_amount = max(Decimal('0.00'), amount_dec - coaching_amount - yearly_fee_amount)
                 else:
                     coaching_amount = Decimal('0.00')
-                    package_amount = max(Decimal('0.00'), amount_dec - yearly_fee_amount)
+                    if concession_discount_amount > Decimal('0.00') and plan:
+                        package_amount = plan.price_monthly
+                    else:
+                        package_amount = max(Decimal('0.00'), amount_dec - yearly_fee_amount)
 
             # Issue 80mm Thermal Payment Receipt with Granular Line-Items
             receipt = PaymentReceipt.objects.create(
@@ -2198,6 +2233,22 @@ def record_payment_api(request):
                 pending_concession.subscription = sub
                 pending_concession.justification = (pending_concession.justification + f" | Settled at Front Desk by {request.user.username} (Receipt #{receipt.receipt_number})").strip()
                 pending_concession.save(update_fields=['receipt', 'final_amount_paid', 'subscription', 'justification'])
+            elif concession_discount_amount > Decimal('0.00') and latest_concession:
+                MembershipDiscountAudit.objects.create(
+                    member=member,
+                    authorized_by=latest_concession.authorized_by or request.user,
+                    subscription=sub,
+                    plan=sub.plan,
+                    discount_type=latest_concession.discount_type,
+                    original_price=plan.price_monthly if plan else Decimal('4000.00'),
+                    discount_value=latest_concession.discount_value,
+                    discount_amount=concession_discount_amount,
+                    annual_fee_waived=latest_concession.annual_fee_waived,
+                    final_amount_paid=amount_dec,
+                    reason_category=latest_concession.reason_category,
+                    justification=f"Renewal under approved {latest_concession.get_reason_category_display()} concession (Auth by @{latest_concession.authorized_by.username}) | Settled at Front Desk by {request.user.username} (Receipt #{receipt.receipt_number})",
+                    receipt=receipt
+                )
 
         return JsonResponse({
             'success': True,

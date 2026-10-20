@@ -1411,7 +1411,7 @@
                   <option value="{{ m.id }}" 
                           data-search="{{ m.get_full_name|lower }} {{ m.username|lower }} {{ m.member_profile.phone|default:'' }} {{ m.biometric_profile.zk_pin|default:m.id }}"
                           data-coach-id="{{ m.member_profile.assigned_coach_id|default:'' }}"
-                          data-plan-id="{% with s=m.subscriptions.first %}{{ s.plan_id|default:'' }}{% endwith %}"
+                          data-plan-id="{{ m.active_plan_id|default:'' }}"
                           data-active-sub="{% if m.has_active_subscription %}true{% else %}false{% endif %}"
                           data-sub-end="{{ m.active_sub_end_str }}"
                           data-sub-plan="{{ m.active_plan_name }}"
@@ -1424,7 +1424,8 @@
                           data-concession-val="{{ m.pending_concession.discount_value|default:'0' }}"
                           data-concession-reason="{{ m.pending_concession.get_reason_category_display|default:'' }}"
                           data-concession-author="{{ m.pending_concession.authorized_by.username|default:'Admin' }}"
-                          data-concession-plan-id="{{ m.pending_concession.plan_id|default:'' }}">
+                          data-concession-plan-id="{{ m.pending_concession.plan_id|default:'' }}"
+                          data-concession-annual-waived="{% if m.pending_concession.annual_fee_waived %}true{% else %}false{% endif %}">
                     {{ m.get_full_name|default:m.username }} (PIN: #{{ m.biometric_profile.zk_pin|default:m.id }}){% if m.member_profile.age %} [Age: {{ m.member_profile.age }}]{% endif %}{% if m.member_profile.phone %} &bull; {{ m.member_profile.phone }}{% endif %}{% if m.pending_concession %} &bull; [🎁 Concession: -LKR {{ m.pending_concession.discount_amount|floatformat:0 }} Approved]{% elif m.has_active_subscription %} &bull; [✓ Paid until {{ m.active_sub_end_str }}]{% elif m.latest_sub_end_str %} &bull; [Expired: {{ m.latest_sub_end_str }}]{% else %} &bull; [Monthly Due]{% endif %}{% if not m.has_paid_yearly_this_year %} &bull; [Yearly Due]{% endif %}
                   </option>
 
@@ -2997,12 +2998,14 @@
     // Auto-toggle yearly fee:
     // If NOT paid for this year -> automatically check it
     // If already paid for this year -> automatically uncheck it
+    // If concession explicitly waives annual fee -> uncheck it
+    const annualWaived = opt ? (opt.getAttribute('data-concession-annual-waived') === 'true') : false;
     const yearlyCheckbox = document.getElementById('payIncludeYearlyFee');
     if (yearlyCheckbox) {
-      yearlyCheckbox.checked = !yearlyPaid;
+      yearlyCheckbox.checked = (!yearlyPaid && !annualWaived);
     }
 
-    const concessionPlanId = selectedOpt?.getAttribute('data-concession-plan-id');
+    const concessionPlanId = opt ? opt.getAttribute('data-concession-plan-id') : null;
     if (concessionPlanId && document.getElementById('payPlanId')) {
       document.getElementById('payPlanId').value = concessionPlanId;
     }
@@ -3070,6 +3073,7 @@
     const activeSub = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-active-sub') === 'true') : false;
     const subEnd = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-sub-end') || '') : '';
     const memberYearlyPaid = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-yearly-paid') === 'true') : false;
+    const annualWaivedMember = selectedMemberOpt ? (selectedMemberOpt.getAttribute('data-concession-annual-waived') === 'true') : false;
     const currentYear = new Date().getFullYear();
     
     // Determine configured registration/yearly fee for this plan
@@ -3092,6 +3096,12 @@
         yearlyBadge.style.color = '#00F0FF';
         yearlyBadge.style.borderColor = 'rgba(0, 240, 255, 0.3)';
         if (yearlyDesc) yearlyDesc.textContent = `Annual fee already paid for ${currentYear} • Unchecked by default (Check to re-charge)`;
+      } else if (annualWaivedMember) {
+        yearlyBadge.textContent = 'WAIVED (Concession)';
+        yearlyBadge.style.background = 'rgba(0, 240, 255, 0.15)';
+        yearlyBadge.style.color = '#00F0FF';
+        yearlyBadge.style.borderColor = 'rgba(0, 240, 255, 0.3)';
+        if (yearlyDesc) yearlyDesc.textContent = 'Annual Registration Fee waived under approved Super Admin concession';
       } else {
         yearlyBadge.textContent = `DUE: +LKR ${planYearlyFee.toLocaleString()}`;
         yearlyBadge.style.background = 'rgba(239, 68, 68, 0.18)';
